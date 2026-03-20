@@ -63,7 +63,7 @@ void TestScript::pass_or_fail_req_with_actual_and_target_values(
 	memory::string req_name, memory::string target_value, memory::string actual_value
 ) {
 	Requirement* req = get_requirement_by_id(req_name);
-	if (req == nullptr){
+	if (req == nullptr) {
 		return;
 	}
 	req->set_target_value(target_value);

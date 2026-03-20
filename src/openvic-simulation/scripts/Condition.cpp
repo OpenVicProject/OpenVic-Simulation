@@ -2,8 +2,8 @@
 
 #include <fmt/format.h>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -14,19 +14,18 @@ using enum scope_type_t;
 using enum identifier_type_t;
 
 Condition::Condition(
-	std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
-	scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
-	identifier_type_t new_value_identifier_type
-) : HasIdentifier { new_identifier }, value_type { new_value_type }, scope { new_scope },
-	scope_change { new_scope_change }, key_identifier_type { new_key_identifier_type },
-	value_identifier_type { new_value_identifier_type } {}
+	std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope, scope_type_t new_scope_change,
+	identifier_type_t new_key_identifier_type, identifier_type_t new_value_identifier_type
+)
+	: HasIdentifier { new_identifier }, value_type { new_value_type }, scope { new_scope }, scope_change { new_scope_change },
+	  key_identifier_type { new_key_identifier_type }, value_identifier_type { new_value_identifier_type } {}
 
 ConditionNode::ConditionNode(
-	Condition const* new_condition, value_t&& new_value, bool new_valid,
-	HasIdentifier const* new_condition_key_item,
+	Condition const* new_condition, value_t&& new_value, bool new_valid, HasIdentifier const* new_condition_key_item,
 	HasIdentifier const* new_condition_value_item
-) : condition { new_condition }, value { std::move(new_value) }, valid { new_valid },
-	condition_key_item { new_condition_key_item }, condition_value_item { new_condition_key_item } {}
+)
+	: condition { new_condition }, value { std::move(new_value) }, valid { new_valid },
+	  condition_key_item { new_condition_key_item }, condition_value_item { new_condition_key_item } {}
 
 bool ConditionManager::add_condition(
 	std::string_view identifier, value_type_t value_type, scope_type_t scope, scope_type_t scope_change,
@@ -38,17 +37,11 @@ bool ConditionManager::add_condition(
 	}
 
 	if (value_type == NO_TYPE || value_type > MAX_VALUE) {
-		spdlog::error_s(
-			"Condition {} has invalid value type: {}",
-			identifier, static_cast<uint64_t>(value_type)
-		);
+		spdlog::error_s("Condition {} has invalid value type: {}", identifier, static_cast<uint64_t>(value_type));
 		return false;
 	}
 	if (scope == NO_SCOPE || scope > MAX_SCOPE) {
-		spdlog::error_s(
-			"Condition {} has invalid scope: {}",
-			identifier, static_cast<uint64_t>(scope)
-		);
+		spdlog::error_s("Condition {} has invalid scope: {}", identifier, static_cast<uint64_t>(scope));
 		return false;
 	}
 
@@ -65,8 +58,7 @@ bool ConditionManager::add_condition(
 	}
 
 	return conditions.emplace_item(
-		identifier,
-		identifier, value_type,	scope, scope_change, key_identifier_type, value_identifier_type
+		identifier, identifier, value_type, scope, scope_change, key_identifier_type, value_identifier_type
 	);
 }
 
@@ -76,7 +68,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	/* Special Scopes */
 	ret &= add_condition("THIS", GROUP, COUNTRY, THIS);
 	ret &= add_condition("FROM", GROUP, COUNTRY, FROM);
-	ret &= add_condition("independence", GROUP, COUNTRY, COUNTRY); //only from rebels!
+	ret &= add_condition("independence", GROUP, COUNTRY, COUNTRY); // only from rebels!
 
 	/* Trigger Country Scopes */
 	ret &= add_condition("all_core", GROUP, COUNTRY, PROVINCE);
@@ -114,7 +106,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	/* Global Conditions */
 	ret &= add_condition("year", INTEGER, COUNTRY);
 	ret &= add_condition("month", INTEGER, COUNTRY);
-	ret &= add_condition("has_global_flag", IDENTIFIER, COUNTRY,  NO_SCOPE, NO_IDENTIFIER, GLOBAL_FLAG);
+	ret &= add_condition("has_global_flag", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, GLOBAL_FLAG);
 	ret &= add_condition("is_canal_enabled", INTEGER, COUNTRY);
 	ret &= add_condition("always", BOOLEAN, COUNTRY);
 	ret &= add_condition("world_wars_enabled", BOOLEAN, COUNTRY);
@@ -341,111 +333,64 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
 
 	const auto import_identifiers = [this, &ret](
-		memory::vector<std::string_view> const& identifiers,
-		value_type_t value_type,
-		scope_type_t scope,
-		scope_type_t scope_change = NO_SCOPE,
-		identifier_type_t key_identifier_type = NO_IDENTIFIER,
-		identifier_type_t value_identifier_type = NO_IDENTIFIER
-	) -> void {
+										memory::vector<std::string_view> const& identifiers, value_type_t value_type,
+										scope_type_t scope, scope_type_t scope_change = NO_SCOPE,
+										identifier_type_t key_identifier_type = NO_IDENTIFIER,
+										identifier_type_t value_identifier_type = NO_IDENTIFIER
+									) -> void {
 		for (std::string_view const& identifier : identifiers) {
-			ret &= add_condition(
-				identifier, value_type, scope, scope_change,
-				key_identifier_type, value_identifier_type
-			);
+			ret &= add_condition(identifier, value_type, scope, scope_change, key_identifier_type, value_identifier_type);
 		}
 	};
 
 	/* Scopes from other registries */
 	import_identifiers(
-		definition_manager.get_country_definition_manager().get_country_definition_identifiers(),
-		GROUP,
-		COUNTRY,
-		COUNTRY,
-		COUNTRY_TAG,
-		NO_IDENTIFIER
+		definition_manager.get_country_definition_manager().get_country_definition_identifiers(), GROUP, COUNTRY, COUNTRY,
+		COUNTRY_TAG, NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_map_definition().get_region_identifiers(),
-		GROUP,
-		COUNTRY,
-		STATE,
-		REGION,
-		NO_IDENTIFIER
+		definition_manager.get_map_definition().get_region_identifiers(), GROUP, COUNTRY, STATE, REGION, NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_map_definition().get_province_definition_identifiers(),
-		GROUP,
-		COUNTRY,
-		PROVINCE,
-		PROVINCE_ID,
+		definition_manager.get_map_definition().get_province_definition_identifiers(), GROUP, COUNTRY, PROVINCE, PROVINCE_ID,
 		NO_IDENTIFIER
 	);
 
 	/* Conditions from other registries */
 	import_identifiers(
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideology_identifiers(),
-		REAL,
-		COUNTRY,
-		NO_SCOPE,
-		IDEOLOGY,
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideology_identifiers(), REAL, COUNTRY, NO_SCOPE,
+		IDEOLOGY, NO_IDENTIFIER
+	);
+
+	import_identifiers(
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(), IDENTIFIER, COUNTRY,
+		NO_SCOPE, REFORM_GROUP, REFORM
+	);
+
+	import_identifiers(
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(), REAL, COUNTRY, NO_SCOPE, REFORM,
 		NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(),
-		IDENTIFIER,
-		COUNTRY,
-		NO_SCOPE,
-		REFORM_GROUP,
-		REFORM
+		definition_manager.get_politics_manager().get_issue_manager().get_party_policy_identifiers(), REAL, COUNTRY, NO_SCOPE,
+		PARTY_POLICY, NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(),
-		REAL,
-		COUNTRY,
-		NO_SCOPE,
-		REFORM,
-		NO_IDENTIFIER
+		definition_manager.get_pop_manager().get_pop_type_identifiers(), REAL, COUNTRY, NO_SCOPE, POP_TYPE, NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_politics_manager().get_issue_manager().get_party_policy_identifiers(),
-		REAL,
-		COUNTRY,
-		NO_SCOPE,
-		PARTY_POLICY,
-		NO_IDENTIFIER
+		definition_manager.get_research_manager().get_technology_manager().get_technology_identifiers(), BOOLEAN_INT, COUNTRY,
+		NO_SCOPE, TECHNOLOGY, NO_IDENTIFIER
 	);
 
 	import_identifiers(
-		definition_manager.get_pop_manager().get_pop_type_identifiers(),
-		REAL,
-		COUNTRY,
-		NO_SCOPE,
-		POP_TYPE,
-		NO_IDENTIFIER
-	);
-
-	import_identifiers(
-		definition_manager.get_research_manager().get_technology_manager().get_technology_identifiers(),
-		BOOLEAN_INT,
-		COUNTRY,
-		NO_SCOPE,
-		TECHNOLOGY,
-		NO_IDENTIFIER
-	);
-
-	import_identifiers(
-		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
-		INTEGER,
-		COUNTRY,
-		NO_SCOPE,
-		TRADE_GOOD,
-		NO_IDENTIFIER
+		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(), INTEGER,
+		COUNTRY, NO_SCOPE, TRADE_GOOD, NO_IDENTIFIER
 	);
 
 	lock_conditions();
@@ -462,29 +407,31 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 }
 
 callback_t<std::string_view> ConditionManager::expect_parse_identifier(
-	DefinitionManager const& definition_manager, identifier_type_t identifier_type,
-	callback_t<HasIdentifier const*> callback
+	DefinitionManager const& definition_manager, identifier_type_t identifier_type, callback_t<HasIdentifier const*> callback
 ) const {
 	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) mutable -> bool {
 		HasIdentifier const* identified = nullptr;
 
-		#define EXPECT_CALL(type, name, manager, ...) \
-			if (share_identifier_type(identifier_type, type)) { \
-				identified = manager.get_##name##_by_identifier(identifier); \
-				if (identified != nullptr) { \
-					return callback(identified); \
-				} __VA_OPT__(else { \
-					/* TODO: the set is just a placeholder for actual logic */ \
-					static const case_insensitive_string_set_t chances { __VA_ARGS__ }; \
-					if (chances.contains(identifier)) { \
-						return true; \
-					} \
-				}) \
-			}
+#define EXPECT_CALL(type, name, manager, ...) \
+	if (share_identifier_type(identifier_type, type)) { \
+		identified = manager.get_##name##_by_identifier(identifier); \
+		if (identified != nullptr) { \
+			return callback(identified); \
+		} \
+		__VA_OPT__(else { \
+			/* TODO: the set is just a placeholder for actual logic */ \
+			static const case_insensitive_string_set_t chances { __VA_ARGS__ }; \
+			if (chances.contains(identifier)) { \
+				return true; \
+			} \
+		}) \
+	}
 
-		//TODO: placeholder for not implemented stuff
-		#define EXPECT_CALL_PLACEHOLDER(type) \
-			if (share_identifier_type(identifier_type, type)) { return true; }
+// TODO: placeholder for not implemented stuff
+#define EXPECT_CALL_PLACEHOLDER(type) \
+	if (share_identifier_type(identifier_type, type)) { \
+		return true; \
+	}
 
 		EXPECT_CALL_PLACEHOLDER(VARIABLE);
 		EXPECT_CALL_PLACEHOLDER(GLOBAL_FLAG);
@@ -511,7 +458,9 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(BUILDING, building_type, definition_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
 		EXPECT_CALL(CASUS_BELLI, wargoal_type, definition_manager.get_military_manager().get_wargoal_type_manager());
 		EXPECT_CALL(GOVERNMENT_TYPE, government_type, definition_manager.get_politics_manager().get_government_type_manager());
-		EXPECT_CALL(COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(
+			COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager()
+		);
 		EXPECT_CALL(COUNTRY_EVENT_MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
 		EXPECT_CALL(
@@ -521,8 +470,8 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(CRIME, crime_modifier, definition_manager.get_crime_manager());
 		EXPECT_CALL(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());
 
-		#undef EXPECT_CALL
-		#undef EXPECT_CALL_PLACEHOLDER
+#undef EXPECT_CALL
+#undef EXPECT_CALL_PLACEHOLDER
 
 		return false;
 	};
@@ -532,9 +481,8 @@ node_callback_t ConditionManager::expect_condition_node(
 	DefinitionManager const& definition_manager, Condition const& condition, scope_type_t current_scope,
 	scope_type_t this_scope, scope_type_t from_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &definition_manager, &condition, callback, current_scope, this_scope, from_scope](
-		ast::NodeCPtr node
-	) mutable -> bool {
+	return [this, &definition_manager, &condition, callback, current_scope, this_scope,
+			from_scope](ast::NodeCPtr node) mutable -> bool {
 		bool ret = false;
 		ConditionNode::value_t value;
 
@@ -547,19 +495,14 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		HasIdentifier const* value_item = nullptr;
 
-		const auto get_identifiable = [this, &definition_manager](
-			identifier_type_t item_type, std::string_view id, bool log
-		) -> HasIdentifier const* {
+		const auto get_identifiable =
+			[this, &definition_manager](identifier_type_t item_type, std::string_view id, bool log) -> HasIdentifier const* {
 			HasIdentifier const* keyval = nullptr;
-			bool ret = expect_parse_identifier(
-				definition_manager,
-				item_type,
-				assign_variable_callback(keyval)
-			)(id);
+			bool ret = expect_parse_identifier(definition_manager, item_type, assign_variable_callback(keyval))(id);
 			if (log && !ret) {
 				spdlog::error_s(
-					"Invalid identifier {} expected to have type {} found during condition node parsing!",
-					id, fmt::underlying(item_type)
+					"Invalid identifier {} expected to have type {} found during condition node parsing!", id,
+					fmt::underlying(item_type)
 				);
 			}
 			return keyval;
@@ -571,8 +514,7 @@ node_callback_t ConditionManager::expect_condition_node(
 			if (ret) {
 				value = ConditionNode::string_t { value_identifier };
 				value_item = get_identifiable(
-					value_identifier_type,
-					value_identifier,
+					value_identifier_type, value_identifier,
 					value_type == IDENTIFIER // don't log if there's a fallback
 				);
 				ret |= value_item != nullptr;
@@ -581,35 +523,27 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		if (!ret && share_value_type(value_type, STRING)) {
 			std::string_view value_identifier {};
-			bool local_ret = expect_identifier_or_string(
-				assign_variable_callback(value_identifier)
-			)(node);
+			bool local_ret = expect_identifier_or_string(assign_variable_callback(value_identifier))(node);
 			ret |= local_ret;
 			if (local_ret) {
 				value = ConditionNode::string_t { value_identifier };
 			}
 		}
 
-		ret |= (!ret && share_value_type(value_type, BOOLEAN))
-			&& expect_bool(assign_variable_callback(value))(node);
-		ret |= (!ret && share_value_type(value_type, BOOLEAN_INT))
-			&& expect_int_bool(assign_variable_callback(value))(node);
-		ret |= (!ret && share_value_type(value_type, INTEGER))
-			&& expect_uint64(assign_variable_callback(value))(node);
-		ret |= (!ret && share_value_type(value_type, REAL))
-			&& expect_fixed_point(assign_variable_callback(value))(node);
+		ret |= (!ret && share_value_type(value_type, BOOLEAN)) && expect_bool(assign_variable_callback(value))(node);
+		ret |= (!ret && share_value_type(value_type, BOOLEAN_INT)) && expect_int_bool(assign_variable_callback(value))(node);
+		ret |= (!ret && share_value_type(value_type, INTEGER)) && expect_uint64(assign_variable_callback(value))(node);
+		ret |= (!ret && share_value_type(value_type, REAL)) && expect_fixed_point(assign_variable_callback(value))(node);
 
-		//entries with magic syntax, thanks paradox!
+		// entries with magic syntax, thanks paradox!
 		if (!ret && share_value_type(value_type, COMPLEX)) {
-			const auto expect_pair = [&ret, &value, node](
-				std::string_view identifier_key, std::string_view value_key
-			) -> void {
+			const auto expect_pair = [&ret, &value, node](std::string_view identifier_key, std::string_view value_key) -> void {
 				std::string_view pair_identifier {};
 				fixed_point_t pair_value = 0;
-				ret |= expect_dictionary_keys(
-					identifier_key, ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(pair_identifier)),
-					value_key, ONE_EXACTLY, expect_fixed_point(assign_variable_callback(pair_value))
-				)(node);
+				ret |=
+					expect_dictionary_keys(identifier_key, ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(pair_identifier)), value_key, ONE_EXACTLY, expect_fixed_point(assign_variable_callback(pair_value)))(
+						node
+					);
 				if (ret) {
 					value = ConditionNode::identifier_real_t { pair_identifier, pair_value };
 				}
@@ -617,11 +551,10 @@ node_callback_t ConditionManager::expect_condition_node(
 
 			if (identifier == "can_build_railway_in_capital" || identifier == "can_build_fort_in_capital") {
 				bool in_whole_capital_state = false, limit_to_world_greatest_level = false;
-				ret |= expect_dictionary_keys(
-					"in_whole_capital_state", ONE_EXACTLY, expect_bool(assign_variable_callback(in_whole_capital_state)),
-					"limit_to_world_greatest_level", ONE_EXACTLY,
-						expect_bool(assign_variable_callback(limit_to_world_greatest_level))
-				)(node);
+				ret |=
+					expect_dictionary_keys("in_whole_capital_state", ONE_EXACTLY, expect_bool(assign_variable_callback(in_whole_capital_state)), "limit_to_world_greatest_level", ONE_EXACTLY, expect_bool(assign_variable_callback(limit_to_world_greatest_level)))(
+						node
+					);
 				if (ret) {
 					value = ConditionNode::double_boolean_t { in_whole_capital_state, limit_to_world_greatest_level };
 				}
@@ -638,9 +571,10 @@ node_callback_t ConditionManager::expect_condition_node(
 			} else if (identifier == "work_available") {
 				// { worker = [type] }
 				std::string_view worker {};
-				ret |= expect_dictionary_keys(
-					"worker", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(worker))
-				)(node);
+				ret |=
+					expect_dictionary_keys("worker", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(worker)))(
+						node
+					);
 				if (ret) {
 					value = ConditionNode::string_t { worker };
 				}
@@ -648,18 +582,15 @@ node_callback_t ConditionManager::expect_condition_node(
 				spdlog::error_s("Attempted to parse unknown complex condition {}!", identifier);
 			}
 
-			#undef EXPECT_PAIR
+#undef EXPECT_PAIR
 		}
 
 		if (!ret && share_value_type(value_type, GROUP)) {
 			ConditionNode::condition_list_t node_list;
-			ret |= expect_condition_node_list(
-				definition_manager,
-				scope_change == NO_SCOPE ? current_scope : scope_change,
-				this_scope,
-				from_scope,
-				vector_callback(node_list)
-			)(node);
+			ret |=
+				expect_condition_node_list(definition_manager, scope_change == NO_SCOPE ? current_scope : scope_change, this_scope, from_scope, vector_callback(node_list))(
+					node
+				);
 			value = std::move(node_list);
 		}
 
@@ -673,8 +604,8 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		if (!share_scope_type(scope, effective_current_scope) && effective_current_scope > scope) {
 			spdlog::warn_s(
-				"Condition or scope {} was found in wrong scope {}, expected {}!",
-				identifier, fmt::underlying(effective_current_scope), fmt::underlying(scope)
+				"Condition or scope {} was found in wrong scope {}, expected {}!", identifier,
+				fmt::underlying(effective_current_scope), fmt::underlying(scope)
 			);
 			ret = false;
 		}
@@ -689,22 +620,10 @@ node_callback_t ConditionManager::expect_condition_node(
 		if (!ret) {
 			spdlog::warn_s("Could not parse condition node {}, will always evaluate to false!", identifier);
 			Condition const* always_condition = conditions.get_item_by_identifier("always");
-			return callback({
-				always_condition,
-				std::move(ConditionNode::value_t(false)),
-				true,
-				key_item,
-				value_item
-			});
+			return callback({ always_condition, std::move(ConditionNode::value_t(false)), true, key_item, value_item });
 		}
 
-		ret &= callback({
-			&condition,
-			std::move(value),
-			ret,
-			key_item,
-			value_item
-		});
+		ret &= callback({ &condition, std::move(value), ret, key_item, value_item });
 
 		return ret;
 	};
@@ -726,36 +645,43 @@ node_callback_t ConditionManager::expect_condition_node_list(
 	callback_t<ConditionNode&&> callback, bool top_scope
 ) const {
 	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
-		const auto expect_node = [this, &definition_manager, callback, current_scope, this_scope, from_scope]
-		(Condition const& condition, ast::NodeCPtr node) -> bool {
-			return expect_condition_node(
-				definition_manager, condition, current_scope, this_scope, from_scope, callback
-			)(node);
+		const auto expect_node = [this, &definition_manager, callback, current_scope, this_scope,
+								  from_scope](Condition const& condition, ast::NodeCPtr node) -> bool {
+			return expect_condition_node(definition_manager, condition, current_scope, this_scope, from_scope, callback)(node);
 		};
 		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ast::NodeCPtr node) -> bool {
-			if (top_scope && id == "factor") { return true; }
+			if (top_scope && id == "factor") {
+				return true;
+			}
 			if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(node); node_name && node_name->value()) {
 				spdlog::warn_s(
-					"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
-					id, node_name->value().view()
+					"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!", id,
+					node_name->value().view()
 				); // TODO: make this error message more useful by pinning down node to an actual file or something
 			} else if (ast::ListValue const* list_values = dryad::node_try_cast<ast::ListValue>(node); list_values) {
 				for (ast::Statement const* statement : list_values->statements()) {
-					dryad::visit_node(statement,
-						[&](ast::AssignStatement const* assign){
-							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(assign->left()); node_name && node_name->value()) {
+					dryad::visit_node(
+						statement,
+						[&](ast::AssignStatement const* assign) {
+							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(assign->left());
+								node_name && node_name->value()) {
 								spdlog::warn_s(
-									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
+									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to "
+									"false!",
 									id, node_name->value().view()
-								); // TODO: make this error message more useful by pinning down node to an actual file or something
+								); // TODO: make this error message more useful by pinning down node to an actual file or
+								   // something
 							}
 						},
 						[&](ast::ValueStatement const* value) {
-							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(value->value()); node_name && node_name->value()) {
+							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(value->value());
+								node_name && node_name->value()) {
 								spdlog::warn_s(
-									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
+									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to "
+									"false!",
 									id, node_name->value().view()
-								); // TODO: make this error message more useful by pinning down node to an actual file or something
+								); // TODO: make this error message more useful by pinning down node to an actual file or
+								   // something
 							}
 						}
 					);
@@ -764,28 +690,21 @@ node_callback_t ConditionManager::expect_condition_node_list(
 			return true;
 		};
 
-		return conditions.expect_item_dictionary_and_default(
-			invalid_condition_node,
-			expect_node
-		)(node);
+		return conditions.expect_item_dictionary_and_default(invalid_condition_node, expect_node)(node);
 	};
 }
 
 bool ConditionManager::expect_condition_script(
-	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
-	scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
+	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope, scope_type_t from_scope,
+	NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
 ) const {
 	ConditionNode::condition_list_t conds;
 	bool ret = true;
 	for (const ast::NodeCPtr node : nodes) {
-		ret &= expect_condition_node_list(
-			definition_manager,
-			initial_scope,
-			this_scope,
-			from_scope,
-			NodeTools::vector_callback(conds),
-			true
-		)(node);
+		ret &=
+			expect_condition_node_list(definition_manager, initial_scope, this_scope, from_scope, NodeTools::vector_callback(conds), true)(
+				node
+			);
 	}
 
 	ret &= callback({ root_condition, std::move(conds), true });

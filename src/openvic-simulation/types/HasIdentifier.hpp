@@ -3,8 +3,8 @@
 #include <cassert>
 #include <concepts>
 #include <cstddef>
-#include <string_view>
 #include <ostream>
+#include <string_view>
 
 #include <fmt/base.h>
 
@@ -23,7 +23,7 @@ namespace OpenVic {
 		memory::string PROPERTY(identifier);
 
 	protected:
-		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {
+		HasIdentifier(std::string_view new_identifier) : identifier { new_identifier } {
 			assert(!identifier.empty());
 		}
 		HasIdentifier(HasIdentifier const&) = default;
@@ -33,16 +33,16 @@ namespace OpenVic {
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
 
-		template <std::derived_from<HasIdentifier> T, std::convertible_to<T const&> U>
-		requires (!has_index<T>)
+		template<std::derived_from<HasIdentifier> T, std::convertible_to<T const&> U>
+		requires(!has_index<T>)
 		friend bool operator==(T const& lhs, U const& rhs) {
 			return lhs.get_identifier() == static_cast<T const&>(rhs).get_identifier();
 		}
 
-		template <typename T, typename U>
-		requires specialization_of<std::decay_t<T>, std::reference_wrapper>
-			&& std::derived_from<typename std::decay_t<T>::type, HasIdentifier>
-			&& equalable<typename std::decay_t<T>::type const&, U>
+		template<typename T, typename U>
+		requires specialization_of<std::decay_t<T>, std::reference_wrapper> &&
+			std::derived_from<typename std::decay_t<T>::type, HasIdentifier> &&
+			equalable<typename std::decay_t<T>::type const&, U>
 		friend bool operator==(T const& lhs, U const& rhs) {
 			return lhs.get() == rhs;
 		}
@@ -63,7 +63,7 @@ namespace OpenVic {
 		const ColourT PROPERTY(colour);
 
 	protected:
-		_HasColour(ColourT new_colour, bool cannot_be_null): colour { new_colour } {
+		_HasColour(ColourT new_colour, bool cannot_be_null) : colour { new_colour } {
 			assert(!cannot_be_null || !colour.is_null());
 		}
 		_HasColour(_HasColour const&) = default;
@@ -98,7 +98,7 @@ namespace OpenVic {
 }
 
 template<OpenVic::has_get_identifier T>
-requires (!OpenVic::has_get_name<T>)
+requires(!OpenVic::has_get_name<T>)
 struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
 		return fmt::formatter<fmt::string_view>::format(has_id.get_identifier(), ctx);
@@ -106,7 +106,7 @@ struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 };
 
 template<OpenVic::has_get_name T>
-requires (!OpenVic::has_get_identifier<T>)
+requires(!OpenVic::has_get_identifier<T>)
 struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
 		return fmt::formatter<fmt::string_view>::format(has_id.get_name(), ctx);
@@ -115,20 +115,20 @@ struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 
 namespace std {
 	template<OpenVic::has_get_identifier T>
-	requires (!OpenVic::has_index<T>)
+	requires(!OpenVic::has_index<T>)
 	struct hash<T> {
 		[[nodiscard]] std::size_t operator()(T const& obj) const noexcept {
-			return std::hash<std::string_view>{}(obj.get_identifier());
+			return std::hash<std::string_view> {}(obj.get_identifier());
 		}
 	};
 }
 
 namespace std {
 	template<OpenVic::has_get_identifier T>
-	requires (!OpenVic::has_index<T>)
+	requires(!OpenVic::has_index<T>)
 	struct hash<std::remove_const<T>> {
 		[[nodiscard]] std::size_t operator()(std::remove_const_t<T> const& obj) const noexcept {
-			return std::hash<std::string_view>{}(obj.get_identifier());
+			return std::hash<std::string_view> {}(obj.get_identifier());
 		}
 	};
 }

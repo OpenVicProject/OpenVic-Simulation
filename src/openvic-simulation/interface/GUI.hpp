@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/interface/GFXSprite.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/interface/GFXSprite.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
 
 namespace OpenVic {
@@ -29,9 +29,7 @@ namespace OpenVic::GUI {
 		friend class Scene;
 
 	public:
-		enum class orientation_t {
-			UPPER_LEFT, LOWER_LEFT, LOWER_RIGHT, UPPER_RIGHT, CENTER, CENTER_UP, CENTER_DOWN
-		};
+		enum class orientation_t { UPPER_LEFT, LOWER_LEFT, LOWER_RIGHT, UPPER_RIGHT, CENTER, CENTER_UP, CENTER_DOWN };
 
 	private:
 		fvec2_t PROPERTY(position);
@@ -71,9 +69,9 @@ namespace OpenVic::GUI {
 		OV_DETAIL_GET_TYPE
 
 		static NodeTools::node_callback_t expect_scene(
-			std::string_view scene_name, NodeTools::callback_t<memory::unique_base_ptr<Scene>&&> callback, UIManager const& ui_manager
+			std::string_view scene_name, NodeTools::callback_t<memory::unique_base_ptr<Scene>&&> callback,
+			UIManager const& ui_manager
 		);
-
 	};
 
 	class Window final : public Element {
@@ -268,7 +266,7 @@ namespace OpenVic::GUI {
 		fixed_point_t PROPERTY(start_value);
 		bool PROPERTY_CUSTOM_PREFIX(horizontal, is, false)
 
-		bool PROPERTY_CUSTOM_PREFIX(range_limited, is, false);
+			bool PROPERTY_CUSTOM_PREFIX(range_limited, is, false);
 		fixed_point_t PROPERTY(range_limit_min);
 		fixed_point_t PROPERTY(range_limit_max);
 		memory::string PROPERTY(range_limit_min_icon_name);

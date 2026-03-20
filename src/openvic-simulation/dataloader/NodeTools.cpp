@@ -15,8 +15,8 @@
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -34,10 +34,7 @@ static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
 			if (cast_node != nullptr) {
 				return callback(cast_node);
 			}
-			spdlog::error_s(
-				"Invalid node type {} when expecting {}",
-				ast::get_type_name(node->kind()), type_name<T>()
-			);
+			spdlog::error_s("Invalid node type {} when expecting {}", ast::get_type_name(node->kind()), type_name<T>());
 		} else {
 			spdlog::error_s("Null node when expecting {}", type_name<T>());
 		}
@@ -58,14 +55,11 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 				return callback(list_value->statements());
 			}
 			spdlog::error_s(
-				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), type_name<ast::FileTree>(), type_name<ast::ListValue>()
+				"Invalid node type {} when expecting {} or {}", ast::get_type_name(node->kind()), type_name<ast::FileTree>(),
+				type_name<ast::ListValue>()
 			);
 		} else {
-			spdlog::error_s(
-				"Null node when expecting {} or {}",
-				type_name<ast::FileTree>(), type_name<ast::ListValue>()
-			);
+			spdlog::error_s("Null node when expecting {} or {}", type_name<ast::FileTree>(), type_name<ast::ListValue>());
 		}
 		return false;
 	};
@@ -121,13 +115,12 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 				return _abstract_string_node_callback<ast::FlatValue>(FWD(callback), allow_empty)(cast_node);
 			}
 			spdlog::error_s(
-				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
+				"Invalid node type {} when expecting {} or {}", ast::get_type_name(node->kind()),
+				type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		} else {
 			spdlog::error_s(
-				"Null node when expecting {} or {}",
-				type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
+				"Null node when expecting {} or {}", type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		}
 		return false;
@@ -152,7 +145,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		int64_t val;
 		std::from_chars_result result = string_to_int64(identifier, val, base);
-		if (result.ec == std::errc{}) {
+		if (result.ec == std::errc {}) {
 			return callback(val);
 		}
 		spdlog::error_s("Invalid int identifier text: {}", identifier);
@@ -164,7 +157,7 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		uint64_t val;
 		std::from_chars_result result = string_to_uint64(identifier, val, base);
-		if (result.ec == std::errc{}) {
+		if (result.ec == std::errc {}) {
 			return callback(val);
 		}
 		spdlog::error_s("Invalid uint identifier text: {}", identifier);
@@ -192,25 +185,23 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
 		colour_t col = colour_t::null();
 		int32_t components = 0;
-		bool ret = expect_list_of_length(3, expect_fixed_point(
-			[&col, &components](fixed_point_t val) -> bool {
-				if (val < 0 || val > 255) {
-					spdlog::error_s(
-						"Invalid colour component #{}: {}",
-						components++, val
-					);
-					return false;
-				} else {
-					if (val <= 1) {
-						val *= 255;
-					} else if (!val.is_integer()) {
-						spdlog::warn_s("Fractional part of colour component #{} will be truncated: {}", components, val);
-					}
-					col[components++] = val.truncate<colour_t::value_type>();
-					return true;
-				}
-			}
-		))(node);
+		bool ret = expect_list_of_length(3, expect_fixed_point([&col, &components](fixed_point_t val) -> bool {
+											 if (val < 0 || val > 255) {
+												 spdlog::error_s("Invalid colour component #{}: {}", components++, val);
+												 return false;
+											 } else {
+												 if (val <= 1) {
+													 val *= 255;
+												 } else if (!val.is_integer()) {
+													 spdlog::warn_s(
+														 "Fractional part of colour component #{} will be truncated: {}",
+														 components, val
+													 );
+												 }
+												 col[components++] = val.truncate<colour_t::value_type>();
+												 return true;
+											 }
+										 }))(node);
 		if (ret) {
 			ret &= callback(col);
 		}
@@ -219,16 +210,19 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 }
 
 node_callback_t NodeTools::expect_colour_hex(callback_t<colour_argb_t> callback) {
-	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) mutable -> bool {
-		return callback(colour_argb_t::from_argb(val));
-	}, 16);
+	return expect_uint<colour_argb_t::integer_type>(
+		[callback](colour_argb_t::integer_type val) mutable -> bool {
+			return callback(colour_argb_t::from_argb(val));
+		},
+		16
+	);
 }
 
 callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
 	return [callback](std::string_view identifier) mutable -> bool {
 		Date::from_chars_result result;
 		const Date date = Date::from_string_log(identifier, &result);
-		if (result.ec == std::errc{}) {
+		if (result.ec == std::errc {}) {
 			return callback(date);
 		}
 		spdlog::error_s("Invalid date identifier text: {}", identifier);
@@ -270,10 +264,10 @@ template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
 NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
 		vec2_t<T> vec;
-		bool ret = expect_dictionary_keys(
-			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
-			"y", ONE_EXACTLY, expect_func(assign_variable_callback(vec.y))
-		)(node);
+		bool ret =
+			expect_dictionary_keys("x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)), "y", ONE_EXACTLY, expect_func(assign_variable_callback(vec.y)))(
+				node
+			);
 		if (ret) {
 			ret &= callback(vec);
 		}
@@ -285,11 +279,7 @@ node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback
 	using enum text_format_t;
 
 	static const string_map_t<text_format_t> format_map = {
-		{ "left",  left },
-		{ "right", right },
-		{ "centre", centre },
-		{ "center", centre },
-		{ "justified", justified }
+		{ "left", left }, { "right", right }, { "centre", centre }, { "center", centre }, { "justified", justified }
 	};
 
 	return expect_identifier(expect_mapped_string(format_map, callback));
@@ -313,12 +303,10 @@ node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
 		fvec3_t vec;
 		int32_t components = 0;
-		bool ret = expect_list_of_length(3, expect_fixed_point(
-			[&vec, &components](fixed_point_t val) -> bool {
-				vec[components++] = val;
-				return true;
-			}
-		))(node);
+		bool ret = expect_list_of_length(3, expect_fixed_point([&vec, &components](fixed_point_t val) -> bool {
+											 vec[components++] = val;
+											 return true;
+										 }))(node);
 		if (ret) {
 			ret &= callback(vec);
 		}
@@ -330,12 +318,10 @@ node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
 		fvec4_t vec;
 		int32_t components = 0;
-		bool ret = expect_list_of_length(4, expect_fixed_point(
-			[&vec, &components](fixed_point_t val) -> bool {
-				vec[components++] = val;
-				return true;
-			}
-		))(node);
+		bool ret = expect_list_of_length(4, expect_fixed_point([&vec, &components](fixed_point_t val) -> bool {
+											 vec[components++] = val;
+											 return true;
+										 }))(node);
 		if (ret) {
 			ret &= callback(vec);
 		}
@@ -366,10 +352,7 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 		size_t size = length_callback(dist);
 
 		if (size > dist) {
-			spdlog::error_s(
-				"Trying to read more values than the list contains: {} > {}",
-				size, dist
-			);
+			spdlog::error_s("Trying to read more values than the list contains: {} > {}", size, dist);
 			size = dist;
 			ret = false;
 		}
@@ -450,55 +433,54 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 		}
 	};
 
-	return _abstract_statement_node_callback([key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
-		bool ret = true;
-		size_t keys_found = 0;
-		for (ast::Statement const* sub_node : list) {
-			auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
-			if (assign_node == nullptr) {
-				continue;
-			}
-			Key left;
-			if (!assign_left(left)(assign_node->left())) {
-				continue;
-			}
-			if (left == key) {
-				if (keys_found++ == 0) {
-					ret &= callback(assign_node->right());
-					if (allow_duplicates) {
-						break;
+	return _abstract_statement_node_callback(
+		[key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
+			bool ret = true;
+			size_t keys_found = 0;
+			for (ast::Statement const* sub_node : list) {
+				auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
+				if (assign_node == nullptr) {
+					continue;
+				}
+				Key left;
+				if (!assign_left(left)(assign_node->left())) {
+					continue;
+				}
+				if (left == key) {
+					if (keys_found++ == 0) {
+						ret &= callback(assign_node->right());
+						if (allow_duplicates) {
+							break;
+						}
 					}
 				}
 			}
-		}
-		std::string_view key_str = [&] {
-			if constexpr (std::same_as<Key, std::string_view>) {
-				return key;
-			} else {
-				return key.view();
-			}
-		}();
-		if (keys_found == 0) {
-			if (key_found != nullptr) {
-				*key_found = false;
-			} else {
-				spdlog::error_s("Failed to find expected key: \"{}\"", key_str);
-			}
-			ret = false;
-		} else {
-			if (key_found != nullptr) {
-				*key_found = true;
-			}
-			if (!allow_duplicates && keys_found > 1) {
-				spdlog::error_s(
-					"Found {} instances of key: \"{}\" (expected 1)",
-					keys_found, key_str
-				);
+			std::string_view key_str = [&] {
+				if constexpr (std::same_as<Key, std::string_view>) {
+					return key;
+				} else {
+					return key.view();
+				}
+			}();
+			if (keys_found == 0) {
+				if (key_found != nullptr) {
+					*key_found = false;
+				} else {
+					spdlog::error_s("Failed to find expected key: \"{}\"", key_str);
+				}
 				ret = false;
+			} else {
+				if (key_found != nullptr) {
+					*key_found = true;
+				}
+				if (!allow_duplicates && keys_found > 1) {
+					spdlog::error_s("Found {} instances of key: \"{}\" (expected 1)", keys_found, key_str);
+					ret = false;
+				}
 			}
+			return ret;
 		}
-		return ret;
-	});
+	);
 }
 
 node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
@@ -521,9 +503,7 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
 		name_list_t list;
-		bool ret = expect_list_reserve_length(
-			list, expect_identifier_or_string(vector_callback<std::string_view>(list))
-		)(node);
+		bool ret = expect_list_reserve_length(list, expect_identifier_or_string(vector_callback<std::string_view>(list)))(node);
 		ret &= callback(std::move(list));
 		return ret;
 	};

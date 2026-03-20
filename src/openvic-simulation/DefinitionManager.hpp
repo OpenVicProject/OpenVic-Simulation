@@ -19,7 +19,6 @@
 #include "openvic-simulation/population/PopManager.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
 #include "openvic-simulation/scripts/ScriptManager.hpp"
-#include "openvic-simulation/interface/UI.hpp"
 
 namespace OpenVic {
 	struct DefinitionManager {

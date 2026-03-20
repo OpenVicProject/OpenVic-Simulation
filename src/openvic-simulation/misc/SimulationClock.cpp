@@ -4,10 +4,9 @@
 
 using namespace OpenVic;
 
-SimulationClock::SimulationClock(
-	tick_function_t new_tick_function, update_function_t new_update_function
-) : tick_function { new_tick_function ? std::move(new_tick_function) : []() {} },
-	update_function { new_update_function ? std::move(new_update_function) : []() {} } {
+SimulationClock::SimulationClock(tick_function_t new_tick_function, update_function_t new_update_function)
+	: tick_function { new_tick_function ? std::move(new_tick_function) : []() {} },
+	  update_function { new_update_function ? std::move(new_update_function) : []() {} } {
 	reset();
 }
 

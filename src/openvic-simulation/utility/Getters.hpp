@@ -7,10 +7,10 @@
 #include <string_view>
 #include <type_traits>
 
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic::utility {
 #if !defined(_MSC_VER)
@@ -162,7 +162,7 @@ namespace OpenVic {
 				result.emplace(property.value());
 			}
 			return result;
-		}else {
+		} else {
 			/* Return const reference */
 			return property;
 		}
@@ -198,7 +198,8 @@ public: \
 
 // TODO: Special logic to decide argument type and control assignment.
 #define PROPERTY_RW(NAME, ...) PROPERTY_RW_ACCESS(NAME, private, __VA_ARGS__)
-#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME, ...) PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private, __VA_ARGS__)
+#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME, ...) \
+	PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private, __VA_ARGS__)
 #define PROPERTY_RW_ACCESS(NAME, ACCESS, ...) PROPERTY_RW_FULL(NAME, get_##NAME, set_##NAME, ACCESS, __VA_ARGS__)
 #define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS, ...) \
 	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS, __VA_ARGS__) \
@@ -216,6 +217,7 @@ public: \
 #define PROPERTY_PTR_ACCESS(NAME, ACCESS, ...) \
 	NAME __VA_OPT__(=) __VA_ARGS__; \
 	static_assert(std::is_pointer_v<decltype(NAME)> && !std::is_const_v<std::remove_pointer_t<decltype(NAME)>>); \
+\
 public: \
 	[[nodiscard]] constexpr decltype(NAME) get_##NAME() { \
 		return NAME; \
@@ -223,14 +225,15 @@ public: \
 	[[nodiscard]] constexpr std::add_pointer_t<std::add_const_t<std::remove_pointer_t<decltype(NAME)>>> get_##NAME() const { \
 		return NAME; \
 	} \
-ACCESS:
+	ACCESS:
 
 #define SPAN_PROPERTY(NAME) SPAN_PROPERTY_ACCESS(NAME, private)
 #define SPAN_PROPERTY_ACCESS(NAME, ACCESS) \
 	NAME; \
 \
 public: \
-	[[nodiscard]] constexpr OpenVic::forwardable_span<std::add_const_t<typename decltype(NAME)::value_type>> get_##NAME() const { \
+	[[nodiscard]] constexpr OpenVic::forwardable_span<std::add_const_t<typename decltype(NAME)::value_type>> get_##NAME() \
+		const { \
 		return NAME; \
 	} \
 	ACCESS:

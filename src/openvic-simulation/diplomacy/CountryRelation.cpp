@@ -353,7 +353,9 @@ influence_priority_value_type& CRM::assign_or_get_influence_priority_with(
 	return it.value();
 }
 
-bool CRM::set_influence_priority_with(CountryInstance* country, CountryInstance const* recipient, influence_priority_value_type value) {
+bool CRM::set_influence_priority_with(
+	CountryInstance* country, CountryInstance const* recipient, influence_priority_value_type value
+) {
 	decltype(influence_priority)::iterator it = influence_priority.find({ country, recipient });
 	if (it == influence_priority.end()) {
 		it = influence_priority.insert({ { country, recipient }, value }).first;

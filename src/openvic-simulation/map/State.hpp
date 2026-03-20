@@ -2,14 +2,15 @@
 
 #include <functional>
 
-#include <fmt/base.h>
 #include <plf_colony.h>
 
+#include <fmt/base.h>
+
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -31,7 +32,7 @@ namespace OpenVic {
 		friend struct StateManager;
 
 	private:
-		CountryInstance* previous_country_ptr = nullptr;	
+		CountryInstance* previous_country_ptr = nullptr;
 
 		ProvinceInstance* PROPERTY_PTR(capital);
 		memory::vector<std::reference_wrapper<ProvinceInstance>> SPAN_PROPERTY(provinces);
@@ -47,12 +48,9 @@ namespace OpenVic {
 		StateSet const& state_set;
 
 		State(
-			StateSet const& new_state_set,
-			ProvinceInstance* new_capital,
-			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
-			colony_status_t new_colony_status,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
+			StateSet const& new_state_set, ProvinceInstance* new_capital,
+			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces, colony_status_t new_colony_status,
+			forwardable_span<const Strata> strata_keys, forwardable_span<const PopType> pop_type_keys,
 			forwardable_span<const Ideology> ideology_keys
 		);
 		State(State&&) = delete;
@@ -98,10 +96,8 @@ namespace OpenVic {
 		memory::vector<StateSet> SPAN_PROPERTY(state_sets);
 
 		bool add_state_set(
-			MapInstance& map_instance, Region const& region,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
-			forwardable_span<const Ideology> ideology_keys
+			MapInstance& map_instance, Region const& region, forwardable_span<const Strata> strata_keys,
+			forwardable_span<const PopType> pop_type_keys, forwardable_span<const Ideology> ideology_keys
 		);
 
 	public:
@@ -109,11 +105,8 @@ namespace OpenVic {
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
 		bool generate_states(
-			MapDefinition const& map_definition,
-			MapInstance& map_instance,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
-			forwardable_span<const Ideology> ideology_keys
+			MapDefinition const& map_definition, MapInstance& map_instance, forwardable_span<const Strata> strata_keys,
+			forwardable_span<const PopType> pop_type_keys, forwardable_span<const Ideology> ideology_keys
 		);
 
 		void reset();

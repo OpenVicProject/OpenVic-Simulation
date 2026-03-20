@@ -8,6 +8,7 @@
 #include <range/v3/algorithm/find.hpp>
 #include <range/v3/algorithm/heap_algorithm.hpp>
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -16,7 +17,6 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
 
@@ -99,12 +99,8 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 	return found_route;
 }
 
-ArmyAStarPathing::ArmyAStarPathing(
-	MapDefinition const& new_map_definition,
-	MapInstance const& new_map_instance
-) : map_instance { new_map_instance },
-	AStarPathing(&new_map_definition.get_path_map_land())
-	{}
+ArmyAStarPathing::ArmyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance)
+	: map_instance { new_map_instance }, AStarPathing(&new_map_definition.get_path_map_land()) {}
 
 bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {
@@ -134,12 +130,8 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	return army_instance->get_country().can_army_units_enter(*province_owner);
 }
 
-NavyAStarPathing::NavyAStarPathing(
-	MapDefinition const& new_map_definition,
-	MapInstance const& new_map_instance
-) : map_instance {new_map_instance},
-	AStarPathing(&new_map_definition.get_path_map_land())
-	{}
+NavyAStarPathing::NavyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance)
+	: map_instance { new_map_instance }, AStarPathing(&new_map_definition.get_path_map_land()) {}
 
 bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {

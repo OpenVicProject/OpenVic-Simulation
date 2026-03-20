@@ -21,13 +21,8 @@ namespace OpenVic {
 		const bool is_water;
 
 		TerrainType(
-			index_t new_index,
-			std::string_view new_identifier,
-			colour_t new_colour,
-			ModifierValue&& new_modifier,
-			fixed_point_t new_movement_cost,
-			fixed_point_t new_defence_bonus,
-			fixed_point_t new_combat_width_percentage_change,
+			index_t new_index, std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier,
+			fixed_point_t new_movement_cost, fixed_point_t new_defence_bonus, fixed_point_t new_combat_width_percentage_change,
 			bool new_is_water
 		);
 		TerrainType(TerrainType&&) = default;
@@ -45,11 +40,8 @@ namespace OpenVic {
 		const bool has_texture;
 
 		TerrainTypeMapping(
-			std::string_view new_identifier,
-			TerrainType const& new_type,
-			memory::vector<index_t>&& new_terrain_indices,
-			index_t new_priority,
-			bool new_has_texture
+			std::string_view new_identifier, TerrainType const& new_type, memory::vector<index_t>&& new_terrain_indices,
+			index_t new_priority, bool new_has_texture
 		);
 		TerrainTypeMapping(TerrainTypeMapping&&) = default;
 	};
@@ -69,21 +61,13 @@ namespace OpenVic {
 
 	public:
 		bool add_terrain_type(
-			std::string_view identifier,
-			colour_t colour,
-			ModifierValue&& values,
-			fixed_point_t movement_cost,
-			fixed_point_t defence_bonus,
-			fixed_point_t combat_width_percentage_change,
-			bool is_water
+			std::string_view identifier, colour_t colour, ModifierValue&& values, fixed_point_t movement_cost,
+			fixed_point_t defence_bonus, fixed_point_t combat_width_percentage_change, bool is_water
 		);
 
 		bool add_terrain_type_mapping(
-			std::string_view identifier,
-			TerrainType const* type,
-			memory::vector<TerrainTypeMapping::index_t>&& terrain_indices,
-			TerrainTypeMapping::index_t priority,
-			bool has_texture
+			std::string_view identifier, TerrainType const* type, memory::vector<TerrainTypeMapping::index_t>&& terrain_indices,
+			TerrainTypeMapping::index_t priority, bool has_texture
 		);
 
 		TerrainTypeMapping const* get_terrain_type_mapping_for(TerrainTypeMapping::index_t idx) const;

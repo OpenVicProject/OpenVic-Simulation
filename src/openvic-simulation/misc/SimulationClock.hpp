@@ -3,9 +3,9 @@
 #include <chrono>
 #include <vector>
 
-#include "openvic-simulation/utility/Getters.hpp"
-
 #include <function2/function2.hpp>
+
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	/* Conditionally advances game depending on speed and pause state. */
@@ -26,9 +26,7 @@ namespace OpenVic {
 		 * (in descending duration order, hence increasing speed order). */
 		static constexpr speed_rates_t GAME_SPEEDS = []() constexpr -> speed_rates_t {
 			using namespace std::chrono_literals;
-			return {
-				3s, 2s, 1s, 100ms, 1ms
-			};
+			return { 3s, 2s, 1s, 100ms, 1ms };
 		}();
 		static constexpr speed_t MIN_SPEED = 0, MAX_SPEED = std::size(GAME_SPEEDS) - 1;
 
@@ -43,10 +41,7 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(paused, is, true);
 
 	public:
-
-		SimulationClock(
-			tick_function_t new_tick_function, update_function_t new_update_function
-		);
+		SimulationClock(tick_function_t new_tick_function, update_function_t new_update_function);
 
 		time_point_t get_now() const;
 
@@ -60,7 +55,7 @@ namespace OpenVic {
 		bool can_decrease_simulation_speed() const;
 
 		void conditionally_advance_game();
-		void force_advance_game(); //for debug only
+		void force_advance_game(); // for debug only
 		void reset();
 	};
 }

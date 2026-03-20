@@ -343,16 +343,15 @@ namespace OpenVic {
 
 		/* Technology Effects */
 		OV_IFLATMAP_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
-		constexpr ModifierEffectCache() :
-			building_type_effects { decltype(building_type_effects)::create_empty() },
-			good_effects { decltype(good_effects)::create_empty() },
-			regiment_type_effects { decltype(regiment_type_effects)::create_empty() },
-			ship_type_effects { decltype(ship_type_effects)::create_empty() },
-			unit_terrain_effects { decltype(unit_terrain_effects)::create_empty() },
-			rebel_org_gain_effects { decltype(rebel_org_gain_effects)::create_empty() },
-			strata_effects { decltype(strata_effects)::create_empty() },
-			research_bonus_effects { decltype(research_bonus_effects)::create_empty() }
-			{}
+		constexpr ModifierEffectCache()
+			: building_type_effects { decltype(building_type_effects)::create_empty() },
+			  good_effects { decltype(good_effects)::create_empty() },
+			  regiment_type_effects { decltype(regiment_type_effects)::create_empty() },
+			  ship_type_effects { decltype(ship_type_effects)::create_empty() },
+			  unit_terrain_effects { decltype(unit_terrain_effects)::create_empty() },
+			  rebel_org_gain_effects { decltype(rebel_org_gain_effects)::create_empty() },
+			  strata_effects { decltype(strata_effects)::create_empty() },
+			  research_bonus_effects { decltype(research_bonus_effects)::create_empty() } {}
 
 	public:
 		ModifierEffectCache(ModifierEffectCache&&) = default;

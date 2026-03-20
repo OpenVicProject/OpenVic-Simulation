@@ -13,13 +13,13 @@
 #include <fmt/std.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -148,7 +148,7 @@ bool Dataloader::should_ignore_path(fs::path const& path, path_span_t replace_pa
 
 template<typename _DirIterator, unique_file_key _UniqueKey>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
-	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
+	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key //
 ) const {
 	const fs::path dirpath { ensure_forward_slash_path(path) };
 	path_vector_t ret;
@@ -167,7 +167,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 			if (entry.is_regular_file()) {
 				fs::path file = entry;
 				if (extension.empty() || file.extension() == extension) {
-					const memory::string full_path = file.string<char>(memory::string::allocator_type{});
+					const memory::string full_path = file.string<char>(memory::string::allocator_type {});
 					std::string_view relative_path = full_path;
 					relative_path.remove_prefix(root_len);
 					relative_path = remove_leading_slashes(relative_path);
@@ -204,13 +204,13 @@ static std::string_view _extract_basic_identifier_prefix_from_path(std::string_v
 };
 
 Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_dir(
-	std::string_view path, fs::path const& extension
+	std::string_view path, fs::path const& extension //
 ) const {
 	return _lookup_files_in_dir<fs::directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
 Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_dir_recursive(
-	std::string_view path, fs::path const& extension
+	std::string_view path, fs::path const& extension //
 ) const {
 	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
@@ -315,15 +315,12 @@ bool Dataloader::load_mod_descriptors(ModManager& mod_manager) const {
 	static constexpr std::string_view mod_directory = "mod";
 	static constexpr std::string_view mod_descriptor_extension = ".mod";
 
-	apply_to_files(
-		lookup_files_in_dir(mod_directory, mod_descriptor_extension),
-		[&mod_manager](fs::path const& file) -> bool {
-			if (!mod_manager.load_mod_file(parse_defines(file).get_file_node())) {
-				spdlog::warn_s("Invalid mod descriptor at path: {} could not be loaded!", file);
-			}
-			return true;
+	apply_to_files(lookup_files_in_dir(mod_directory, mod_descriptor_extension), [&mod_manager](fs::path const& file) -> bool {
+		if (!mod_manager.load_mod_file(parse_defines(file).get_file_node())) {
+			spdlog::warn_s("Invalid mod descriptor at path: {} could not be loaded!", file);
 		}
-	);
+		return true;
+	});
 
 	mod_manager.lock_mods();
 
@@ -333,12 +330,9 @@ bool Dataloader::load_mod_descriptors(ModManager& mod_manager) const {
 bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	static constexpr std::string_view interface_directory = "interface/";
 
-	bool ret = apply_to_files(
-		lookup_files_in_dir(interface_directory, ".gfx"),
-		[&ui_manager](fs::path const& file) -> bool {
-			return ui_manager.load_gfx_file(parse_defines(file).get_file_node());
-		}
-	);
+	bool ret = apply_to_files(lookup_files_in_dir(interface_directory, ".gfx"), [&ui_manager](fs::path const& file) -> bool {
+		return ui_manager.load_gfx_file(parse_defines(file).get_file_node());
+	});
 	ui_manager.lock_gfx_registries();
 
 	/* Hard-coded GUI file names, might be replaced with a dynamic system but everything should still be loaded on startup. */
@@ -360,10 +354,10 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 
 	for (std::string_view const& gui_file : gui_files) {
 		if (!ui_manager.load_gui_file(
-			gui_file, parse_defines(lookup_file(
-				append_string_views(interface_directory, gui_file, gui_file_extension)
-			)).get_file_node()
-		)) {
+				gui_file,
+				parse_defines(lookup_file(append_string_views(interface_directory, gui_file, gui_file_extension)))
+					.get_file_node()
+			)) {
 			spdlog::critical_s("Failed to load interface gui file: {}", gui_file);
 			ret = false;
 		}
@@ -390,8 +384,7 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 	pop_manager.reserve_pop_types_and_delayed_nodes(pop_type_files.size());
 
 	ret &= apply_to_files(
-		pop_type_files,
-		[this, &pop_manager, &good_definition_manager, &ideology_manager](fs::path const& file) -> bool {
+		pop_type_files, [this, &pop_manager, &good_definition_manager, &ideology_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
 				file.stem().string(), good_definition_manager, ideology_manager, parse_defines_cached(file).get_file_node()
 			);
@@ -426,17 +419,13 @@ bool Dataloader::_load_units(DefinitionManager& definition_manager) const {
 
 	unit_type_manager.reserve_all_unit_types(unit_files.size());
 
-	bool ret = apply_to_files(
-		unit_files,
-		[&definition_manager, &unit_type_manager](fs::path const& file) -> bool {
-			return unit_type_manager.load_unit_type_file(
-				definition_manager.get_economy_manager().get_good_definition_manager(),
-				definition_manager.get_map_definition().get_terrain_type_manager(),
-				definition_manager.get_modifier_manager(),
-				parse_defines(file)
-			);
-		}
-	);
+	bool ret = apply_to_files(unit_files, [&definition_manager, &unit_type_manager](fs::path const& file) -> bool {
+		return unit_type_manager.load_unit_type_file(
+			definition_manager.get_economy_manager().get_good_definition_manager(),
+			definition_manager.get_map_definition().get_terrain_type_manager(), definition_manager.get_modifier_manager(),
+			parse_defines(file)
+		);
+	});
 
 	unit_type_manager.lock_all_unit_types();
 
@@ -507,16 +496,15 @@ bool Dataloader::_load_technologies(DefinitionManager& definition_manager) {
 
 	static constexpr std::string_view technologies_directory = "technologies";
 	if (!apply_to_files(
-		lookup_files_in_dir(technologies_directory, ".txt"),
-		[this, &definition_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
-			return technology_manager.load_technologies_file(
-				modifier_manager,
-				definition_manager.get_military_manager().get_unit_type_manager(),
-				definition_manager.get_economy_manager().get_building_type_manager(),
-				parse_defines_cached(file).get_file_node()
-			);
-		}
-	)) {
+			lookup_files_in_dir(technologies_directory, ".txt"),
+			[this, &definition_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
+				return technology_manager.load_technologies_file(
+					modifier_manager, definition_manager.get_military_manager().get_unit_type_manager(),
+					definition_manager.get_economy_manager().get_building_type_manager(),
+					parse_defines_cached(file).get_file_node()
+				);
+			}
+		)) {
 		spdlog::critical_s("Failed to load technologies!");
 		ret = false;
 	}
@@ -536,17 +524,15 @@ bool Dataloader::_load_inventions(DefinitionManager& definition_manager) {
 	TechnologyManager& technology_manager = research_manager.get_technology_manager();
 
 	bool ret = apply_to_files(
-	   lookup_files_in_dir(inventions_directory, ".txt"),
-	   [this, &definition_manager, &invention_manager, &technology_manager](fs::path const& file) -> bool {
-		  return invention_manager.load_inventions_file(
-			 technology_manager,
-			 definition_manager.get_modifier_manager(),
-			 definition_manager.get_military_manager().get_unit_type_manager(),
-			 definition_manager.get_economy_manager().get_building_type_manager(),
-			 definition_manager.get_crime_manager(),
-			 parse_defines_cached(file).get_file_node()
-		  );
-	   }
+		lookup_files_in_dir(inventions_directory, ".txt"),
+		[this, &definition_manager, &invention_manager, &technology_manager](fs::path const& file) -> bool {
+			return invention_manager.load_inventions_file(
+				technology_manager, definition_manager.get_modifier_manager(),
+				definition_manager.get_military_manager().get_unit_type_manager(),
+				definition_manager.get_economy_manager().get_building_type_manager(), definition_manager.get_crime_manager(),
+				parse_defines_cached(file).get_file_node()
+			);
+		}
 	);
 
 	invention_manager.lock_inventions();
@@ -565,8 +551,7 @@ bool Dataloader::_load_decisions(DefinitionManager& definition_manager) {
 	DecisionManager& decision_manager = definition_manager.get_decision_manager();
 
 	bool ret = apply_to_files(
-		lookup_files_in_dir(decisions_directory, ".txt"),
-		[this, &decision_manager](fs::path const& file) -> bool {
+		lookup_files_in_dir(decisions_directory, ".txt"), [this, &decision_manager](fs::path const& file) -> bool {
 			return decision_manager.load_decision_file(parse_defines_cached(file).get_file_node());
 		}
 	);
@@ -595,7 +580,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		ret &= apply_to_files(
 			country_history_files,
 			[this, &definition_manager, &country_history_manager, unused_history_file_warnings](fs::path const& file) -> bool {
-				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
+				const memory::string filename = file.stem().string<char>(memory::string::allocator_type {});
 				const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
 				CountryDefinition const* country =
@@ -637,10 +622,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 
 		ret &= apply_to_files(
 			province_history_files,
-			[this, &definition_manager, &province_history_manager, &map_definition, unused_history_file_warnings](
-				fs::path const& file
-			) -> bool {
-				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
+			[this, &definition_manager, &province_history_manager, &map_definition,
+			 unused_history_file_warnings](fs::path const& file) -> bool {
+				const memory::string filename = file.stem().string<char>(memory::string::allocator_type {});
 				const std::string_view province_id = extract_basic_identifier_prefix(filename);
 
 				ProvinceDefinition const* province = map_definition.get_province_definition_by_identifier(province_id);
@@ -668,14 +652,13 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 			Date::from_chars_result result;
 			const Date date = Date::from_string_log(dir, &result);
 
-			if (result.ec == std::errc{} && date <= last_bookmark_date) {
+			if (result.ec == std::errc {} && date <= last_bookmark_date) {
 				bool non_integer_size = false;
 
 				ret &= apply_to_files(
 					lookup_files_in_dir(append_string_views(pop_history_directory, dir), ".txt"),
-					[this, &definition_manager, &province_history_manager, date, &non_integer_size](
-						fs::path const& file
-					) -> bool {
+					[this, &definition_manager, &province_history_manager, date,
+					 &non_integer_size](fs::path const& file) -> bool {
 						return province_history_manager.load_pop_history_file(
 							definition_manager, date, parse_defines(file).get_file_node(), &non_integer_size
 						);
@@ -693,8 +676,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 
 	{
 		/* Diplomacy History */
-		DiplomaticHistoryManager& diplomatic_history_manager =
-			definition_manager.get_history_manager().get_diplomacy_manager();
+		DiplomaticHistoryManager& diplomatic_history_manager = definition_manager.get_history_manager().get_diplomacy_manager();
 
 		static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
 
@@ -714,8 +696,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		diplomatic_history_manager.reserve_more_wars(war_history_files.size());
 
 		ret &= apply_to_files(
-			war_history_files,
-			[this, &definition_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
+			war_history_files, [this, &definition_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
 				return diplomatic_history_manager.load_war_history_file(
 					definition_manager, parse_defines(file).get_file_node()
 				);
@@ -732,8 +713,7 @@ bool Dataloader::_load_events(DefinitionManager& definition_manager) {
 	static constexpr std::string_view events_directory = "events";
 
 	const bool ret = apply_to_files(
-		lookup_files_in_dir(events_directory, ".txt"),
-		[this, &definition_manager](fs::path const& file) -> bool {
+		lookup_files_in_dir(events_directory, ".txt"), [this, &definition_manager](fs::path const& file) -> bool {
 			return definition_manager.get_event_manager().load_event_file(
 				definition_manager.get_politics_manager().get_issue_manager(), parse_defines_cached(file).get_file_node()
 			);
@@ -813,8 +793,8 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	}
 
 	if (!map_definition.load_province_definitions(
-		parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines()
-	)) {
+			parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines()
+		)) {
 		spdlog::critical_s("Failed to load province definitions file!");
 		ret = false;
 	}
@@ -835,16 +815,17 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		colours.push_back(0xFFFFFF_rgb); /* This ensures there is always at least one region colour. */
 
 		if (!map_definition.load_region_file(
-				parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node(), colours)) {
+				parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node(), colours
+			)) {
 			spdlog::critical_s("Failed to load region file!");
 			ret = false;
 		}
 	}
 
 	if (!map_definition.get_terrain_type_manager().load_terrain_types(
-		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, terrain_definition))).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(),
+			parse_defines(lookup_file(append_string_views(map_directory, terrain_definition))).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load terrain types!");
 		ret = false;
 	}
@@ -854,17 +835,17 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	}
 
 	if (!map_definition.load_map_images(
-		lookup_file(append_string_views(map_directory, provinces)),
-		lookup_file(append_string_views(map_directory, terrain)),
-		lookup_file(append_string_views(map_directory, rivers)), false
-	)) {
+			lookup_file(append_string_views(map_directory, provinces)),
+			lookup_file(append_string_views(map_directory, terrain)), lookup_file(append_string_views(map_directory, rivers)),
+			false
+		)) {
 		spdlog::critical_s("Failed to load map images!");
 		ret = false;
 	}
 
 	if (map_definition.generate_and_load_province_adjacencies(
-		parse_csv(lookup_file(append_string_views(map_directory, adjacencies))).get_lines()
-	)) {
+			parse_csv(lookup_file(append_string_views(map_directory, adjacencies))).get_lines()
+		)) {
 		SPDLOG_INFO("Successfully generated and loaded province adjacencies!");
 	} else {
 		spdlog::critical_s("Failed to generate and load province adjacencies!");
@@ -873,25 +854,25 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 
 	/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
 	if (!map_definition.load_province_positions(
-		definition_manager.get_economy_manager().get_building_type_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
-	)) {
+			definition_manager.get_economy_manager().get_building_type_manager(),
+			parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load province positions file!");
 		ret = false;
 	}
 
 	if (!map_definition.load_climate_file(
-		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, climate_file))).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(),
+			parse_defines(lookup_file(append_string_views(map_directory, climate_file))).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load climates!");
 		ret = false;
 	}
 
 	if (!map_definition.load_continent_file(
-		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, continent))).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(),
+			parse_defines(lookup_file(append_string_views(map_directory, continent))).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load continents!");
 		ret = false;
 	}
@@ -929,13 +910,9 @@ bool Dataloader::_load_sound_effect_defines(DefinitionManager& definition_manage
 	sound_effect_manager.lock_sound_effects();
 
 	return ret;
-
 }
 
-bool Dataloader::load_defines(
-	GameRulesManager const& game_rules_manager,
-	DefinitionManager& definition_manager
-) {
+bool Dataloader::load_defines(GameRulesManager const& game_rules_manager, DefinitionManager& definition_manager) {
 	if (roots.empty()) {
 		spdlog::critical_s("Cannot load defines - Dataloader has no roots!");
 		return false;
@@ -978,8 +955,8 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	if (!definition_manager.get_define_manager().load_defines_file(
-		parse_lua_defines(lookup_file(defines_file)).get_file_node()
-	)) {
+			parse_lua_defines(lookup_file(defines_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load defines!");
 		ret = false;
 	}
@@ -988,26 +965,26 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(
-		parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load graphical culture types!");
 		ret = false;
 	}
 	if (!definition_manager.get_pop_manager().get_religion_manager().load_religion_file(
-		parse_defines(lookup_file(religion_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(religion_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load religions!");
 		ret = false;
 	}
 	if (!definition_manager.get_politics_manager().get_ideology_manager().load_ideology_file(
-		parse_defines_cached(lookup_file(ideology_file)).get_file_node()
-	)) {
+			parse_defines_cached(lookup_file(ideology_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load ideologies!");
 		ret = false;
 	}
 	if (!definition_manager.get_politics_manager().load_government_types_file(
-		parse_defines(lookup_file(governments_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(governments_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load government types!");
 		ret = false;
 	}
@@ -1016,23 +993,20 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	if (!definition_manager.get_economy_manager().load_production_types_file(
-		game_rules_manager,
-		definition_manager.get_pop_manager(),
-		parse_defines_cached(lookup_file(production_types_file))
-	)) {
+			game_rules_manager, definition_manager.get_pop_manager(), parse_defines_cached(lookup_file(production_types_file))
+		)) {
 		spdlog::critical_s("Failed to load production types!");
 		ret = false;
 	}
-	if (!definition_manager.get_economy_manager().load_buildings_file(definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(buildings_file)).get_file_node()
-	)) {
+	if (!definition_manager.get_economy_manager().load_buildings_file(
+			definition_manager.get_modifier_manager(), parse_defines(lookup_file(buildings_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load buildings!");
 		ret = false;
 	}
 	if (!definition_manager.get_mapmode_manager().setup_mapmodes(
-		definition_manager.get_map_definition(),
-		definition_manager.get_economy_manager().get_building_type_manager()
-	)) {
+			definition_manager.get_map_definition(), definition_manager.get_economy_manager().get_building_type_manager()
+		)) {
 		spdlog::critical_s("Failed to set up mapmodes!");
 		ret = false;
 	}
@@ -1055,56 +1029,55 @@ bool Dataloader::load_defines(
 	}
 	definition_manager.get_modifier_manager().lock_base_country_modifier_effects();
 	if (!definition_manager.get_politics_manager().load_issues_file(
-		definition_manager.get_modifier_manager(),
-		parse_defines_cached(lookup_file(issues_file)).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(issues_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load issues and reforms!");
 		ret = false;
 	}
 	if (!definition_manager.get_pop_manager().load_delayed_parse_pop_type_data(
-		definition_manager.get_military_manager().get_unit_type_manager(),
-		definition_manager.get_politics_manager().get_issue_manager()
-	)) {
+			definition_manager.get_military_manager().get_unit_type_manager(),
+			definition_manager.get_politics_manager().get_issue_manager()
+		)) {
 		spdlog::critical_s("Failed to load delayed parse pop type data (promotion and issue weights)!");
 		ret = false;
 	}
 	if (!definition_manager.get_politics_manager().load_national_foci_file(
-		definition_manager.get_pop_manager(), definition_manager.get_economy_manager().get_good_definition_manager(),
-		definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(national_foci_file)).get_file_node()
-	)) {
+			definition_manager.get_pop_manager(), definition_manager.get_economy_manager().get_good_definition_manager(),
+			definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(national_foci_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load national foci!");
 		ret = false;
 	}
 	if (!definition_manager.get_politics_manager().get_national_value_manager().load_national_values_file(
-		definition_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load national values!");
 		ret = false;
 	}
 	if (!definition_manager.get_crime_manager().load_crime_modifiers(
-		definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(crime_modifiers_file)).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(crime_modifiers_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load crime modifiers!");
 		ret = false;
 	}
 
 	if (!definition_manager.get_modifier_manager().load_event_modifiers(
-		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(event_modifiers_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load event modifiers!");
 		ret = false;
 	}
 	if (!definition_manager.get_modifier_manager().load_static_modifiers(
-		parse_defines(lookup_file(static_modifiers_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(static_modifiers_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load static modifiers!");
 		ret = false;
 	}
 	definition_manager.get_modifier_manager().lock_event_modifiers();
 
 	if (!definition_manager.get_modifier_manager().load_triggered_modifiers(
-		parse_defines_cached(lookup_file(triggered_modifiers_file)).get_file_node()
-	)) {
+			parse_defines_cached(lookup_file(triggered_modifiers_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load triggered modifiers!");
 		ret = false;
 	}
@@ -1113,46 +1086,45 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	if (!definition_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(
-		definition_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node()
-	)) {
+			definition_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load leader traits!");
 		ret = false;
 	}
 	if (!definition_manager.get_military_manager().get_leader_trait_manager().setup_leader_prestige_modifier(
-		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		definition_manager.get_define_manager().get_military_defines()
-	)) {
+			definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+			definition_manager.get_define_manager().get_military_defines()
+		)) {
 		spdlog::critical_s("Failed to set up leader prestige modifier!");
 		ret = false;
 	}
 	if (!definition_manager.get_military_manager().get_wargoal_type_manager().load_wargoal_file(
-		parse_defines_cached(lookup_file(cb_types_file))
-	)) {
+			parse_defines_cached(lookup_file(cb_types_file))
+		)) {
 		spdlog::critical_s("Failed to load wargoals!");
 		ret = false;
 	}
 	if (!definition_manager.get_history_manager().get_bookmark_manager().load_bookmark_file(
-		definition_manager.get_map_definition().get_height(),
-		parse_defines(lookup_file(bookmark_file)).get_file_node()
-	)) {
+			definition_manager.get_map_definition().get_height(), parse_defines(lookup_file(bookmark_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load bookmarks!");
 		ret = false;
 	}
 	if (!definition_manager.get_country_definition_manager().load_countries(
-		definition_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
-	)) {
+			definition_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load countries!");
 		ret = false;
 	}
 	if (!definition_manager.get_country_definition_manager().load_country_colours(
-		parse_defines(lookup_file(country_colours_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(country_colours_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load country colours!");
 		ret = false;
 	}
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_culture_file(
-		definition_manager.get_country_definition_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
-	)) {
+			definition_manager.get_country_definition_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load cultures!");
 		ret = false;
 	}
@@ -1177,8 +1149,8 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	if (!definition_manager.get_event_manager().load_on_action_file(
-		parse_defines(lookup_file(on_actions_file)).get_file_node()
-	)) {
+			parse_defines(lookup_file(on_actions_file)).get_file_node()
+		)) {
 		spdlog::critical_s("Failed to load on actions!");
 		ret = false;
 	}
@@ -1245,10 +1217,7 @@ static bool _load_localisation_file(Dataloader::localisation_callback_t callback
 }
 
 bool Dataloader::load_localisation_files(localisation_callback_t callback, std::string_view localisation_dir) const {
-	return apply_to_files(
-		lookup_files_in_dir(localisation_dir, ".csv"),
-		[callback](fs::path path) -> bool {
-			return _load_localisation_file(callback, parse_csv(path).get_lines());
-		}
-	);
+	return apply_to_files(lookup_files_in_dir(localisation_dir, ".csv"), [callback](fs::path path) -> bool {
+		return _load_localisation_file(callback, parse_csv(path).get_lines());
+	});
 }

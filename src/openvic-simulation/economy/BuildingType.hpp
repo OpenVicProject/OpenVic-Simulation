@@ -3,14 +3,14 @@
 #include <functional>
 #include <optional>
 
-#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -41,8 +41,8 @@ namespace OpenVic {
 			fixed_point_map_t<GoodDefinition const*> goods_cost;
 			Timespan build_time;
 			bool on_map = false, default_enabled = false, pop_build_factory = false, strategic_factory = false,
-				advanced_factory = false, in_province = false, one_per_state = false, spawn_railway_track = false,
-				sail = false, steam = false, capital = false, port = false;
+				 advanced_factory = false, in_province = false, one_per_state = false, spawn_railway_track = false,
+				 sail = false, steam = false, capital = false, port = false;
 			ProductionType const* production_type = nullptr;
 			naval_capacity_t naval_capacity = 0;
 			memory::vector<fixed_point_t> colonial_points;
@@ -57,12 +57,12 @@ namespace OpenVic {
 		const bool is_port;
 		const bool capital; // only in naval base
 
-		const memory::string on_completion; //unknown
+		const memory::string on_completion; // unknown
 
 		memory::vector<fixed_point_t> SPAN_PROPERTY(colonial_points);
 
 	public:
-		//general attributes
+		// general attributes
 		const std::optional<province_building_index_t> province_building_index;
 
 		const bool is_pop_build_factory;
@@ -80,12 +80,12 @@ namespace OpenVic {
 		const building_level_t max_level;
 		const fixed_point_t completion_size;
 
-		//costs
+		// costs
 		const fixed_point_t cost;
 		const Timespan build_time;
 		const fixed_point_map_t<GoodDefinition const*> goods_cost;
 
-		//effects
+		// effects
 		ProductionType const* const production_type;
 		const building_level_t fort_level; // fort bonus step-per-level
 		const naval_capacity_t naval_capacity;
@@ -93,18 +93,14 @@ namespace OpenVic {
 		const fixed_point_t infrastructure;
 
 		BuildingType(
-			index_t new_index,
-			std::optional<province_building_index_t> new_province_building_index,
-			std::string_view new_identifier,
-			building_type_args_t& building_type_args
+			index_t new_index, std::optional<province_building_index_t> new_province_building_index,
+			std::string_view new_identifier, building_type_args_t& building_type_args
 		);
 		BuildingType(BuildingType&&) = default;
 
 		[[nodiscard]] bool can_be_built_in(
-			ModifierEffectCache const& modifier_effect_cache,
-			const building_level_t desired_level,
-			CountryInstance const& actor,
-			ProvinceInstance const& location
+			ModifierEffectCache const& modifier_effect_cache, const building_level_t desired_level,
+			CountryInstance const& actor, ProvinceInstance const& location
 		) const;
 		[[nodiscard]] bool can_be_built_in(ProvinceDefinition const& location) const;
 	};

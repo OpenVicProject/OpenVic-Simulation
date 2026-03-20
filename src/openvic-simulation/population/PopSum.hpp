@@ -6,10 +6,10 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-
-#include <type_safe/strong_typedef.hpp>
 
 namespace OpenVic {
 	namespace detail {

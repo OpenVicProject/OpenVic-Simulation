@@ -44,8 +44,7 @@ namespace OpenVic {
 		bool add_decision(
 			std::string_view identifier, bool alert, bool news, std::string_view news_title, std::string_view news_desc_long,
 			std::string_view news_desc_medium, std::string_view news_desc_short, std::string_view picture,
-			ConditionScript&& potential, ConditionScript&& allow, ConditionalWeightFactorMul&& ai_will_do,
-			EffectScript&& effect
+			ConditionScript&& potential, ConditionScript&& allow, ConditionalWeightFactorMul&& ai_will_do, EffectScript&& effect
 		);
 
 		bool load_decision_file(ast::NodeCPtr root);

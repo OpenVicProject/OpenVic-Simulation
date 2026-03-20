@@ -24,13 +24,9 @@ namespace OpenVic {
 		const Timespan term_duration;
 
 		GovernmentType(
-			index_t new_index,
-			std::string_view new_identifier,
-			memory::vector<std::reference_wrapper<const Ideology>>&& new_ideologies,
-			bool new_holds_elections,
-			bool new_can_appoint_ruling_party,
-			Timespan new_term_duration,
-			std::string_view new_flag_type_identifier
+			index_t new_index, std::string_view new_identifier,
+			memory::vector<std::reference_wrapper<const Ideology>>&& new_ideologies, bool new_holds_elections,
+			bool new_can_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
 		);
 		GovernmentType(GovernmentType&&) = default;
 
@@ -44,8 +40,8 @@ namespace OpenVic {
 
 	public:
 		bool add_government_type(
-			std::string_view identifier, memory::vector<std::reference_wrapper<const Ideology>>&& ideologies, bool elections, bool appoint_ruling_party,
-			Timespan term_duration, std::string_view flag_type
+			std::string_view identifier, memory::vector<std::reference_wrapper<const Ideology>>&& ideologies, bool elections,
+			bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type
 		);
 
 		bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);

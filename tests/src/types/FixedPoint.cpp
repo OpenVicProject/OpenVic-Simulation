@@ -288,24 +288,21 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CONSTEXPR_CHECK(((int32_t)decimal4) == 3);
 
 	CONSTEXPR_CHECK(
-		fixed_point_t::mul_div(
-			fixed_point_t::parse_raw(2),
-			fixed_point_t::parse_raw(3),
-			fixed_point_t::parse_raw(6)
-		) == fixed_point_t::parse_raw(1)
+		fixed_point_t::mul_div(fixed_point_t::parse_raw(2), fixed_point_t::parse_raw(3), fixed_point_t::parse_raw(6)) ==
+		fixed_point_t::parse_raw(1)
 	);
 
 	CONSTEXPR_CHECK(
 		fixed_point_t::multiply_truncate<int64_t>(
-			4294967295LL, //2^32 - 1
-			fixed_point_t::usable_max //2^31 / 2^16
-		) == 140737488322560LL //2^47 - 2^15
+			4294967295LL, // 2^32 - 1
+			fixed_point_t::usable_max // 2^31 / 2^16
+		) == 140737488322560LL // 2^47 - 2^15
 	);
 	CONSTEXPR_CHECK(
 		fixed_point_t::multiply_truncate<int64_t>(
-			281474976710655LL, //2^48 - 1
+			281474976710655LL, // 2^48 - 1
 			fixed_point_t::_0_50
-		) == 140737488355327LL //2^47 - 1
+		) == 140737488355327LL // 2^47 - 1
 	);
 }
 

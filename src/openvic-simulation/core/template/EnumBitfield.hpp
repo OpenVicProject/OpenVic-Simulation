@@ -7,7 +7,7 @@ namespace OpenVic {
 		struct is_scoped_enum final : std::bool_constant < requires {
 		requires std::is_enum_v<E>;
 		requires !std::is_convertible_v<E, std::underlying_type_t<E>>;
-	} > {};
+	}> {};
 
 	template<class T>
 	inline constexpr bool is_scoped_enum_v = is_scoped_enum<T>::value;
@@ -16,8 +16,7 @@ namespace OpenVic {
 	concept IsScopedEnum = is_scoped_enum_v<T>;
 
 	template<IsScopedEnum T>
-	struct enable_bitfield final : std::false_type {
-	};
+	struct enable_bitfield final : std::false_type {};
 
 	template<IsScopedEnum T>
 	inline constexpr bool enable_bitfield_v = enable_bitfield<T>::value;

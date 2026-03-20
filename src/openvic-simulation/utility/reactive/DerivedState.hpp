@@ -1,7 +1,5 @@
 #pragma once
 
-#include "DependencyTracker.hpp"
-
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/types/Signal.hpp"
@@ -9,8 +7,10 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/reactive/DependencyTracker.hpp"
 
+#include "DependencyTracker.hpp"
+
 namespace OpenVic {
-	template <typename T>
+	template<typename T>
 	struct DerivedState : public DependencyTracker {
 	private:
 		T cached_value;
@@ -44,17 +44,15 @@ namespace OpenVic {
 	public:
 		template<typename Func>
 		explicit DerivedState(Func&& new_calculate)
-		requires std::is_default_constructible_v<T>
-			&& std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
-			: calculate { std::forward<Func>(new_calculate) },
-			cached_value() {}
+		requires std::is_default_constructible_v<T> && std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
+			: calculate { std::forward<Func>(new_calculate) }, cached_value() {}
 
 		template<typename Func, typename InitialValue>
-		requires std::is_convertible_v<InitialValue, T>
-			&& std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
+		requires std::is_convertible_v<InitialValue, T> &&
+					 std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
 		explicit DerivedState(Func&& new_calculate, InitialValue&& empty_initial_value)
 			: calculate { std::forward<Func>(new_calculate) },
-			cached_value { std::forward<InitialValue>(empty_initial_value) } {}
+			  cached_value { std::forward<InitialValue>(empty_initial_value) } {}
 
 		DerivedState(DerivedState&&) = delete;
 		DerivedState(DerivedState const&) = delete;
@@ -77,8 +75,8 @@ namespace OpenVic {
 			recalculate_if_dirty();
 			return cached_value;
 		}
-		
-		//special case where connection may be discarded as the observer handles it
+
+		// special case where connection may be discarded as the observer handles it
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
 		requires OpenVic::_detail::signal::Callable<Pmf, Ptr>
 		connection connect_using_observer(Pmf&& pmf, Ptr&& ptr, OpenVic::_detail::signal::group_id gid = 0) {

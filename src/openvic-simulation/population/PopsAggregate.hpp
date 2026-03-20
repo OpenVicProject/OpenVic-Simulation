@@ -1,10 +1,10 @@
 #pragma once
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/population/PopSum.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
@@ -68,6 +68,7 @@ namespace OpenVic {
 		void normalise_pops_aggregate();
 		void update_parties_for_votes(CountryDefinition const* country_definition);
 		void update_parties_for_votes(CountryInstance const* country_instance);
+
 	public:
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0

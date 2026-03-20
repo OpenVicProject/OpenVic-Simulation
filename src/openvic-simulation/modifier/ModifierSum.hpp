@@ -4,8 +4,8 @@
 #include <variant>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -19,11 +19,15 @@ namespace OpenVic {
 
 		static std::string_view source_to_string(modifier_source_t const& source);
 		static constexpr bool source_is_null(modifier_source_t const& source) {
-			return std::visit([](auto const* source) -> bool { return source == nullptr; }, source);
+			return std::visit(
+				[](auto const* source) -> bool {
+					return source == nullptr;
+				},
+				source
+			);
 		}
-		static constexpr modifier_source_t const& source_or_null_fallback(
-			modifier_source_t const& source, modifier_source_t const& fallback
-		) {
+		static constexpr modifier_source_t const&
+		source_or_null_fallback(modifier_source_t const& source, modifier_source_t const& fallback) {
 			return std::visit(
 				[&source, &fallback](auto const* source_ptr) -> modifier_source_t const& {
 					return source_ptr == nullptr ? fallback : source;
@@ -38,20 +42,15 @@ namespace OpenVic {
 		ModifierEffect::target_t excluded_targets;
 
 		constexpr modifier_entry_t(
-			Modifier const& new_modifier,
-			fixed_point_t new_multiplier,
-			modifier_source_t const& new_source,
+			Modifier const& new_modifier, fixed_point_t new_multiplier, modifier_source_t const& new_source,
 			ModifierEffect::target_t new_excluded_targets
-		) : modifier { new_modifier },
-			multiplier { new_multiplier },
-			source { new_source },
-			excluded_targets { new_excluded_targets } {}
+		)
+			: modifier { new_modifier }, multiplier { new_multiplier }, source { new_source },
+			  excluded_targets { new_excluded_targets } {}
 
 		constexpr bool operator==(modifier_entry_t const& other) const {
-			return &modifier == &other.modifier
-				&& multiplier == other.multiplier
-				&& source == other.source
-				&& excluded_targets == other.excluded_targets;
+			return &modifier == &other.modifier && multiplier == other.multiplier && source == other.source &&
+				excluded_targets == other.excluded_targets;
 		}
 
 		constexpr CountryInstance const* get_source_country() const {
@@ -65,9 +64,7 @@ namespace OpenVic {
 
 		memory::string to_string() const;
 
-		constexpr fixed_point_t get_modifier_effect_value(
-			ModifierEffect const& effect, bool* effect_found = nullptr
-		) const {
+		constexpr fixed_point_t get_modifier_effect_value(ModifierEffect const& effect, bool* effect_found = nullptr) const {
 			if (ModifierEffect::excludes_targets(effect.targets, excluded_targets)) {
 				return modifier.get_effect(effect, effect_found) * multiplier;
 			}
@@ -112,9 +109,7 @@ namespace OpenVic {
 		bool has_modifier_effect(ModifierEffect const& effect) const;
 
 		void add_modifier(
-			Modifier const& modifier,
-			fixed_point_t multiplier = 1,
-			modifier_entry_t::modifier_source_t const& source = {},
+			Modifier const& modifier, fixed_point_t multiplier = 1, modifier_entry_t::modifier_source_t const& source = {},
 			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::NO_TARGETS
 		);
 		// Reserves space for the number of modifier entries in the given sum and adds each of them using add_modifier
@@ -124,9 +119,8 @@ namespace OpenVic {
 		void add_modifier_sum(ModifierSum const& modifier_sum);
 
 		// TODO - help calculate value_sum[effect]? Early return if lookup in value_sum fails?
-		constexpr void for_each_contributing_modifier(
-			ModifierEffect const& effect, ContributingModifierCallback auto callback
-		) const {
+		constexpr void
+		for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
 			for (modifier_entry_t const& modifier_entry : modifiers) {
 				const fixed_point_t contribution = modifier_entry.get_modifier_effect_value(effect);
 

@@ -1,18 +1,21 @@
 #pragma once
 
-#include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/utility/reactive/DependencyTracker.hpp"
 
 namespace OpenVic {
-	template <typename T>
+	template<typename T>
 	struct ReadOnlyMutableState {
 	private:
 		signal<T> changed;
+
 	protected:
 		T value;
 
-		constexpr ReadOnlyMutableState() requires std::is_default_constructible_v<T> : value() {}
+		constexpr ReadOnlyMutableState()
+		requires std::is_default_constructible_v<T>
+			: value() {}
 		constexpr explicit ReadOnlyMutableState(T const& new_value) : value { new_value } {}
 		constexpr explicit ReadOnlyMutableState(T&& new_value) : value { std::move(new_value) } {}
 		ReadOnlyMutableState(ReadOnlyMutableState&&) = delete;
@@ -29,6 +32,7 @@ namespace OpenVic {
 			value = new_value;
 			changed(value);
 		}
+
 	public:
 		template<typename ConnectTemplateType>
 		requires std::invocable<ConnectTemplateType, signal<T>&>
@@ -43,8 +47,8 @@ namespace OpenVic {
 		[[nodiscard]] constexpr T const& get_untracked() const {
 			return value;
 		}
-		
-		//special case where connection may be discarded as the observer handles it
+
+		// special case where connection may be discarded as the observer handles it
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
 		requires OpenVic::_detail::signal::Callable<Pmf, Ptr, T>
 		connection connect_using_observer(Pmf&& pmf, Ptr&& ptr, OpenVic::_detail::signal::group_id gid = 0) {
@@ -71,9 +75,11 @@ namespace OpenVic {
 			return changed.disconnect(std::forward<Ts>(args)...);
 		}
 	};
-	template <typename T>
+	template<typename T>
 	struct MutableState : public ReadOnlyMutableState<T> {
-		constexpr MutableState() requires std::is_default_constructible_v<T> : ReadOnlyMutableState<T>() {}
+		constexpr MutableState()
+		requires std::is_default_constructible_v<T>
+			: ReadOnlyMutableState<T>() {}
 		constexpr explicit MutableState(T const& new_value) : ReadOnlyMutableState<T>(new_value) {}
 		constexpr explicit MutableState(T&& new_value) : ReadOnlyMutableState<T>(std::move(new_value)) {}
 		MutableState(MutableState&&) = delete;
@@ -91,21 +97,29 @@ namespace OpenVic {
 		}
 
 		using ReadOnlyMutableState<T>::value;
-		MutableState<T>& operator++() requires pre_incrementable <T> {
+		MutableState<T>& operator++()
+		requires pre_incrementable<T>
+		{
 			set(++value);
 			return *this;
 		}
 
-		void operator++(int) requires post_incrementable <T> {
+		void operator++(int)
+		requires post_incrementable<T>
+		{
 			set(value++);
 		}
 
-		MutableState<T>& operator--() requires pre_decrementable<T> {
+		MutableState<T>& operator--()
+		requires pre_decrementable<T>
+		{
 			set(--value);
 			return *this;
 		}
 
-		void operator--(int) requires post_decrementable<T> {
+		void operator--(int)
+		requires post_decrementable<T>
+		{
 			set(value--);
 		}
 
@@ -146,10 +160,10 @@ public: \
 	} \
 	template<typename ConnectTemplateType> \
 	requires std::invocable<ConnectTemplateType, signal<T>&> \
-	[[nodiscard]] T const& get_##NAME(ConnectTemplateType&& connect) { \
+	[[nodiscard]] T const& get_##NAME(ConnectTemplateType && connect) { \
 		return NAME.get(std::forward<ConnectTemplateType>(connect)); \
 	} \
-	[[nodiscard]] T get_##NAME(DependencyTracker& tracker) { \
+	[[nodiscard]] T get_##NAME(DependencyTracker & tracker) { \
 		return NAME.get(tracker); \
 	} \
 	[[nodiscard]] T get_##NAME##_untracked() const { \

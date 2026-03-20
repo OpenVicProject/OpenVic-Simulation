@@ -13,20 +13,14 @@ namespace OpenVic {
 		fixed_point_t PROPERTY_ACCESS(max, protected);
 		OV_STATE_PROPERTY_ACCESS(fixed_point_t, value, protected);
 		constexpr ReadOnlyClampedValue() {};
-		ReadOnlyClampedValue(
-			const fixed_point_t new_min,
-			const fixed_point_t new_max
-		) : min { new_min }, max { new_max } {};
+		ReadOnlyClampedValue(const fixed_point_t new_min, const fixed_point_t new_max) : min { new_min }, max { new_max } {};
 	};
 
 	struct ClampedValue : public ReadOnlyClampedValue {
 	public:
 		constexpr ClampedValue() {};
-		ClampedValue(
-			const fixed_point_t new_min,
-			const fixed_point_t new_max,
-			const fixed_point_t new_value
-		) : ReadOnlyClampedValue(new_min, new_max) {
+		ClampedValue(const fixed_point_t new_min, const fixed_point_t new_max, const fixed_point_t new_value)
+			: ReadOnlyClampedValue(new_min, new_max) {
 			set_value(new_value);
 		};
 

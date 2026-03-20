@@ -13,10 +13,7 @@ bool FlagStrings::set_flag(std::string_view flag, bool warn) {
 	}
 
 	if (!flags.emplace(flag).second && warn) {
-		spdlog::warn_s(
-			"Attempted to set {} flag \"{}\": already set!",
-			name, flag
-		);
+		spdlog::warn_s("Attempted to set {} flag \"{}\": already set!", name, flag);
 	}
 
 	return true;
@@ -29,10 +26,7 @@ bool FlagStrings::clear_flag(std::string_view flag, bool warn) {
 	}
 
 	if (flags.erase(flag) == 0 && warn) {
-		spdlog::warn_s(
-			"Attempted to clear {} flag \"{}\": not set!",
-			name, flag
-		);
+		spdlog::warn_s("Attempted to clear {} flag \"{}\": not set!", name, flag);
 	}
 
 	return true;

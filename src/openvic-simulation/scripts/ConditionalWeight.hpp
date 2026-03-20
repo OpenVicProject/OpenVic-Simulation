@@ -9,9 +9,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	enum class conditional_weight_type_t : uint8_t {
-		BASE, FACTOR_ADD, FACTOR_MUL, TIME
-	};
+	enum class conditional_weight_type_t : uint8_t { BASE, FACTOR_ADD, FACTOR_MUL, TIME };
 
 	constexpr bool conditional_weight_type_is_additive(conditional_weight_type_t type) {
 		return type == conditional_weight_type_t::BASE || type == conditional_weight_type_t::FACTOR_ADD;
@@ -37,8 +35,7 @@ namespace OpenVic {
 
 	public:
 		ConditionalWeight(
-			scope_type_t new_initial_scope = scope_type_t::NO_SCOPE,
-			scope_type_t new_this_scope = scope_type_t::NO_SCOPE,
+			scope_type_t new_initial_scope = scope_type_t::NO_SCOPE, scope_type_t new_this_scope = scope_type_t::NO_SCOPE,
 			scope_type_t new_from_scope = scope_type_t::NO_SCOPE
 		);
 		ConditionalWeight(ConditionalWeight&&) = default;

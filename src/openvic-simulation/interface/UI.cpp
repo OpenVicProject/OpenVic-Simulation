@@ -21,10 +21,7 @@ bool UIManager::add_font(
 		return false;
 	}
 	if (colour.alpha == colour_argb_t::colour_traits::null) {
-		spdlog::error_s(
-			"Invalid colour for font {} - completely transparent! ({})",
-			identifier, colour
-		);
+		spdlog::error_s("Invalid colour for font {} - completely transparent! ({})", identifier, colour);
 		return false;
 	}
 	if (fontname.empty()) {
@@ -32,9 +29,7 @@ bool UIManager::add_font(
 		return false;
 	}
 	const bool ret = fonts.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		identifier, colour, fontname, charset, height, std::move(colour_codes)
+		identifier, duplicate_warning_callback, identifier, colour, fontname, charset, height, std::move(colour_codes)
 	);
 
 	if (universal_colour_codes.empty() && ret) {
@@ -78,19 +73,13 @@ bool UIManager::_load_font(ast::NodeCPtr node) {
 }
 
 NodeCallback auto UIManager::_load_fonts(std::string_view font_key) {
-	return expect_dictionary_reserve_length(
-		fonts,
-		[this, font_key](std::string_view key, ast::NodeCPtr node) -> bool {
-			if (key != font_key) {
-				spdlog::error_s(
-					"Invalid key: \"{}\" (expected {})",
-					key, font_key
-				);
-				return false;
-			}
-			return _load_font(node);
+	return expect_dictionary_reserve_length(fonts, [this, font_key](std::string_view key, ast::NodeCPtr node) -> bool {
+		if (key != font_key) {
+			spdlog::error_s("Invalid key: \"{}\" (expected {})", key, font_key);
+			return false;
 		}
-	);
+		return _load_font(node);
+	});
 }
 
 void UIManager::lock_gfx_registries() {

@@ -13,6 +13,7 @@ namespace OpenVic {
 	struct HistoryEntry {
 	protected:
 		constexpr HistoryEntry(const Date new_date) : date { new_date } {}
+
 	public:
 		const Date date;
 	};
@@ -32,10 +33,8 @@ namespace OpenVic {
 	private:
 		ordered_map<Date, memory::unique_ptr<entry_type>> PROPERTY(entries);
 
-		bool _try_load_history_entry(
-			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
-		) {
-			entry_type *const entry = _get_or_make_entry(definition_manager, date);
+		bool _try_load_history_entry(DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root) {
+			entry_type* const entry = _get_or_make_entry(definition_manager, date);
 			if (entry != nullptr) {
 				return _load_history_entry(definition_manager, args..., *entry, root);
 			} else {
@@ -59,18 +58,13 @@ namespace OpenVic {
 		}
 
 		bool _load_history_sub_entry_callback(
-			DefinitionManager const& definition_manager,
-			Args... args,
-			Date date,
-			ast::NodeCPtr root,
-			NodeTools::template_key_map_t<StringMapCaseSensitive> const& key_map,
-			std::string_view key,
-			ast::NodeCPtr value
+			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root,
+			NodeTools::template_key_map_t<StringMapCaseSensitive> const& key_map, std::string_view key, ast::NodeCPtr value
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
 			Date::from_chars_result result;
 			const Date sub_date { Date::from_string(key, &result) };
-			if (result.ec == std::errc{}) {
+			if (result.ec == std::errc {}) {
 				if (sub_date < date) {
 					spdlog::warn_s("History entry {} defined before parent entry date {}", sub_date, date);
 				}
@@ -84,8 +78,10 @@ namespace OpenVic {
 					return false;
 				}
 			}
-			
-			return NodeTools::map_key_value_invalid_callback<NodeTools::template_key_map_t<StringMapCaseSensitive>>(key_map, key, value);
+
+			return NodeTools::map_key_value_invalid_callback<NodeTools::template_key_map_t<StringMapCaseSensitive>>(
+				key_map, key, value
+			);
 		}
 
 		/* Returns history entry at specific date, if date doesn't have an entry creates one, if that fails returns nullptr. */

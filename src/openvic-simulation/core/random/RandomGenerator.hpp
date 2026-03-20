@@ -78,6 +78,10 @@ namespace OpenVic {
 		T _generator;
 	};
 
-	struct RandomU32 : RandomGenerator<XoshiroCpp::Xoshiro128StarStar> { using RandomGenerator::RandomGenerator; };
-	struct RandomU64 : RandomGenerator<XoshiroCpp::Xoshiro256StarStar> { using RandomGenerator::RandomGenerator; };
+	struct RandomU32 : RandomGenerator<XoshiroCpp::Xoshiro128StarStar> {
+		using RandomGenerator::RandomGenerator;
+	};
+	struct RandomU64 : RandomGenerator<XoshiroCpp::Xoshiro256StarStar> {
+		using RandomGenerator::RandomGenerator;
+	};
 }

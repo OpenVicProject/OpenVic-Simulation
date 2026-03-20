@@ -3,12 +3,12 @@
 #include <functional>
 
 #include "openvic-simulation/economy/production/Employee.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct MarketInstance;
@@ -50,13 +50,9 @@ namespace OpenVic {
 
 	public:
 		ResourceGatheringOperation(
-			ResourceGatheringOperationDeps const& rgo_deps,
-			ProductionType const* new_production_type_nullable,
-			fixed_point_t new_size_multiplier,
-			fixed_point_t new_revenue_yesterday,
-			fixed_point_t new_output_quantity_yesterday,
-			fixed_point_t new_unsold_quantity_yesterday,
-			memory::vector<Employee>&& new_employees
+			ResourceGatheringOperationDeps const& rgo_deps, ProductionType const* new_production_type_nullable,
+			fixed_point_t new_size_multiplier, fixed_point_t new_revenue_yesterday, fixed_point_t new_output_quantity_yesterday,
+			fixed_point_t new_unsold_quantity_yesterday, memory::vector<Employee>&& new_employees
 		);
 
 		ResourceGatheringOperation(ResourceGatheringOperationDeps const& rgo_deps);

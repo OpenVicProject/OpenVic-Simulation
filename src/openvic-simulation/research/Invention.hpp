@@ -23,7 +23,7 @@ namespace OpenVic {
 	struct Invention : HasIndex<Invention, invention_index_t>, Modifier {
 		friend struct InventionManager;
 
-		//TODO implement limit and chance
+		// TODO implement limit and chance
 		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
 		using crime_set_t = ordered_set<Crime const*>;
@@ -31,7 +31,7 @@ namespace OpenVic {
 	private:
 		ConditionScript PROPERTY(limit);
 		ConditionalWeightBase PROPERTY(chance);
-		
+
 		memory::vector<memory::string> raw_associated_tech_identifiers;
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -45,18 +45,10 @@ namespace OpenVic {
 		const bool unlocks_gas_defence;
 
 		Invention(
-			index_t new_index,
-			std::string_view new_identifier,
-			ModifierValue&& new_values,
-			bool new_is_news,
-			unit_set_t&& new_activated_units,
-			building_set_t&& new_activated_buildings,
-			crime_set_t&& new_enabled_crimes,
-			bool new_unlocks_gas_attack,
-			bool new_unlocks_gas_defence,
-			ConditionScript&& new_limit,
-			ConditionalWeightBase&& new_chance,
-			memory::vector<memory::string>&& new_raw_associated_tech_identifiers
+			index_t new_index, std::string_view new_identifier, ModifierValue&& new_values, bool new_is_news,
+			unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes,
+			bool new_unlocks_gas_attack, bool new_unlocks_gas_defence, ConditionScript&& new_limit,
+			ConditionalWeightBase&& new_chance, memory::vector<memory::string>&& new_raw_associated_tech_identifiers
 		);
 		Invention(Invention&&) = default;
 	};
@@ -73,9 +65,9 @@ namespace OpenVic {
 		);
 
 		bool load_inventions_file(
-			TechnologyManager const& tech_manager,
-			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
+			TechnologyManager const& tech_manager, ModifierManager const& modifier_manager,
+			UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
+			CrimeManager const& crime_manager, ast::NodeCPtr root
 		); // inventions/*.txt
 
 		bool generate_invention_links(TechnologyManager& tech_manager);

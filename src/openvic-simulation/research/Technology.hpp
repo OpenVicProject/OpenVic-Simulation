@@ -71,18 +71,10 @@ namespace OpenVic {
 		const building_set_t activated_buildings;
 
 		Technology(
-			std::string_view new_identifier,
-			index_t new_index,
-			TechnologyArea const& new_area,
-			Date::year_t new_year,
-			fixed_point_t new_cost,
-			area_index_t new_index_in_area,
-			bool new_unciv_military,
-			std::optional<unit_variant_t>&& new_unit_variant,
-			unit_set_t&& new_activated_units,
-			building_set_t&& new_activated_buildings,
-			ModifierValue&& new_values,
-			ConditionalWeightFactorMul&& new_ai_chance
+			std::string_view new_identifier, index_t new_index, TechnologyArea const& new_area, Date::year_t new_year,
+			fixed_point_t new_cost, area_index_t new_index_in_area, bool new_unciv_military,
+			std::optional<unit_variant_t>&& new_unit_variant, unit_set_t&& new_activated_units,
+			building_set_t&& new_activated_buildings, ModifierValue&& new_values, ConditionalWeightFactorMul&& new_ai_chance
 		);
 		Technology(Technology&&) = default;
 

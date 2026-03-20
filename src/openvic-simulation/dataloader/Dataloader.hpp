@@ -6,12 +6,12 @@
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
-
 #include <function2/function2.hpp>
+
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/dataloader/ModManager.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -51,7 +51,7 @@ namespace OpenVic {
 		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */
 		template<typename _DirIterator, unique_file_key _UniqueKey>
 		path_vector_t _lookup_files_in_dir(
-			std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
+			std::string_view path, fs::path const& extension, _UniqueKey const& unique_key //
 		) const;
 
 	public:
@@ -114,16 +114,18 @@ namespace OpenVic {
 		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_basic_identifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_basic_identifier_prefixed_files_in_dir_recursive(
-			std::string_view path, fs::path const& extension
+			std::string_view path, fs::path const& extension //
 		) const;
 
 		static constexpr size_t apply_callback_stack_size = sizeof(std::intptr_t) * 4;
-		using apply_files_callback_t = fu2::function_base<true, true, fu2::capacity_fixed<apply_callback_stack_size, 8>, false, false, bool(fs::path const&)>;
+		using apply_files_callback_t = fu2::function_base<
+			true, true, fu2::capacity_fixed<apply_callback_stack_size, 8>, false, false, bool(fs::path const&)>;
 		bool apply_to_files(path_span_t files, apply_files_callback_t callback) const;
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
-		/* Load all mod descriptors present in the mod/ directory. Importantly, loads dependencies and replace_paths for us to check. */
+		/* Load all mod descriptors present in the mod/ directory. Importantly, loads dependencies and replace_paths for us to
+		 * check. */
 		bool load_mod_descriptors(ModManager& mod_manager) const;
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
@@ -137,18 +139,30 @@ namespace OpenVic {
 
 	public:
 		enum locale_t : size_t {
-			English, French, German, Polish, Spanish, Italian, Swedish,
-			Czech, Hungarian, Dutch, Portuguese, Russian, Finnish, _LocaleCount
+			English,
+			French,
+			German,
+			Polish,
+			Spanish,
+			Italian,
+			Swedish,
+			Czech,
+			Hungarian,
+			Dutch,
+			Portuguese,
+			Russian,
+			Finnish,
+			_LocaleCount
 		};
 		static constexpr char const* locale_names[_LocaleCount] = {
 			"en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES", "it_IT", "sv_SE",
-			"cs_CZ", "hu_HU", "nl_NL", "pt_PT", "ru_RU", "fi_FI"
+			"cs_CZ", "hu_HU", "nl_NL", "pt_PT", "ru_RU", "fi_FI" //
 		};
 
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
 		bool load_localisation_files(
-			localisation_callback_t callback, std::string_view localisation_dir = "localisation"
+			localisation_callback_t callback, std::string_view localisation_dir = "localisation" //
 		) const;
 	};
 }

@@ -188,8 +188,10 @@ std::optional<bool> ConsoleInstance::validate_boolean(std::string_view value_str
 	if (value_string == TRUE_VALUE || value_string == YES_VALUE || //
 		value_string == ONE_VALUE || value_string == ON_VALUE) {
 		return true;
-	} else if (value_string == FALSE_VALUE || value_string == NO_VALUE || //
-			   value_string == ZERO_VALUE || value_string == OFF_VALUE) {
+	} else if (
+		value_string == FALSE_VALUE || value_string == NO_VALUE || //
+		value_string == ZERO_VALUE || value_string == OFF_VALUE
+	) {
 		return false;
 	}
 

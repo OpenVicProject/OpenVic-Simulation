@@ -10,12 +10,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ProvinceDefinition::ProvinceDefinition(
-	std::string_view new_identifier,
-	colour_t new_colour,
-	index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, true },
-	HasIndex { new_index } {}
+ProvinceDefinition::ProvinceDefinition(std::string_view new_identifier, colour_t new_colour, index_t new_index)
+	: HasIdentifierAndColour { new_identifier, new_colour, true }, HasIndex { new_index } {}
 
 memory::string ProvinceDefinition::to_string() const {
 	return memory::fmt::format("(#{}, {}, 0x{})", get_province_number(), get_identifier(), get_colour());
@@ -126,20 +122,21 @@ fixed_point_t ProvinceDefinition::get_building_rotation(BuildingType const* buil
 
 std::string_view ProvinceDefinition::adjacency_t::get_type_name(type_t type) {
 	switch (type) {
-	case type_t::LAND: return "Land";
-	case type_t::WATER: return "Water";
-	case type_t::COASTAL: return "Coastal";
+	case type_t::LAND:		 return "Land";
+	case type_t::WATER:		 return "Water";
+	case type_t::COASTAL:	 return "Coastal";
 	case type_t::IMPASSABLE: return "Impassable";
-	case type_t::STRAIT: return "Strait";
-	case type_t::CANAL: return "Canal";
-	default: return "Invalid Adjacency Type";
+	case type_t::STRAIT:	 return "Strait";
+	case type_t::CANAL:		 return "Canal";
+	default:				 return "Invalid Adjacency Type";
 	}
 }
 
 ProvinceDefinition::adjacency_t const* ProvinceDefinition::get_adjacency_to(ProvinceDefinition const& province) const {
-	const memory::vector<adjacency_t>::const_iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
-		[&province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
-	);
+	const memory::vector<adjacency_t>::const_iterator it =
+		std::find_if(adjacencies.begin(), adjacencies.end(), [&province](adjacency_t const& adj) -> bool {
+			return adj.get_to() == province;
+		});
 	if (it != adjacencies.end()) {
 		return &*it;
 	} else {
@@ -148,14 +145,13 @@ ProvinceDefinition::adjacency_t const* ProvinceDefinition::get_adjacency_to(Prov
 }
 
 bool ProvinceDefinition::is_adjacent_to(ProvinceDefinition const& province) const {
-	return std::any_of(adjacencies.begin(), adjacencies.end(),
-		[&province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
-	);
+	return std::any_of(adjacencies.begin(), adjacencies.end(), [&province](adjacency_t const& adj) -> bool {
+		return adj.get_to() == province;
+	});
 }
 
-memory::vector<std::reference_wrapper<const ProvinceDefinition::adjacency_t>> ProvinceDefinition::get_adjacencies_going_through(
-	ProvinceDefinition const& province
-) const {
+memory::vector<std::reference_wrapper<const ProvinceDefinition::adjacency_t>>
+ProvinceDefinition::get_adjacencies_going_through(ProvinceDefinition const& province) const {
 	memory::vector<std::reference_wrapper<const adjacency_t>> ret;
 	for (adjacency_t const& adj : adjacencies) {
 		if (adj.get_through() != nullptr && *adj.get_through() == province) {
@@ -166,11 +162,9 @@ memory::vector<std::reference_wrapper<const ProvinceDefinition::adjacency_t>> Pr
 }
 
 bool ProvinceDefinition::has_adjacency_going_through(ProvinceDefinition const& province) const {
-	return std::any_of(adjacencies.begin(), adjacencies.end(),
-		[&province](adjacency_t const& adj) -> bool {
-			return adj.get_through() != nullptr && *adj.get_through() == province;
-		}
-	);
+	return std::any_of(adjacencies.begin(), adjacencies.end(), [&province](adjacency_t const& adj) -> bool {
+		return adj.get_through() != nullptr && *adj.get_through() == province;
+	});
 }
 
 fvec2_t ProvinceDefinition::get_unit_position() const {

@@ -3,8 +3,8 @@
 #include <atomic>
 #include <utility>
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace std {
 	template<>

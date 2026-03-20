@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BuildingType;

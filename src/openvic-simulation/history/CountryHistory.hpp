@@ -3,11 +3,11 @@
 #include <optional>
 
 #include "openvic-simulation/history/HistoryMap.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -29,6 +29,7 @@ namespace OpenVic {
 
 	struct CountryHistoryEntry : HistoryEntry {
 		friend struct CountryHistoryMap;
+
 	private:
 		std::optional<Culture const*> PROPERTY(primary_culture);
 		ordered_map<Culture const*, bool> PROPERTY(accepted_cultures);
@@ -64,7 +65,8 @@ namespace OpenVic {
 		CountryDefinition const& country;
 
 		CountryHistoryEntry(
-			CountryDefinition const& new_country, const Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+			CountryDefinition const& new_country, const Date new_date,
+			decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
 		);
 	};

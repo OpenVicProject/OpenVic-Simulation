@@ -14,36 +14,25 @@
 using namespace OpenVic;
 
 State::State(
-	StateSet const& new_state_set,
-	ProvinceInstance* new_capital,
-	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
-	colony_status_t new_colony_status,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
+	StateSet const& new_state_set, ProvinceInstance* new_capital,
+	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces, colony_status_t new_colony_status,
+	forwardable_span<const Strata> strata_keys, forwardable_span<const PopType> pop_type_keys,
 	forwardable_span<const Ideology> ideology_keys
-) : PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
-	state_set { new_state_set },
-	capital { new_capital },
-	provinces { std::move(new_provinces) },
-	colony_status { new_colony_status },
-	pops_cache_by_type { pop_type_keys }
-{
+)
+	: PopsAggregate { strata_keys, pop_type_keys, ideology_keys }, state_set { new_state_set }, capital { new_capital },
+	  provinces { std::move(new_provinces) }, colony_status { new_colony_status }, pops_cache_by_type { pop_type_keys } {
 	_update_country();
 }
 
 memory::string State::get_identifier() const {
 	return memory::fmt::format(
-		"{}_{}_{}",
-		state_set.region,
-		ovfmt::validate(get_owner(), "NoCountry"),
+		"{}_{}_{}", state_set.region, ovfmt::validate(get_owner(), "NoCountry"),
 		ProvinceInstance::get_colony_status_string(colony_status)
 	);
 }
 
 CountryInstance* State::get_owner() const {
-	return capital == nullptr
-		? static_cast<CountryInstance*>(nullptr)
-		: capital->get_owner();
+	return capital == nullptr ? static_cast<CountryInstance*>(nullptr) : capital->get_owner();
 }
 
 memory::vector<std::reference_wrapper<Pop>> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
@@ -64,11 +53,7 @@ void State::update_gamestate() {
 
 		for (auto const& [pop_type, province_pops_of_type] : province.get_pops_cache_by_type()) {
 			memory::vector<std::reference_wrapper<Pop>>& state_pops_of_type = pops_cache_by_type.at(pop_type);
-			state_pops_of_type.insert(
-				state_pops_of_type.end(),
-				province_pops_of_type.begin(),
-				province_pops_of_type.end()
-			);
+			state_pops_of_type.insert(state_pops_of_type.end(), province_pops_of_type.begin(), province_pops_of_type.end());
 		}
 	}
 
@@ -97,10 +82,10 @@ void State::update_gamestate() {
 
 void State::_update_country() {
 	CountryInstance* const owner_ptr = get_owner();
-	if (owner_ptr == previous_country_ptr) { 
+	if (owner_ptr == previous_country_ptr) {
 		return;
 	}
-	
+
 	update_parties_for_votes(owner_ptr);
 	if (previous_country_ptr != nullptr) {
 		previous_country_ptr->remove_state(*this);
@@ -131,13 +116,15 @@ void StateSet::update_gamestate() {
 }
 
 bool StateManager::add_state_set(
-	MapInstance& map_instance, Region const& region,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
-	forwardable_span<const Ideology> ideology_keys
+	MapInstance& map_instance, Region const& region, forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys, forwardable_span<const Ideology> ideology_keys
 ) {
-	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
-	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
+	OV_ERR_FAIL_COND_V_MSG(
+		region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region)
+	);
+	OV_ERR_FAIL_COND_V_MSG(
+		region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region)
+	);
 
 	memory::vector<memory::vector<std::reference_wrapper<ProvinceInstance>>> temp_provinces;
 
@@ -173,9 +160,7 @@ bool StateManager::add_state_set(
 
 		State& state = *state_set.states.emplace(
 			/* TODO: capital province logic */
-			state_set, &capital,
-			std::move(provinces), capital.get_colony_status(),
-			strata_keys, pop_type_keys, ideology_keys
+			state_set, &capital, std::move(provinces), capital.get_colony_status(), strata_keys, pop_type_keys, ideology_keys
 		);
 
 		for (ProvinceInstance& province : state.get_provinces()) {
@@ -187,11 +172,8 @@ bool StateManager::add_state_set(
 }
 
 bool StateManager::generate_states(
-	MapDefinition const& map_definition,
-	MapInstance& map_instance,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
-	forwardable_span<const Ideology> ideology_keys
+	MapDefinition const& map_definition, MapInstance& map_instance, forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys, forwardable_span<const Ideology> ideology_keys
 ) {
 	state_sets.clear();
 	state_sets.reserve(map_definition.get_region_count());

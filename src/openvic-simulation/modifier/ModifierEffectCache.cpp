@@ -10,13 +10,15 @@
 
 using namespace OpenVic;
 
-ModifierEffectCache::building_type_effects_t const& ModifierEffectCache::get_building_type_effects(BuildingType const& key) const {
+ModifierEffectCache::building_type_effects_t const&
+ModifierEffectCache::get_building_type_effects(BuildingType const& key) const {
 	return building_type_effects.at(key);
 }
 ModifierEffectCache::good_effects_t const& ModifierEffectCache::get_good_effects(GoodDefinition const& key) const {
 	return good_effects.at(key);
 }
-ModifierEffectCache::regiment_type_effects_t const& ModifierEffectCache::get_regiment_type_effects(RegimentType const& key) const {
+ModifierEffectCache::regiment_type_effects_t const&
+ModifierEffectCache::get_regiment_type_effects(RegimentType const& key) const {
 	return regiment_type_effects.at(key);
 }
 ModifierEffectCache::ship_type_effects_t const& ModifierEffectCache::get_ship_type_effects(ShipType const& key) const {

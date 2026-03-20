@@ -8,33 +8,20 @@ using namespace OpenVic::NodeTools;
 IdeologyGroup::IdeologyGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 Ideology::Ideology(
-	std::string_view new_identifier,
-	index_t new_index,
-	colour_t new_colour,
-	IdeologyGroup const& new_group,
-	bool new_is_allowed_for_uncivilised,
-	bool new_can_reduce_consciousness,
-	bool new_can_reduce_militancy,
-	std::optional<Date> new_spawn_date,
-	ConditionalWeightBase&& new_add_political_reform,
-	ConditionalWeightBase&& new_remove_political_reform,
-	ConditionalWeightBase&& new_add_social_reform,
-	ConditionalWeightBase&& new_remove_social_reform,
-	ConditionalWeightBase&& new_add_military_reform,
+	std::string_view new_identifier, index_t new_index, colour_t new_colour, IdeologyGroup const& new_group,
+	bool new_is_allowed_for_uncivilised, bool new_can_reduce_consciousness, bool new_can_reduce_militancy,
+	std::optional<Date> new_spawn_date, ConditionalWeightBase&& new_add_political_reform,
+	ConditionalWeightBase&& new_remove_political_reform, ConditionalWeightBase&& new_add_social_reform,
+	ConditionalWeightBase&& new_remove_social_reform, ConditionalWeightBase&& new_add_military_reform,
 	ConditionalWeightBase&& new_add_economic_reform
-) : HasIdentifierAndColour { new_identifier, new_colour, false },
-	HasIndex { new_index },
-	group { new_group },
-	is_allowed_for_uncivilised { new_is_allowed_for_uncivilised },
-	can_reduce_consciousness { new_can_reduce_consciousness },
-	can_reduce_militancy { new_can_reduce_militancy },
-	spawn_date { new_spawn_date },
-	add_political_reform { std::move(new_add_political_reform) },
-	remove_political_reform { std::move(new_remove_political_reform) },
-	add_social_reform { std::move(new_add_social_reform) },
-	remove_social_reform { std::move(new_remove_social_reform) },
-	add_military_reform { std::move(new_add_military_reform) },
-	add_economic_reform { std::move(new_add_economic_reform) } {}
+)
+	: HasIdentifierAndColour { new_identifier, new_colour, false }, HasIndex { new_index }, group { new_group },
+	  is_allowed_for_uncivilised { new_is_allowed_for_uncivilised }, can_reduce_consciousness { new_can_reduce_consciousness },
+	  can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date },
+	  add_political_reform { std::move(new_add_political_reform) },
+	  remove_political_reform { std::move(new_remove_political_reform) },
+	  add_social_reform { std::move(new_add_social_reform) }, remove_social_reform { std::move(new_remove_social_reform) },
+	  add_military_reform { std::move(new_add_military_reform) }, add_economic_reform { std::move(new_add_economic_reform) } {}
 
 bool Ideology::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -58,18 +45,10 @@ bool IdeologyManager::add_ideology_group(std::string_view identifier) {
 }
 
 bool IdeologyManager::add_ideology(
-	std::string_view identifier,
-	colour_t colour,
-	IdeologyGroup const* group,
-	bool uncivilised,
-	bool can_reduce_consciousness,
-	bool can_reduce_militancy,
-	std::optional<Date> spawn_date,
-	ConditionalWeightBase&& add_political_reform,
-	ConditionalWeightBase&& remove_political_reform,
-	ConditionalWeightBase&& add_social_reform,
-	ConditionalWeightBase&& remove_social_reform,
-	ConditionalWeightBase&& add_military_reform,
+	std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_consciousness,
+	bool can_reduce_militancy, std::optional<Date> spawn_date, ConditionalWeightBase&& add_political_reform,
+	ConditionalWeightBase&& remove_political_reform, ConditionalWeightBase&& add_social_reform,
+	ConditionalWeightBase&& remove_social_reform, ConditionalWeightBase&& add_military_reform,
 	ConditionalWeightBase&& add_economic_reform
 ) {
 	spdlog::scope scope { fmt::format("ideology {}", identifier) };
@@ -85,21 +64,9 @@ bool IdeologyManager::add_ideology(
 
 	const Ideology::index_t new_index = Ideology::index_t { ideologies.size() };
 	return ideologies.emplace_item(
-		identifier,
-		identifier,
-		new_index,
-		colour,
-		*group,
-		uncivilised,
-		can_reduce_consciousness,
-		can_reduce_militancy,
-		spawn_date,
-		std::move(add_political_reform),
-		std::move(remove_political_reform),
-		std::move(add_social_reform),
-		std::move(remove_social_reform),
-		std::move(add_military_reform),
-		std::move(add_economic_reform)
+		identifier, identifier, new_index, colour, *group, uncivilised, can_reduce_consciousness, can_reduce_militancy,
+		spawn_date, std::move(add_political_reform), std::move(remove_political_reform), std::move(add_social_reform),
+		std::move(remove_social_reform), std::move(add_military_reform), std::move(add_economic_reform)
 	);
 }
 
@@ -109,14 +76,12 @@ bool IdeologyManager::add_ideology(
 bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 	spdlog::scope scope { "common/ideologies.txt" };
 	size_t expected_ideologies = 0;
-	bool ret = expect_dictionary_reserve_length(
-		ideology_groups,
-		[this, &expected_ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
+	bool ret =
+		expect_dictionary_reserve_length(ideology_groups, [this, &expected_ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
 			bool ret = expect_length(add_variable_callback(expected_ideologies))(value);
 			ret &= add_ideology_group(key);
 			return ret;
-		}
-	)(root);
+		})(root);
 	lock_ideology_groups();
 
 	reserve_more_ideologies(expected_ideologies);
@@ -152,19 +117,9 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 			)(value);
 
 			ret &= add_ideology(
-				key,
-				colour,
-				ideology_group,
-				uncivilised,
-				can_reduce_consciousness,
-				can_reduce_militancy,
-				spawn_date,
-				std::move(add_political_reform),
-				std::move(remove_political_reform),
-				std::move(add_social_reform),
-				std::move(remove_social_reform),
-				std::move(add_military_reform),
-				std::move(add_economic_reform)
+				key, colour, ideology_group, uncivilised, can_reduce_consciousness, can_reduce_militancy, spawn_date,
+				std::move(add_political_reform), std::move(remove_political_reform), std::move(add_social_reform),
+				std::move(remove_social_reform), std::move(add_military_reform), std::move(add_economic_reform)
 			);
 
 			return ret;

@@ -41,19 +41,11 @@ namespace OpenVic {
 		IdeologyGroup const& group;
 
 		Ideology(
-			std::string_view new_identifier,
-			index_t new_index,
-			colour_t new_colour,
-			IdeologyGroup const& new_group,
-			bool new_is_allowed_for_uncivilised,
-			bool new_can_reduce_consciousness,
-			bool new_can_reduce_militancy,
-			std::optional<Date> new_spawn_date,
-			ConditionalWeightBase&& new_add_political_reform,
-			ConditionalWeightBase&& new_remove_political_reform,
-			ConditionalWeightBase&& new_add_social_reform,
-			ConditionalWeightBase&& new_remove_social_reform,
-			ConditionalWeightBase&& new_add_military_reform,
+			std::string_view new_identifier, index_t new_index, colour_t new_colour, IdeologyGroup const& new_group,
+			bool new_is_allowed_for_uncivilised, bool new_can_reduce_consciousness, bool new_can_reduce_militancy,
+			std::optional<Date> new_spawn_date, ConditionalWeightBase&& new_add_political_reform,
+			ConditionalWeightBase&& new_remove_political_reform, ConditionalWeightBase&& new_add_social_reform,
+			ConditionalWeightBase&& new_remove_social_reform, ConditionalWeightBase&& new_add_military_reform,
 			ConditionalWeightBase&& new_add_economic_reform
 		);
 		Ideology(Ideology&&) = default;
@@ -68,19 +60,11 @@ namespace OpenVic {
 		bool add_ideology_group(std::string_view identifier);
 
 		bool add_ideology(
-			std::string_view identifier,
-			colour_t colour,
-			IdeologyGroup const* group,
-			bool uncivilised,
-			bool can_reduce_consciousness,
-			bool can_reduce_militancy,
-			std::optional<Date> spawn_date,
-			ConditionalWeightBase&& add_political_reform,
-			ConditionalWeightBase&& remove_political_reform,
-			ConditionalWeightBase&& add_social_reform,
-			ConditionalWeightBase&& remove_social_reform,
-			ConditionalWeightBase&& add_military_reform,
-			ConditionalWeightBase&& add_economic_reform
+			std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised,
+			bool can_reduce_consciousness, bool can_reduce_militancy, std::optional<Date> spawn_date,
+			ConditionalWeightBase&& add_political_reform, ConditionalWeightBase&& remove_political_reform,
+			ConditionalWeightBase&& add_social_reform, ConditionalWeightBase&& remove_social_reform,
+			ConditionalWeightBase&& add_military_reform, ConditionalWeightBase&& add_economic_reform
 		);
 
 		bool load_ideology_file(ast::NodeCPtr root);

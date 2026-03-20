@@ -12,11 +12,11 @@
 #include <vector>
 
 #include "openvic-simulation/core/Assert.hpp"
+#include "openvic-simulation/core/Compare.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/utility/Allocator.hpp"
-#include "openvic-simulation/core/Compare.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	/**
@@ -98,8 +98,7 @@ namespace OpenVic {
 					swap(other, *this);
 				} else if (!other.empty()) {
 					_data = _allocate_payload(other.size());
-					_data->array_end =
-						uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
+					_data->array_end = uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
 					destroy(_data->array, _data->array_end, alloc);
 					_data->array_end = _data->array;
 				}
@@ -129,8 +128,9 @@ namespace OpenVic {
 			cow_vector tmp = std::move(x);
 			writer& tmp_writer = *reinterpret_cast<writer*>(&tmp);
 
-			if constexpr (allocator_traits::propagate_on_container_move_assignment::value ||
-						  allocator_traits::is_always_equal::value) {
+			if constexpr (
+				allocator_traits::propagate_on_container_move_assignment::value || allocator_traits::is_always_equal::value
+			) {
 				self_writer.swap(tmp_writer);
 			} else if (alloc == x.alloc) {
 				self_writer.swap(tmp_writer);
@@ -450,8 +450,7 @@ namespace OpenVic {
 					if constexpr (move_insertable_allocator<allocator_type>) {
 						_relocate(_data->array, _data->array_end, new_data->array, alloc);
 					} else {
-						new_data->array_end =
-							uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
+						new_data->array_end = uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
 						destroy(_data->array, _data->array_end, alloc);
 					}
 					_deallocate_payload(_data);

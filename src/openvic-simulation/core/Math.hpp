@@ -8,8 +8,8 @@
 #include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
-    template<typename T>
-    [[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num);
+	template<typename T>
+	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num);
 
 	template<typename T>
 	requires std::integral<T> || std::floating_point<T>
@@ -21,8 +21,8 @@ namespace OpenVic {
 		}
 	}
 
-    template<typename T>
-	requires (!(std::integral<T> || std::floating_point<T>))
+	template<typename T>
+	requires(!(std::integral<T> || std::floating_point<T>))
 	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num);
 
 	template<std::floating_point T>

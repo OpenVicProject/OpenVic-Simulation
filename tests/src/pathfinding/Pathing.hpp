@@ -125,7 +125,7 @@ namespace OpenVic::testing {
 							// Reachable.
 							{
 								INFO(fmt::format("From {} to {}: Fringe did not find a path", u, v));
-								CHECK_FALSE_IF(route.size() == 0) {
+								CHECK_FALSE_IF (route.size() == 0) {
 									match = false;
 									goto exit;
 								}
@@ -135,9 +135,12 @@ namespace OpenVic::testing {
 								CAPTURE(i);
 								{
 									INFO(
-										fmt::format("From {} to {}: edge ({}, {}) does not exist", u, v, route[i - 1], route[i])
+										fmt::format(
+											"From {} to {}: edge ({}, {}) does not exist", //
+											u, v, route[i - 1], route[i]
+										)
 									);
-									CHECK_FALSE_IF(!adjacent[route[i - 1]][route[i]]) {
+									CHECK_FALSE_IF (!adjacent[route[i - 1]][route[i]]) {
 										match = false;
 										goto exit;
 									}
@@ -145,11 +148,13 @@ namespace OpenVic::testing {
 								astar_dist += std::sqrt(points[route[i - 1]].distance_squared(points[route[i]]));
 							}
 							{
-								INFO(fmt::format(
-									"From {} to {}: Floyd-Warshall gives {:.6}, Fringe gives {:.6}", u, v, dist[u][v],
-									astar_dist
-								));
-								CHECK_FALSE_IF(std::abs(astar_dist - dist[u][v]) >= accuracy_threshold) {
+								INFO(
+									fmt::format(
+										"From {} to {}: Floyd-Warshall gives {:.6}, Fringe gives {:.6}", //
+										u, v, dist[u][v], astar_dist
+									)
+								);
+								CHECK_FALSE_IF (std::abs(astar_dist - dist[u][v]) >= accuracy_threshold) {
 									match = false;
 									goto exit;
 								}
@@ -157,7 +162,7 @@ namespace OpenVic::testing {
 						} else {
 							// Unreachable.
 							INFO(fmt::format("From {} to {}: Fringe somehow found a nonexistent path", u, v));
-							CHECK_FALSE_IF(route.size() > 0) {
+							CHECK_FALSE_IF (route.size() > 0) {
 								match = false;
 								goto exit;
 							}

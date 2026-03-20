@@ -21,15 +21,14 @@ namespace OpenVic {
 
 		bool _load_party_policy_group(size_t& expected_party_policies, std::string_view identifier, ast::NodeCPtr node);
 		bool _load_party_policy(
-			ModifierManager const& modifier_manager, std::string_view identifier,
-			PartyPolicyGroup& party_policy_group, ast::NodeCPtr node
+			ModifierManager const& modifier_manager, std::string_view identifier, PartyPolicyGroup& party_policy_group,
+			ast::NodeCPtr node
 		);
-		bool _load_reform_group(
-			size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
-		);
+		bool
+		_load_reform_group(size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node);
 		bool _load_reform(
-			ModifierManager const& modifier_manager, size_t ordinal,
-			std::string_view identifier, ReformGroup& reform_group, ast::NodeCPtr node
+			ModifierManager const& modifier_manager, size_t ordinal, std::string_view identifier, ReformGroup& reform_group,
+			ast::NodeCPtr node
 		);
 
 	public:
@@ -53,42 +52,37 @@ namespace OpenVic {
 
 			return {};
 		}
-		constexpr NodeTools::NodeCallback auto expect_base_issue_group_identifier(
-			NodeTools::Callback<issue_group_t> auto callback, bool warn = false
-		) const {
-			return NodeTools::expect_identifier(
-				[this, callback, warn](std::string_view identifier) -> bool {
-					if (identifier.empty()) {
-						spdlog::log_s(
-							warn ? spdlog::level::warn : spdlog::level::err,
-							"Invalid base issue group identifier: empty!"
-						);
-						return warn;
-					}
-					issue_group_t issue_group = get_base_issue_group_by_identifier(identifier);
-					if (std::holds_alternative<std::monostate>(issue_group)) {
-						spdlog::log_s(
-							warn ? spdlog::level::warn : spdlog::level::err,
-							"Invalid base issue group identifier: {}", identifier
-						);
-						return warn;
-					}
-					
-					return callback(issue_group);
+		constexpr NodeTools::NodeCallback auto
+		expect_base_issue_group_identifier(NodeTools::Callback<issue_group_t> auto callback, bool warn = false) const {
+			return NodeTools::expect_identifier([this, callback, warn](std::string_view identifier) -> bool {
+				if (identifier.empty()) {
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err, "Invalid base issue group identifier: empty!"
+					);
+					return warn;
 				}
-			);
+				issue_group_t issue_group = get_base_issue_group_by_identifier(identifier);
+				if (std::holds_alternative<std::monostate>(issue_group)) {
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err, "Invalid base issue group identifier: {}", identifier
+					);
+					return warn;
+				}
+
+				return callback(issue_group);
+			});
 		}
 
 		bool add_party_policy_group(std::string_view identifier);
 		bool add_party_policy(
-			std::string_view identifier, colour_t new_colour, ModifierValue&& values, PartyPolicyGroup& party_policy_group, RuleSet&& rules,
-			bool jingoism
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, PartyPolicyGroup& party_policy_group,
+			RuleSet&& rules, bool jingoism
 		);
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
 		bool add_reform_group(std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative);
 		bool add_reform(
-			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup& reform_group,
-			size_t ordinal, fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup& reform_group, size_t ordinal,
+			fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
 			ConditionScript&& allow, ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 		);
 		bool load_issues_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);

@@ -15,15 +15,10 @@ namespace OpenVic {
 
 	public:
 		inline bool load_production_types_file(
-			GameRulesManager const& game_rules_manager,
-			PopManager const& pop_manager,
-			ovdl::v2script::Parser const& parser
+			GameRulesManager const& game_rules_manager, PopManager const& pop_manager, ovdl::v2script::Parser const& parser
 		) {
 			return production_type_manager.load_production_types_file(
-				game_rules_manager,
-				good_definition_manager,
-				pop_manager,
-				parser
+				game_rules_manager, good_definition_manager, pop_manager, parser
 			);
 		}
 

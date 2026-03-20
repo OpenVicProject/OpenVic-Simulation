@@ -1,8 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
@@ -15,11 +15,8 @@ namespace OpenVic {
 		friend struct GoodInstanceManager;
 
 	public:
-		//pointers instead of references to allow construction via std::tuple
-		GoodInstance(
-			GoodDefinition const* new_good_definition,
-			GameRulesManager const* new_game_rules_manager
-		);
+		// pointers instead of references to allow construction via std::tuple
+		GoodInstance(GoodDefinition const* new_good_definition, GameRulesManager const* new_game_rules_manager);
 		GoodInstance(GoodInstance const&) = delete;
 		GoodInstance& operator=(GoodInstance const&) = delete;
 		GoodInstance(GoodInstance&&) = delete;
@@ -37,8 +34,7 @@ namespace OpenVic {
 
 	public:
 		GoodInstanceManager(
-			GoodDefinitionManager const& new_good_definition_manager,
-			GameRulesManager const& game_rules_manager
+			GoodDefinitionManager const& new_good_definition_manager, GameRulesManager const& game_rules_manager
 		);
 
 		constexpr forwardable_span<GoodInstance> get_good_instances() {

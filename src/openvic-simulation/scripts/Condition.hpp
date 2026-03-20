@@ -16,69 +16,72 @@ namespace OpenVic {
 	struct DefinitionManager;
 
 	enum class value_type_t : uint8_t {
-		NO_TYPE     = 0,
-		IDENTIFIER  = 1 << 0,
-		STRING      = 1 << 1,
-		BOOLEAN     = 1 << 2,
+		NO_TYPE = 0,
+		IDENTIFIER = 1 << 0,
+		STRING = 1 << 1,
+		BOOLEAN = 1 << 2,
 		BOOLEAN_INT = 1 << 3,
-		INTEGER     = 1 << 4,
-		REAL        = 1 << 5,
-		COMPLEX     = 1 << 6,
-		GROUP       = 1 << 7,
-		MAX_VALUE   = (1 << 8) - 1
+		INTEGER = 1 << 4,
+		REAL = 1 << 5,
+		COMPLEX = 1 << 6,
+		GROUP = 1 << 7,
+		MAX_VALUE = (1 << 8) - 1
 	};
 
 	// Order matters in this enum, for the fallback system to work
 	// smaller entities must have smaller integers associated!
-	enum class scope_type_t : uint8_t { //TODO: maybe distinguish TRANSPARENT from NO_SCOPE
-		NO_SCOPE    = 0,
-		POP         = 1 << 0,
-		PROVINCE    = 1 << 1,
-		STATE       = 1 << 2,
-		COUNTRY     = 1 << 3,
-		THIS        = 1 << 4,
-		FROM        = 1 << 5,
-		MAX_SCOPE   = (1 << 6) - 1
+	enum class scope_type_t : uint8_t { // TODO: maybe distinguish TRANSPARENT from NO_SCOPE
+		NO_SCOPE = 0,
+		POP = 1 << 0,
+		PROVINCE = 1 << 1,
+		STATE = 1 << 2,
+		COUNTRY = 1 << 3,
+		THIS = 1 << 4,
+		FROM = 1 << 5,
+		MAX_SCOPE = (1 << 6) - 1
 	};
 
 	enum class identifier_type_t : uint32_t {
-		NO_IDENTIFIER   = 0,
-		VARIABLE        = 1 << 0,
-		GLOBAL_FLAG     = 1 << 1,
-		COUNTRY_FLAG    = 1 << 2,
-		PROVINCE_FLAG   = 1 << 3,
-		COUNTRY_TAG     = 1 << 4,
-		PROVINCE_ID     = 1 << 5,
-		REGION          = 1 << 6,
-		IDEOLOGY        = 1 << 7,
-		REFORM_GROUP    = 1 << 8,
-		REFORM          = 1 << 9,
-		PARTY_POLICY    = 1 << 10,
-		POP_TYPE        = 1 << 11,
-		POP_STRATA      = 1 << 12,
-		TECHNOLOGY      = 1 << 13,
-		INVENTION       = 1 << 14,
-		TECH_SCHOOL     = 1 << 15,
-		CULTURE         = 1 << 16,
-		CULTURE_GROUP   = 1 << 17,
-		RELIGION        = 1 << 18,
-		TRADE_GOOD      = 1 << 19,
-		BUILDING        = 1 << 20,
-		CASUS_BELLI     = 1 << 21,
+		NO_IDENTIFIER = 0,
+		VARIABLE = 1 << 0,
+		GLOBAL_FLAG = 1 << 1,
+		COUNTRY_FLAG = 1 << 2,
+		PROVINCE_FLAG = 1 << 3,
+		COUNTRY_TAG = 1 << 4,
+		PROVINCE_ID = 1 << 5,
+		REGION = 1 << 6,
+		IDEOLOGY = 1 << 7,
+		REFORM_GROUP = 1 << 8,
+		REFORM = 1 << 9,
+		PARTY_POLICY = 1 << 10,
+		POP_TYPE = 1 << 11,
+		POP_STRATA = 1 << 12,
+		TECHNOLOGY = 1 << 13,
+		INVENTION = 1 << 14,
+		TECH_SCHOOL = 1 << 15,
+		CULTURE = 1 << 16,
+		CULTURE_GROUP = 1 << 17,
+		RELIGION = 1 << 18,
+		TRADE_GOOD = 1 << 19,
+		BUILDING = 1 << 20,
+		CASUS_BELLI = 1 << 21,
 		GOVERNMENT_TYPE = 1 << 22,
 		COUNTRY_EVENT_MODIFIER = 1 << 23,
 		PROVINCE_EVENT_MODIFIER = 1 << 24,
-		NATIONAL_VALUE  = 1 << 25,
-		CULTURE_UNION   = 1 << 26, // same as COUNTRY_TAG but also accepts scope this_union
-		CONTINENT       = 1 << 27,
-		CRIME           = 1 << 28,
-		TERRAIN         = 1 << 29
+		NATIONAL_VALUE = 1 << 25,
+		CULTURE_UNION = 1 << 26, // same as COUNTRY_TAG but also accepts scope this_union
+		CONTINENT = 1 << 27,
+		CRIME = 1 << 28,
+		TERRAIN = 1 << 29
 	};
 
 	/* Allows enum types to be used with bitwise operators. */
-	template<> struct enable_bitfield<value_type_t> : std::true_type {};
-	template<> struct enable_bitfield<scope_type_t> : std::true_type {};
-	template<> struct enable_bitfield<identifier_type_t> : std::true_type {};
+	template<>
+	struct enable_bitfield<value_type_t> : std::true_type {};
+	template<>
+	struct enable_bitfield<scope_type_t> : std::true_type {};
+	template<>
+	struct enable_bitfield<identifier_type_t> : std::true_type {};
 
 	/* Returns true if the values have any bit in common. */
 	inline constexpr bool share_value_type(value_type_t lhs, value_type_t rhs) {
@@ -207,9 +210,8 @@ namespace OpenVic {
 		const identifier_type_t value_identifier_type;
 
 		Condition(
-			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
-			scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
-			identifier_type_t new_value_identifier_type
+			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope, scope_type_t new_scope_change,
+			identifier_type_t new_key_identifier_type, identifier_type_t new_value_identifier_type
 		);
 		Condition(Condition&&) = default;
 	};
@@ -225,9 +227,8 @@ namespace OpenVic {
 		using real_t = fixed_point_t;
 		using identifier_real_t = std::pair<memory::string, real_t>;
 		using condition_list_t = memory::vector<ConditionNode>;
-		using value_t = std::variant<
-			string_t, boolean_t, double_boolean_t, integer_t, real_t, identifier_real_t, condition_list_t
-		>;
+		using value_t =
+			std::variant<string_t, boolean_t, double_boolean_t, integer_t, real_t, identifier_real_t, condition_list_t>;
 
 	private:
 		Condition const* PROPERTY(condition);
@@ -237,10 +238,8 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(valid, is);
 
 		ConditionNode(
-			Condition const* new_condition = nullptr, value_t&& new_value = 0,
-			bool new_valid = false,
-			HasIdentifier const* new_condition_key_item = nullptr,
-			HasIdentifier const* new_condition_value_item = nullptr
+			Condition const* new_condition = nullptr, value_t&& new_value = 0, bool new_valid = false,
+			HasIdentifier const* new_condition_key_item = nullptr, HasIdentifier const* new_condition_value_item = nullptr
 		);
 	};
 

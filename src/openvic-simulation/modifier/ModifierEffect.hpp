@@ -19,17 +19,12 @@ namespace OpenVic {
 		static constexpr size_t FORMAT_SUFFIX_BIT_OFFSET = FORMAT_DECIMAL_PLACES_BIT_OFFSET + FORMAT_DECIMAL_PLACES_BIT_COUNT;
 		static constexpr size_t FORMAT_POS_NEG_BIT_OFFSET = FORMAT_SUFFIX_BIT_OFFSET + FORMAT_SUFFIX_BIT_COUNT;
 
-		enum suffix_t : uint8_t {
-			NO_SUFFIX = 0,
-			PERCENT   = 1,
-			DAYS      = 2,
-			SPEED     = 3
-		};
+		enum suffix_t : uint8_t { NO_SUFFIX = 0, PERCENT = 1, DAYS = 2, SPEED = 3 };
 
 		enum class format_t : uint8_t {
 			// 1 and 2 bits
-			FORMAT_PART_x1   = 0 << FORMAT_MULTIPLIER_BIT_OFFSET,
-			FORMAT_PART_x10  = 1 << FORMAT_MULTIPLIER_BIT_OFFSET,
+			FORMAT_PART_x1 = 0 << FORMAT_MULTIPLIER_BIT_OFFSET,
+			FORMAT_PART_x10 = 1 << FORMAT_MULTIPLIER_BIT_OFFSET,
 			FORMAT_PART_x100 = 2 << FORMAT_MULTIPLIER_BIT_OFFSET,
 
 			// 4 and 8 bits
@@ -39,10 +34,10 @@ namespace OpenVic {
 			FORMAT_PART_3DP = 3 << FORMAT_DECIMAL_PLACES_BIT_OFFSET,
 
 			// 16 bit and 32 bit
-			FORMAT_PART_NO_SUFFIX      = NO_SUFFIX << FORMAT_SUFFIX_BIT_OFFSET,
-			FORMAT_PART_PERCENT_SUFFIX = PERCENT   << FORMAT_SUFFIX_BIT_OFFSET,
-			FORMAT_PART_DAYS_SUFFIX    = DAYS      << FORMAT_SUFFIX_BIT_OFFSET,
-			FORMAT_PART_SPEED_SUFFIX   = SPEED     << FORMAT_SUFFIX_BIT_OFFSET,
+			FORMAT_PART_NO_SUFFIX = NO_SUFFIX << FORMAT_SUFFIX_BIT_OFFSET,
+			FORMAT_PART_PERCENT_SUFFIX = PERCENT << FORMAT_SUFFIX_BIT_OFFSET,
+			FORMAT_PART_DAYS_SUFFIX = DAYS << FORMAT_SUFFIX_BIT_OFFSET,
+			FORMAT_PART_SPEED_SUFFIX = SPEED << FORMAT_SUFFIX_BIT_OFFSET,
 
 			// 64 bit
 			FORMAT_PART_POS = 0 << FORMAT_POS_NEG_BIT_OFFSET,
@@ -82,10 +77,10 @@ namespace OpenVic {
 		};
 
 		enum class target_t : uint8_t {
-			NO_TARGETS  = 0,
-			COUNTRY     = 1 << 0,
-			PROVINCE    = 1 << 1,
-			UNIT        = 1 << 2,
+			NO_TARGETS = 0,
+			COUNTRY = 1 << 0,
+			PROVINCE = 1 << 1,
+			UNIT = 1 << 2,
 			ALL_TARGETS = (1 << 3) - 1
 		};
 
@@ -95,7 +90,8 @@ namespace OpenVic {
 
 		static memory::string make_default_modifier_effect_localisation_key(std::string_view identifier);
 
-	private:;
+	private:
+		;
 		memory::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
@@ -106,8 +102,8 @@ namespace OpenVic {
 		const target_t targets;
 
 		ModifierEffect(
-			std::string_view new_identifier, format_t new_format, target_t new_targets,
-			std::string_view new_localisation_key, bool new_has_no_effect
+			std::string_view new_identifier, format_t new_format, target_t new_targets, std::string_view new_localisation_key,
+			bool new_has_no_effect
 		);
 		ModifierEffect(ModifierEffect&&) = default;
 
@@ -120,7 +116,8 @@ namespace OpenVic {
 		}
 	};
 
-	template<> struct enable_bitfield<ModifierEffect::target_t> : std::true_type {};
+	template<>
+	struct enable_bitfield<ModifierEffect::target_t> : std::true_type {};
 
 	inline constexpr bool ModifierEffect::excludes_targets(target_t targets, target_t excluded_targets) {
 		using enum target_t;

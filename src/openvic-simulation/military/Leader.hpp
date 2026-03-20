@@ -3,9 +3,9 @@
 #include <string_view>
 
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UniqueId.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -52,6 +52,7 @@ namespace OpenVic {
 	private:
 		UnitInstanceGroup* PROPERTY_PTR(unit_instance_group, nullptr);
 		bool PROPERTY_RW(can_be_used, true);
+
 	public:
 		const unique_id_t unique_id;
 

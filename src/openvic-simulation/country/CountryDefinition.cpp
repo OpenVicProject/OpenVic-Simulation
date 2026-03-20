@@ -4,9 +4,9 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
@@ -19,27 +19,16 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryDefinition::CountryDefinition(
-	std::string_view new_identifier,
-	colour_t new_colour,
-	index_t new_index,
-	GraphicalCultureType const& new_graphical_culture,
-	IdentifierRegistry<CountryParty>&& new_parties,
-	unit_names_map_t&& new_unit_names,
-	bool new_is_dynamic_tag,
-	government_colour_map_t&& new_alternative_colours,
-	colour_t new_primary_unit_colour,
-	colour_t new_secondary_unit_colour,
+	std::string_view new_identifier, colour_t new_colour, index_t new_index, GraphicalCultureType const& new_graphical_culture,
+	IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_is_dynamic_tag,
+	government_colour_map_t&& new_alternative_colours, colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour,
 	colour_t new_tertiary_unit_colour
-) : HasIdentifierAndColour { new_identifier, new_colour, false },
-	HasIndex { new_index },
-	graphical_culture { new_graphical_culture },
-	parties { std::move(new_parties) },
-	unit_names { std::move(new_unit_names) },
-	is_dynamic_tag { new_is_dynamic_tag },
-	alternative_colours { std::move(new_alternative_colours) },
-	primary_unit_colour { new_primary_unit_colour },
-	secondary_unit_colour { new_secondary_unit_colour },
-	tertiary_unit_colour { new_tertiary_unit_colour } {}
+)
+	: HasIdentifierAndColour { new_identifier, new_colour, false }, HasIndex { new_index },
+	  graphical_culture { new_graphical_culture }, parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) },
+	  is_dynamic_tag { new_is_dynamic_tag }, alternative_colours { std::move(new_alternative_colours) },
+	  primary_unit_colour { new_primary_unit_colour }, secondary_unit_colour { new_secondary_unit_colour },
+	  tertiary_unit_colour { new_tertiary_unit_colour } {}
 
 bool CountryDefinitionManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
@@ -78,9 +67,8 @@ bool CountryDefinitionManager::load_countries(
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
-	const bool ret = expect_dictionary_reserve_length(
-		country_definitions,
-		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
+	const bool ret =
+		expect_dictionary_reserve_length(country_definitions, [this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
 					if (val == is_dynamic) {
@@ -94,26 +82,24 @@ bool CountryDefinitionManager::load_countries(
 					return true;
 				})(value);
 			}
-			if (expect_string(
-				[this, &definition_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
+			if (expect_string([this, &definition_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
 					if (load_country_data_file(
-						definition_manager, key, is_dynamic,
-						Dataloader::parse_defines(
-							dataloader.lookup_file(append_string_views(common_dir, filepath))
-						).get_file_node()
-					)) {
+							definition_manager, key, is_dynamic,
+							Dataloader::parse_defines(
+								dataloader.lookup_file(append_string_views(common_dir, filepath)) //
+							)
+								.get_file_node()
+						)) {
 						return true;
 					}
 					spdlog::critical_s("Failed to load country data file: {}", filepath);
 					return false;
-				}
-			)(value)) {
+				})(value)) {
 				return true;
 			}
 			spdlog::critical_s("Failed to load country: {}", key);
 			return false;
-		}
-	)(root);
+		})(root);
 	lock_country_definitions();
 	return ret;
 }
@@ -141,7 +127,9 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		std::string_view party_name;
 		Date start_date, end_date;
 		Ideology const* ideology = nullptr;
-		IndexedFlatMap<PartyPolicyGroup, PartyPolicy const*> policies { politics_manager.get_issue_manager().get_party_policy_groups() };
+		IndexedFlatMap<PartyPolicyGroup, PartyPolicy const*> policies {
+			politics_manager.get_issue_manager().get_party_policy_groups()
+		};
 
 		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -189,9 +177,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		}
 
 		ret &= country_parties.emplace_item(
-			party_name,
-			duplicate_warning_callback,
-			party_name, start_date, end_date, ideology, std::move(policies)
+			party_name, duplicate_warning_callback, party_name, start_date, end_date, ideology, std::move(policies)
 		);
 
 		return ret;

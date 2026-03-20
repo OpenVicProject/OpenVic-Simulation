@@ -5,8 +5,8 @@
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
-#include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
+#include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerDeps.hpp"
@@ -22,8 +22,8 @@
 #include "openvic-simulation/population/PopDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ThreadPool.hpp"
 
 namespace OpenVic {
 
@@ -43,7 +43,7 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
-		
+
 		ArtisanalProducerDeps artisanal_producer_deps;
 		CountryInstanceDeps country_instance_deps;
 		PopDeps pop_deps;
@@ -82,8 +82,7 @@ namespace OpenVic {
 		DefinitionManager const& definition_manager;
 
 		InstanceManager(
-			GameRulesManager const& new_game_rules_manager,
-			DefinitionManager const& new_definition_manager,
+			GameRulesManager const& new_game_rules_manager, DefinitionManager const& new_definition_manager,
 			gamestate_updated_func_t gamestate_updated_callback
 		);
 
@@ -101,12 +100,7 @@ namespace OpenVic {
 
 		template<typename T, typename... Args>
 		bool queue_game_action(Args&&... args) {
-			return queue_game_action(
-				game_action_t(
-					std::in_place_type<T>,
-					std::forward<Args>(args)...
-				)
-			);
+			return queue_game_action(game_action_t(std::in_place_type<T>, std::forward<Args>(args)...));
 		}
 		bool queue_game_action(game_action_t&& game_action);
 	};

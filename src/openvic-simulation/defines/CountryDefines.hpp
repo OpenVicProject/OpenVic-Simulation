@@ -3,9 +3,9 @@
 #include <cstddef>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -30,10 +30,12 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(min_crimefight_percent);
 		fixed_point_t PROPERTY(max_crimefight_percent);
 		fixed_point_t PROPERTY(admin_efficiency_crimefight_percent);
+
 	public:
 		constexpr fixed_point_t get_admin_spending_crimefight_percent() const {
 			return fixed_point_t::_1 - admin_efficiency_crimefight_percent;
 		}
+
 	private:
 		fixed_point_t PROPERTY(conservative_increase_after_reform);
 		Timespan PROPERTY(campaign_event_base_duration);

@@ -152,14 +152,16 @@ namespace OpenVic::_detail::forwardable_span {
 
 		template<span_array_convertible<element_type> OtherElementType, std::size_t OtherExtent>
 		requires(Extent == dynamic_extent || OtherExtent == dynamic_extent || Extent == OtherExtent)
-		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent)
-			span(span<OtherElementType, OtherExtent> const& s)
+		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent) span(
+			span<OtherElementType, OtherExtent> const& s
+		)
 			: _ptr(s.data()), _extent(s.size()) {}
 
 		template<span_array_convertible<element_type> OtherElementType, std::size_t OtherExtent>
 		requires(Extent == dynamic_extent || OtherExtent == dynamic_extent || Extent == OtherExtent)
-		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent)
-			span(std::span<OtherElementType, OtherExtent> const& s)
+		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent) span(
+			std::span<OtherElementType, OtherExtent> const& s
+		)
 			: _ptr(s.data()), _extent(s.size()) {}
 
 

@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/interface/LoadBase.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/interface/LoadBase.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -77,20 +77,20 @@ namespace OpenVic::GFX {
 
 	/* arrows.gfx */
 	class ArrowType final : public Object {
-		//Named<> already handles the name property
+		// Named<> already handles the name property
 		fixed_point_t PROPERTY(size, 5);
-		//texture_file is unused, body_texture_file determines the appearance of the arrow
-		memory::string PROPERTY(texture_file); //unused
+		// texture_file is unused, body_texture_file determines the appearance of the arrow
+		memory::string PROPERTY(texture_file); // unused
 		memory::string PROPERTY(body_texture_file);
-		//colours dont appear to be used
-		//TODO: Verify these property names for color and colortwo are correct
+		// colours dont appear to be used
+		// TODO: Verify these property names for color and colortwo are correct
 		colour_t PROPERTY(back_colour);
 		colour_t PROPERTY(progress_colour);
 
-		fixed_point_t PROPERTY(end_at, 1); //how should float be repd? >> fixed_point handles it
+		fixed_point_t PROPERTY(end_at, 1); // how should float be repd? >> fixed_point handles it
 		fixed_point_t PROPERTY(height, 1);
-		uint64_t PROPERTY(arrow_type, 0); //TODO: what does this do?
-		fixed_point_t PROPERTY(heading, 1); //also float
+		uint64_t PROPERTY(arrow_type, 0); // TODO: what does this do?
+		fixed_point_t PROPERTY(heading, 1); // also float
 
 		memory::string PROPERTY(effect_file);
 
@@ -111,10 +111,10 @@ namespace OpenVic::GFX {
 		memory::string PROPERTY(texture_arrow_body);
 		memory::string PROPERTY(texture_arrow_head);
 
-		fixed_point_t PROPERTY(start, 1); //labelled 'body start width' in file
-		fixed_point_t PROPERTY(stop, 1);  //labelled 'body end width' in file
+		fixed_point_t PROPERTY(start, 1); // labelled 'body start width' in file
+		fixed_point_t PROPERTY(stop, 1); // labelled 'body end width' in file
 
-		fvec2_t PROPERTY(dims, { 1, 1 }); //x,y labelled 'arrow length','arrow height' in file
+		fvec2_t PROPERTY(dims, { 1, 1 }); // x,y labelled 'arrow length','arrow height' in file
 		memory::string PROPERTY(font);
 		fixed_point_t PROPERTY(scale, 1);
 		bool PROPERTY(no_fade, false);
@@ -149,7 +149,7 @@ namespace OpenVic::GFX {
 	/* mapitems.gfx */
 	class Projection final : public Object {
 		memory::string PROPERTY(texture_file);
-		//TODO: pulseSpeed, fadeout be ints or fixed points? assume fixed_point_t to start
+		// TODO: pulseSpeed, fadeout be ints or fixed points? assume fixed_point_t to start
 		fixed_point_t PROPERTY(size, 1);
 		fixed_point_t PROPERTY(spin, 1);
 		bool PROPERTY(pulsating, false);
@@ -157,8 +157,8 @@ namespace OpenVic::GFX {
 		fixed_point_t PROPERTY(pulse_speed, 1);
 		bool PROPERTY(additative, false);
 		fixed_point_t PROPERTY(expanding, 1);
-		fixed_point_t PROPERTY(duration, 0); //0 means it stays indefinitely (also the default value)
-		fixed_point_t PROPERTY(fadeout, 0); //appears to have no effect
+		fixed_point_t PROPERTY(duration, 0); // 0 means it stays indefinitely (also the default value)
+		fixed_point_t PROPERTY(fadeout, 0); // appears to have no effect
 
 	protected:
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
@@ -211,7 +211,7 @@ namespace OpenVic::GFX {
 		using enum text_format_t;
 
 	private:
-		//textblock
+		// textblock
 		memory::string PROPERTY(text);
 		colour_t PROPERTY(colour);
 		memory::string PROPERTY(font);
@@ -220,7 +220,7 @@ namespace OpenVic::GFX {
 		fvec2_t PROPERTY(size);
 
 		text_format_t PROPERTY(format, text_format_t::left);
-		//end textblock
+		// end textblock
 
 		fixed_point_t PROPERTY(speed, 1);
 		fixed_point_t PROPERTY(scale, 1);

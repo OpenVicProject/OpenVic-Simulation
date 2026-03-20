@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	/**

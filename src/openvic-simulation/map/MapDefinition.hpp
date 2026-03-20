@@ -78,25 +78,25 @@ namespace OpenVic {
 		}
 
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(province_definition);
-		ProvinceDefinition* get_province_definition_from_number(
-			const ProvinceDefinition::province_number_t province_number
-		);
+		ProvinceDefinition* get_province_definition_from_number(const ProvinceDefinition::province_number_t province_number);
 
 	public:
 		MapDefinition();
 
-		ProvinceDefinition const* get_province_definition_from_number(
-			const ProvinceDefinition::province_number_t province_number
-		) const;
+		ProvinceDefinition const*
+		get_province_definition_from_number(const ProvinceDefinition::province_number_t province_number) const;
 
-		inline constexpr int32_t get_width() const { return dims.x; }
-		inline constexpr int32_t get_height() const { return dims.y; }
+		inline constexpr int32_t get_width() const {
+			return dims.x;
+		}
+		inline constexpr int32_t get_height() const {
+			return dims.y;
+		}
 
 		bool add_province_definition(std::string_view identifier, colour_t colour);
 
-		ProvinceDefinition::distance_t calculate_distance_between(
-			ProvinceDefinition const& from, ProvinceDefinition const& to
-		) const;
+		ProvinceDefinition::distance_t
+		calculate_distance_between(ProvinceDefinition const& from, ProvinceDefinition const& to) const;
 		bool add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to);
 		bool add_special_adjacency(
 			ProvinceDefinition& from, ProvinceDefinition& to, ProvinceDefinition::adjacency_t::type_t type,
@@ -116,9 +116,9 @@ namespace OpenVic {
 		ProvinceDefinition* get_province_definition_at(ivec2_t pos);
 
 		/* This provides a safe way to remove the const qualifier of a ProvinceDefinition const&, via a non-const Map.
-		 * It looks up the ProvinceDefinition& using the ProvinceDefinition const&'s index. Requiring a non-const Map ensures that this
-		 * function can only be used where the ProvinceDefinition& could already be accessed by other means, such as the
-		 * index method, preventing misleading code, or in the worst case undefined behaviour. */
+		 * It looks up the ProvinceDefinition& using the ProvinceDefinition const&'s index. Requiring a non-const Map ensures
+		 * that this function can only be used where the ProvinceDefinition& could already be accessed by other means, such as
+		 * the index method, preventing misleading code, or in the worst case undefined behaviour. */
 		constexpr ProvinceDefinition& get_mutable_province_definition(ProvinceDefinition const& province) {
 			return *province_definitions.get_item_by_index(province.index);
 		}
@@ -128,8 +128,7 @@ namespace OpenVic {
 		bool set_max_provinces(ProvinceDefinition::index_t new_max_provinces);
 
 		bool add_region(
-			std::string_view identifier,
-			memory::vector<std::reference_wrapper<const ProvinceDefinition>>&& provinces,
+			std::string_view identifier, memory::vector<std::reference_wrapper<const ProvinceDefinition>>&& provinces,
 			colour_t colour
 		);
 
@@ -138,7 +137,9 @@ namespace OpenVic {
 		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 		static bool load_region_colours(ast::NodeCPtr root, memory::vector<colour_t>& colours);
 		bool load_region_file(ast::NodeCPtr root, std::span<const colour_t> colours);
-		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors);
+		bool load_map_images(
+			fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors
+		);
 		bool generate_and_load_province_adjacencies(std::span<const ovdl::csv::LineObject> additional_adjacencies);
 		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
