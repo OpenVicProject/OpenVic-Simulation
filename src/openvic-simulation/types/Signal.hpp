@@ -12,11 +12,11 @@
 #include <type_traits>
 #include <vector>
 
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/thread/NullMutex.hpp"
 #include "openvic-simulation/types/CowPtr.hpp"
 #include "openvic-simulation/types/CowVector.hpp"
-#include "openvic-simulation/core/thread/NullMutex.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 // Based heavily on https://github.com/palacaze/sigslot and https://github.com/mousebyte/sigslot20
 

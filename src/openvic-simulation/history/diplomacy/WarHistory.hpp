@@ -12,11 +12,11 @@ namespace OpenVic {
 	struct CountryDefinition;
 	struct ProvinceDefinition;
 	struct WargoalType;
-	
+
 	struct WarHistory {
 		friend struct DiplomaticHistoryManager;
 
-		struct added_wargoal_t {		
+		struct added_wargoal_t {
 		public:
 			const Date date_added;
 			CountryDefinition const& actor;
@@ -26,20 +26,14 @@ namespace OpenVic {
 			// TODO - could these just be nullptr when unset rather than using optionals?
 			const std::optional<CountryDefinition const*> third_party;
 			const std::optional<ProvinceDefinition const*> target;
-			
+
 			constexpr added_wargoal_t(
-				const Date new_date_added,
-				CountryDefinition const& new_actor,
-				CountryDefinition const& new_receiver,
-				WargoalType const& new_wargoal,
-				std::optional<CountryDefinition const*> new_third_party,
+				const Date new_date_added, CountryDefinition const& new_actor, CountryDefinition const& new_receiver,
+				WargoalType const& new_wargoal, std::optional<CountryDefinition const*> new_third_party,
 				std::optional<ProvinceDefinition const*> new_target
-			) : date_added { new_date_added },
-				actor { new_actor },
-				receiver { new_receiver },
-				wargoal { new_wargoal },
-				third_party { new_third_party },
-				target { new_target } {}
+			)
+				: date_added { new_date_added }, actor { new_actor }, receiver { new_receiver }, wargoal { new_wargoal },
+				  third_party { new_third_party }, target { new_target } {}
 		};
 		static_assert(std::is_trivially_move_constructible_v<added_wargoal_t>);
 
@@ -50,7 +44,7 @@ namespace OpenVic {
 
 		public:
 			CountryDefinition const& country;
-			
+
 			constexpr war_participant_t(CountryDefinition const& new_country, const Period new_period)
 				: country { new_country }, period { new_period } {}
 		};

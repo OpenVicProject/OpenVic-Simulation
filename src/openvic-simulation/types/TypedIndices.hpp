@@ -11,14 +11,14 @@
 #define TYPED_INDEX_CUSTOM(name, base_type) \
 	namespace OpenVic { \
 		struct name : type_safe::strong_typedef<name, base_type>, \
-			type_safe::strong_typedef_op::equality_comparison<name>, \
-			type_safe::strong_typedef_op::relational_comparison<name>, \
-			type_safe::strong_typedef_op::integer_arithmetic<name> { \
+					  type_safe::strong_typedef_op::equality_comparison<name>, \
+					  type_safe::strong_typedef_op::relational_comparison<name>, \
+					  type_safe::strong_typedef_op::integer_arithmetic<name> { \
 			using strong_typedef::strong_typedef; \
 		}; \
 	} \
 	namespace std { \
-		template <> \
+		template<> \
 		struct hash<OpenVic::name> : type_safe::hashable<OpenVic::name> {}; \
 	} \
 	template<> \
@@ -54,16 +54,16 @@ TYPED_INDEX(terrain_type_index_t)
 
 namespace OpenVic {
 	struct province_index_t : type_safe::strong_typedef<province_index_t, std::uint16_t>,
-		type_safe::strong_typedef_op::equality_comparison<province_index_t>,
-		type_safe::strong_typedef_op::relational_comparison<province_index_t>,
-		type_safe::strong_typedef_op::integer_arithmetic<province_index_t>,
-		type_safe::strong_typedef_op::mixed_addition<province_index_t, std::uint16_t>,
-		type_safe::strong_typedef_op::mixed_subtraction<province_index_t, std::uint16_t> {
+							  type_safe::strong_typedef_op::equality_comparison<province_index_t>,
+							  type_safe::strong_typedef_op::relational_comparison<province_index_t>,
+							  type_safe::strong_typedef_op::integer_arithmetic<province_index_t>,
+							  type_safe::strong_typedef_op::mixed_addition<province_index_t, std::uint16_t>,
+							  type_safe::strong_typedef_op::mixed_subtraction<province_index_t, std::uint16_t> {
 		using strong_typedef::strong_typedef;
 	};
 }
 namespace std {
-	template <>
+	template<>
 	struct hash<OpenVic::province_index_t> : type_safe::hashable<OpenVic::province_index_t> {};
 }
 template<>

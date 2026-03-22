@@ -13,21 +13,21 @@
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/Atomic.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/types/fixed_point/Atomic.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/DerivedState.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
@@ -154,8 +154,10 @@ namespace OpenVic {
 
 		/* Production */
 		OV_STATE_PROPERTY(fixed_point_t, industrial_power);
-		memory::vector<std::pair<std::reference_wrapper<const State>, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_states);
-		memory::vector<std::pair<std::reference_wrapper<const CountryInstance>, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_investments);
+		memory::vector<std::pair<std::reference_wrapper<const State>, fixed_point_t>>
+			SPAN_PROPERTY(industrial_power_from_states);
+		memory::vector<std::pair<std::reference_wrapper<const CountryInstance>, fixed_point_t>>
+			SPAN_PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<std::reference_wrapper<const CountryInstance>> PROPERTY(foreign_investments);
 		OV_IFLATMAP_PROPERTY(BuildingType, building_level_t, building_type_unlock_levels);
@@ -170,23 +172,26 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
 		OV_STATE_PROPERTY(fixed_point_t, tax_efficiency);
 		IndexedFlatMap<Strata, DerivedState<fixed_point_t>> PROPERTY(effective_tax_rate_by_strata);
+
 	public:
 		DerivedState<fixed_point_t>& get_effective_tax_rate_by_strata(Strata const& strata);
+
 	private:
 		IndexedFlatMap<Strata, ClampedValue> tax_rate_slider_value_by_strata;
+
 	public:
 		[[nodiscard]] constexpr IndexedFlatMap<Strata, ClampedValue> const& get_tax_rate_slider_value_by_strata() const {
 			return tax_rate_slider_value_by_strata;
 		}
 		[[nodiscard]] ReadOnlyClampedValue& get_tax_rate_slider_value_by_strata(Strata const& strata);
 		[[nodiscard]] ReadOnlyClampedValue const& get_tax_rate_slider_value_by_strata(Strata const& strata) const;
-	private:
 
+	private:
 		OV_STATE_PROPERTY(fixed_point_t, administrative_efficiency_from_administrators);
 		OV_STATE_PROPERTY(fixed_point_t, administrator_percentage);
 
-		//store per slider per good: desired, bought & cost
-		//store purchase record from last tick and prediction next tick
+		// store per slider per good: desired, bought & cost
+		// store purchase record from last tick and prediction next tick
 		OV_CLAMPED_PROPERTY(army_spending_slider_value);
 		OV_CLAMPED_PROPERTY(navy_spending_slider_value);
 		OV_CLAMPED_PROPERTY(construction_spending_slider_value);
@@ -218,8 +223,8 @@ namespace OpenVic {
 		bool PROPERTY(was_social_budget_cut_yesterday, false);
 		atomic_fixed_point_t PROPERTY(actual_pensions_spending);
 		atomic_fixed_point_t PROPERTY(actual_unemployment_subsidies_spending);
-		
-		//base here means not scaled by slider or pop size
+
+		// base here means not scaled by slider or pop size
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> education_salary_base_by_pop_type;
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> military_salary_base_by_pop_type;
@@ -234,8 +239,8 @@ namespace OpenVic {
 			return actual_tariff_income.load() - actual_import_subsidies_spending.load();
 		}
 
-		//TODO actual factory subsidies
-		//projected cost is UI only and lists the different factories
+		// TODO actual factory subsidies
+		// projected cost is UI only and lists the different factories
 
 		/* Technology */
 		OV_IFLATMAP_PROPERTY(Technology, technology_unlock_level_t, technology_unlock_levels);
@@ -296,7 +301,7 @@ namespace OpenVic {
 		DerivedState<fixed_point_t> projected_import_subsidies;
 		DerivedState<fixed_point_t> projected_spending;
 		DerivedState<bool> has_import_subsidies;
-		
+
 		fixed_point_t get_taxable_income_by_strata(Strata const& strata) const;
 		// TODO - national foci
 
@@ -314,8 +319,8 @@ namespace OpenVic {
 
 			fixed_point_t exported_amount; // negative if net importing
 
-			fixed_point_t max_government_consumption; //for automated BuyUpToOrder
-			fixed_point_t government_needs; //quantity to allocate for while automated
+			fixed_point_t max_government_consumption; // for automated BuyUpToOrder
+			fixed_point_t government_needs; // quantity to allocate for while automated
 			fixed_point_t army_needs;
 			fixed_point_t navy_needs;
 			fixed_point_t overseas_maintenance;
@@ -331,7 +336,7 @@ namespace OpenVic {
 			good_data_t(good_data_t&&) = default;
 			good_data_t& operator=(good_data_t&&) = default;
 
-			//thread safe
+			// thread safe
 			void clear_daily_recorded_data();
 		};
 
@@ -398,8 +403,7 @@ namespace OpenVic {
 
 	public:
 		CountryInstance(
-			CountryDefinition const& new_country_definition,
-			SharedCountryValues& new_shared_country_values,
+			CountryDefinition const& new_country_definition, SharedCountryValues& new_shared_country_values,
 			CountryInstanceDeps const& country_instance_deps
 		);
 		CountryInstance(CountryInstance const&) = delete;
@@ -453,7 +457,9 @@ namespace OpenVic {
 		[[nodiscard]] bool is_secondary_power() const;
 		[[nodiscard]] bool is_at_war() const;
 		[[nodiscard]] bool is_neighbour(CountryInstance const& country) const;
-		[[nodiscard]] bool may_build_in(const BuildingRestrictionCategory restriction_category, ProvinceInstance const& location) const;
+		[[nodiscard]] bool may_build_in(
+			const BuildingRestrictionCategory restriction_category, ProvinceInstance const& location //
+		) const;
 
 		// Double-sided diplomacy functions
 
@@ -493,7 +499,9 @@ namespace OpenVic {
 		void set_influence_with(CountryInstance& country, CountryRelationManager::influence_value_type influence);
 
 		CountryRelationManager::influence_priority_value_type get_influence_priority_with(CountryInstance const& country) const;
-		void set_influence_priority_with(CountryInstance& country, CountryRelationManager::influence_priority_value_type influence);
+		void set_influence_priority_with(
+			CountryInstance& country, CountryRelationManager::influence_priority_value_type influence //
+		);
 
 		std::optional<Date> get_decredited_from_date(CountryInstance const& country) const;
 		void set_discredited_from(CountryInstance& country, Date until);
@@ -557,9 +565,7 @@ namespace OpenVic {
 		bool unlock_unit_type(UnitType const& unit_type);
 		[[nodiscard]] bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
-		bool modify_building_type_unlock(
-			BuildingType const& building_type, technology_unlock_level_t unlock_level_change
-		);
+		bool modify_building_type_unlock(BuildingType const& building_type, technology_unlock_level_t unlock_level_change);
 		bool unlock_building_type(BuildingType const& building_type);
 		[[nodiscard]] bool is_building_type_unlocked(BuildingType const& building_type) const;
 
@@ -579,21 +585,13 @@ namespace OpenVic {
 		bool unlock_unit_variant(unit_variant_t unit_variant);
 		[[nodiscard]] unit_variant_t get_max_unlocked_unit_variant() const;
 
-		bool modify_technology_unlock(
-			Technology const& technology, technology_unlock_level_t unlock_level_change
-		);
-		bool set_technology_unlock_level(
-			Technology const& technology, technology_unlock_level_t unlock_level
-		);
+		bool modify_technology_unlock(Technology const& technology, technology_unlock_level_t unlock_level_change);
+		bool set_technology_unlock_level(Technology const& technology, technology_unlock_level_t unlock_level);
 		bool unlock_technology(Technology const& technology);
 		[[nodiscard]] bool is_technology_unlocked(Technology const& technology) const;
 
-		bool modify_invention_unlock(
-			Invention const& invention, technology_unlock_level_t unlock_level_change
-		);
-		bool set_invention_unlock_level(
-			Invention const& invention, technology_unlock_level_t unlock_level
-		);
+		bool modify_invention_unlock(Invention const& invention, technology_unlock_level_t unlock_level_change);
+		bool set_invention_unlock_level(Invention const& invention, technology_unlock_level_t unlock_level);
 		bool unlock_invention(Invention const& invention);
 		[[nodiscard]] bool is_invention_unlocked(Invention const& invention) const;
 
@@ -613,33 +611,27 @@ namespace OpenVic {
 		);
 
 		bool apply_history_to_country(
-			CountryHistoryEntry const& entry,
-			CountryInstanceManager const& country_instance_manager,
-			FlagStrings& global_flags,
+			CountryHistoryEntry const& entry, CountryInstanceManager const& country_instance_manager, FlagStrings& global_flags,
 			MapInstance& map_instance
 		);
 
 	private:
 		static void after_buy(void* actor, BuyResult const& buy_result);
-		//matching GoodMarketSellOrder::callback_t
+		// matching GoodMarketSellOrder::callback_t
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
 
 		void calculate_government_good_needs();
 
 		void manage_national_stockpile(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_COUNTRY_TICK
-			> reusable_vectors,
-			memory::vector<good_index_t>& reusable_good_index_vector,
-			fixed_point_t& available_funds
+			forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_COUNTRY_TICK> reusable_vectors,
+			memory::vector<good_index_t>& reusable_good_index_vector, fixed_point_t& available_funds
 		);
 
 		void _update_production();
 		void _update_budget();
 
-		//base here means not scaled by slider or pop size
+		// base here means not scaled by slider or pop size
 		fixed_point_t calculate_pensions_base(PopType const& pop_type);
 		fixed_point_t calculate_unemployment_subsidies_base(PopType const& pop_type);
 
@@ -658,7 +650,7 @@ namespace OpenVic {
 		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		constexpr void for_each_contributing_modifier(
-			ModifierEffect const& effect, ContributingModifierCallback auto callback
+			ModifierEffect const& effect, ContributingModifierCallback auto callback //
 		) const {
 			return modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
 		}
@@ -666,10 +658,7 @@ namespace OpenVic {
 		void update_gamestate(const Date today, MapInstance& map_instance);
 		void country_tick_before_map(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_COUNTRY_TICK
-			> reusable_vectors,
+			forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_COUNTRY_TICK> reusable_vectors,
 			memory::vector<good_index_t>& reusable_good_index_vector
 		);
 		void country_tick_after_map(const Date today);
@@ -679,12 +668,16 @@ namespace OpenVic {
 		good_data_t& get_good_data(GoodDefinition const& good_definition);
 		good_data_t const& get_good_data(GoodDefinition const& good_definition) const;
 
-		//thread safe
+		// thread safe
 		void report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax);
 		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_pop_need_demand(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_input_consumption(
+			ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity
+		);
+		void report_input_demand(
+			ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity //
+		);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void request_salaries_and_welfare_and_import_subsidies(Pop& pop);
 		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type);

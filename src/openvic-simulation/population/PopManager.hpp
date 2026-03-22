@@ -1,8 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/population/Culture.hpp"
-#include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/population/Religion.hpp"
 
 namespace OpenVic {
 	struct GoodDefinitionManager;
@@ -51,41 +51,17 @@ namespace OpenVic {
 		bool add_strata(std::string_view identifier);
 
 		bool add_pop_type(
-			std::string_view identifier,
-			colour_t new_colour,
-			Strata* strata,
-			pop_sprite_t sprite,
-			fixed_point_map_t<GoodDefinition const*>&& life_needs,
-			fixed_point_map_t<GoodDefinition const*>&& everyday_needs,
-			fixed_point_map_t<GoodDefinition const*>&& luxury_needs,
-			PopType::income_type_t life_needs_income_types,
-			PopType::income_type_t everyday_needs_income_types,
-			PopType::income_type_t luxury_needs_income_types,
-			ast::NodeCPtr rebel_units,
-			pop_size_t max_size,
-			pop_size_t merge_max_size,
-			bool state_capital_only,
-			bool demote_migrant,
-			bool is_artisan,
-			bool allowed_to_vote,
-			bool is_slave,
-			bool can_be_recruited,
-			bool can_reduce_consciousness,
-			bool administrative_efficiency,
-			bool can_invest,
-			bool factory,
-			bool can_work_factory,
-			bool unemployment,
-			fixed_point_t research_points,
-			fixed_point_t leadership_points,
-			fixed_point_t research_leadership_optimum,
-			fixed_point_t state_administration_multiplier,
-			ast::NodeCPtr equivalent,
-			ConditionalWeightFactorMul&& country_migration_target,
-			ConditionalWeightFactorMul&& migration_target,
-			ast::NodeCPtr promote_to_node,
-			PopType::ideology_weight_map_t&& ideologies,
-			ast::NodeCPtr issues_node
+			std::string_view identifier, colour_t new_colour, Strata* strata, pop_sprite_t sprite,
+			fixed_point_map_t<GoodDefinition const*>&& life_needs, fixed_point_map_t<GoodDefinition const*>&& everyday_needs,
+			fixed_point_map_t<GoodDefinition const*>&& luxury_needs, PopType::income_type_t life_needs_income_types,
+			PopType::income_type_t everyday_needs_income_types, PopType::income_type_t luxury_needs_income_types,
+			ast::NodeCPtr rebel_units, pop_size_t max_size, pop_size_t merge_max_size, bool state_capital_only,
+			bool demote_migrant, bool is_artisan, bool allowed_to_vote, bool is_slave, bool can_be_recruited,
+			bool can_reduce_consciousness, bool administrative_efficiency, bool can_invest, bool factory, bool can_work_factory,
+			bool unemployment, fixed_point_t research_points, fixed_point_t leadership_points,
+			fixed_point_t research_leadership_optimum, fixed_point_t state_administration_multiplier, ast::NodeCPtr equivalent,
+			ConditionalWeightFactorMul&& country_migration_target, ConditionalWeightFactorMul&& migration_target,
+			ast::NodeCPtr promote_to_node, PopType::ideology_weight_map_t&& ideologies, ast::NodeCPtr issues_node
 		);
 
 		bool setup_stratas();
@@ -102,7 +78,7 @@ namespace OpenVic {
 
 		bool load_pop_bases_into_vector(
 			RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
-			bool *non_integer_size
+			bool* non_integer_size
 		) const;
 
 		bool generate_modifiers(ModifierManager& modifier_manager) const;

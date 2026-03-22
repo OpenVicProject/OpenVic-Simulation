@@ -13,31 +13,23 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Bookmark::Bookmark(
-	index_t new_index,
-	std::string_view new_name,
-	std::string_view new_description,
-	Date new_date,
+	index_t new_index, std::string_view new_name, std::string_view new_description, Date new_date,
 	fvec2_t new_initial_camera_position
-) : HasIdentifier { std::to_string(type_safe::get(new_index)) },
-	HasIndex { new_index },
-	name { new_name },
-	description { new_description },
-	date { new_date },
-	initial_camera_position { new_initial_camera_position } {}
+)
+	: HasIdentifier { std::to_string(type_safe::get(new_index)) }, HasIndex { new_index }, name { new_name },
+	  description { new_description }, date { new_date }, initial_camera_position { new_initial_camera_position } {}
 
 bool BookmarkManager::add_bookmark(
 	std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
 ) {
 	return bookmarks.emplace_item(
-		name,
-		Bookmark::index_t { bookmarks.size() }, name, description, date, initial_camera_position
+		name, Bookmark::index_t { bookmarks.size() }, name, description, date, initial_camera_position
 	);
 }
 
 bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		bookmarks,
-		[this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
+	const bool ret =
+		expect_dictionary_reserve_length(bookmarks, [this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key != "bookmark") {
 				spdlog::error_s("Invalid bookmark declaration {}", key);
 				return false;
@@ -58,8 +50,7 @@ bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr
 
 			ret &= add_bookmark(name, description, date, initial_camera_position);
 			return ret;
-		}
-	)(root);
+		})(root);
 	lock_bookmarks();
 
 	return ret;

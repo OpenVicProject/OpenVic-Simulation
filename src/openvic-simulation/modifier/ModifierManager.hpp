@@ -40,23 +40,16 @@ namespace OpenVic {
 		StaticModifierCache PROPERTY(static_modifier_cache);
 
 		bool _register_modifier_effect(
-			modifier_effect_registry_t& registry,
-			ModifierEffect::target_t targets,
-			ModifierEffect const*& effect_cache,
-			const std::string_view identifier,
-			const ModifierEffect::format_t format,
-			const std::string_view localisation_key,
+			modifier_effect_registry_t& registry, ModifierEffect::target_t targets, ModifierEffect const*& effect_cache,
+			const std::string_view identifier, const ModifierEffect::format_t format, const std::string_view localisation_key,
 			const bool has_no_effect
 		);
 
 #define REGISTER_MODIFIER_EFFECT_DEFINITION(MAPPING_TYPE) \
-		bool register_##MAPPING_TYPE##_modifier_effect( \
-			ModifierEffect const*& effect_cache, \
-			std::string_view identifier, \
-			ModifierEffect::format_t format, \
-			std::string_view localisation_key = {}, \
-			bool has_no_effect = false \
-		);
+	bool register_##MAPPING_TYPE##_modifier_effect( \
+		ModifierEffect const*& effect_cache, std::string_view identifier, ModifierEffect::format_t format, \
+		std::string_view localisation_key = {}, bool has_no_effect = false \
+	);
 
 		REGISTER_MODIFIER_EFFECT_DEFINITION(leader)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(unit_terrain)
@@ -67,39 +60,28 @@ namespace OpenVic {
 #undef REGISTER_MODIFIER_EFFECT_DEFINITION
 
 		bool _add_flattened_modifier_cb(
-			ModifierValue& modifier_value,
-			const std::string_view prefix,
-			const std::string_view key,
-			const ast::NodeCPtr value
+			ModifierValue& modifier_value, const std::string_view prefix, const std::string_view key, const ast::NodeCPtr value
 		) const;
 
-		bool _add_modifier_cb(
-			ModifierValue& modifier_value,
-			ModifierEffect const* const effect,
-			const ast::NodeCPtr value
-		) const;
+		bool
+		_add_modifier_cb(ModifierValue& modifier_value, ModifierEffect const* const effect, const ast::NodeCPtr value) const;
 
-		NodeTools::key_value_callback_t _expect_modifier_effect(
-			modifier_effect_registry_t const& registry,
-			ModifierValue& modifier_value
-		) const;
+		NodeTools::key_value_callback_t
+		_expect_modifier_effect(modifier_effect_registry_t const& registry, ModifierValue& modifier_value) const;
 
 		NodeTools::key_value_callback_t _expect_modifier_effect_with_fallback(
-			modifier_effect_registry_t const& registry,
-			ModifierValue& modifier_value,
-			NodeTools::key_value_callback_t fallback
+			modifier_effect_registry_t const& registry, ModifierValue& modifier_value, NodeTools::key_value_callback_t fallback
 		) const;
 
 	public:
 		bool register_complex_modifier(const std::string_view identifier);
-		static memory::string get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
+		static memory::string
+		get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
 
 		bool setup_modifier_effects();
 
 		bool add_event_modifier(
-			const std::string_view identifier,
-			ModifierValue&& values,
-			const IconModifier::icon_t icon,
+			const std::string_view identifier, ModifierValue&& values, const IconModifier::icon_t icon,
 			const Modifier::modifier_type_t type = Modifier::modifier_type_t::EVENT
 		);
 		bool load_event_modifiers(const ast::NodeCPtr root);
@@ -107,9 +89,7 @@ namespace OpenVic {
 		bool load_static_modifiers(const ast::NodeCPtr root);
 
 		bool add_triggered_modifier(
-			const std::string_view identifier,
-			ModifierValue&& values,
-			const IconModifier::icon_t icon,
+			const std::string_view identifier, ModifierValue&& values, const IconModifier::icon_t icon,
 			ConditionScript&& trigger
 		);
 		bool load_triggered_modifiers(const ast::NodeCPtr root);
@@ -119,10 +99,8 @@ namespace OpenVic {
 
 		NodeTools::key_value_callback_t expect_leader_modifier(ModifierValue& modifier_value) const;
 		NodeTools::key_value_callback_t expect_technology_modifier(ModifierValue& modifier_value) const;
-		NodeTools::key_value_callback_t expect_unit_terrain_modifier(
-			ModifierValue& modifier_value,
-			const std::string_view terrain_type_identifier
-		) const;
+		NodeTools::key_value_callback_t
+		expect_unit_terrain_modifier(ModifierValue& modifier_value, const std::string_view terrain_type_identifier) const;
 		NodeTools::key_value_callback_t expect_base_country_modifier(ModifierValue& modifier_value) const;
 		NodeTools::key_value_callback_t expect_base_province_modifier(ModifierValue& modifier_value) const;
 		NodeTools::key_value_callback_t expect_terrain_modifier(ModifierValue& modifier_value) const;

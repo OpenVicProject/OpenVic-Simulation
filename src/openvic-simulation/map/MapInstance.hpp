@@ -43,8 +43,7 @@ namespace OpenVic {
 
 	public:
 		MapInstance(
-			MapDefinition const& new_map_definition,
-			ProvinceInstanceDeps const& province_instance_deps,
+			MapDefinition const& new_map_definition, ProvinceInstanceDeps const& province_instance_deps,
 			ThreadPool& new_thread_pool
 		);
 
@@ -64,23 +63,18 @@ namespace OpenVic {
 		ProvinceInstance* get_province_instance_by_index(typename ProvinceInstance::index_t index);
 		ProvinceInstance const* get_province_instance_by_index(typename ProvinceInstance::index_t index) const;
 		ProvinceInstance& get_province_instance_by_definition(ProvinceDefinition const& province_definition);
-		ProvinceInstance* get_province_instance_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
-		);
+		ProvinceInstance*
+		get_province_instance_from_number(decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number);
 		ProvinceInstance const* get_province_instance_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+			decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number
 		) const;
 
 		void enable_canal(canal_index_t canal_index);
 		bool is_canal_enabled(canal_index_t canal_index) const;
 
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager,
-			const Date date,
-			CountryInstanceManager& country_manager,
-			IssueManager const& issue_manager,
-			MilitaryDefines const& military_defines,
-			PopDeps const& pop_deps
+			ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
+			IssueManager const& issue_manager, MilitaryDefines const& military_defines, PopDeps const& pop_deps
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

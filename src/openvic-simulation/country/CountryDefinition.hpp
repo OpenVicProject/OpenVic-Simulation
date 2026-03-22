@@ -24,7 +24,7 @@ namespace OpenVic {
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition, country_index_t> {
 		friend struct CountryDefinitionManager;
-		
+
 		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
@@ -64,7 +64,7 @@ namespace OpenVic {
 		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
 
 		NodeTools::node_callback_t load_country_party(
-			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
+			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties //
 		) const;
 
 	public:

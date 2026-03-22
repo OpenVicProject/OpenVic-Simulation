@@ -9,9 +9,9 @@
 #include <tuple>
 #include <type_traits>
 
+#include "openvic-simulation/core/Hash.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -46,9 +46,7 @@ namespace OpenVic {
 			auto& rhs_comp_first = rhs_left > rhs_right ? rhs_left : rhs_right;
 			auto& rhs_comp_second = rhs_left < rhs_right ? rhs_left : rhs_right;
 
-			return three_way_compare(
-				std::tie(lhs_comp_first, lhs_comp_second), std::tie(rhs_comp_first, rhs_comp_second)
-			);
+			return three_way_compare(std::tie(lhs_comp_first, lhs_comp_second), std::tie(rhs_comp_first, rhs_comp_second));
 		}
 
 		inline constexpr bool operator==(UnorderedCountryInstancePair const& rhs) const {
@@ -266,7 +264,9 @@ private:
 		RELATION_PAIR_MAP(CountryInstancePair, bool, vision, has_vision, const);
 		RELATION_PAIR_MAP(CountryInstancePair, OpinionType, opinions, country_opinion, const);
 		RELATION_PAIR_MAP(CountryInstancePair, influence_value_type, influence, influence_with, const);
-		RELATION_PAIR_MAP(CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const);
+		RELATION_PAIR_MAP(
+			CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const
+		);
 
 		vector_ordered_map<CountryInstancePair, Date> discredits;
 		vector_ordered_map<CountryInstancePair, Date> embassy_bans;

@@ -111,12 +111,11 @@ namespace OpenVic {
 	concept is_strongly_typed = derived_from_specialization_of<T, type_safe::strong_typedef>;
 
 	template<typename T>
-	concept has_index = requires { typename T::index_t; } &&
-		is_strongly_typed<typename T::index_t> && requires {
-			static_cast<std::size_t>(
-				static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
-			);
-		};
+	concept has_index = requires { typename T::index_t; } && is_strongly_typed<typename T::index_t> && requires {
+		static_cast<std::size_t>(
+			static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
+		);
+	};
 
 	// helper to avoid error 'index_t': is not a member of T
 	template<typename T, typename = void>
@@ -196,7 +195,7 @@ namespace OpenVic {
 
 	template<typename Lhs, typename Rhs = Lhs, typename Result = std::common_type_t<Lhs, Rhs>>
 	concept multipliable = requires(Lhs const& lhs, Rhs const& rhs) {
-		{ lhs* rhs } -> std::convertible_to<Result>;
+		{ lhs * rhs } -> std::convertible_to<Result>;
 	};
 
 	template<typename Lhs, typename Rhs = Lhs, typename Result = std::common_type_t<Lhs, Rhs>>

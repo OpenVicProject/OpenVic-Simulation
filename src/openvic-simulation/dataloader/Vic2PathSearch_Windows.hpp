@@ -9,8 +9,8 @@
 
 #include <Windows.h>
 
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic::Windows {
 	inline memory::wstring convert(std::string_view as) {

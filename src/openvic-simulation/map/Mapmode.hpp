@@ -1,12 +1,12 @@
 #pragma once
 
+#include <function2/function2.hpp>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-
-#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct BuildingTypeManager;
@@ -27,8 +27,7 @@ namespace OpenVic {
 			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
 		};
 		using colour_func_t = fu2::function<
-			base_stripe_t(MapInstance const&, ProvinceInstance const&, CountryInstance const*, ProvinceInstance const*) const
-		>;
+			base_stripe_t(MapInstance const&, ProvinceInstance const&, CountryInstance const*, ProvinceInstance const*) const>;
 
 	private:
 		// Not const so they don't have to be copied when the Mapmode is moved
@@ -40,17 +39,14 @@ namespace OpenVic {
 		const bool is_parchment_mapmode_allowed;
 
 		Mapmode(
-			std::string_view new_identifier,
-			index_t new_index,
-			colour_func_t new_colour_func,
-			std::string_view new_localisation_key = {},
-			bool new_is_parchment_mapmode_allowed = true
+			std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func,
+			std::string_view new_localisation_key = {}, bool new_is_parchment_mapmode_allowed = true
 		);
 		Mapmode(Mapmode&&) = default;
 
 		base_stripe_t get_base_stripe_colours(
-			MapInstance const& map_instance, ProvinceInstance const& province,
-			CountryInstance const* player_country, ProvinceInstance const* selected_province
+			MapInstance const& map_instance, ProvinceInstance const& province, CountryInstance const* player_country,
+			ProvinceInstance const* selected_province
 		) const;
 	};
 
@@ -62,9 +58,7 @@ namespace OpenVic {
 		constexpr MapmodeManager() {};
 
 		bool add_mapmode(
-			std::string_view identifier,
-			Mapmode::colour_func_t colour_func,
-			std::string_view localisation_key = {},
+			std::string_view identifier, Mapmode::colour_func_t colour_func, std::string_view localisation_key = {},
 			bool parchment_mapmode_allowed = true
 		);
 
@@ -74,9 +68,8 @@ namespace OpenVic {
 		 * together adjacently, so each province's entry is 8 bytes long.
 		 * The list contains all provinces indexed by their number + index 0 for the "null province". */
 		bool generate_mapmode_colours(
-			MapInstance const& map_instance, Mapmode const* mapmode,
-			CountryInstance const* player_country, ProvinceInstance const* selected_province,
-			uint8_t* target
+			MapInstance const& map_instance, Mapmode const* mapmode, CountryInstance const* player_country,
+			ProvinceInstance const* selected_province, uint8_t* target
 		) const;
 
 		bool setup_mapmodes(MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager);

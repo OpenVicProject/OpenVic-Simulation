@@ -3,19 +3,19 @@
 #include <cstddef>
 #include <functional>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/population/PopIdInProvince.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-
-#include <type_safe/strong_typedef.hpp>
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -51,37 +51,36 @@ namespace OpenVic {
 			PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 			fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
 		);
+
 	public:
 		Culture const& culture;
 		Religion const& religion;
 	};
 
-	#define OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
-		F(rgo_owner_income) \
-		F(rgo_worker_income) \
-		F(factory_worker_income) \
-		F(factory_owner_income) \
-		F(unemployment_subsidies) \
-		F(pensions) \
-		F(government_salary_administration) \
-		F(government_salary_education) \
-		F(government_salary_military) \
-		F(event_and_decision_income) \
-		F(loan_interest_payments)
+#define OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
+	F(rgo_owner_income) \
+	F(rgo_worker_income) \
+	F(factory_worker_income) \
+	F(factory_owner_income) \
+	F(unemployment_subsidies) \
+	F(pensions) \
+	F(government_salary_administration) \
+	F(government_salary_education) \
+	F(government_salary_military) \
+	F(event_and_decision_income) \
+	F(loan_interest_payments)
 
-	#define OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F) \
-		F(life_needs_expense) \
-		F(everyday_needs_expense) \
-		F(luxury_needs_expense) \
-		F(artisan_inputs_expense)
+#define OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F) \
+	F(life_needs_expense) \
+	F(everyday_needs_expense) \
+	F(luxury_needs_expense) \
+	F(artisan_inputs_expense)
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
 	 */
 	struct Pop : PopBase {
-		enum struct culture_status_t : uint8_t {
-			UNACCEPTED, ACCEPTED, PRIMARY
-		};
+		enum struct culture_status_t : uint8_t { UNACCEPTED, ACCEPTED, PRIMARY };
 
 		static constexpr bool is_culture_status_allowed(regiment_allowed_cultures_t allowed, culture_status_t status) {
 			return static_cast<uint8_t>(allowed) <= static_cast<uint8_t>(status);
@@ -106,7 +105,6 @@ namespace OpenVic {
 		}
 
 	private:
-
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change, 0);
 		pop_size_t PROPERTY(num_grown, 0);
@@ -127,7 +125,7 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-	
+
 	public:
 		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
 		// the support as a proportion of 1.0
@@ -141,31 +139,36 @@ namespace OpenVic {
 			return size - employed;
 		}
 		fixed_point_t get_unemployment_fraction() const;
+
 	private:
 		fixed_point_t PROPERTY(income);
 		fixed_point_t PROPERTY(savings);
 		moveable_atomic_fixed_point_t PROPERTY(cash);
-		moveable_atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
+		moveable_atomic_fixed_point_t
+			PROPERTY(expenses); // positive value means POP paid for goods. This is displayed * -1 in UI.
 		moveable_atomic_fixed_point_t PROPERTY(yesterdays_import_value);
 
-		#define NEED_MEMBERS(need_category) \
-			moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
-			public: \
-				fixed_point_t get_##need_category##_needs_fulfilled() const; \
-			private: \
-				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
-				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+#define NEED_MEMBERS(need_category) \
+	moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+\
+public: \
+	fixed_point_t get_##need_category##_needs_fulfilled() const; \
+\
+private: \
+	fixed_point_map_t<GoodDefinition const*> PROPERTY( \
+		need_category##_needs \
+	); /* TODO pool? (if recalculating in UI is acceptable) */ \
+	ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
-		#undef NEED_MEMBERS
+#undef NEED_MEMBERS
 
 		fixed_point_t PROPERTY(artisanal_revenue);
-		#define DECLARE_POP_MONEY_STORES(money_type) \
-			fixed_point_t PROPERTY(money_type);
+#define DECLARE_POP_MONEY_STORES(money_type) fixed_point_t PROPERTY(money_type);
 
 		OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);
 		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
-		#undef DECLARE_POP_MONEY_STORES
+#undef DECLARE_POP_MONEY_STORES
 
 		std::size_t PROPERTY(regiment_count, 0);
 		std::size_t PROPERTY(max_supported_regiments, 0);
@@ -175,19 +178,13 @@ namespace OpenVic {
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
 			fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
-			forwardable_span<fixed_point_t> money_to_spend_per_good,
-			memory::vector<fixed_point_t>& reusable_vector,
-			fixed_point_t& price_inverse_sum,
-			fixed_point_t& cash_left_to_spend
+			forwardable_span<fixed_point_t> money_to_spend_per_good, memory::vector<fixed_point_t>& reusable_vector,
+			fixed_point_t& price_inverse_sum, fixed_point_t& cash_left_to_spend
 		);
 		void pop_tick_without_cleanup(
-			PopValuesFromProvince const& shared_values,
-			RandomU32& random_number_generator,
+			PopValuesFromProvince const& shared_values, RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_POP_TICK
-			> reusable_vectors
+			forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_POP_TICK> reusable_vectors
 		);
 		void pay_income_tax(fixed_point_t& income);
 
@@ -195,17 +192,13 @@ namespace OpenVic {
 		void add_artisanal_revenue(const fixed_point_t revenue);
 
 		static void after_buy(void* actor, BuyResult const& buy_result);
-		//matching GoodMarketSellOrder::callback_t
+		// matching GoodMarketSellOrder::callback_t
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
 
 	public:
-		Pop(
-			ProvinceInstance& new_location,
-			PopBase const& pop_base,
-			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-			PopDeps const& pop_deps,
-			const pop_id_in_province_t new_id_in_province
-		);
+		Pop(ProvinceInstance& new_location, PopBase const& pop_base,
+			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys, PopDeps const& pop_deps,
+			const pop_id_in_province_t new_id_in_province);
 		Pop(Pop const&) = delete;
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
@@ -216,31 +209,25 @@ namespace OpenVic {
 		void update_location_based_attributes();
 
 		void update_gamestate(
-			MilitaryDefines const& military_defines,
-			CountryInstance const* owner,
+			MilitaryDefines const& military_defines, CountryInstance const* owner,
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
-		#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
-			void add_##name(fixed_point_t amount);
+#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) void add_##name(fixed_point_t amount);
 
 		OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
-		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
+#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 
 		void pop_tick(
-			PopValuesFromProvince const& shared_values,
-			RandomU32& random_number_generator,
+			PopValuesFromProvince const& shared_values, RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_POP_TICK
-			> reusable_vectors
+			forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_POP_TICK> reusable_vectors
 		);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void hire(pop_size_t count);
-		//recruit or conscript
+		// recruit or conscript
 		bool try_recruit();
 		bool try_recruit_understrength();
 	};

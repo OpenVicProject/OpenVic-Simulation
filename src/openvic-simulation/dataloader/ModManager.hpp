@@ -4,9 +4,9 @@
 #include <functional>
 #include <string_view>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -24,14 +24,9 @@ namespace OpenVic {
 		const memory::vector<memory::string> SPAN_PROPERTY(dependencies);
 
 	public:
-		Mod(
-			ModManager const& manager,
-			std::string_view new_identifier,
-			std::string_view new_path,
-			std::optional<std::string_view> new_user_dir,
-			memory::vector<memory::string> new_replace_paths,
-			memory::vector<memory::string> new_dependencies
-		);
+		Mod(ModManager const& manager, std::string_view new_identifier, std::string_view new_path,
+			std::optional<std::string_view> new_user_dir, memory::vector<memory::string> new_replace_paths,
+			memory::vector<memory::string> new_dependencies);
 		Mod(Mod&&) = default;
 
 		vector_ordered_set<std::reference_wrapper<const Mod>> generate_dependency_list(bool* success = nullptr) const;

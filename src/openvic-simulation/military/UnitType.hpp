@@ -12,9 +12,9 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct TerrainType;
@@ -27,7 +27,14 @@ namespace OpenVic {
 		using terrain_modifiers_t = ordered_map<TerrainType const*, Modifier>;
 
 		enum struct unit_category_t : uint8_t {
-			INVALID_UNIT_CATEGORY, INFANTRY, CAVALRY, SUPPORT, SPECIAL, BIG_SHIP, LIGHT_SHIP, TRANSPORT
+			INVALID_UNIT_CATEGORY,
+			INFANTRY,
+			CAVALRY,
+			SUPPORT,
+			SPECIAL,
+			BIG_SHIP,
+			LIGHT_SHIP,
+			TRANSPORT
 		};
 
 		struct unit_type_args_t {
@@ -40,7 +47,7 @@ namespace OpenVic {
 			bool starts_unlocked = true, floating_flag = false;
 			uint32_t priority = 0;
 			fixed_point_t max_strength = 0, default_organisation = 0, maximum_speed = 0, weighted_value = 0,
-				supply_consumption = 0;
+						  supply_consumption = 0;
 			Timespan build_time;
 			fixed_point_map_t<GoodDefinition const*> build_cost, supply_cost;
 			terrain_modifier_values_t terrain_modifier_values;
@@ -82,9 +89,8 @@ namespace OpenVic {
 
 	template<>
 	struct UnitTypeBranched<unit_branch_t::LAND> : UnitType, HasIndex<RegimentType, regiment_type_index_t> {
-		static constexpr regiment_allowed_cultures_t allowed_cultures_get_most_permissive(
-			regiment_allowed_cultures_t lhs, regiment_allowed_cultures_t rhs
-		) {
+		static constexpr regiment_allowed_cultures_t
+		allowed_cultures_get_most_permissive(regiment_allowed_cultures_t lhs, regiment_allowed_cultures_t rhs) {
 			return std::min(lhs, rhs);
 		}
 
@@ -93,8 +99,7 @@ namespace OpenVic {
 			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
 			// TODO - represent these as modifier effects, so that they can be combined with tech, inventions,
 			// leader bonuses, etc. and applied to unit instances all in one go (same for ShipTypes below)
-			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0,
-				siege = 0;
+			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, siege = 0;
 
 			constexpr regiment_type_args_t() {};
 			regiment_type_args_t(regiment_type_args_t&&) = default;
@@ -116,8 +121,8 @@ namespace OpenVic {
 		const fixed_point_t siege;
 
 		UnitTypeBranched(
-			index_t new_index, std::string_view new_identifier,
-			unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
+			index_t new_index, std::string_view new_identifier, unit_type_args_t& unit_args,
+			regiment_type_args_t const& regiment_type_args
 		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
@@ -130,7 +135,7 @@ namespace OpenVic {
 			uint32_t min_port_level = 0;
 			int32_t limit_per_port = 0;
 			fixed_point_t colonial_points = 0, supply_consumption_score = 0, hull = 0, gun_power = 0, fire_range = 0,
-				evasion = 0, torpedo_attack = 0;
+						  evasion = 0, torpedo_attack = 0;
 
 			constexpr ship_type_args_t() {};
 			ship_type_args_t(ship_type_args_t&&) = default;
@@ -155,8 +160,8 @@ namespace OpenVic {
 		const fixed_point_t torpedo_attack;
 
 		UnitTypeBranched(
-			index_t new_index, std::string_view new_identifier,
-			unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
+			index_t new_index, std::string_view new_identifier, unit_type_args_t& unit_args,
+			ship_type_args_t const& ship_type_args
 		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
@@ -176,17 +181,12 @@ namespace OpenVic {
 			RegimentType::regiment_type_args_t const& regiment_type_args
 		);
 		bool add_ship_type(
-			std::string_view identifier, UnitType::unit_type_args_t& unit_args,
-			ShipType::ship_type_args_t const& ship_type_args
+			std::string_view identifier, UnitType::unit_type_args_t& unit_args, ShipType::ship_type_args_t const& ship_type_args
 		);
 
-		static NodeTools::Callback<std::string_view> auto expect_branch_str(
-			NodeTools::Callback<unit_branch_t> auto callback
-		) {
+		static NodeTools::Callback<std::string_view> auto expect_branch_str(NodeTools::Callback<unit_branch_t> auto callback) {
 			using enum unit_branch_t;
-			static const string_map_t<unit_branch_t> branch_map {
-				{ "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL }
-			};
+			static const string_map_t<unit_branch_t> branch_map { { "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL } };
 			return NodeTools::expect_mapped_string(branch_map, callback);
 		}
 		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<unit_branch_t> auto callback) {

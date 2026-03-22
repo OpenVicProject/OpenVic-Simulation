@@ -4,15 +4,13 @@
 
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	template<
-		derived_from_specialization_of<type_safe::strong_typedef> IndexType,
-		typename ValueType,
-		size_t _Extent = std::dynamic_extent
-	>
+		derived_from_specialization_of<type_safe::strong_typedef> IndexType, typename ValueType,
+		size_t _Extent = std::dynamic_extent>
 	struct TypedSpan : public forwardable_span<ValueType, _Extent> {
 	public:
 		using forwardable_span<ValueType, _Extent>::forwardable_span;
@@ -27,7 +25,7 @@ namespace OpenVic {
 		}
 
 		constexpr operator TypedSpan<IndexType, const ValueType, _Extent>() {
-			return TypedSpan<IndexType, const ValueType, _Extent>{*this};
+			return TypedSpan<IndexType, const ValueType, _Extent> { *this };
 		}
 	};
 }

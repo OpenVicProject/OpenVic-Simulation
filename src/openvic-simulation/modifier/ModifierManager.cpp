@@ -20,12 +20,8 @@ void ModifierManager::lock_all_modifier_except_base_country_effects() {
 }
 
 bool ModifierManager::_register_modifier_effect(
-	modifier_effect_registry_t& registry,
-	ModifierEffect::target_t targets,
-	ModifierEffect const*& effect_cache,
-	const std::string_view identifier,
-	const ModifierEffect::format_t format,
-	const std::string_view localisation_key,
+	modifier_effect_registry_t& registry, ModifierEffect::target_t targets, ModifierEffect const*& effect_cache,
+	const std::string_view identifier, const ModifierEffect::format_t format, const std::string_view localisation_key,
 	const bool has_no_effect
 ) {
 	using enum ModifierEffect::target_t;
@@ -42,24 +38,20 @@ bool ModifierManager::_register_modifier_effect(
 
 	if (!is_power_of_two(static_cast<uint64_t>(targets))) {
 		spdlog::error_s(
-			"Invalid targets for modifier effect \"{}\" - {} (can only contain one target)",
-			identifier, ModifierEffect::target_to_string(targets)
+			"Invalid targets for modifier effect \"{}\" - {} (can only contain one target)", identifier,
+			ModifierEffect::target_to_string(targets)
 		);
 		return false;
 	}
 
 	if (effect_cache != nullptr) {
 		spdlog::error_s(
-			"Cache variable for modifier effect \"{}\" is already filled with modifier effect \"{}\"",
-			identifier, *effect_cache
+			"Cache variable for modifier effect \"{}\" is already filled with modifier effect \"{}\"", identifier, *effect_cache
 		);
 		return false;
 	}
 
-	const bool ret = registry.emplace_item(
-		identifier,
-		identifier, format, targets, localisation_key, has_no_effect
-	);
+	const bool ret = registry.emplace_item(identifier, identifier, format, targets, localisation_key, has_no_effect);
 
 	if (ret) {
 		effect_cache = &registry.back();
@@ -69,23 +61,15 @@ bool ModifierManager::_register_modifier_effect(
 }
 
 #define REGISTER_MODIFIER_EFFECT(MAPPING_TYPE, TARGETS) \
-bool ModifierManager::register_##MAPPING_TYPE##_modifier_effect( \
-	ModifierEffect const*& effect_cache, \
-	const std::string_view identifier, \
-	const ModifierEffect::format_t format, \
-	const std::string_view localisation_key, \
-	const bool has_no_effect \
-) { \
-	return _register_modifier_effect( \
-		MAPPING_TYPE##_modifier_effects, \
-		TARGETS, \
-		effect_cache, \
-		std::move(identifier), \
-		format, \
-		localisation_key, \
-		has_no_effect \
-	); \
-}
+	bool ModifierManager::register_##MAPPING_TYPE##_modifier_effect( \
+		ModifierEffect const*& effect_cache, const std::string_view identifier, const ModifierEffect::format_t format, \
+		const std::string_view localisation_key, const bool has_no_effect \
+	) { \
+		return _register_modifier_effect( \
+			MAPPING_TYPE##_modifier_effects, TARGETS, effect_cache, std::move(identifier), format, localisation_key, \
+			has_no_effect \
+		); \
+	}
 
 REGISTER_MODIFIER_EFFECT(leader, UNIT)
 REGISTER_MODIFIER_EFFECT(unit_terrain, UNIT)
@@ -120,8 +104,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.supply_range, "supply_range", FORMAT_x100_2DP_PC_POS, "SUPPLY_RANGE_TECH"
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", FORMAT_x100_2DP_PC_POS,
-		"SUPPLY_LIMIT_TECH"
+		modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", FORMAT_x100_2DP_PC_POS, "SUPPLY_LIMIT_TECH"
 	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.morale_global, "morale", FORMAT_x100_2DP_PC_POS, "MORALE_TECH"
@@ -220,8 +203,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.factory_output_tech, "factory_output", FORMAT_x100_1DP_PC_POS, "FACTORY_OUTPUT_TECH"
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.factory_throughput_tech, "factory_throughput", FORMAT_x100_1DP_PC_POS,
-		"FACTORY_THROUGHPUT_TECH"
+		modifier_effect_cache.factory_throughput_tech, "factory_throughput", FORMAT_x100_1DP_PC_POS, "FACTORY_THROUGHPUT_TECH"
 	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.artisan_input_tech, "artisan_input", FORMAT_x100_1DP_PC_NEG, "ARTISAN_INPUT_TECH", has_no_effect
@@ -262,9 +244,8 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.max_war_exhaustion, "max_war_exhaustion", FORMAT_x1_2DP_NEG, "MAX_WAR_EXHAUSTION"
 	);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.leadership, "leadership", FORMAT_x1_2DP_POS, "LEADERSHIP"
-	);
+	ret &=
+		register_base_country_modifier_effect(modifier_effect_cache.leadership, "leadership", FORMAT_x1_2DP_POS, "LEADERSHIP");
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.leadership_modifier, "leadership_modifier", FORMAT_x100_1DP_PC_POS,
 		ModifierEffect::make_default_modifier_effect_localisation_key("global_leadership_modifier")
@@ -276,18 +257,15 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.unit_recruitment_time, "unit_recruitment_time", FORMAT_x100_1DP_PC_NEG
 	);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.org_regain, "org_regain", FORMAT_x100_1DP_PC_POS);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.reinforce_speed, "reinforce_speed", FORMAT_x100_1DP_PC_POS
-	);
+	ret &=
+		register_base_country_modifier_effect(modifier_effect_cache.reinforce_speed, "reinforce_speed", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.land_organisation, "land_organisation", FORMAT_x100_1DP_PC_POS
 	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.naval_organisation, "naval_organisation", FORMAT_x100_1DP_PC_POS
 	);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.research_points, "research_points", FORMAT_x1_2DP_POS
-	);
+	ret &= register_base_country_modifier_effect(modifier_effect_cache.research_points, "research_points", FORMAT_x1_2DP_POS);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.research_points_modifier, "research_points_modifier", FORMAT_x100_1DP_PC_POS
 	);
@@ -300,9 +278,8 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.loan_interest_foreign, "loan_interest", FORMAT_x100_1DP_PC_NEG
 	);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.tax_efficiency, "tax_efficiency", FORMAT_x100_1DP_PC_POS
-	);
+	ret &=
+		register_base_country_modifier_effect(modifier_effect_cache.tax_efficiency, "tax_efficiency", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.min_tax, "min_tax", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.max_tax, "max_tax", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_country_modifier_effect(
@@ -349,9 +326,8 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.factory_throughput_country, "factory_throughput", FORMAT_x100_1DP_PC_POS
 	);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.rgo_output_country, "rgo_output", FORMAT_x100_1DP_PC_POS
-	);
+	ret &=
+		register_base_country_modifier_effect(modifier_effect_cache.rgo_output_country, "rgo_output", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.rgo_throughput_country, "rgo_throughput", FORMAT_x100_1DP_PC_POS
 	);
@@ -370,9 +346,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.global_assimilation_rate, "global_assimilation_rate", FORMAT_x100_1DP_PC_POS,
 		ModifierEffect::make_default_modifier_effect_localisation_key("assimilation_rate")
 	);
-	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.prestige_monthly_gain, "prestige", FORMAT_x1_3DP_POS
-	);
+	ret &= register_base_country_modifier_effect(modifier_effect_cache.prestige_monthly_gain, "prestige", FORMAT_x1_3DP_POS);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.factory_cost_country, "factory_cost", FORMAT_x100_1DP_PC_NEG
 	);
@@ -380,7 +354,8 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.farm_rgo_output_global, "farm_rgo_eff", FORMAT_x100_1DP_PC_POS, "MODIFIER_FARM_EFFICIENCY"
 	);
 	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.mine_rgo_output_global, "mine_rgo_eff", FORMAT_x100_1DP_PC_POS, "MODIFIER_MINE_EFFICIENCY" //not sure about this one
+		modifier_effect_cache.mine_rgo_output_global, "mine_rgo_eff", FORMAT_x100_1DP_PC_POS,
+		"MODIFIER_MINE_EFFICIENCY" // not sure about this one
 	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.farm_rgo_size_fake, "farm_rgo_size", FORMAT_x100_1DP_PC_POS,
@@ -548,18 +523,15 @@ bool ModifierManager::setup_modifier_effects() {
 	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_artisan_input, "local_artisan_input", FORMAT_x100_1DP_PC_POS,
-		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_input"),
-		has_no_effect
+		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_input"), has_no_effect
 	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_artisan_output, "local_artisan_output", FORMAT_x100_1DP_PC_POS,
-		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_output"),
-		has_no_effect
+		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_output"), has_no_effect
 	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_artisan_throughput, "local_artisan_throughput", FORMAT_x100_1DP_PC_POS,
-		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_throughput"),
-		has_no_effect
+		ModifierEffect::make_default_modifier_effect_localisation_key("artisan_throughput"), has_no_effect
 	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.number_of_voters, "number_of_voters", FORMAT_x100_1DP_PC_NEG
@@ -599,9 +571,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.immigrant_push, "immigrant_push", FORMAT_x100_1DP_PC_POS,
 		ModifierEffect::make_default_modifier_effect_localisation_key("immigant_push")
 	);
-	ret &= register_base_province_modifier_effect(
-		modifier_effect_cache.local_repair, "local_repair", FORMAT_x100_1DP_PC_POS
-	);
+	ret &= register_base_province_modifier_effect(modifier_effect_cache.local_repair, "local_repair", FORMAT_x100_1DP_PC_POS);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_ship_build, "local_ship_build", FORMAT_x100_1DP_PC_NEG
 	);
@@ -610,18 +580,13 @@ bool ModifierManager::setup_modifier_effects() {
 	);
 
 	/* Terrain Modifier Effects */
-	ret &= register_terrain_modifier_effect(
-		modifier_effect_cache.attrition_local, "attrition", FORMAT_x1_2DP_NEG, "ATTRITION"
-	);
+	ret &= register_terrain_modifier_effect(modifier_effect_cache.attrition_local, "attrition", FORMAT_x1_2DP_NEG, "ATTRITION");
 
 	/* Military Modifier Effects */
 	ret &= register_leader_modifier_effect(modifier_effect_cache.attack_leader, "attack", FORMAT_x1_2DP_POS, "TRAIT_ATTACK");
-	ret &= register_leader_modifier_effect(
-		modifier_effect_cache.defence_leader, "defence", FORMAT_x1_2DP_POS, "TRAIT_DEFEND"
-	);
-	ret &= register_leader_modifier_effect(
-		modifier_effect_cache.morale_leader, "morale", FORMAT_x100_1DP_PC_POS, "TRAIT_MORALE"
-	);
+	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", FORMAT_x1_2DP_POS, "TRAIT_DEFEND");
+	ret &=
+		register_leader_modifier_effect(modifier_effect_cache.morale_leader, "morale", FORMAT_x100_1DP_PC_POS, "TRAIT_MORALE");
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.organisation, "organisation", FORMAT_x100_1DP_PC_POS, "TRAIT_ORGANISATION"
 	);
@@ -652,16 +617,13 @@ bool ModifierManager::register_complex_modifier(const std::string_view identifie
 }
 
 memory::string ModifierManager::get_flat_identifier(
-	const std::string_view complex_modifier_identifier,
-	const std::string_view variant_identifier
+	const std::string_view complex_modifier_identifier, const std::string_view variant_identifier
 ) {
 	return memory::fmt::format("{} {}", complex_modifier_identifier, variant_identifier);
 }
 
 bool ModifierManager::add_event_modifier(
-	const std::string_view identifier,
-	ModifierValue&& values,
-	const IconModifier::icon_t icon,
+	const std::string_view identifier, ModifierValue&& values, const IconModifier::icon_t icon,
 	const Modifier::modifier_type_t type
 ) {
 
@@ -670,30 +632,23 @@ bool ModifierManager::add_event_modifier(
 		return false;
 	}
 
-	return event_modifiers.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		identifier, std::move(values), type, icon 
-	);
+	return event_modifiers.emplace_item(identifier, duplicate_warning_callback, identifier, std::move(values), type, icon);
 }
 
 bool ModifierManager::load_event_modifiers(const ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		event_modifiers,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
-			ModifierValue modifier_value;
-			IconModifier::icon_t icon = 0;
+	const bool ret = expect_dictionary_reserve_length(event_modifiers, [this](std::string_view key, ast::NodeCPtr value) -> bool {
+		ModifierValue modifier_value;
+		IconModifier::icon_t icon = 0;
 
-			bool ret = expect_dictionary_keys_and_default(
-				expect_base_province_modifier(modifier_value),
-				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon))
-			)(value);
+		bool ret =
+			expect_dictionary_keys_and_default(expect_base_province_modifier(modifier_value), "icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)))(
+				value
+			);
 
-			ret &= add_event_modifier(key, std::move(modifier_value), icon);
+		ret &= add_event_modifier(key, std::move(modifier_value), icon);
 
-			return ret;
-		}
-	)(root);
+		return ret;
+	})(root);
 
 	return ret;
 }
@@ -703,10 +658,7 @@ bool ModifierManager::load_static_modifiers(const ast::NodeCPtr root) {
 }
 
 bool ModifierManager::add_triggered_modifier(
-	const std::string_view identifier,
-	ModifierValue&& values,
-	const IconModifier::icon_t icon,
-	ConditionScript&& trigger
+	const std::string_view identifier, ModifierValue&& values, const IconModifier::icon_t icon, ConditionScript&& trigger
 ) {
 	using enum Modifier::modifier_type_t;
 
@@ -716,16 +668,13 @@ bool ModifierManager::add_triggered_modifier(
 	}
 
 	return triggered_modifiers.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		identifier, std::move(values), TRIGGERED, icon, std::move(trigger)
+		identifier, duplicate_warning_callback, identifier, std::move(values), TRIGGERED, icon, std::move(trigger)
 	);
 }
 
 bool ModifierManager::load_triggered_modifiers(const ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		triggered_modifiers,
-		[this](const std::string_view key, const ast::NodeCPtr value) -> bool {
+	const bool ret =
+		expect_dictionary_reserve_length(triggered_modifiers, [this](const std::string_view key, const ast::NodeCPtr value) -> bool {
 			using enum scope_type_t;
 
 			ModifierValue modifier_value {};
@@ -741,8 +690,7 @@ bool ModifierManager::load_triggered_modifiers(const ast::NodeCPtr root) {
 			ret &= add_triggered_modifier(key, std::move(modifier_value), icon, std::move(trigger));
 
 			return ret;
-		}
-	)(root);
+		})(root);
 
 	lock_triggered_modifiers();
 
@@ -760,10 +708,7 @@ bool ModifierManager::parse_scripts(DefinitionManager const& definition_manager)
 }
 
 bool ModifierManager::_add_flattened_modifier_cb(
-	ModifierValue& modifier_value,
-	const std::string_view prefix,
-	const std::string_view key,
-	const ast::NodeCPtr value
+	ModifierValue& modifier_value, const std::string_view prefix, const std::string_view key, const ast::NodeCPtr value
 ) const {
 	const memory::string flat_identifier = get_flat_identifier(prefix, key);
 	ModifierEffect const* effect = technology_modifier_effects.get_item_by_identifier(flat_identifier);
@@ -776,9 +721,7 @@ bool ModifierManager::_add_flattened_modifier_cb(
 };
 
 bool ModifierManager::_add_modifier_cb(
-	ModifierValue& modifier_value,
-	ModifierEffect const* const effect,
-	const ast::NodeCPtr value
+	ModifierValue& modifier_value, ModifierEffect const* const effect, const ast::NodeCPtr value
 ) const {
 	if (effect->has_no_effect) {
 		spdlog::warn_s("This modifier does nothing: {}", *effect);
@@ -786,23 +729,17 @@ bool ModifierManager::_add_modifier_cb(
 	return expect_fixed_point(map_callback(modifier_value.values, effect))(value);
 }
 
-key_value_callback_t ModifierManager::_expect_modifier_effect(
-	modifier_effect_registry_t const& registry,
-	ModifierValue& modifier_value
-) const {
+key_value_callback_t
+ModifierManager::_expect_modifier_effect(modifier_effect_registry_t const& registry, ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_warn_callback);
 }
 
 key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
-	modifier_effect_registry_t const& registry,
-	ModifierValue& modifier_value,
-	key_value_callback_t fallback
+	modifier_effect_registry_t const& registry, ModifierValue& modifier_value, key_value_callback_t fallback
 ) const {
 	return [this, &registry, &modifier_value, fallback](const std::string_view key, const ast::NodeCPtr value) mutable -> bool {
 		if (dryad::node_has_kind<ast::ListValue>(value) && complex_modifiers.contains(key)) {
-			return expect_dictionary([this, &modifier_value, key](
-				const std::string_view inner_key, const ast::NodeCPtr inner_value
-			) -> bool {
+			return expect_dictionary([this, &modifier_value, key](const std::string_view inner_key, const ast::NodeCPtr inner_value) -> bool {
 				return _add_flattened_modifier_cb(modifier_value, key, inner_key, inner_value);
 			})(value);
 		}
@@ -825,26 +762,22 @@ key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& 
 			std::string_view faction_identifier;
 			ast::NodeCPtr value_node = nullptr;
 
-			bool ret = expect_dictionary_keys(
-				"faction", ONE_EXACTLY, expect_identifier(assign_variable_callback(faction_identifier)),
-				"value", ONE_EXACTLY, assign_variable_callback(value_node)
-			)(value);
+			bool ret =
+				expect_dictionary_keys("faction", ONE_EXACTLY, expect_identifier(assign_variable_callback(faction_identifier)), "value", ONE_EXACTLY, assign_variable_callback(value_node))(
+					value
+				);
 
 			ret &= _add_flattened_modifier_cb(modifier_value, key, faction_identifier, value_node);
 
 			return ret;
 		}
 
-		return _expect_modifier_effect(
-			technology_modifier_effects,
-			modifier_value
-		)(key, value);
+		return _expect_modifier_effect(technology_modifier_effects, modifier_value)(key, value);
 	};
 }
 
 key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
-	ModifierValue& modifier_value,
-	const std::string_view terrain_type_identifier
+	ModifierValue& modifier_value, const std::string_view terrain_type_identifier
 ) const {
 	return [this, &modifier_value, terrain_type_identifier](const std::string_view key, const ast::NodeCPtr value) -> bool {
 		const memory::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
@@ -862,16 +795,12 @@ key_value_callback_t ModifierManager::expect_base_country_modifier(ModifierValue
 
 key_value_callback_t ModifierManager::expect_base_province_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(
-		base_province_modifier_effects,
-		modifier_value,
-		expect_base_country_modifier(modifier_value)
+		base_province_modifier_effects, modifier_value, expect_base_country_modifier(modifier_value)
 	);
 }
 
 key_value_callback_t ModifierManager::expect_terrain_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(
-		terrain_modifier_effects,
-		modifier_value,
-		expect_base_province_modifier(modifier_value)
+		terrain_modifier_effects, modifier_value, expect_base_province_modifier(modifier_value)
 	);
 }

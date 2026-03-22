@@ -19,10 +19,7 @@ namespace OpenVic {
 		Ideology const* const ideology; // Can be nullptr, shows up as "No Ideology" in game
 
 		CountryParty(
-			std::string_view new_identifier,
-			Date new_start_date,
-			Date new_end_date,
-			Ideology const* new_ideology,
+			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
 			decltype(policies)&& new_policies
 		);
 		CountryParty(CountryParty&&) = default;

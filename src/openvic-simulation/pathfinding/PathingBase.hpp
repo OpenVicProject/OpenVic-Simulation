@@ -139,7 +139,8 @@ namespace OpenVic {
 		}
 
 		template<typename T, typename Projection = std::identity>
-		inline memory::vector<T> generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
+		inline memory::vector<T>
+		generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
 			search_iterator p = to_it;
 			int64_t pc = 1; // Begin point
 			while (p != from_it) {

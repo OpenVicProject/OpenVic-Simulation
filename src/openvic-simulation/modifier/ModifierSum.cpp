@@ -1,10 +1,9 @@
 #include "ModifierSum.hpp"
 
-#include "openvic-simulation/modifier/Modifier.hpp"
-
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 
 using namespace OpenVic;
 
@@ -19,9 +18,7 @@ std::string_view modifier_entry_t::source_to_string(modifier_source_t const& sou
 
 memory::string modifier_entry_t::to_string() const {
 	return memory::fmt::format(
-		"[{}, {}, {}, {}]",
-		modifier, multiplier, source_to_string(source),
-		ModifierEffect::target_to_string(excluded_targets)
+		"[{}, {}, {}, {}]", modifier, multiplier, source_to_string(source), ModifierEffect::target_to_string(excluded_targets)
 	);
 }
 
@@ -50,9 +47,7 @@ void ModifierSum::add_modifier(
 	// called with an explcit/hardcoded value and so won't ever exclude everything.
 	if (multiplier != 0) {
 		modifier_entry_t const& new_entry = modifiers.emplace_back(
-			modifier,
-			multiplier,
-			modifier_entry_t::source_or_null_fallback(source, this_source),
+			modifier, multiplier, modifier_entry_t::source_or_null_fallback(source, this_source),
 			excluded_targets | this_excluded_targets
 		);
 		value_sum.multiply_add_exclude_targets(new_entry.modifier, new_entry.multiplier, new_entry.excluded_targets);
@@ -66,10 +61,7 @@ void ModifierSum::add_modifier_sum(ModifierSum const& modifier_sum) {
 	// called with an explcit/hardcoded value and so won't ever exclude everything.
 	for (modifier_entry_t const& modifier_entry : modifier_sum.modifiers) {
 		add_modifier(
-			modifier_entry.modifier,
-			modifier_entry.multiplier,
-			modifier_entry.source,
-			modifier_entry.excluded_targets
+			modifier_entry.modifier, modifier_entry.multiplier, modifier_entry.source, modifier_entry.excluded_targets
 		);
 	}
 }

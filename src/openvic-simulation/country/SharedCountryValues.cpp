@@ -9,13 +9,11 @@
 using namespace OpenVic;
 
 SharedCountryValues::SharedCountryValues(
-	PopsDefines const& new_pop_defines,
-	GoodInstanceManager const& new_good_instance_manager,
+	PopsDefines const& new_pop_defines, GoodInstanceManager const& new_good_instance_manager,
 	decltype(shared_pop_type_values)::keys_span_type pop_type_keys
-) : pop_defines { new_pop_defines },
-	good_instance_manager { new_good_instance_manager },
-	shared_pop_type_values { pop_type_keys }
-	{}
+)
+	: pop_defines { new_pop_defines }, good_instance_manager { new_good_instance_manager },
+	  shared_pop_type_values { pop_type_keys } {}
 
 SharedPopTypeValues& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) {
 	return shared_pop_type_values.at(pop_type);
@@ -33,26 +31,26 @@ void SharedPopTypeValues::update_costs(PopsDefines const& pop_defines, GoodInsta
 	fixed_point_t military_salary_base_running_total = 0;
 	using enum PopType::income_type_t;
 
-	#define UPDATE_NEED_COSTS(need_category) \
-		base_##need_category##_need_costs = 0; \
-		for (auto const& [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
-			GoodInstance const& good_instance = good_instance_manager.get_good_instance_by_definition(*good_definition_ptr); \
-			base_##need_category##_need_costs += good_instance.get_price() * quantity; \
-		} \
-		base_##need_category##_need_costs *= pop_defines.get_base_goods_demand(); \
-		if ((pop_type.get_##need_category##_needs_income_types() & ADMINISTRATION) == ADMINISTRATION) { \
-			administration_salary_base_running_total += base_##need_category##_need_costs; \
-		} \
-		if ((pop_type.get_##need_category##_needs_income_types() & EDUCATION) == EDUCATION) { \
-			education_salary_base_running_total += base_##need_category##_need_costs; \
-		} \
-		if ((pop_type.get_##need_category##_needs_income_types() & MILITARY) == MILITARY) { \
-			military_salary_base_running_total += base_##need_category##_need_costs; \
-		}
+#define UPDATE_NEED_COSTS(need_category) \
+	base_##need_category##_need_costs = 0; \
+	for (auto const& [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
+		GoodInstance const& good_instance = good_instance_manager.get_good_instance_by_definition(*good_definition_ptr); \
+		base_##need_category##_need_costs += good_instance.get_price() * quantity; \
+	} \
+	base_##need_category##_need_costs *= pop_defines.get_base_goods_demand(); \
+	if ((pop_type.get_##need_category##_needs_income_types() & ADMINISTRATION) == ADMINISTRATION) { \
+		administration_salary_base_running_total += base_##need_category##_need_costs; \
+	} \
+	if ((pop_type.get_##need_category##_needs_income_types() & EDUCATION) == EDUCATION) { \
+		education_salary_base_running_total += base_##need_category##_need_costs; \
+	} \
+	if ((pop_type.get_##need_category##_needs_income_types() & MILITARY) == MILITARY) { \
+		military_salary_base_running_total += base_##need_category##_need_costs; \
+	}
 
 	OV_DO_FOR_ALL_NEED_CATEGORIES(UPDATE_NEED_COSTS)
 
-	#undef UPDATE_NEED_COSTS
+#undef UPDATE_NEED_COSTS
 
 	administration_salary_base.set(administration_salary_base_running_total);
 	education_salary_base.set(education_salary_base_running_total);

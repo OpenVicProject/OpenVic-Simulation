@@ -6,11 +6,9 @@
 using namespace OpenVic;
 
 PoliticsInstanceManager::PoliticsInstanceManager(
-	InstanceManager const& new_instance_manager,
-	forwardable_span<const Ideology> ideologies
+	InstanceManager const& new_instance_manager, forwardable_span<const Ideology> ideologies
 )
-  : instance_manager { new_instance_manager },
-	ideology_spawn_date { ideologies } {}
+	: instance_manager { new_instance_manager }, ideology_spawn_date { ideologies } {}
 
 void PoliticsInstanceManager::setup_starting_ideologies() {
 	const Date today = instance_manager.get_today();
@@ -39,16 +37,13 @@ void PoliticsInstanceManager::unlock_ideology(Ideology const& ideology) {
 	if (!spawn_date.has_value()) {
 		spawn_date = instance_manager.get_today();
 	} else {
-		spdlog::warn_s(
-			"Cannot unlock ideology \"{}\" - it was already unlocked on: {}",
-			ideology, *spawn_date
-		);
+		spdlog::warn_s("Cannot unlock ideology \"{}\" - it was already unlocked on: {}", ideology, *spawn_date);
 	}
 }
 
 void PoliticsInstanceManager::set_great_wars_enabled(bool enabled) {
 	// if (enabled && !great_wars_enabled) {
-		// TODO - trigger "Great Wars discovered!" popup
+	// TODO - trigger "Great Wars discovered!" popup
 	// }
 
 	great_wars_enabled = enabled;

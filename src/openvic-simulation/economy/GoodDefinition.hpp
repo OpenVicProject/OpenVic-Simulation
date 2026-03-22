@@ -17,6 +17,7 @@ namespace OpenVic {
 
 	private:
 		memory::vector<std::reference_wrapper<const GoodDefinition>> SPAN_PROPERTY(good_definitions);
+
 	public:
 		GoodCategory(std::string_view new_identifier);
 		GoodCategory(GoodCategory&&) = default;

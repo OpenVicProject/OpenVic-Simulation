@@ -53,7 +53,7 @@ namespace OpenVic {
 					}
 					s |= std::hash<Args> {}(args);
 				}(),
-				...
+				... //
 			);
 		}
 	}

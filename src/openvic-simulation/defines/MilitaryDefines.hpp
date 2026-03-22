@@ -2,9 +2,9 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/military/CombatWidth.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

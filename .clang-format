@@ -71,6 +71,13 @@ InsertNewlineAtEOF: true
 InsertBraces: true
 MaxEmptyLinesToKeep: 2
 RequiresClausePosition: OwnLine
+AttributeMacros:
+  - OV_ALWAYS_INLINE
+  - OV_SPEED_INLINE
+  - OV_NO_UNIQUE_ADDRESS
+IfMacros:
+  - CHECK_IF
+  - CHECK_FALSE_IF
 IncludeCategories:
   - Regex: <[[:alnum:]_]+>
     Priority: 1
@@ -90,7 +97,11 @@ IncludeCategories:
     Priority: 8
   - Regex: ^<spdlog/
     Priority: 9
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<function2/
     Priority: 10
-  - Regex: .*
+  - Regex: ^<type_safe/
     Priority: 11
+  - Regex: ^"openvic-simulation/
+    Priority: 12
+  - Regex: .*
+    Priority: 13

@@ -7,11 +7,11 @@
 #include <type_traits>
 #include <variant>
 
+#include <function2/function2.hpp>
+
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-
-#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct InstanceManager;

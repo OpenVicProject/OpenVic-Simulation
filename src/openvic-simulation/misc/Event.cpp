@@ -14,7 +14,8 @@ using namespace OpenVic::NodeTools;
 
 Event::EventOption::EventOption(
 	std::string_view new_name, EffectScript&& new_effect, ConditionalWeightFactorMul&& new_ai_chance
-) : name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
+)
+	: name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
 
 bool Event::EventOption::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -24,19 +25,20 @@ bool Event::EventOption::parse_scripts(DefinitionManager const& definition_manag
 }
 
 Event::Event(
-	std::string_view new_identifier, std::string_view new_title, std::string_view new_description,
-	std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major, bool new_fire_only_once,
-	bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long,
-	std::string_view new_news_desc_medium, std::string_view new_news_desc_short, bool new_election,
-	const issue_group_t new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
-	EffectScript&& new_immediate, memory::vector<EventOption>&& new_options
-) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
-	type { new_type }, is_triggered_only { new_triggered_only }, is_major { new_major }, fire_only_once { new_fire_only_once },
-	allows_multiple_instances { new_allows_multiple_instances }, is_news { new_news }, news_title { new_news_title },
-	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
-	election { new_election }, election_issue_group { new_election_issue_group }, trigger { std::move(new_trigger) },
-	mean_time_to_happen { std::move(new_mean_time_to_happen) }, immediate { std::move(new_immediate) },
-	options { std::move(new_options) } {}
+	std::string_view new_identifier, std::string_view new_title, std::string_view new_description, std::string_view new_image,
+	event_type_t new_type, bool new_triggered_only, bool new_major, bool new_fire_only_once, bool new_allows_multiple_instances,
+	bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long, std::string_view new_news_desc_medium,
+	std::string_view new_news_desc_short, bool new_election, const issue_group_t new_election_issue_group,
+	ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen, EffectScript&& new_immediate,
+	memory::vector<EventOption>&& new_options
+)
+	: HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
+	  type { new_type }, is_triggered_only { new_triggered_only }, is_major { new_major },
+	  fire_only_once { new_fire_only_once }, allows_multiple_instances { new_allows_multiple_instances }, is_news { new_news },
+	  news_title { new_news_title }, news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium },
+	  news_desc_short { new_news_desc_short }, election { new_election }, election_issue_group { new_election_issue_group },
+	  trigger { std::move(new_trigger) }, mean_time_to_happen { std::move(new_mean_time_to_happen) },
+	  immediate { std::move(new_immediate) }, options { std::move(new_options) } {}
 
 bool Event::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -81,26 +83,22 @@ bool EventManager::register_event(
 	if (election && std::holds_alternative<std::monostate>(election_issue_group)) {
 		spdlog::warn_s("Event with ID {} is an election event but has no issue group!", identifier);
 	} else if (!election) {
-		std::visit([identifier](auto&& arg) {
-			using T = std::decay_t<decltype(arg)>; // Get the clean type
-			
-			if constexpr (std::is_same_v<T, std::reference_wrapper<const PartyPolicyGroup>>) {
-				spdlog::warn_s(
-					"Event with ID {} is not an election event but has party policy group {}!",
-					identifier, arg
-				);
-			} else if constexpr (std::is_same_v<T, std::reference_wrapper<const ReformGroup>>) {
-				spdlog::warn_s(
-					"Event with ID {} is not an election event but has reform group {}!",
-					identifier, arg
-				);
-			} else if constexpr (!std::is_same_v<T, std::monostate>){
-				spdlog::error_s(
-					"Event with ID {} is not an election event but has unknown issue group {}!",
-					identifier, arg
-				);
-			}
-		}, election_issue_group);
+		std::visit(
+			[identifier](auto&& arg) {
+				using T = std::decay_t<decltype(arg)>; // Get the clean type
+
+				if constexpr (std::is_same_v<T, std::reference_wrapper<const PartyPolicyGroup>>) {
+					spdlog::warn_s("Event with ID {} is not an election event but has party policy group {}!", identifier, arg);
+				} else if constexpr (std::is_same_v<T, std::reference_wrapper<const ReformGroup>>) {
+					spdlog::warn_s("Event with ID {} is not an election event but has reform group {}!", identifier, arg);
+				} else if constexpr (!std::is_same_v<T, std::monostate>) {
+					spdlog::error_s(
+						"Event with ID {} is not an election event but has unknown issue group {}!", identifier, arg
+					);
+				}
+			},
+			election_issue_group
+		);
 	}
 	if (news) {
 		if (news_desc_long.empty() || news_desc_medium.empty() || news_desc_short.empty()) {
@@ -123,11 +121,10 @@ bool EventManager::register_event(
 	// TODO - error if is_triggered_only with triggers or MTTH defined
 
 	return events.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances, news,
-		news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(trigger),
-		std::move(mean_time_to_happen), std::move(immediate), std::move(options)
+		identifier, duplicate_warning_callback, identifier, title, description, image, type, triggered_only, major,
+		fire_only_once, allows_multiple_instances, news, news_title, news_desc_long, news_desc_medium, news_desc_short,
+		election, election_issue_group, std::move(trigger), std::move(mean_time_to_happen), std::move(immediate),
+		std::move(options)
 	);
 }
 
@@ -137,48 +134,42 @@ bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_m
 		return false;
 	}
 
-	return on_actions.emplace_item(
-		identifier,
-		identifier, std::move(weighted_events)
-	);
+	return on_actions.emplace_item(identifier, identifier, std::move(weighted_events));
 }
 
 bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(
-		events,
-		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
-			using enum scope_type_t;
+	return expect_dictionary_reserve_length(events, [this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+		using enum scope_type_t;
 
-			Event::event_type_t type;
-			scope_type_t initial_scope;
+		Event::event_type_t type;
+		scope_type_t initial_scope;
 
-			if (key == "country_event") {
-				type = Event::event_type_t::COUNTRY;
-				initial_scope = COUNTRY;
-			} else if (key == "province_event") {
-				type = Event::event_type_t::PROVINCE;
-				initial_scope = PROVINCE;
-			} else {
-				spdlog::error_s("Invalid event type: {}", key);
-				return false;
-			}
+		if (key == "country_event") {
+			type = Event::event_type_t::COUNTRY;
+			initial_scope = COUNTRY;
+		} else if (key == "province_event") {
+			type = Event::event_type_t::PROVINCE;
+			initial_scope = PROVINCE;
+		} else {
+			spdlog::error_s("Invalid event type: {}", key);
+			return false;
+		}
 
-			std::string_view identifier, title, description, image, news_title, news_desc_long, news_desc_medium,
-				news_desc_short;
-			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
-				news = false, election = false;
-			issue_group_t election_issue_group;
-			ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
-			ConditionalWeightTime mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
-			EffectScript immediate;
+		std::string_view identifier, title, description, image, news_title, news_desc_long, news_desc_medium, news_desc_short;
+		bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false, news = false,
+			 election = false;
+		issue_group_t election_issue_group;
+		ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
+		ConditionalWeightTime mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
+		EffectScript immediate;
 
-			// Ensures that if ever multithreaded, only one vector is used per thread
-			// Else acts like static
-			thread_local memory::vector<Event::EventOption> options;
-			// Default max vanilla options is 5
-			options.reserve(2);
+		// Ensures that if ever multithreaded, only one vector is used per thread
+		// Else acts like static
+		thread_local memory::vector<Event::EventOption> options;
+		// Default max vanilla options is 5
+		options.reserve(2);
 
-			bool ret = expect_dictionary_keys(
+		bool ret = expect_dictionary_keys(
 				"id", ONE_EXACTLY, expect_identifier(assign_variable_callback(identifier)),
 				"title", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(title)),
 				"desc", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(description)),
@@ -219,26 +210,24 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"immediate", ZERO_OR_MORE, immediate.expect_script()
 			)(value);
 
-			ret &= register_event(
-				identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances,
-				news, news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group,
-				std::move(trigger), std::move(mean_time_to_happen), std::move(immediate), std::move(options)
-			);
-			return ret;
-		}
-	)(root);
+		ret &= register_event(
+			identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances, news,
+			news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(trigger),
+			std::move(mean_time_to_happen), std::move(immediate), std::move(options)
+		);
+		return ret;
+	})(root);
 }
 
 bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 		OnAction::weight_map_t weighted_events;
-		bool ret = expect_dictionary_reserve_length(
-			weighted_events,
-			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
+		bool ret =
+			expect_dictionary_reserve_length(weighted_events, [this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
 				bool ret = false;
 				uint64_t weight;
 				std::from_chars_result result = string_to_uint64(weight_str, weight);
-				ret = result.ec == std::errc{};
+				ret = result.ec == std::errc {};
 				if (!ret) {
 					spdlog::error_s("Invalid weight {} on action {}", weight_str, identifier);
 					return ret;
@@ -249,16 +238,18 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 
 				if (event != nullptr) {
 					ret &= map_callback(weighted_events, event)(weight);
-				} else if (ast::FlatValue const* event_name = dryad::node_try_cast<ast::FlatValue>(event_node); event_name && event_name->value()) {
+				} else if (
+					ast::FlatValue const* event_name = dryad::node_try_cast<ast::FlatValue>(event_node);
+					event_name && event_name->value()
+				) {
 					spdlog::warn_s(
-						"Non-existing event {} loaded on action {} with weight {}!",
-						event_name->value().view(), identifier, weight
+						"Non-existing event {} loaded on action {} with weight {}!", event_name->value().view(), identifier,
+						weight
 					);
 				}
 
 				return ret;
-			}
-		)(node);
+			})(node);
 		ret &= add_on_action(identifier, std::move(weighted_events));
 		return ret;
 	})(root);

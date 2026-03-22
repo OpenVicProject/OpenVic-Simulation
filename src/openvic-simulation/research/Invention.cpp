@@ -10,29 +10,17 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Invention::Invention(
-	index_t new_index,
-	std::string_view new_identifier,
-	ModifierValue&& new_values,
-	bool new_is_news,
-	unit_set_t&& new_activated_units,
-	building_set_t&& new_activated_buildings,
-	crime_set_t&& new_enabled_crimes,
-	bool new_unlocks_gas_attack,
-	bool new_unlocks_gas_defence,
-	ConditionScript&& new_limit,
-	ConditionalWeightBase&& new_chance,
+	index_t new_index, std::string_view new_identifier, ModifierValue&& new_values, bool new_is_news,
+	unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes,
+	bool new_unlocks_gas_attack, bool new_unlocks_gas_defence, ConditionScript&& new_limit, ConditionalWeightBase&& new_chance,
 	memory::vector<memory::string>&& new_raw_associated_tech_identifiers
-) : HasIndex { new_index },
-	Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
-	is_news { new_is_news },
-	activated_units { std::move(new_activated_units) },
-	activated_buildings { std::move(new_activated_buildings) },
-	enabled_crimes { std::move(new_enabled_crimes) },
-	unlocks_gas_attack { new_unlocks_gas_attack },
-	unlocks_gas_defence { new_unlocks_gas_defence },
-	limit { std::move(new_limit) },
-	chance { std::move(new_chance) },
-	raw_associated_tech_identifiers { std::move(new_raw_associated_tech_identifiers) } {}
+)
+	: HasIndex { new_index }, Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
+	  is_news { new_is_news }, activated_units { std::move(new_activated_units) },
+	  activated_buildings { std::move(new_activated_buildings) }, enabled_crimes { std::move(new_enabled_crimes) },
+	  unlocks_gas_attack { new_unlocks_gas_attack }, unlocks_gas_defence { new_unlocks_gas_defence },
+	  limit { std::move(new_limit) }, chance { std::move(new_chance) },
+	  raw_associated_tech_identifiers { std::move(new_raw_associated_tech_identifiers) } {}
 
 bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -57,8 +45,7 @@ bool InventionManager::add_invention(
 	return inventions.emplace_item(
 		identifier, Invention::index_t { get_invention_count() }, identifier, std::move(values), news,
 		std::move(activated_units), std::move(activated_buildings), std::move(enabled_crimes), unlock_gas_attack,
-		unlock_gas_defence, std::move(limit), std::move(chance),
-		std::move(raw_associated_tech_identifiers)
+		unlock_gas_defence, std::move(limit), std::move(chance), std::move(raw_associated_tech_identifiers)
 	);
 }
 
@@ -87,22 +74,19 @@ bool InventionManager::load_inventions_file(
 		memory::vector<memory::string> found_tech_ids;
 
 		auto parse_limit_and_find_techs = [&](ast::NodeCPtr node) -> bool {
+			if (!limit.expect_script()(node)) {
+				return false;
+			}
 
-			  if (!limit.expect_script()(node)) {
-				  return false;
-			  }
+			expect_dictionary([&](std::string_view key, ast::NodeCPtr /*value*/) -> bool {
+				if (tech_manager.get_technology_by_identifier(key) != nullptr) {
+					found_tech_ids.push_back(memory::string(key));
+				}
+				return true;
+			})(node);
 
-			  expect_dictionary(
-				  [&](std::string_view key, ast::NodeCPtr /*value*/) -> bool {
-					  if (tech_manager.get_technology_by_identifier(key) != nullptr) {
-						  found_tech_ids.push_back(memory::string(key));
-					  }
-					  return true;
-				  }
-			  )(node);
-
-			  return true;
-		  };
+			return true;
+		};
 
 		bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_country_modifier(loose_modifiers),

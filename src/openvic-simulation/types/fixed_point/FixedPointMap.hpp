@@ -26,9 +26,8 @@ namespace OpenVic {
 	}
 
 	template<typename T>
-	constexpr fixed_point_map_t<T>& fixed_point_map_mul_add(
-		fixed_point_map_t<T>& lhs, fixed_point_map_t<T> const& rhs, fixed_point_t factor
-	) {
+	constexpr fixed_point_map_t<T>&
+	fixed_point_map_mul_add(fixed_point_map_t<T>& lhs, fixed_point_map_t<T> const& rhs, fixed_point_t factor) {
 		if (factor != 0) {
 			for (auto const& [key, value] : rhs) {
 				lhs[key] += value * factor;
@@ -90,7 +89,6 @@ namespace OpenVic {
 			if (value_cmp != std::strong_ordering::equal) {
 				return value_cmp == std::strong_ordering::less;
 			}
-
 		}
 
 		return rit != rhs.rcend();

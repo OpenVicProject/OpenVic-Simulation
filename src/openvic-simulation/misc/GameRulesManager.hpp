@@ -2,37 +2,20 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct ProvinceInstance;
 	struct State;
 
-	enum struct country_to_report_economy_t : uint8_t {
-		Owner,
-		Controller,
-		NeitherWhenOccupied
-	};
+	enum struct country_to_report_economy_t : uint8_t { Owner, Controller, NeitherWhenOccupied };
 
-	enum struct demand_category : uint8_t {
-		None,
-		PopNeeds,
-		FactoryNeeds
-	};
+	enum struct demand_category : uint8_t { None, PopNeeds, FactoryNeeds };
 
-	enum struct artisan_coastal_restriction_t : uint8_t {
-		Unrestricted,
-		CountriesWithCoast,
-		CoastalStates,
-		CoastalProvinces
-	};
+	enum struct artisan_coastal_restriction_t : uint8_t { Unrestricted, CountriesWithCoast, CoastalStates, CoastalProvinces };
 
-	enum struct factory_coastal_restriction_t : uint8_t {
-		Unrestricted,
-		CountriesWithCoast,
-		CoastalStates
-	};
+	enum struct factory_coastal_restriction_t : uint8_t { Unrestricted, CountriesWithCoast, CoastalStates };
 
 	struct GameRulesManager {
 	private:

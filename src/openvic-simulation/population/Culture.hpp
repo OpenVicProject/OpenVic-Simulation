@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct CultureManager;
@@ -103,9 +103,8 @@ namespace OpenVic {
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);
 		bool load_culture_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 
-		static memory::string make_leader_picture_name(
-			std::string_view cultural_type, unit_branch_t branch, leader_count_t count
-		);
+		static memory::string
+		make_leader_picture_name(std::string_view cultural_type, unit_branch_t branch, leader_count_t count);
 		static memory::string make_leader_picture_path(std::string_view leader_picture_name);
 
 		bool find_cultural_leader_pictures(Dataloader const& dataloader);

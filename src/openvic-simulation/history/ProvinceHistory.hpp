@@ -2,18 +2,18 @@
 
 #include <optional>
 
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
+#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/map/LifeRating.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -30,10 +30,9 @@ namespace OpenVic {
 		friend struct ProvinceHistoryMap;
 
 		ProvinceHistoryEntry(
-			BuildingTypeManager const& building_type_manager,
-			ProvinceDefinition const& new_province,
-			Date new_date
+			BuildingTypeManager const& building_type_manager, ProvinceDefinition const& new_province, Date new_date
 		);
+
 	private:
 		std::optional<CountryDefinition const*> PROPERTY(owner);
 		std::optional<CountryDefinition const*> PROPERTY(controller);
@@ -45,18 +44,20 @@ namespace OpenVic {
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
 		memory::FixedVector<building_level_t> _province_building_levels;
 		TypedSpan<province_building_index_t, building_level_t> province_building_levels;
+
 	public:
 		constexpr TypedSpan<province_building_index_t, const building_level_t> get_province_building_levels() const {
 			return province_building_levels;
 		}
+
 	private:
 		ordered_map<building_type_index_t, building_level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 		memory::vector<PopBase> SPAN_PROPERTY(pops);
 
-		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
-		);
+		bool
+		_load_province_pop_history(DefinitionManager const& definition_manager, ast::NodeCPtr root, bool* non_integer_size);
+
 	public:
 		ProvinceDefinition const& province;
 	};
@@ -74,8 +75,9 @@ namespace OpenVic {
 		ProvinceHistoryMap(ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager);
 
 		memory::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
-		bool _load_history_entry(DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root)
-			override;
+		bool _load_history_entry(
+			DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
+		) override;
 
 	private:
 		bool _load_province_pop_history(
@@ -94,7 +96,8 @@ namespace OpenVic {
 		ProvinceHistoryMap* _get_or_make_province_history(ProvinceDefinition const& province);
 
 	public:
-		ProvinceHistoryManager(DefinitionManager const& new_definition_manager) : definition_manager { new_definition_manager } {};
+		ProvinceHistoryManager(DefinitionManager const& new_definition_manager)
+			: definition_manager { new_definition_manager } {};
 
 		void reserve_more_province_histories(size_t size);
 		void lock_province_histories(MapDefinition const& map_definition, bool detailed_errors);

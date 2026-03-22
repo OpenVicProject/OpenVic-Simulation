@@ -16,12 +16,12 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/core/Hash.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/core/string/CharConv.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -119,9 +119,8 @@ namespace OpenVic {
 		static constexpr Timespan::day_t MONTHS_IN_YEAR = DAYS_IN_MONTH.size();
 		static constexpr Timespan::day_t MAX_DAYS_IN_MONTH = *ranges::max_element(DAYS_IN_MONTH);
 
-		static constexpr Timespan::day_t DAYS_IN_YEAR = std::accumulate(
-			DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), Timespan::day_t { 0 }
-		);
+		static constexpr Timespan::day_t DAYS_IN_YEAR =
+			std::accumulate(DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), Timespan::day_t { 0 });
 		static_assert(DAYS_IN_YEAR == 365);
 
 		static constexpr std::array<Timespan::day_t, MONTHS_IN_YEAR> DAYS_UP_TO_MONTH = [] {
@@ -148,8 +147,8 @@ namespace OpenVic {
 		static constexpr char SEPARATOR_CHARACTER = '.';
 
 		static constexpr std::array<std::string_view, MONTHS_IN_YEAR> MONTH_NAMES {
-			"January", "February", "March",     "April",   "May",      "June", //
-			"July",    "August",   "September", "October", "November", "December" //
+			"January", "February", "March",		"April",   "May",	   "June", //
+			"July",	   "August",   "September", "October", "November", "December" //
 		};
 		static constexpr std::string_view INVALID_MONTH_NAME = "Invalid Month";
 
@@ -177,7 +176,8 @@ namespace OpenVic {
 		// Negative Timespans indicate dates before Jan 1st, Year 0.
 		OV_ALWAYS_INLINE constexpr Date(Timespan new_timespan) : timespan { new_timespan } {}
 		// Year month day specification
-		OV_ALWAYS_INLINE constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1) : timespan { _date_to_timespan(year, month, day) } {}
+		OV_ALWAYS_INLINE constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1)
+			: timespan { _date_to_timespan(year, month, day) } {}
 
 		OV_SPEED_INLINE constexpr Timespan::day_t get_day_of_year() const {
 			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
@@ -188,10 +188,9 @@ namespace OpenVic {
 		}
 
 		OV_SPEED_INLINE constexpr year_t get_year() const {
-			return (timespan >= 0
-				? static_cast<Timespan::day_t>(timespan)
-				: static_cast<Timespan::day_t>(timespan) - DAYS_IN_YEAR + 1
-			) / DAYS_IN_YEAR;
+			return (timespan >= 0 ? static_cast<Timespan::day_t>(timespan)
+								  : static_cast<Timespan::day_t>(timespan) - DAYS_IN_YEAR + 1) /
+				DAYS_IN_YEAR;
 		}
 		OV_SPEED_INLINE constexpr month_t get_month() const {
 			return MONTH_FROM_DAY_IN_YEAR[get_day_of_year()];
@@ -344,7 +343,8 @@ namespace OpenVic {
 		}
 
 		struct stack_string;
-		OV_SPEED_INLINE constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
+		OV_SPEED_INLINE constexpr stack_string
+		to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 
 		struct stack_string final : StackString<
 										fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
@@ -404,8 +404,8 @@ namespace OpenVic {
 			}
 
 			if (OV_unlikely(
-				year_check > std::numeric_limits<year_t>::max() || year_check < std::numeric_limits<year_t>::min()
-			)) {
+					year_check > std::numeric_limits<year_t>::max() || year_check < std::numeric_limits<year_t>::min()
+				)) {
 				result.ec = std::errc::value_too_large;
 				result.ptr = first;
 				return result;
@@ -563,7 +563,9 @@ namespace OpenVic {
 				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::day &&
 					from_chars->ptr == from_chars->type_first,
 				date,
-				memory::fmt::format("Day value cannot be larger than {} for {}.", DAYS_IN_MONTH[date.get_month() - 1], date.get_month())
+				memory::fmt::format(
+					"Day value cannot be larger than {} for {}.", DAYS_IN_MONTH[date.get_month() - 1], date.get_month()
+				)
 			);
 
 			return date;

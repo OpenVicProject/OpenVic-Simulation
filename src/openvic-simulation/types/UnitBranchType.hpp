@@ -26,53 +26,41 @@ namespace OpenVic {
 	using ArmyInstance = UnitInstanceGroupBranched<unit_branch_t::LAND>;
 	using NavyInstance = UnitInstanceGroupBranched<unit_branch_t::NAVAL>;
 
-	
+
 	static constexpr std::string_view get_branch_name(unit_branch_t branch) {
 		using enum unit_branch_t;
 
 		switch (branch) {
-		case LAND:
-			return "land";
-		case NAVAL:
-			return "naval";
-		default:
-			return "INVALID BRANCH";
+		case LAND:	return "land";
+		case NAVAL: return "naval";
+		default:	return "INVALID BRANCH";
 		}
 	}
 	static constexpr std::string_view get_branched_unit_name(unit_branch_t branch) {
 		using enum unit_branch_t;
 
 		switch (branch) {
-		case LAND:
-			return "regiment";
-		case NAVAL:
-			return "ship";
-		default:
-			return "INVALID UNIT BRANCH";
+		case LAND:	return "regiment";
+		case NAVAL: return "ship";
+		default:	return "INVALID UNIT BRANCH";
 		}
 	}
 	static constexpr std::string_view get_branched_unit_group_name(unit_branch_t branch) {
 		using enum unit_branch_t;
 
 		switch (branch) {
-		case LAND:
-			return "army";
-		case NAVAL:
-			return "navy";
-		default:
-			return "INVALID UNIT GROUP BRANCH";
+		case LAND:	return "army";
+		case NAVAL: return "navy";
+		default:	return "INVALID UNIT GROUP BRANCH";
 		}
 	}
 	static constexpr std::string_view get_branched_leader_name(unit_branch_t branch) {
 		using enum unit_branch_t;
 
 		switch (branch) {
-		case LAND:
-			return "general";
-		case NAVAL:
-			return "admiral";
-		default:
-			return "INVALID LEADER BRANCH";
+		case LAND:	return "general";
+		case NAVAL: return "admiral";
+		default:	return "INVALID LEADER BRANCH";
 		}
 	}
 }

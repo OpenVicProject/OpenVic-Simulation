@@ -12,7 +12,7 @@
 	F(very_easy_ai) \
 	F(easy_ai) \
 	F(hard_ai) \
-	F(very_hard_ai) \
+	F(very_hard_ai)
 
 #define COUNTRY_MODIFIER_LIST(F, ID_F) \
 	F(war) \
@@ -53,22 +53,22 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 	private:
-		#define DEFINE_PROPERTY_ID(PROP, ID) Modifier PROPERTY(PROP, { #ID, {}, Modifier::modifier_type_t::STATIC });
-		#define DEFINE_PROPERTY(PROP) DEFINE_PROPERTY_ID(PROP, PROP)
+#define DEFINE_PROPERTY_ID(PROP, ID) Modifier PROPERTY(PROP, { #ID, {}, Modifier::modifier_type_t::STATIC });
+#define DEFINE_PROPERTY(PROP) DEFINE_PROPERTY_ID(PROP, PROP)
 
 		COUNTRY_DIFFICULTY_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
 		COUNTRY_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
 		PROVINCE_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
 
-		#undef DEFINE_PROPERTY
-		#undef DEFINE_PROPERTY_NAME
+#undef DEFINE_PROPERTY
+#undef DEFINE_PROPERTY_NAME
 
 		Modifier PROPERTY(base_modifier, { "base_values", {}, Modifier::modifier_type_t::STATIC });
 
 		// Country event modifiers
 		Modifier const* PROPERTY(in_bankruptcy, nullptr);
 		Modifier const* PROPERTY(bad_debtor, nullptr);
-		Modifier const* PROPERTY(generalised_debt_default, nullptr); //possibly, as it's used to trigger gunboat CB
+		Modifier const* PROPERTY(generalised_debt_default, nullptr); // possibly, as it's used to trigger gunboat CB
 
 		StaticModifierCache();
 

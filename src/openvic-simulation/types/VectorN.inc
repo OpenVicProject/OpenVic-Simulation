@@ -14,13 +14,18 @@
 // They are safe to ignore so long as they don't appear in the compiler log.
 
 #ifndef VEC_TYPE
-	#warning "VEC_TYPE not defined, defaulting to example: vec5_t"
-	#define VEC_TYPE vec5_t
+#warning "VEC_TYPE not defined, defaulting to example: vec5_t"
+#define VEC_TYPE vec5_t
 #endif
 
 #ifndef FOR_VEC_COMPONENTS
-	#warning "FOR_VEC_COMPONENTS not defined, defaulting to example: FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w) SEP F(v)"
-	#define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w) SEP F(v)
+#warning \
+	"FOR_VEC_COMPONENTS not defined, defaulting to example: FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w) SEP F(v)"
+#define FOR_VEC_COMPONENTS(F, SEP) \
+	F(x) SEP F(y) \
+	SEP F(z) \
+	SEP F(w) \
+	SEP F(v)
 #endif
 
 #define COMMA ,
@@ -98,8 +103,10 @@ namespace OpenVic {
 			return rend();
 		}
 
+		// clang-format off
 #define VEC_CONSTRUCTOR_ARG(v) T new_##v
 #define VEC_CONSTRUCTOR_INITIALISE(v) v { new_##v }
+		// clang-format on
 		OV_SPEED_INLINE constexpr VEC_TYPE(FOR_VEC_COMPONENTS(VEC_CONSTRUCTOR_ARG, COMMA))
 			: FOR_VEC_COMPONENTS(VEC_CONSTRUCTOR_INITIALISE, COMMA) {}
 #undef VEC_CONSTRUCTOR_ARG
@@ -130,7 +137,9 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_ABS
 
+		// clang-format off
 #define VEC_COMPONENT_SQUARE(v) v * v
+		// clang-format on
 		OV_SPEED_INLINE constexpr T length_squared() const {
 			return FOR_VEC_COMPONENTS(VEC_COMPONENT_SQUARE, +);
 		}
@@ -143,7 +152,9 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_DIST_SQUARE
 
+		// clang-format off
 #define VEC_COMPONENT_DOT(v) v * vec.v
+		// clang-format on
 		template<typename S>
 		OV_SPEED_INLINE constexpr T dot(VEC_TYPE<S> const& vec) const {
 			return FOR_VEC_COMPONENTS(VEC_COMPONENT_DOT, +);
@@ -156,7 +167,9 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_NONNEGATIVE
 
-#define VEC_COMPONENT_COMPARE(v) if (left.v != right.v) return left.v <=> right.v;
+#define VEC_COMPONENT_COMPARE(v) \
+	if (left.v != right.v) \
+		return left.v <=> right.v;
 #define VEC_COMPONENT_COMPARE_END(v) return left.v <=> right.v
 		OV_SPEED_INLINE constexpr friend auto operator<=>(VEC_TYPE const& left, VEC_TYPE const& right) {
 			FOR_VEC_COMPONENTS_END(VEC_COMPONENT_COMPARE, VEC_COMPONENT_COMPARE_END);
@@ -164,7 +177,9 @@ namespace OpenVic {
 #undef VEC_COMPONENT_COMPARE
 #undef VEC_COMPONENT_COMPARE_END
 
-#define VEC_COMPONENT_COMPARE(v) if (v != right.v) return v <=> right.v;
+#define VEC_COMPONENT_COMPARE(v) \
+	if (v != right.v) \
+		return v <=> right.v;
 #define VEC_COMPONENT_COMPARE_END(v) return v <=> right.v
 		template<typename S>
 		OV_SPEED_INLINE constexpr auto operator<=>(VEC_TYPE<S> const& right) const {
@@ -208,7 +223,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_ADDEQ(v) v += right.v;
 		template<typename S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator+=(VEC_TYPE<S> const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_ADDEQ,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_ADDEQ, )
 			return *this;
 		}
 #undef VEC_COMPONENT_ADDEQ
@@ -230,7 +245,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_ADDEQ_RIGHT(v) v += right;
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator+=(S const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_ADDEQ_RIGHT,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_ADDEQ_RIGHT, )
 			return *this;
 		}
 #undef VEC_COMPONENT_ADDEQ_RIGHT
@@ -251,7 +266,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_SUBEQ(v) v -= right.v;
 		template<typename S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator-=(VEC_TYPE<S> const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_SUBEQ,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_SUBEQ, )
 			return *this;
 		}
 #undef VEC_COMPONENT_SUBEQ
@@ -273,12 +288,14 @@ namespace OpenVic {
 #define VEC_COMPONENT_SUBEQ_RIGHT(v) v -= right;
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator-=(S const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_SUBEQ_RIGHT,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_SUBEQ_RIGHT, )
 			return *this;
 		}
 #undef VEC_COMPONENT_SUBEQ_RIGHT
 
+		// clang-format off
 #define VEC_COMPONENT_MUL(v) left.v * right.v
+		// clang-format on
 		template<typename S>
 		OV_SPEED_INLINE constexpr friend VEC_TYPE operator*(VEC_TYPE const& left, VEC_TYPE<S> const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_MUL, COMMA) };
@@ -288,19 +305,23 @@ namespace OpenVic {
 #define VEC_COMPONENT_MULEQ(v) v *= right.v;
 		template<typename S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator*=(VEC_TYPE<S> const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_MULEQ,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_MULEQ, )
 			return *this;
 		}
 #undef VEC_COMPONENT_MULEQ
 
+		// clang-format off
 #define VEC_COMPONENT_MUL_RIGHT(v) left.v * right
+		// clang-format on
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr friend VEC_TYPE operator*(VEC_TYPE const& left, S const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_MUL_RIGHT, COMMA) };
 		}
 #undef VEC_COMPONENT_MUL_RIGHT
 
+		// clang-format off
 #define VEC_COMPONENT_MUL_LEFT(v) left * right.v
+		// clang-format on
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr friend VEC_TYPE operator*(S const& left, VEC_TYPE const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_MUL_LEFT, COMMA) };
@@ -310,7 +331,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_MULEQ_RIGHT(v) v *= right;
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator*=(S const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_MULEQ_RIGHT,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_MULEQ_RIGHT, )
 			return *this;
 		}
 #undef VEC_COMPONENT_MULEQ_RIGHT
@@ -325,7 +346,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_DIVEQ(v) v /= right.v;
 		template<typename S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator/=(VEC_TYPE<S> const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_DIVEQ,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_DIVEQ, )
 			return *this;
 		}
 #undef VEC_COMPONENT_DIVEQ
@@ -347,7 +368,7 @@ namespace OpenVic {
 #define VEC_COMPONENT_DIVEQ_RIGHT(v) v /= right;
 		template<not_same_as<VEC_TYPE<T>> S>
 		OV_SPEED_INLINE constexpr VEC_TYPE& operator/=(S const& right) {
-			FOR_VEC_COMPONENTS(VEC_COMPONENT_DIVEQ_RIGHT,)
+			FOR_VEC_COMPONENTS(VEC_COMPONENT_DIVEQ_RIGHT, )
 			return *this;
 		}
 #undef VEC_COMPONENT_DIVEQ_RIGHT

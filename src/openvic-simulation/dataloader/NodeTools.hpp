@@ -14,21 +14,21 @@
 
 #include <spdlog/common.h>
 
+#include <function2/function2.hpp>
+
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/string/Utility.hpp"
-
-#include <function2/function2.hpp>
+#include "openvic-simulation/utility/TslHelper.hpp"
 
 #define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
 #define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
@@ -40,7 +40,7 @@ namespace OpenVic {
 
 		static constexpr std::string_view get_type_name(NodeKind kind) {
 #ifdef _MSC_VER // type_name starts with "struct "
-using namespace std::string_view_literals;
+			using namespace std::string_view_literals;
 #define NODE_CASE(Node) \
 	case Node: return OpenVic::type_name<ast::Node>().substr("struct "sv.size());
 #else
@@ -95,14 +95,11 @@ using namespace std::string_view_literals;
 
 		template<typename Fn, typename Map>
 		concept MapKeyValueCallback = Callback<Fn, Map const&, std::string_view, ast::NodeCPtr>;
-		
+
 		template<typename Map>
 		constexpr static MapKeyValueCallback<Map> auto ignore_map(KeyValueCallback auto&& callback) {
-			return [default_callback = MOV(callback)](
-				Map const& key_map,
-				std::string_view key,
-				ast::NodeCPtr value
-			) mutable -> bool {
+			return [default_callback =
+						MOV(callback)](Map const& key_map, std::string_view key, ast::NodeCPtr value) mutable -> bool {
 				return default_callback(key, value);
 			};
 		}
@@ -133,19 +130,13 @@ using namespace std::string_view_literals;
 
 		template<derived_ordered_map Map>
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
-			spdlog::error_s(
-				"Invalid dictionary key \"{}\". Valid values are [{}]",
-				key, string_join(key_map)
-			);
+			spdlog::error_s("Invalid dictionary key \"{}\". Valid values are [{}]", key, string_join(key_map));
 			return false;
 		}
 
 		template<derived_ordered_map Map>
 		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
-			spdlog::warn_s(
-				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
-				key, string_join(key_map)
-			);
+			spdlog::warn_s("Invalid dictionary key \"{}\" is ignored. Valid values are [{}]", key, string_join(key_map));
 			return true;
 		}
 
@@ -161,19 +152,20 @@ using namespace std::string_view_literals;
 
 		template<std::signed_integral T>
 		NodeCallback auto expect_int(callback_t<T>& callback, int base = 10) {
-			return expect_int64([callback](int64_t val) mutable -> bool {
-				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
-					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
-					return callback(val);
-				}
-				spdlog::error_s(
-					"Invalid int: {} (valid range: [{}, {}])",
-					val,
-					static_cast<int64_t>(std::numeric_limits<T>::lowest()),
-					static_cast<int64_t>(std::numeric_limits<T>::max())
-				);
-				return false;
-			}, base);
+			return expect_int64(
+				[callback](int64_t val) mutable -> bool {
+					if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
+						val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
+						return callback(val);
+					}
+					spdlog::error_s(
+						"Invalid int: {} (valid range: [{}, {}])", val, static_cast<int64_t>(std::numeric_limits<T>::lowest()),
+						static_cast<int64_t>(std::numeric_limits<T>::max())
+					);
+					return false;
+				},
+				base
+			);
 		}
 		template<std::signed_integral T>
 		NodeCallback auto expect_int(callback_t<T>&& callback, int base = 10) {
@@ -182,16 +174,18 @@ using namespace std::string_view_literals;
 
 		template<std::integral T>
 		NodeCallback auto expect_uint(callback_t<T>& callback, int base = 10) {
-			return expect_uint64([callback](uint64_t val) mutable -> bool {
-				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
-					return callback(val);
-				}
-				spdlog::error_s(
-					"Invalid uint: {} (valid range: [0, {}])",
-					val, static_cast<uint64_t>(std::numeric_limits<T>::max()) 
-				);
-				return false;
-			}, base);
+			return expect_uint64(
+				[callback](uint64_t val) mutable -> bool {
+					if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
+						return callback(val);
+					}
+					spdlog::error_s(
+						"Invalid uint: {} (valid range: [0, {}])", val, static_cast<uint64_t>(std::numeric_limits<T>::max())
+					);
+					return false;
+				},
+				base
+			);
 		}
 		template<std::integral T>
 		NodeCallback auto expect_uint(callback_t<T>&& callback, int base = 10) {
@@ -281,13 +275,11 @@ using namespace std::string_view_literals;
 		node_callback_t expect_list(node_callback_t callback);
 		node_callback_t expect_length(callback_t<size_t> callback);
 
-		node_callback_t expect_key(
-			ovdl::symbol<char> key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
-		);
+		node_callback_t
+		expect_key(ovdl::symbol<char> key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false);
 
-		node_callback_t expect_key(
-			std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
-		);
+		node_callback_t
+		expect_key(std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false);
 
 		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
 		node_callback_t expect_dictionary(key_value_callback_t callback);
@@ -346,10 +338,9 @@ using namespace std::string_view_literals;
 		}
 
 		template<derived_ordered_map Map>
-		KeyValueCallback auto dictionary_keys_callback(
-			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback
-		) {
-			return [&key_map, default_callback = FWD(default_callback)](std::string_view key, ast::NodeCPtr value) mutable -> bool {
+		KeyValueCallback auto dictionary_keys_callback(Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback) {
+			return [&key_map,
+					default_callback = FWD(default_callback)](std::string_view key, ast::NodeCPtr value) mutable -> bool {
 				typename std::remove_reference_t<Map>::iterator it = key_map.find(key);
 				if (it == key_map.end()) {
 					return default_callback(key_map, key, value);
@@ -401,30 +392,27 @@ using namespace std::string_view_literals;
 		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
 			Map&& key_map, LengthCallback auto&& length_callback, MapKeyValueCallback<Map> auto&& default_callback
 		) {
-			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback), key_map = MOV(key_map)](
-				ast::NodeCPtr node
-			) mutable -> bool {
-				bool ret = expect_dictionary_and_length(
-					FWD(length_callback), dictionary_keys_callback(key_map, FWD(default_callback))
-				)(node);
+			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback),
+					key_map = MOV(key_map)](ast::NodeCPtr node) mutable -> bool {
+				bool ret =
+					expect_dictionary_and_length(FWD(length_callback), dictionary_keys_callback(key_map, FWD(default_callback)))(
+						node
+					);
 				ret &= check_key_map_counts(key_map);
 				return ret;
 			};
 		}
 
 		template<derived_ordered_map Map>
-		NodeCallback auto expect_dictionary_key_map_and_length(
-			Map&& key_map, LengthCallback auto&& length_callback
-		) {
+		NodeCallback auto expect_dictionary_key_map_and_length(Map&& key_map, LengthCallback auto&& length_callback) {
 			return expect_dictionary_key_map_and_length_and_default(
 				FWD(key_map), FWD(length_callback), map_key_value_invalid_callback<Map>
 			);
 		}
 
 		template<derived_ordered_map Map>
-		NodeCallback auto expect_dictionary_key_map_and_default(
-			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback
-		) {
+		NodeCallback auto
+		expect_dictionary_key_map_and_default(Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback) {
 			return expect_dictionary_key_map_and_length_and_default(
 				FWD(key_map), default_length_callback, FWD(default_callback)
 			);
@@ -433,7 +421,10 @@ using namespace std::string_view_literals;
 		template<string_map_case Case>
 		NodeCallback auto expect_dictionary_key_map(template_key_map_t<Case>&& key_map) {
 			return expect_dictionary_key_map_and_length_and_default(
-				MOV(key_map), default_length_callback, map_key_value_ignore_invalid_callback<template_key_map_t<Case>> // we use map_key_value_ignore_invalid_callback here as some mods add extraneous keys (like maxWidth) which V2 ignores, so we must too
+				MOV(key_map), default_length_callback,
+				map_key_value_ignore_invalid_callback<template_key_map_t<Case>> // we use map_key_value_ignore_invalid_callback
+																				// here as some mods add extraneous keys (like
+																				// maxWidth) which V2 ignores, so we must too
 			);
 		}
 
@@ -448,9 +439,8 @@ using namespace std::string_view_literals;
 		}
 
 		template<derived_ordered_map Map, typename... Args>
-		NodeCallback auto expect_dictionary_key_map_and_length(
-			Map&& key_map, LengthCallback auto&& length_callback, Args&&... args
-		) {
+		NodeCallback auto
+		expect_dictionary_key_map_and_length(Map&& key_map, LengthCallback auto&& length_callback, Args&&... args) {
 			add_key_map_entries(FWD(key_map), FWD(args)...);
 			return expect_dictionary_key_map_and_length(FWD(key_map), FWD(length_callback));
 		}
@@ -463,14 +453,9 @@ using namespace std::string_view_literals;
 			return expect_dictionary_key_map_and_default(FWD(key_map), FWD(default_callback));
 		}
 		template<derived_ordered_map Map, typename... Args>
-		NodeCallback auto expect_dictionary_key_map_and_default(
-			Map&& key_map, KeyValueCallback auto&& default_callback, Args&&... args
-		) {
-			return expect_dictionary_key_map_and_default_map(
-				key_map,
-				ignore_map<Map>(FWD(default_callback)),
-				FWD(args)...
-			);
+		NodeCallback auto
+		expect_dictionary_key_map_and_default(Map&& key_map, KeyValueCallback auto&& default_callback, Args&&... args) {
+			return expect_dictionary_key_map_and_default_map(key_map, ignore_map<Map>(FWD(default_callback)), FWD(args)...);
 		}
 
 		template<derived_ordered_map Map, typename... Args>
@@ -481,7 +466,8 @@ using namespace std::string_view_literals;
 
 		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_length_and_default(
-			LengthCallback auto&& length_callback, MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args
+			LengthCallback auto&& length_callback, MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback,
+			Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
 				template_key_map_t<Case> {}, FWD(length_callback), FWD(default_callback), FWD(args)...
@@ -491,12 +477,15 @@ using namespace std::string_view_literals;
 		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_length(LengthCallback auto&& length_callback, Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, FWD(length_callback), map_key_value_invalid_callback<template_key_map_t<Case>>, FWD(args)...
+				template_key_map_t<Case> {}, FWD(length_callback), map_key_value_invalid_callback<template_key_map_t<Case>>,
+				FWD(args)...
 			);
 		}
 
 		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys_and_default_map(MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args) {
+		NodeCallback auto expect_dictionary_keys_and_default_map(
+			MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args
+		) {
 			return expect_dictionary_key_map_and_length_and_default(
 				template_key_map_t<Case> {}, default_length_callback, FWD(default_callback), FWD(args)...
 			);
@@ -504,15 +493,15 @@ using namespace std::string_view_literals;
 		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_default(KeyValueCallback auto&& default_callback, Args&&... args) {
 			return expect_dictionary_keys_and_default_map(
-				ignore_map<template_key_map_t<Case>>(FWD(default_callback)),
-				FWD(args)...
+				ignore_map<template_key_map_t<Case>>(FWD(default_callback)), FWD(args)...
 			);
 		}
 
 		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys(Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, default_length_callback, map_key_value_invalid_callback<template_key_map_t<Case>>, FWD(args)...
+				template_key_map_t<Case> {}, default_length_callback, map_key_value_invalid_callback<template_key_map_t<Case>>,
+				FWD(args)...
 			);
 		}
 
@@ -530,17 +519,14 @@ using namespace std::string_view_literals;
 		}
 		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_reserve_length_and_default(
-			reservable auto& reservable, Map&& key_map, KeyValueCallback auto&& default_callback,
-			Args&&... args
+			reservable auto& reservable, Map&& key_map, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
 				FWD(key_map), reserve_length_callback(reservable), FWD(default_callback), FWD(args)...
 			);
 		}
 		template<derived_ordered_map Map, typename... Args>
-		NodeCallback auto expect_dictionary_key_map_reserve_length(
-			reservable auto& reservable, Map&& key_map, Args&&... args
-		) {
+		NodeCallback auto expect_dictionary_key_map_reserve_length(reservable auto& reservable, Map&& key_map, Args&&... args) {
 			return expect_dictionary_key_map_and_length(FWD(key_map), reserve_length_callback(reservable), FWD(args)...);
 		}
 
@@ -557,9 +543,7 @@ using namespace std::string_view_literals;
 			reservable auto& reservable, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_keys_reserve_length_and_default_map<Case>(
-				reservable,
-				ignore_map<template_key_map_t<Case>>(FWD(default_callback)),
-				FWD(args)...
+				reservable, ignore_map<template_key_map_t<Case>>(FWD(default_callback)), FWD(args)...
 			);
 		}
 
@@ -571,18 +555,16 @@ using namespace std::string_view_literals;
 		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);
 
 		template<typename T, string_map_case Case>
-		Callback<std::string_view> auto expect_mapped_string(
-			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
-		) {
+		Callback<std::string_view> auto
+		expect_mapped_string(template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false) {
 			return [&map, callback = FWD(callback), warn](std::string_view string) mutable -> bool {
 				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
 				}
 				spdlog::log_s(
-					warn ? spdlog::level::warn : spdlog::level::err,
-					"\"{}\" is not a valid key. Valid keys: [{}]",
-					string, string_join(map)
+					warn ? spdlog::level::warn : spdlog::level::err, "\"{}\" is not a valid key. Valid keys: [{}]", string,
+					string_join(map)
 				);
 				return warn;
 			};
@@ -613,9 +595,7 @@ using namespace std::string_view_literals;
 		/* By default this will only allow an optional to be set once. Set allow_overwrite
 		 * to true to allow multiple assignments, with the last taking precedence. */
 		template<typename T>
-		Callback<T> auto assign_variable_callback_opt(
-			std::optional<T>& var, bool allow_overwrite = false
-		) {
+		Callback<T> auto assign_variable_callback_opt(std::optional<T>& var, bool allow_overwrite = false) {
 			return [&var, allow_overwrite](T const& val) -> bool {
 				if (!allow_overwrite && var.has_value()) {
 					spdlog::error_s("Cannot assign value to already-initialised optional!");
@@ -629,9 +609,7 @@ using namespace std::string_view_literals;
 		/* By default this will only allow an optional to be set once. Set allow_overwrite
 		 * to true to allow multiple assignments, with the last taking precedence. */
 		template<typename T>
-		auto emplace_opt_callback(
-			std::optional<T>& var, bool allow_overwrite = false
-		) {
+		auto emplace_opt_callback(std::optional<T>& var, bool allow_overwrite = false) {
 			return [&var, allow_overwrite](auto&&... args) -> bool {
 				if (!allow_overwrite && var.has_value()) {
 					spdlog::error_s("Cannot assign value to already-initialised optional!");
@@ -689,9 +667,8 @@ using namespace std::string_view_literals;
 		/* By default this will only allow an optional to be set once. Set allow_overwrite
 		 * to true to allow multiple assignments, with the last taking precedence. */
 		template<typename T>
-		Callback<T const&> auto assign_variable_callback_pointer_opt(
-			std::optional<T const*>& var, bool allow_overwrite = false
-		) {
+		Callback<T const&> auto
+		assign_variable_callback_pointer_opt(std::optional<T const*>& var, bool allow_overwrite = false) {
 			return [&var, allow_overwrite](T const& val) -> bool {
 				if (!allow_overwrite && var.has_value()) {
 					spdlog::error_s("Cannot assign pointer value to already-initialised optional!");
@@ -739,10 +716,7 @@ using namespace std::string_view_literals;
 				if (set.emplace(std::move(val)).second) {
 					return true;
 				}
-				spdlog::log_s(
-					warn ? spdlog::level::warn : spdlog::level::err,
-					"Duplicate set entry: \"{}\"", val
-				);
+				spdlog::log_s(warn ? spdlog::level::warn : spdlog::level::err, "Duplicate set entry: \"{}\"", val);
 				return warn;
 			};
 		}
@@ -753,42 +727,31 @@ using namespace std::string_view_literals;
 				if (set.emplace(&val).second) {
 					return true;
 				}
-				spdlog::log_s(
-					warn ? spdlog::level::warn : spdlog::level::err,
-					"Duplicate set entry: \"{}\"",
-					val
-				);
+				spdlog::log_s(warn ? spdlog::level::warn : spdlog::level::err, "Duplicate set entry: \"{}\"", val);
 				return warn;
 			};
 		}
 
 		template<typename Key, typename Value, typename... MapArgs>
-		Callback<Value> auto map_callback(
-			tsl::ordered_map<Key, Value, MapArgs...>& map, Key key, bool warn = false
-		) {
+		Callback<Value> auto map_callback(tsl::ordered_map<Key, Value, MapArgs...>& map, Key key, bool warn = false) {
 			return [&map, key, warn](Value value) -> bool {
 				if (map.emplace(key, std::move(value)).second) {
 					return true;
 				}
-				if constexpr(std::is_pointer_v<Key>) {
+				if constexpr (std::is_pointer_v<Key>) {
 					spdlog::log_s(
-						warn ? spdlog::level::warn : spdlog::level::err,
-						"Duplicate map entry with key: \"{}\"", ovfmt::validate(key)
+						warn ? spdlog::level::warn : spdlog::level::err, "Duplicate map entry with key: \"{}\"",
+						ovfmt::validate(key)
 					);
 				} else {
-					spdlog::log_s(
-						warn ? spdlog::level::warn : spdlog::level::err,
-						"Duplicate map entry with key: \"{}\"", key
-					);
+					spdlog::log_s(warn ? spdlog::level::warn : spdlog::level::err, "Duplicate map entry with key: \"{}\"", key);
 				}
 				return warn;
 			};
 		}
 
 		template<typename Key, typename Value>
-		Callback<Value> auto map_callback(
-			IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false
-		) {
+		Callback<Value> auto map_callback(IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false) {
 			return [&map, key, warn](Value value) -> bool {
 				if (key == nullptr) {
 					spdlog::error_s("Null key in map_callback");
@@ -797,7 +760,9 @@ using namespace std::string_view_literals;
 				Value& map_value = map.at(*key);
 				bool ret = true;
 				if (map_value != Value {}) {
-					spdlog::log_s(warn ? spdlog::level::warn : spdlog::level::err, "Duplicate map entry with key: \"{}\"", *key);
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err, "Duplicate map entry with key: \"{}\"", *key
+					);
 					ret = warn;
 				}
 				map_value = std::move(value);

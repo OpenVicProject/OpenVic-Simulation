@@ -13,46 +13,32 @@
 using namespace OpenVic;
 
 MapInstance::MapInstance(
-	MapDefinition const& new_map_definition,
-	ProvinceInstanceDeps const& province_instance_deps,
-	ThreadPool& new_thread_pool
-) : map_definition { new_map_definition },
-	thread_pool { new_thread_pool },
-	land_pathing { new_map_definition, *this },
-	sea_pathing { new_map_definition, *this },
-	province_instance_by_definition(
-		new_map_definition.get_province_definitions(),
-		[&province_instance_deps](
-			ProvinceDefinition const& province_definition
-		) -> auto {
-			return std::make_tuple(
-				std::ref(province_definition),
-				std::ref(province_instance_deps)
-			);
-		}
-	) { assert(new_map_definition.province_definitions_are_locked()); }
+	MapDefinition const& new_map_definition, ProvinceInstanceDeps const& province_instance_deps, ThreadPool& new_thread_pool
+)
+	: map_definition { new_map_definition }, thread_pool { new_thread_pool }, land_pathing { new_map_definition, *this },
+	  sea_pathing { new_map_definition, *this },
+	  province_instance_by_definition(
+		  new_map_definition.get_province_definitions(),
+		  [&province_instance_deps](ProvinceDefinition const& province_definition) -> auto {
+			  return std::make_tuple(std::ref(province_definition), std::ref(province_instance_deps));
+		  }
+	  ) {
+	assert(new_map_definition.province_definitions_are_locked());
+}
 
 ProvinceInstance* MapInstance::get_province_instance_by_identifier(std::string_view identifier) {
 	ProvinceDefinition const* province_definition = map_definition.get_province_definition_by_identifier(identifier);
-	return province_definition == nullptr
-		? nullptr
-		: &get_province_instance_by_definition(*province_definition);
+	return province_definition == nullptr ? nullptr : &get_province_instance_by_definition(*province_definition);
 }
 ProvinceInstance const* MapInstance::get_province_instance_by_identifier(std::string_view identifier) const {
 	ProvinceDefinition const* province_definition = map_definition.get_province_definition_by_identifier(identifier);
-	return province_definition == nullptr
-		? nullptr
-		: &get_province_instance_by_definition(*province_definition);
+	return province_definition == nullptr ? nullptr : &get_province_instance_by_definition(*province_definition);
 }
 ProvinceInstance* MapInstance::get_province_instance_by_index(typename ProvinceInstance::index_t index) {
-	return province_instance_by_definition.contains_index(index)
-		? &province_instance_by_definition.at_index(index)
-		: nullptr;
+	return province_instance_by_definition.contains_index(index) ? &province_instance_by_definition.at_index(index) : nullptr;
 }
 ProvinceInstance const* MapInstance::get_province_instance_by_index(typename ProvinceInstance::index_t index) const {
-	return province_instance_by_definition.contains_index(index)
-		? &province_instance_by_definition.at_index(index)
-		: nullptr;
+	return province_instance_by_definition.contains_index(index) ? &province_instance_by_definition.at_index(index) : nullptr;
 }
 ProvinceInstance& MapInstance::get_province_instance_by_definition(ProvinceDefinition const& province_definition) {
 	return province_instance_by_definition.at(province_definition);
@@ -62,12 +48,12 @@ ProvinceInstance const& MapInstance::get_province_instance_by_definition(Provinc
 }
 
 ProvinceInstance* MapInstance::get_province_instance_from_number(
-	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+	decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number
 ) {
 	return get_province_instance_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 ProvinceInstance const* MapInstance::get_province_instance_from_number(
-	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+	decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number
 ) const {
 	return get_province_instance_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
@@ -81,12 +67,8 @@ bool MapInstance::is_canal_enabled(canal_index_t canal_index) const {
 }
 
 bool MapInstance::apply_history_to_provinces(
-	ProvinceHistoryManager const& history_manager,
-	const Date date,
-	CountryInstanceManager& country_manager,
-	IssueManager const& issue_manager,
-	MilitaryDefines const& military_defines,
-	PopDeps const& pop_deps
+	ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
+	IssueManager const& issue_manager, MilitaryDefines const& military_defines, PopDeps const& pop_deps
 ) {
 	bool ret = true;
 
@@ -121,13 +103,10 @@ bool MapInstance::apply_history_to_provinces(
 				if (pop_history_entry == nullptr) {
 					spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
 				} else {
-					ret &= province.add_pop_vec(
-						pop_history_entry->get_pops(),
-						pop_deps
-					);
+					ret &= province.add_pop_vec(pop_history_entry->get_pops(), pop_deps);
 					province.setup_pop_test_values(issue_manager);
 
-					//update pops so OOB can use up to date max_supported_regiments
+					// update pops so OOB can use up to date max_supported_regiments
 					province._update_pops(military_defines);
 				}
 
@@ -165,9 +144,9 @@ void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
 
 void MapInstance::map_tick() {
 	thread_pool.process_province_ticks();
-	//state tick
-	//after province tick as province tick sets pop employment to 0
-	//state tick will update pop employment via factories
+	// state tick
+	// after province tick as province tick sets pop employment to 0
+	// state tick will update pop employment via factories
 }
 
 void MapInstance::initialise_for_new_game(InstanceManager const& instance_manager) {

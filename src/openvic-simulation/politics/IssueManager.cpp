@@ -1,7 +1,7 @@
 #include "IssueManager.hpp"
 
-#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -13,14 +13,13 @@ bool IssueManager::add_party_policy_group(std::string_view identifier) {
 	}
 
 	return party_policy_groups.emplace_item(
-		identifier,
-		identifier, PartyPolicyGroup::index_t { get_party_policy_group_count() }
+		identifier, identifier, PartyPolicyGroup::index_t { get_party_policy_group_count() }
 	);
 }
 
 bool IssueManager::add_party_policy(
-	std::string_view identifier, colour_t new_colour, ModifierValue&& values, PartyPolicyGroup& party_policy_group, RuleSet&& rules,
-	bool jingoism
+	std::string_view identifier, colour_t new_colour, ModifierValue&& values, PartyPolicyGroup& party_policy_group,
+	RuleSet&& rules, bool jingoism
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid party policy identifier - empty!");
@@ -28,10 +27,9 @@ bool IssueManager::add_party_policy(
 	}
 
 	if (!party_policies.emplace_item(
-		identifier,
-		PartyPolicy::index_t { get_party_policy_count() }, identifier,
-		new_colour, std::move(values), party_policy_group, std::move(rules), jingoism
-	)) {
+			identifier, PartyPolicy::index_t { get_party_policy_count() }, identifier, new_colour, std::move(values),
+			party_policy_group, std::move(rules), jingoism
+		)) {
 		return false;
 	}
 
@@ -45,24 +43,18 @@ bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised
 		return false;
 	}
 
-	return reform_types.emplace_item(
-		identifier,
-		identifier, uncivilised
-	);
+	return reform_types.emplace_item(identifier, identifier, uncivilised);
 }
 
-bool IssueManager::add_reform_group(
-	std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative
-) {
+bool IssueManager::add_reform_group(std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid issue group identifier - empty!");
 		return false;
 	}
 
 	if (!reform_groups.emplace_item(
-		identifier,
-		identifier, ReformGroup::index_t { get_reform_group_count() }, reform_type, ordered, administrative
-	)) {
+			identifier, identifier, ReformGroup::index_t { get_reform_group_count() }, reform_type, ordered, administrative
+		)) {
 		return false;
 	}
 
@@ -84,23 +76,19 @@ bool IssueManager::add_reform(
 		if (ordinal == 0) {
 			if (technology_cost != 0) {
 				spdlog::warn_s(
-					"Non-zero technology cost {} found in ordinal 0 uncivilised reform {}!",
-					technology_cost, identifier
+					"Non-zero technology cost {} found in ordinal 0 uncivilised reform {}!", technology_cost, identifier
 				);
 			}
 		} else {
 			if (technology_cost <= 0) {
 				spdlog::warn_s(
-					"Non-positive technology cost {} found in ordinal {} uncivilised reform {}!",
-					technology_cost, ordinal, identifier
+					"Non-positive technology cost {} found in ordinal {} uncivilised reform {}!", technology_cost, ordinal,
+					identifier
 				);
 			}
 		}
 	} else if (technology_cost != 0) {
-		spdlog::warn_s(
-			"Non-zero technology cost {} found in civilised reform {}!",
-			technology_cost, identifier
-		);
+		spdlog::warn_s("Non-zero technology cost {} found in civilised reform {}!", technology_cost, identifier);
 	}
 
 	if (administrative_multiplier != 0 && !reform_group.is_administrative) {
@@ -111,11 +99,10 @@ bool IssueManager::add_reform(
 	}
 
 	if (!reforms.emplace_item(
-		identifier,
-		Reform::index_t { get_reform_count() }, identifier,
-		new_colour, std::move(values), reform_group, ordinal, administrative_multiplier, std::move(rules),
-		technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
-	)) {
+			identifier, Reform::index_t { get_reform_count() }, identifier, new_colour, std::move(values), reform_group,
+			ordinal, administrative_multiplier, std::move(rules), technology_cost, std::move(allow),
+			std::move(on_execute_trigger), std::move(on_execute_effect)
+		)) {
 		return false;
 	}
 
@@ -125,8 +112,7 @@ bool IssueManager::add_reform(
 
 bool IssueManager::_load_party_policy_group(size_t& expected_party_policies, std::string_view identifier, ast::NodeCPtr node) {
 	spdlog::scope scope { fmt::format("party policy group {}", identifier) };
-	return expect_length(add_variable_callback(expected_party_policies))(node)
-		& add_party_policy_group(identifier);
+	return expect_length(add_variable_callback(expected_party_policies))(node) & add_party_policy_group(identifier);
 }
 
 /* Each colour is made up of these components in some order:
@@ -144,8 +130,8 @@ static constexpr size_t varying_colour_denominator = 60;
 /* 3! = 3 (choices for 0) * 2 (choices for 252) * 1 (choices for 4.25 * i) */
 static constexpr size_t colour_pattern_period = 6;
 
-static constexpr std::array<size_t, colour_pattern_period> dim_colour_indices     { 0, 1, 2, 0, 1, 2 };
-static constexpr std::array<size_t, colour_pattern_period> bright_colour_indices  { 1, 2, 0, 2, 0, 1 };
+static constexpr std::array<size_t, colour_pattern_period> dim_colour_indices { 0, 1, 2, 0, 1, 2 };
+static constexpr std::array<size_t, colour_pattern_period> bright_colour_indices { 1, 2, 0, 2, 0, 1 };
 static constexpr std::array<size_t, colour_pattern_period> varying_colour_indices { 2, 0, 1, 1, 2, 0 };
 
 static constexpr colour_t create_issue_reform_colour(size_t index) {
@@ -157,15 +143,15 @@ static constexpr colour_t create_issue_reform_colour(size_t index) {
 
 	ret[bright_colour_indices[periodic_index]] = bright_colour_component;
 
-	ret[varying_colour_indices[periodic_index]] = static_cast<size_t>(colour_t::max_value)
-		* ((index * scattering_prime) % varying_colour_denominator) / varying_colour_denominator;
+	ret[varying_colour_indices[periodic_index]] = static_cast<size_t>(colour_t::max_value) *
+		((index * scattering_prime) % varying_colour_denominator) / varying_colour_denominator;
 
 	return ret;
 }
 
 bool IssueManager::_load_party_policy(
-	ModifierManager const& modifier_manager, std::string_view identifier,
-	PartyPolicyGroup& party_policy_group, ast::NodeCPtr node
+	ModifierManager const& modifier_manager, std::string_view identifier, PartyPolicyGroup& party_policy_group,
+	ast::NodeCPtr node
 ) {
 	spdlog::scope scope { fmt::format("party policy {}", identifier) };
 
@@ -173,19 +159,15 @@ bool IssueManager::_load_party_policy(
 	RuleSet rules;
 	bool is_jingoism = false;
 
-	bool ret = NodeTools::expect_dictionary_keys_and_default(
-		modifier_manager.expect_base_country_modifier(values),
-		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_jingoism)),
-		"rules", ZERO_OR_ONE, RuleSet::expect_rule_set(move_variable_callback(rules)),
-		"war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
+	bool
+		ret = NodeTools::expect_dictionary_keys_and_default(modifier_manager.expect_base_country_modifier(values), "is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_jingoism)), "rules", ZERO_OR_ONE, RuleSet::expect_rule_set(move_variable_callback(rules)), "war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
 			spdlog::warn_s("war_exhaustion_effect does nothing (vanilla issues have it).");
 			return true;
-		}
-	)(node);
+		})(node);
 
 	ret &= add_party_policy(
-		identifier, create_issue_reform_colour(get_party_policy_count() + get_reform_count()), std::move(values), party_policy_group,
-		std::move(rules), is_jingoism
+		identifier, create_issue_reform_colour(get_party_policy_count() + get_reform_count()), std::move(values),
+		party_policy_group, std::move(rules), is_jingoism
 	);
 
 	return ret;
@@ -197,11 +179,10 @@ bool IssueManager::_load_reform_group(
 	spdlog::scope scope { fmt::format("reform group {}", identifier) };
 	bool ordered = false, administrative = false;
 
-	bool ret = expect_dictionary_keys_and_default(
-		increment_callback(expected_reforms),
-		"next_step_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(ordered)),
-		"administrative", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative))
-	)(node);
+	bool ret =
+		expect_dictionary_keys_and_default(increment_callback(expected_reforms), "next_step_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(ordered)), "administrative", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative)))(
+			node
+		);
 
 	ret &= add_reform_group(identifier, reform_type, ordered, administrative);
 
@@ -209,8 +190,8 @@ bool IssueManager::_load_reform_group(
 }
 
 bool IssueManager::_load_reform(
-	ModifierManager const& modifier_manager, size_t ordinal, std::string_view identifier,
-	ReformGroup& reform_group, ast::NodeCPtr node
+	ModifierManager const& modifier_manager, size_t ordinal, std::string_view identifier, ReformGroup& reform_group,
+	ast::NodeCPtr node
 ) {
 	spdlog::scope scope { fmt::format("reform {}", identifier) };
 	using enum scope_type_t;
@@ -253,20 +234,15 @@ bool IssueManager::_load_reform(
  * POL-99, POL-101, POL-102, POL-103, POL-104, POL-105, POL-107, POL-108, POL-109, POL-110, POL-111, POL-113,
  * POL-113, POL-114, POL-115, POL-116
  */
-bool IssueManager::load_issues_file(
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
-) {
+bool IssueManager::load_issues_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
 	spdlog::scope scope { "common/issues.txt" };
 	bool party_issues_found = false;
 	size_t expected_party_policy_groups = 0;
 	size_t expected_reform_groups = 0;
 
 	/* Reserve space for issue and reform groups and reserve space for and load reform types. */
-	bool ret = expect_dictionary_reserve_length(
-		reform_types,
-		[this, &party_issues_found, &expected_party_policy_groups, &expected_reform_groups](
-			std::string_view key, ast::NodeCPtr value
-		) -> bool {
+	bool ret =
+		expect_dictionary_reserve_length(reform_types, [this, &party_issues_found, &expected_party_policy_groups, &expected_reform_groups](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "party_issues") {
 				if (party_issues_found) {
 					/* Error emitted here allowing later passes to return true with no error message. */
@@ -277,15 +253,13 @@ bool IssueManager::load_issues_file(
 
 				return expect_length(add_variable_callback(expected_party_policy_groups))(value);
 			} else {
-				static const string_set_t uncivilised_reform_groups {
-					"economic_reforms", "education_reforms", "military_reforms"
-				};
+				static const string_set_t uncivilised_reform_groups { "economic_reforms", "education_reforms",
+																	  "military_reforms" };
 
-				return expect_length(add_variable_callback(expected_reform_groups))(value)
-					& add_reform_type(key, uncivilised_reform_groups.contains(key));
+				return expect_length(add_variable_callback(expected_reform_groups))(value) &
+					add_reform_type(key, uncivilised_reform_groups.contains(key));
 			}
-		}
-	)(root);
+		})(root);
 
 	lock_reform_types();
 
@@ -297,10 +271,8 @@ bool IssueManager::load_issues_file(
 	size_t expected_reforms = 0;
 
 	/* Load issue and reform groups. */
-	ret &= expect_dictionary(
-		[this, &party_issues_found, &expected_party_policies, &expected_reforms](
-			std::string_view type_key, ast::NodeCPtr type_value
-		) -> bool {
+	ret &=
+		expect_dictionary([this, &party_issues_found, &expected_party_policies, &expected_reforms](std::string_view type_key, ast::NodeCPtr type_value) -> bool {
 			if (type_key == "party_issues") {
 				if (party_issues_found) {
 					return true; /* Error will have been emitted in first pass. */
@@ -318,14 +290,11 @@ bool IssueManager::load_issues_file(
 					return false;
 				}
 
-				return expect_dictionary(
-					[this, reform_type, &expected_reforms](std::string_view key, ast::NodeCPtr value) -> bool {
-						return _load_reform_group(expected_reforms, key, *reform_type, value);
-					}
-				)(type_value);
+				return expect_dictionary([this, reform_type, &expected_reforms](std::string_view key, ast::NodeCPtr value) -> bool {
+					return _load_reform_group(expected_reforms, key, *reform_type, value);
+				})(type_value);
 			}
-		}
-	)(root);
+		})(root);
 
 	lock_party_policy_groups();
 	lock_reform_groups();
@@ -336,58 +305,46 @@ bool IssueManager::load_issues_file(
 	party_issues_found = false;
 
 	/* Load issues and reforms. */
-	ret &= expect_dictionary(
-		[this, &party_issues_found, &modifier_manager](
-			std::string_view type_key, ast::NodeCPtr type_value
-		) -> bool {
-			if (type_key == "party_issues") {
-				if (party_issues_found) {
-					return true;
-				}
-				party_issues_found = true;
-
-				return expect_dictionary([this, &modifier_manager](
-					std::string_view group_key, ast::NodeCPtr group_value
-				) -> bool {
-					PartyPolicyGroup* party_policy_group = party_policy_groups.get_item_by_identifier(group_key);
-
-					if (OV_unlikely(party_policy_group == nullptr)) {
-						spdlog::error_s("Party policy group \"{}\" not found!", group_key);
-						return false;
-					}
-
-					return expect_dictionary([this, &modifier_manager, party_policy_group](
-						std::string_view key, ast::NodeCPtr value
-					) -> bool {
-						return _load_party_policy(modifier_manager, key, *party_policy_group, value);
-					})(group_value);
-				})(type_value);
-			} else {
-				return expect_dictionary([this, &party_issues_found, &modifier_manager](
-					std::string_view group_key, ast::NodeCPtr group_value
-				) -> bool {
-					ReformGroup* reform_group = reform_groups.get_item_by_identifier(group_key);
-
-					if (OV_unlikely(reform_group == nullptr)) {
-						spdlog::error_s("Reform group \"{}\" not found!", group_key);
-						return false;
-					}
-
-					size_t ordinal = 0;
-
-					return expect_dictionary([this, &modifier_manager, reform_group, &ordinal](
-						std::string_view key, ast::NodeCPtr value
-					) -> bool {
-						if (key == "next_step_only" || key == "administrative") {
-							return true;
-						}
-
-						return _load_reform(modifier_manager, ordinal++, key, *reform_group, value);
-					})(group_value);
-				})(type_value);
+	ret &= expect_dictionary([this, &party_issues_found, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_value) -> bool {
+		if (type_key == "party_issues") {
+			if (party_issues_found) {
+				return true;
 			}
+			party_issues_found = true;
+
+			return expect_dictionary([this, &modifier_manager](std::string_view group_key, ast::NodeCPtr group_value) -> bool {
+				PartyPolicyGroup* party_policy_group = party_policy_groups.get_item_by_identifier(group_key);
+
+				if (OV_unlikely(party_policy_group == nullptr)) {
+					spdlog::error_s("Party policy group \"{}\" not found!", group_key);
+					return false;
+				}
+
+				return expect_dictionary([this, &modifier_manager, party_policy_group](std::string_view key, ast::NodeCPtr value) -> bool {
+					return _load_party_policy(modifier_manager, key, *party_policy_group, value);
+				})(group_value);
+			})(type_value);
+		} else {
+			return expect_dictionary([this, &party_issues_found, &modifier_manager](std::string_view group_key, ast::NodeCPtr group_value) -> bool {
+				ReformGroup* reform_group = reform_groups.get_item_by_identifier(group_key);
+
+				if (OV_unlikely(reform_group == nullptr)) {
+					spdlog::error_s("Reform group \"{}\" not found!", group_key);
+					return false;
+				}
+
+				size_t ordinal = 0;
+
+				return expect_dictionary([this, &modifier_manager, reform_group, &ordinal](std::string_view key, ast::NodeCPtr value) -> bool {
+					if (key == "next_step_only" || key == "administrative") {
+						return true;
+					}
+
+					return _load_reform(modifier_manager, ordinal++, key, *reform_group, value);
+				})(group_value);
+			})(type_value);
 		}
-	)(root);
+	})(root);
 
 	lock_party_policies();
 	lock_reforms();

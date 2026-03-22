@@ -8,10 +8,11 @@ Decision::Decision(
 	std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
 	std::string_view new_picture, ConditionScript&& new_potential, ConditionScript&& new_allow,
 	ConditionalWeightFactorMul&& new_ai_will_do, EffectScript&& new_effect
-) : HasIdentifier { new_identifier }, has_alert { new_alert }, is_news { new_news }, news_title { new_news_title },
-	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium },
-	news_desc_short { new_news_desc_short }, picture { new_picture }, potential { std::move(new_potential) },
-	allow { std::move(new_allow) }, ai_will_do { std::move(new_ai_will_do) }, effect { std::move(new_effect) } {}
+)
+	: HasIdentifier { new_identifier }, has_alert { new_alert }, is_news { new_news }, news_title { new_news_title },
+	  news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
+	  picture { new_picture }, potential { std::move(new_potential) }, allow { std::move(new_allow) },
+	  ai_will_do { std::move(new_ai_will_do) }, effect { std::move(new_effect) } {}
 
 bool Decision::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -45,28 +46,23 @@ bool DecisionManager::add_decision(
 	}
 
 	return decisions.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture, std::move(potential),
-		std::move(allow), std::move(ai_will_do), std::move(effect)
+		identifier, duplicate_warning_callback, identifier, alert, news, news_title, news_desc_long, news_desc_medium,
+		news_desc_short, picture, std::move(potential), std::move(allow), std::move(ai_will_do), std::move(effect)
 	);
 }
 
 bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
-	return expect_dictionary_keys(
-		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
-			decisions,
-			[this](std::string_view identifier, ast::NodeCPtr node) -> bool {
-				using enum scope_type_t;
+	return expect_dictionary_keys("political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(decisions, [this](std::string_view identifier, ast::NodeCPtr node) -> bool {
+									  using enum scope_type_t;
 
-				bool alert = true, news = false;
-				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
-				ConditionScript potential { COUNTRY, COUNTRY, NO_SCOPE };
-				ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
-				ConditionalWeightFactorMul ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
-				EffectScript effect;
+									  bool alert = true, news = false;
+									  std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
+									  ConditionScript potential { COUNTRY, COUNTRY, NO_SCOPE };
+									  ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
+									  ConditionalWeightFactorMul ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
+									  EffectScript effect;
 
-				bool ret = expect_dictionary_keys(
+									  bool ret = expect_dictionary_keys(
 					"alert", ZERO_OR_ONE, expect_bool(assign_variable_callback(alert)),
 					"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
 					"news_title", ZERO_OR_ONE, expect_string(assign_variable_callback(news_title)),
@@ -80,15 +76,14 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 					"ai_will_do", ZERO_OR_ONE, ai_will_do.expect_conditional_weight()
 				)(node);
 
-				ret &= add_decision(
-					identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture,
-					std::move(potential), std::move(allow), std::move(ai_will_do), std::move(effect)
-				);
+									  ret &= add_decision(
+										  identifier, alert, news, news_title, news_desc_long, news_desc_medium,
+										  news_desc_short, picture, std::move(potential), std::move(allow),
+										  std::move(ai_will_do), std::move(effect)
+									  );
 
-				return ret;
-			}
-		)
-	)(root);
+									  return ret;
+								  }))(root);
 }
 
 bool DecisionManager::parse_scripts(DefinitionManager const& definition_manager) {

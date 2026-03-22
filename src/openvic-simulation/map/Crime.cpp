@@ -7,15 +7,12 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Crime::Crime(
-	index_t new_index,
-	std::string_view new_identifier,
-	ModifierValue&& new_values,
-	icon_t new_icon,
-	ConditionScript&& new_trigger,
-	bool new_default_active
-) : HasIndex { new_index },
-	TriggeredModifier { new_identifier, std::move(new_values), modifier_type_t::CRIME, new_icon, std::move(new_trigger) },
-	is_default_active { new_default_active } {}
+	index_t new_index, std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon,
+	ConditionScript&& new_trigger, bool new_default_active
+)
+	: HasIndex { new_index },
+	  TriggeredModifier { new_identifier, std::move(new_values), modifier_type_t::CRIME, new_icon, std::move(new_trigger) },
+	  is_default_active { new_default_active } {}
 
 bool CrimeManager::add_crime_modifier(
 	std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger,
@@ -27,16 +24,14 @@ bool CrimeManager::add_crime_modifier(
 	}
 
 	return crime_modifiers.emplace_item(
-		identifier,
-		duplicate_warning_callback,
-		Crime::index_t { get_crime_modifier_count() }, identifier, std::move(values), icon, std::move(trigger), default_active
+		identifier, duplicate_warning_callback, Crime::index_t { get_crime_modifier_count() }, identifier, std::move(values),
+		icon, std::move(trigger), default_active
 	);
 }
 
 bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		crime_modifiers,
-		[this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+	const bool ret =
+		expect_dictionary_reserve_length(crime_modifiers, [this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 			using enum scope_type_t;
 
 			ModifierValue modifier_value;
@@ -54,8 +49,7 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 			ret &= add_crime_modifier(key, std::move(modifier_value), icon, std::move(trigger), default_active);
 
 			return ret;
-		}
-	)(root);
+		})(root);
 
 	lock_crime_modifiers();
 

@@ -8,10 +8,10 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/portable/Deque.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>
@@ -55,12 +55,12 @@ namespace OpenVic {
 
 	// Specialization for reference_wrapper
 	template<typename T>
-	struct default_equal_to_selector<std::reference_wrapper<T>> { 
-		using type = std::equal_to<std::reference_wrapper<const T>>; 
+	struct default_equal_to_selector<std::reference_wrapper<T>> {
+		using type = std::equal_to<std::reference_wrapper<const T>>;
 	};
 	template<typename T>
-	struct default_equal_to_selector<std::reference_wrapper<const T>> { 
-		using type = std::equal_to<std::reference_wrapper<const T>>; 
+	struct default_equal_to_selector<std::reference_wrapper<const T>> {
+		using type = std::equal_to<std::reference_wrapper<const T>>;
 	};
 
 	template<typename T>

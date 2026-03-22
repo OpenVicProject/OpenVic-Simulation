@@ -7,13 +7,13 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 
+#include <function2/function2.hpp>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-
-#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct ProvinceInstance;

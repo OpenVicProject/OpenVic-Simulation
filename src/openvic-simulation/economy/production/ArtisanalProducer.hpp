@@ -30,7 +30,7 @@ namespace OpenVic {
 		ModifierEffectCache const& modifier_effect_cache;
 		IndexedFlatMap<GoodDefinition, fixed_point_t> stockpile;
 
-		//only used during day tick (from artisan_tick() until MarketInstance.execute_orders())
+		// only used during day tick (from artisan_tick() until MarketInstance.execute_orders())
 		fixed_point_map_t<GoodDefinition const*> max_quantity_to_buy_per_good;
 
 		ProductionType const* PROPERTY(production_type_nullable);
@@ -40,53 +40,39 @@ namespace OpenVic {
 
 		void set_production_type(ProductionType const* const new_production_type);
 		ProductionType const* pick_production_type(
-			Pop& pop,
-			PopValuesFromProvince const& values_from_province,
-			RandomU32& random_number_generator
+			Pop& pop, PopValuesFromProvince const& values_from_province, RandomU32& random_number_generator
 		) const;
 
-		static fixed_point_t calculate_production_type_score(
-			const fixed_point_t revenue,
-			const fixed_point_t costs,
-			const pop_size_t workforce
-		);
+		static fixed_point_t
+		calculate_production_type_score(const fixed_point_t revenue, const fixed_point_t costs, const pop_size_t workforce);
 
 	public:
 		ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps);
 		ArtisanalProducer(
-			ArtisanalProducerDeps const& artisanal_producer_deps,
-			IndexedFlatMap<GoodDefinition, fixed_point_t>&& new_stockpile,
-			ProductionType const* const new_production_type,
-			GoodDefinition const* const new_last_produced_good,
+			ArtisanalProducerDeps const& artisanal_producer_deps, IndexedFlatMap<GoodDefinition, fixed_point_t>&& new_stockpile,
+			ProductionType const* const new_production_type, GoodDefinition const* const new_last_produced_good,
 			const fixed_point_t new_current_production
 		);
 
 		void artisan_tick(
-			MarketInstance const& market_instance,
-			Pop& pop,
-			PopValuesFromProvince const& values_from_province,
-			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			MarketInstance const& market_instance, Pop& pop, PopValuesFromProvince const& values_from_province,
+			RandomU32& random_number_generator, IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
-			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
-			memory::vector<fixed_point_t>& reusable_map_0,
-			memory::vector<fixed_point_t>& reusable_map_1,
-			fixed_point_map_t<GoodDefinition const*>& goods_to_sell
+			memory::vector<fixed_point_t>& pop_money_to_spend_per_good, memory::vector<fixed_point_t>& reusable_map_0,
+			memory::vector<fixed_point_t>& reusable_map_1, fixed_point_map_t<GoodDefinition const*>& goods_to_sell
 		);
 
-		//thread safe if called once per good and stockpile already has an entry.
-		//adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
+		// thread safe if called once per good and stockpile already has an entry.
+		// adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
 		fixed_point_t add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity);
 		void subtract_from_stockpile(GoodDefinition const& good, const fixed_point_t sold_quantity);
 
-		//optional to handle invalid
+		// optional to handle invalid
 		static std::optional<fixed_point_t> estimate_production_type_score(
-			GoodInstanceManager const& good_instance_manager,
-			ProductionType const& production_type,
-			ProvinceInstance& location,
+			GoodInstanceManager const& good_instance_manager, ProductionType const& production_type, ProvinceInstance& location,
 			const fixed_point_t max_cost_multiplier
 		);
-	
+
 	private:
 		struct artisan_tick_handler {
 		private:
@@ -103,27 +89,20 @@ namespace OpenVic {
 		public:
 			artisan_tick_handler(
 				CountryInstance* const new_country_to_report_economy_nullable,
-				memory::vector<fixed_point_t>& new_demand_per_input,
-				MarketInstance const& new_market_instance,
-				memory::vector<fixed_point_t>& new_max_price_per_input,
-				Pop& new_pop,
-				ProductionType const& new_production_type,
+				memory::vector<fixed_point_t>& new_demand_per_input, MarketInstance const& new_market_instance,
+				memory::vector<fixed_point_t>& new_max_price_per_input, Pop& new_pop, ProductionType const& new_production_type,
 				IndexedFlatMap<GoodDefinition, char>& new_wants_more_mask
-			) : country_to_report_economy_nullable { new_country_to_report_economy_nullable },
-				demand_per_input { new_demand_per_input },
-				market_instance { new_market_instance },
-				max_price_per_input { new_max_price_per_input },
-				pop { new_pop },
-				production_type { new_production_type },
-				wants_more_mask { new_wants_more_mask } {}
+			)
+				: country_to_report_economy_nullable { new_country_to_report_economy_nullable },
+				  demand_per_input { new_demand_per_input }, market_instance { new_market_instance },
+				  max_price_per_input { new_max_price_per_input }, pop { new_pop }, production_type { new_production_type },
+				  wants_more_mask { new_wants_more_mask } {}
 
 			void calculate_inputs(
-				IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
-				const bool should_report_input_demand
+				IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile, const bool should_report_input_demand
 			);
 			void produce(
-				fixed_point_t& costs_of_production,
-				fixed_point_t& current_production,
+				fixed_point_t& costs_of_production, fixed_point_t& current_production,
 				IndexedFlatMap<GoodDefinition, fixed_point_t>& stockpile
 			);
 			void allocate_money_for_inputs(

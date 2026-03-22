@@ -1,20 +1,22 @@
 #include "CountryHistory.hpp"
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryHistoryEntry::CountryHistoryEntry(
-	CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+	CountryDefinition const& new_country, Date new_date,
+	decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 	decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
-) : HistoryEntry { new_date }, country { new_country }, upper_house_proportion_by_ideology { ideology_keys },
-	flag_overrides_by_government_type { government_type_keys } {}
+)
+	: HistoryEntry { new_date }, country { new_country }, upper_house_proportion_by_ideology { ideology_keys },
+	  flag_overrides_by_government_type { government_type_keys } {}
 
 fixed_point_t CountryHistoryEntry::get_upper_house_proportion_by_ideology(Ideology const& key) const {
 	return upper_house_proportion_by_ideology.at(key);
@@ -27,7 +29,8 @@ GovernmentType const* CountryHistoryEntry::get_flag_overrides_by_government_type
 CountryHistoryMap::CountryHistoryMap(
 	CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
 	decltype(government_type_keys) new_government_type_keys
-) : country { new_country }, ideology_keys { new_ideology_keys }, government_type_keys { new_government_type_keys } {}
+)
+	: country { new_country }, ideology_keys { new_ideology_keys }, government_type_keys { new_government_type_keys } {}
 
 memory::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
 	return memory::make_unique<CountryHistoryEntry>(country, date, ideology_keys, government_type_keys);
@@ -65,8 +68,8 @@ bool CountryHistoryMap::_load_history_entry(
 			} else if (it->second == add) {
 				// Desired culture instruction already exists
 				spdlog::warn_s(
-					"Duplicate attempt to {} accepted culture {} {} country history of {}",
-					add ? "add" : "remove", add ? "to" : "from", culture, entry.country
+					"Duplicate attempt to {} accepted culture {} {} country history of {}", add ? "add" : "remove",
+					add ? "to" : "from", culture, entry.country
 				);
 				return true;
 			} else {
@@ -74,11 +77,7 @@ bool CountryHistoryMap::_load_history_entry(
 				entry.accepted_cultures.erase(it);
 				spdlog::warn_s(
 					"Attempted to {} accepted culture {} {} country history of {} after previously {} it",
-					add ? "add" : "remove",
-					culture,
-					add ? "to" : "from",
-					entry.country,
-					add ? "removing" : "adding"
+					add ? "add" : "remove", culture, add ? "to" : "from", entry.country, add ? "removing" : "adding"
 				);
 				return true;
 			}

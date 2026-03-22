@@ -41,9 +41,10 @@ memory::string ModifierEffect::make_default_modifier_effect_localisation_key(std
 }
 
 ModifierEffect::ModifierEffect(
-	std::string_view new_identifier, format_t new_format, target_t new_targets,
-	std::string_view new_localisation_key, bool new_has_no_effect
-) : HasIdentifier { new_identifier }, format { new_format }, targets { new_targets },
-	localisation_key {
-		new_localisation_key.empty() ? make_default_modifier_effect_localisation_key(new_identifier) : new_localisation_key
-	}, has_no_effect { new_has_no_effect } {}
+	std::string_view new_identifier, format_t new_format, target_t new_targets, std::string_view new_localisation_key,
+	bool new_has_no_effect
+)
+	: HasIdentifier { new_identifier }, format { new_format }, targets { new_targets },
+	  localisation_key { new_localisation_key.empty() ? make_default_modifier_effect_localisation_key(new_identifier)
+													  : new_localisation_key },
+	  has_no_effect { new_has_no_effect } {}

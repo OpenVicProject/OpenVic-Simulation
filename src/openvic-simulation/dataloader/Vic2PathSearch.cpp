@@ -262,7 +262,8 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 		current_node = std::visit(visit_node, it->second);
 
 		if (!current_node.has_value()) {
-			return search_log(hint_empty, "Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.").result();
+			return search_log(hint_empty, "Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.")
+				.result();
 		}
 
 		// Array of strings contain "0" to std::to_string(max_amount_of_steam_libraries - 1)

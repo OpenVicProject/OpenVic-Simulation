@@ -240,10 +240,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	SPDLOG_INFO("===== Setting up instance... =====");
 	ret &= game_manager.setup_instance(
-		game_manager.get_definition_manager()
-			.get_history_manager()
-			.get_bookmark_manager()
-			.get_front_bookmark()
+		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_front_bookmark()
 	);
 
 	print_memory_usage("Instance Setup");
@@ -267,7 +264,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 					"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})", //
 					country, //
 					country.get_total_rank(), country.total_score.get_untracked().to_string(1), //
-					country.get_prestige_rank(), country.get_prestige_untracked().to_string(1),
+					country.get_prestige_rank(), country.get_prestige_untracked().to_string(1), //
 					country.get_industrial_rank(), country.get_industrial_power_untracked().to_string(1),
 					country.get_military_rank(), country.military_power.get_untracked().to_string(1)
 				);
@@ -275,9 +272,11 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 			SPDLOG_INFO("{}:{}", title, countries_str);
 		};
 
-		CountryInstanceManager const& country_instance_manager = game_manager.get_instance_manager()->get_country_instance_manager();
+		CountryInstanceManager const& country_instance_manager =
+			game_manager.get_instance_manager()->get_country_instance_manager();
 
-		OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> great_powers = country_instance_manager.get_great_powers();
+		OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> great_powers =
+			country_instance_manager.get_great_powers();
 		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());

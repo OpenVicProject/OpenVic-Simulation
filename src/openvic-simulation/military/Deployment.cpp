@@ -2,9 +2,9 @@
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
-#include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -13,7 +13,8 @@ using namespace OpenVic::NodeTools;
 
 UnitDeployment<unit_branch_t::LAND>::UnitDeployment(
 	std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home
-) : name { new_name }, type { new_type }, home { new_home } {}
+)
+	: name { new_name }, type { new_type }, home { new_home } {}
 
 UnitDeployment<unit_branch_t::NAVAL>::UnitDeployment(std::string_view new_name, ShipType const& new_type)
 	: name { new_name }, type { new_type } {}
@@ -22,13 +23,15 @@ template<unit_branch_t Branch>
 UnitDeploymentGroup<Branch>::UnitDeploymentGroup(
 	std::string_view new_name, ProvinceDefinition const& new_location, memory::vector<_Unit>&& new_units,
 	std::optional<size_t> new_leader_index
-) : name { new_name }, location { new_location }, units { std::move(new_units) }, leader_index { new_leader_index } {}
+)
+	: name { new_name }, location { new_location }, units { std::move(new_units) }, leader_index { new_leader_index } {}
 
 Deployment::Deployment(
 	std::string_view new_path, memory::vector<ArmyDeployment>&& new_armies, memory::vector<NavyDeployment>&& new_navies,
 	memory::vector<LeaderBase>&& new_leaders
-) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
-	leaders { std::move(new_leaders) } {}
+)
+	: HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
+	  leaders { std::move(new_leaders) } {}
 
 bool DeploymentManager::add_deployment(
 	std::string_view path, memory::vector<ArmyDeployment>&& armies, memory::vector<NavyDeployment>&& navies,
@@ -39,19 +42,12 @@ bool DeploymentManager::add_deployment(
 		return false;
 	}
 
-	return deployments.emplace_item(
-		path,
-		path, std::move(armies), std::move(navies), std::move(leaders)
-	);
+	return deployments.emplace_item(path, path, std::move(armies), std::move(navies), std::move(leaders));
 }
 
 bool DeploymentManager::load_oob_file(
-	Dataloader const& dataloader,
-	MapDefinition const& map_definition,
-	MilitaryManager const& military_manager,
-	std::string_view history_path,
-	Deployment const*& deployment,
-	bool fail_on_missing
+	Dataloader const& dataloader, MapDefinition const& map_definition, MilitaryManager const& military_manager,
+	std::string_view history_path, Deployment const*& deployment, bool fail_on_missing
 ) {
 	deployment = get_deployment_by_identifier(history_path);
 	if (deployment != nullptr) {
@@ -65,8 +61,7 @@ bool DeploymentManager::load_oob_file(
 
 	static constexpr std::string_view oob_directory = "history/units/";
 
-	const fs::path lookedup_path =
-		dataloader.lookup_file(append_string_views(oob_directory, history_path), false);
+	const fs::path lookedup_path = dataloader.lookup_file(append_string_views(oob_directory, history_path), false);
 
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);
@@ -96,7 +91,8 @@ bool DeploymentManager::load_oob_file(
 
 	using enum unit_branch_t;
 
-	const auto leader_callback = [&map_definition, &military_manager, &general_count, &admiral_count](ast::NodeCPtr node) -> bool {
+	const auto leader_callback = [&map_definition, &military_manager, &general_count,
+								  &admiral_count](ast::NodeCPtr node) -> bool {
 		std::string_view leader_name {};
 		unit_branch_t leader_branch = INVALID_BRANCH;
 		Date leader_date {};
@@ -127,26 +123,18 @@ bool DeploymentManager::load_oob_file(
 		// Default cases for leader personality and background match vic2 behaviour of ignoring invalid traits.
 		if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
 			spdlog::warn_s(
-				"Leader {} has personality \"{}\" which is not a personality trait!",
-				leader_name, *leader_personality
+				"Leader {} has personality \"{}\" which is not a personality trait!", leader_name, *leader_personality
 			);
 			leader_personality = nullptr;
 		}
 		if (leader_background != nullptr && !leader_background->is_background_trait()) {
-			spdlog::warn_s(
-				"Leader {} has background \"{}\" which is not a background trait!",
-				leader_name, *leader_background
-			);
+			spdlog::warn_s("Leader {} has background \"{}\" which is not a background trait!", leader_name, *leader_background);
 			leader_background = nullptr;
 		}
 
 		switch (leader_branch) {
-		case LAND:
-			++general_count;
-			break;
-		case NAVAL:
-			++admiral_count;
-			break;
+		case LAND:	++general_count; break;
+		case NAVAL: ++admiral_count; break;
 		default:
 			spdlog::error_s("Invalid branch {} for leader {}", static_cast<uint64_t>(leader_branch), leader_name);
 			return false;
@@ -267,12 +255,9 @@ bool DeploymentManager::load_oob_file(
 
 	if (general_count + admiral_count != leaders.size()) {
 		spdlog::error_s(
-			"Mismatch in sum (#{}) of general (#{}) and admiral (#{}) counts when compared to loaded leader count (#{}) for OOB file {}",
-			general_count + admiral_count,
-			general_count,
-			admiral_count,
-			leaders.size(),
-			history_path
+			"Mismatch in sum (#{}) of general (#{}) and admiral (#{}) counts when compared to loaded leader count (#{}) for "
+			"OOB file {}",
+			general_count + admiral_count, general_count, admiral_count, leaders.size(), history_path
 		);
 		return false;
 	}

@@ -5,10 +5,10 @@
 
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -24,13 +24,12 @@ namespace OpenVic {
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
 
-		//only used during day tick (from actors placing order until execute_orders())
+		// only used during day tick (from actors placing order until execute_orders())
 		memory::vector<GoodBuyUpToOrder> buy_up_to_orders;
 		memory::vector<GoodMarketSellOrder> market_sell_orders;
 
 		void execute_buy_orders(
-			const fixed_point_t new_price,
-			TypedSpan<country_index_t, const fixed_point_t> actual_bought_per_country,
+			const fixed_point_t new_price, TypedSpan<country_index_t, const fixed_point_t> actual_bought_per_country,
 			TypedSpan<country_index_t, const fixed_point_t> supply_per_country,
 			std::span<const fixed_point_t> quantity_bought_per_order
 		);
@@ -50,6 +49,7 @@ namespace OpenVic {
 		ValueHistory<fixed_point_t> PROPERTY(price_history);
 
 		void update_next_price_limits();
+
 	public:
 		GoodDefinition const& good_definition;
 
@@ -59,19 +59,16 @@ namespace OpenVic {
 		GoodMarket(GoodMarket&&) = delete;
 		GoodMarket& operator=(GoodMarket&&) = delete;
 
-		//thread safe
+		// thread safe
 		void add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order);
 		void add_market_sell_order(GoodMarketSellOrder&& market_sell_order);
 
-		//not thread safe
+		// not thread safe
 		static constexpr size_t VECTORS_FOR_EXECUTE_ORDERS = 2;
 		void execute_orders(
 			TypedSpan<country_index_t, fixed_point_t> reusable_country_map_0,
 			TypedSpan<country_index_t, fixed_point_t> reusable_country_map_1,
-			std::span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_EXECUTE_ORDERS
-			> reusable_vectors
+			std::span<memory::vector<fixed_point_t>, VECTORS_FOR_EXECUTE_ORDERS> reusable_vectors
 		);
 		void on_use_exponential_price_changes_changed();
 		void record_price_history();

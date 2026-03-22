@@ -22,10 +22,10 @@
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/transform.hpp>
 
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/string/CharConv.hpp"
 
 #include "../types/Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
@@ -169,7 +169,8 @@ struct Ast : ovdl::SymbolIntern {
 		StatementList slist;
 		for (size_t index : ranges::views::iota(static_cast<size_t>(0), count)) {
 			std::to_chars_result result = std::to_chars(hex_array.data(), hex_array.data() + hex_array.size(), index);
-			CHECK_IF(result.ec == std::errc {});
+			CHECK_IF (result.ec == std::errc {})
+				;
 			else {
 				continue;
 			}
@@ -188,7 +189,8 @@ struct Ast : ovdl::SymbolIntern {
 		for (auto [index, lhs] : ranges::views::iota(static_cast<size_t>(0), count) | ranges::views::enumerate) {
 			index %= span_rhs.size();
 			std::to_chars_result result = std::to_chars(hex_array.data(), hex_array.data() + hex_array.size(), lhs);
-			CHECK_IF(result.ec == std::errc {});
+			CHECK_IF (result.ec == std::errc {})
+				;
 			else {
 				continue;
 			}
@@ -329,7 +331,8 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 
 		decltype(val) check;
 		std::from_chars_result result = std::from_chars(sv.data(), sv.data() + sv.size(), check);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -378,7 +381,8 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 
 		decltype(val) check;
 		std::from_chars_result result = string_to_uint64(sv, check, base);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -442,7 +446,8 @@ TEST_CASE(
 
 		fixed_point_t check = 0;
 		std::from_chars_result result = check.from_chars(sv.data(), sv.data() + sv.size());
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -484,7 +489,8 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 
 	auto callback = [](ListValue const* ptr, colour_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == 3);
+		CHECK_IF (ranges::distance(list) == 3)
+			;
 		else {
 			return false;
 		}
@@ -529,7 +535,8 @@ TEST_CASE(
 
 		colour_argb_t check;
 		std::from_chars_result result = check.from_chars_argb(sv.data(), sv.data() + sv.size());
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -595,7 +602,8 @@ TEST_CASE("NodeTools expect Date functions", "[NodeTools][NodeTools-expect-funct
 	static auto sv_callback = [](std::string_view sv, Date val) -> bool {
 		Date::from_chars_result result = {};
 		Date check = Date::from_string(sv, &result);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -633,7 +641,8 @@ TEST_CASE(
 
 		int64_t check_int;
 		std::from_chars_result result = string_to_int64(sv, check_int);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -674,7 +683,8 @@ TEST_CASE("NodeTools expect vector functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback = [](ListValue const* ptr, auto val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == val.size());
+		CHECK_IF (ranges::distance(list) == val.size())
+			;
 		else {
 			return false;
 		}
@@ -824,8 +834,8 @@ TEST_CASE("NodeTools expect assign functions", "[NodeTools][NodeTools-expect-fun
 
 		auto* value = dryad::node_cast<FlatValue>(rhs);
 
-		CHECK_IF(ptr_lhs->value().view() == lhs) {
-			CHECK_IF(ptr_rhs->value().view() == value->value().view()) {
+		CHECK_IF (ptr_lhs->value().view() == lhs) {
+			CHECK_IF (ptr_rhs->value().view() == value->value().view()) {
 				return true;
 			}
 		}
@@ -858,7 +868,7 @@ TEST_CASE("NodeTools expect list functions", "[NodeTools][NodeTools-expect-funct
 	auto* _24_str_list = ast.create_assign_list(24, str_value);
 
 	static auto length_callback = [](size_t size, size_t check) {
-		CHECK_IF(size == check) {
+		CHECK_IF (size == check) {
 			return true;
 		}
 		return false;
@@ -866,7 +876,8 @@ TEST_CASE("NodeTools expect list functions", "[NodeTools][NodeTools-expect-funct
 
 	static auto callback = [](ListValue const* ptr, size_t count, NodeCPtr val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == count);
+		CHECK_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -982,7 +993,8 @@ TEST_CASE("NodeTools expect length functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback = [](ListValue const* ptr, size_t count, size_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == count);
+		CHECK_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -1003,7 +1015,8 @@ TEST_CASE("NodeTools expect length functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback_false = [](ListValue const* ptr, size_t count, size_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_FALSE_IF(ranges::distance(list) == count);
+		CHECK_FALSE_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -1405,7 +1418,8 @@ TEST_CASE(
 		};
 
 	static auto callback = [](string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
-		CHECK_IF(map.size() > expected_index);
+		CHECK_IF (map.size() > expected_index)
+			;
 		else {
 			return false;
 		}

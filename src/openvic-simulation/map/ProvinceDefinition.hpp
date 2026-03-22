@@ -6,13 +6,13 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -40,12 +40,12 @@ namespace OpenVic {
 			static constexpr data_t DEFAULT_DATA = 0;
 
 			enum struct type_t : uint8_t {
-				LAND,       /* Between two land provinces */
-				WATER,      /* Between two water provinces */
-				COASTAL,    /* Between a land province and a water province */
+				LAND, /* Between two land provinces */
+				WATER, /* Between two water provinces */
+				COASTAL, /* Between a land province and a water province */
 				IMPASSABLE, /* Between two land provinces (non-traversable) */
-				STRAIT,     /* Between two land provinces with a water through province */
-				CANAL       /* Between two water provinces with a land through province */
+				STRAIT, /* Between two land provinces with a water through province */
+				CANAL /* Between two water provinces with a land through province */
 			};
 
 			/* Type display name used for logging */
@@ -61,16 +61,10 @@ namespace OpenVic {
 
 		public:
 			constexpr adjacency_t(
-				ProvinceDefinition const& new_to,
-				const distance_t new_distance,
-				const type_t new_type,
-				ProvinceDefinition const* const new_through,
-				const data_t new_data
-			) : to { new_to },
-				through { new_through },
-				distance { new_distance },
-				type { new_type },
-				data { new_data } {}
+				ProvinceDefinition const& new_to, const distance_t new_distance, const type_t new_type,
+				ProvinceDefinition const* const new_through, const data_t new_data
+			)
+				: to { new_to }, through { new_through }, distance { new_distance }, type { new_type }, data { new_data } {}
 
 			adjacency_t(adjacency_t const&) = delete;
 			adjacency_t(adjacency_t&&) = default;
@@ -151,7 +145,8 @@ namespace OpenVic {
 
 		adjacency_t const* get_adjacency_to(ProvinceDefinition const& province) const;
 		bool is_adjacent_to(ProvinceDefinition const& province) const;
-		memory::vector<std::reference_wrapper<const adjacency_t>> get_adjacencies_going_through(ProvinceDefinition const& province) const;
+		memory::vector<std::reference_wrapper<const adjacency_t>>
+		get_adjacencies_going_through(ProvinceDefinition const& province) const;
 		bool has_adjacency_going_through(ProvinceDefinition const& province) const;
 
 		fvec2_t get_unit_position() const;

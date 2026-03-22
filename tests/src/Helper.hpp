@@ -34,11 +34,13 @@
 #define _OVSIM_CHECK_FALSE(NAME, ASSIGN_VALUE, ...)   _REQUIRE_IMPL("CHECK_FALSE" NAME,   false, (void)0,              ASSIGN_VALUE, __VA_ARGS__)
 // clang-format on
 
+// clang-format off
 #define _OVSIM_CHECK_IF(NAME, ...) \
 	if (bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; [&] { _OVSIM_CHECK(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); }(), (SNITCH_MACRO_CONCAT(result_, __LINE__)))
 
 #define _OVSIM_CHECK_FALSE_IF(NAME, ...) \
 	if (bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; [&] { _OVSIM_CHECK_FALSE(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); }(), (!SNITCH_MACRO_CONCAT(result_, __LINE__)))
+// clang-format on
 
 #define CHECK_IF(...) _OVSIM_CHECK_IF("_IF", __VA_ARGS__)
 

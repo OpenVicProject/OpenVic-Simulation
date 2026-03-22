@@ -3,9 +3,9 @@
 #include <string_view>
 
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UniqueId.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -18,11 +18,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(strength);
 
 	protected:
-		UnitInstance(
-			unique_id_t new_unique_id,
-			std::string_view new_name,
-			UnitType const& new_unit_type
-		);
+		UnitInstance(unique_id_t new_unique_id, std::string_view new_name, UnitType const& new_unit_type);
 
 	public:
 		const unique_id_t unique_id;
@@ -56,10 +52,7 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 
 		UnitInstanceBranched(
-			unique_id_t new_unique_id,
-			std::string_view new_name,
-			RegimentType const& new_regiment_type,
-			Pop* new_pop,
+			unique_id_t new_unique_id, std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop,
 			bool new_mobilised
 		);
 
@@ -76,11 +69,7 @@ namespace OpenVic {
 		friend struct UnitInstanceManager;
 
 	private:
-		UnitInstanceBranched(
-			unique_id_t new_unique_id,
-			std::string_view new_name,
-			ShipType const& new_ship_type
-		);
+		UnitInstanceBranched(unique_id_t new_unique_id, std::string_view new_name, ShipType const& new_ship_type);
 
 	public:
 		UnitInstanceBranched(UnitInstanceBranched&&) = default;

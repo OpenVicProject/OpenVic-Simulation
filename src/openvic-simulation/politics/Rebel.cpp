@@ -2,35 +2,34 @@
 
 #include <string_view>
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 RebelType::RebelType(
-	index_t new_index, std::string_view new_identifier,
-	RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
+	index_t new_index, std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area,
+	bool break_alliance_on_win, RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
 	RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
 	bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing,
 	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeightFactorMul&& new_will_rise,
 	ConditionalWeightFactorMul&& new_spawn_chance, ConditionalWeightFactorMul&& new_movement_evaluation,
 	ConditionScript&& new_siege_won_trigger, EffectScript&& new_siege_won_effect,
 	ConditionScript&& new_demands_enforced_trigger, EffectScript&& new_demands_enforced_effect
-) : HasIndex { new_index },
-	HasIdentifier { new_identifier },
-	icon { icon }, area { area }, will_break_alliance_on_win { break_alliance_on_win },
-	desired_governments { std::move(desired_governments) }, defection_type { defection }, independence_type { independence },
-	defect_delay { defect_delay }, ideology { ideology }, allows_all_cultures { allow_all_cultures },
-	allows_all_culture_groups { allow_all_culture_groups }, allows_all_religions { allow_all_religions },
-	allows_all_ideologies { allow_all_ideologies }, is_resilient { resilient }, is_reinforcing { reinforcing }, has_generals { general },
-	is_smart { smart }, will_transfer_units { unit_transfer }, occupation_mult { occupation_mult },
-	will_rise { std::move(new_will_rise) }, spawn_chance { std::move(new_spawn_chance) },
-	movement_evaluation { std::move(new_movement_evaluation) }, siege_won_trigger { std::move(new_siege_won_trigger) },
-	siege_won_effect { std::move(new_siege_won_effect) }, demands_enforced_trigger { std::move(new_demands_enforced_trigger) },
-	demands_enforced_effect { std::move(new_demands_enforced_effect) } {}
+)
+	: HasIndex { new_index }, HasIdentifier { new_identifier }, icon { icon }, area { area },
+	  will_break_alliance_on_win { break_alliance_on_win }, desired_governments { std::move(desired_governments) },
+	  defection_type { defection }, independence_type { independence }, defect_delay { defect_delay }, ideology { ideology },
+	  allows_all_cultures { allow_all_cultures }, allows_all_culture_groups { allow_all_culture_groups },
+	  allows_all_religions { allow_all_religions }, allows_all_ideologies { allow_all_ideologies }, is_resilient { resilient },
+	  is_reinforcing { reinforcing }, has_generals { general }, is_smart { smart }, will_transfer_units { unit_transfer },
+	  occupation_mult { occupation_mult }, will_rise { std::move(new_will_rise) }, spawn_chance { std::move(new_spawn_chance) },
+	  movement_evaluation { std::move(new_movement_evaluation) }, siege_won_trigger { std::move(new_siege_won_trigger) },
+	  siege_won_effect { std::move(new_siege_won_effect) },
+	  demands_enforced_trigger { std::move(new_demands_enforced_trigger) },
+	  demands_enforced_effect { std::move(new_demands_enforced_effect) } {}
 
 bool RebelType::parse_scripts(DefinitionManager const& definition_manager) {
 	spdlog::scope scope { fmt::format("rebel type {}", get_identifier()) };
@@ -47,10 +46,10 @@ bool RebelType::parse_scripts(DefinitionManager const& definition_manager) {
 
 bool RebelManager::add_rebel_type(
 	std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
-	RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
-	bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing,
-	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeightFactorMul&& will_rise,
+	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection, RebelType::independence_t independence,
+	uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures, bool allow_all_culture_groups,
+	bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing, bool general, bool smart,
+	bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeightFactorMul&& will_rise,
 	ConditionalWeightFactorMul&& spawn_chance, ConditionalWeightFactorMul&& movement_evaluation,
 	ConditionScript&& siege_won_trigger, EffectScript&& siege_won_effect, ConditionScript&& demands_enforced_trigger,
 	EffectScript&& demands_enforced_effect
@@ -61,13 +60,12 @@ bool RebelManager::add_rebel_type(
 	}
 
 	return rebel_types.emplace_item(
-		new_identifier,
-		RebelType::index_t { get_rebel_type_count() }, new_identifier,
-		icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
-		defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions, allow_all_ideologies,
-		resilient, reinforcing, general, smart, unit_transfer, occupation_mult, std::move(will_rise), std::move(spawn_chance),
-		std::move(movement_evaluation), std::move(siege_won_trigger), std::move(siege_won_effect),
-		std::move(demands_enforced_trigger), std::move(demands_enforced_effect)
+		new_identifier, RebelType::index_t { get_rebel_type_count() }, new_identifier, icon, area, break_alliance_on_win,
+		std::move(desired_governments), defection, independence, defect_delay, ideology, allow_all_cultures,
+		allow_all_culture_groups, allow_all_religions, allow_all_ideologies, resilient, reinforcing, general, smart,
+		unit_transfer, occupation_mult, std::move(will_rise), std::move(spawn_chance), std::move(movement_evaluation),
+		std::move(siege_won_trigger), std::move(siege_won_effect), std::move(demands_enforced_trigger),
+		std::move(demands_enforced_effect)
 	);
 }
 
@@ -76,15 +74,13 @@ bool RebelManager::load_rebels_file(
 ) {
 	spdlog::scope scope { "common/rebel_types.txt" };
 
-	static const string_map_t<RebelType::area_t> area_map = {
-		{ "nation", RebelType::area_t::NATION },
-		{ "nation_religion", RebelType::area_t::NATION_RELIGION },
-		{ "nation_culture", RebelType::area_t::NATION_CULTURE },
-		{ "culture", RebelType::area_t::CULTURE },
-		{ "culture_group", RebelType::area_t::CULTURE_GROUP },
-		{ "religion", RebelType::area_t::RELIGION },
-		{ "all", RebelType::area_t::ALL }
-	};
+	static const string_map_t<RebelType::area_t> area_map = { { "nation", RebelType::area_t::NATION },
+															  { "nation_religion", RebelType::area_t::NATION_RELIGION },
+															  { "nation_culture", RebelType::area_t::NATION_CULTURE },
+															  { "culture", RebelType::area_t::CULTURE },
+															  { "culture_group", RebelType::area_t::CULTURE_GROUP },
+															  { "religion", RebelType::area_t::RELIGION },
+															  { "all", RebelType::area_t::ALL } };
 
 	static const string_map_t<RebelType::defection_t> defection_map = {
 		{ "none", RebelType::defection_t::NONE },
@@ -106,9 +102,8 @@ bool RebelManager::load_rebels_file(
 		{ "any", RebelType::independence_t::ANY }
 	};
 
-	bool ret = expect_dictionary_reserve_length(
-		rebel_types,
-		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+	bool ret =
+		expect_dictionary_reserve_length(rebel_types, [this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
 			using enum scope_type_t;
 
 			spdlog::scope scope { fmt::format("rebel type {}", identifier) };
@@ -121,8 +116,8 @@ bool RebelManager::load_rebels_file(
 			uint16_t defect_delay = 0;
 			Ideology const* ideology = nullptr;
 			bool break_alliance_on_win = false, allow_all_cultures = true, allow_all_culture_groups = true,
-				allow_all_religions = true, allow_all_ideologies = true, resilient = true, reinforcing = true, general = true,
-				smart = true, unit_transfer = false;
+				 allow_all_religions = true, allow_all_ideologies = true, resilient = true, reinforcing = true, general = true,
+				 smart = true, unit_transfer = false;
 			fixed_point_t occupation_mult = 0;
 			ConditionalWeightFactorMul will_rise { POP, COUNTRY, NO_SCOPE };
 			ConditionalWeightFactorMul spawn_chance { POP, POP, NO_SCOPE };
@@ -175,15 +170,14 @@ bool RebelManager::load_rebels_file(
 
 			ret &= add_rebel_type(
 				identifier, icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
-				defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions,
-				allow_all_ideologies, resilient, reinforcing, general, smart, unit_transfer, occupation_mult,
-				std::move(will_rise), std::move(spawn_chance), std::move(movement_evaluation), std::move(siege_won_trigger),
+				defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions, allow_all_ideologies,
+				resilient, reinforcing, general, smart, unit_transfer, occupation_mult, std::move(will_rise),
+				std::move(spawn_chance), std::move(movement_evaluation), std::move(siege_won_trigger),
 				std::move(siege_won_effect), std::move(demands_enforced_trigger), std::move(demands_enforced_effect)
 			);
 
 			return ret;
-		}
-	)(root);
+		})(root);
 
 	lock_rebel_types();
 
@@ -206,13 +200,12 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	);
 
 	auto& rebel_org_gain_effects = modifier_manager.modifier_effect_cache.rebel_org_gain_effects;
-	rebel_org_gain_effects = std::move(decltype(ModifierEffectCache::rebel_org_gain_effects){get_rebel_types()});
+	rebel_org_gain_effects = std::move(decltype(ModifierEffectCache::rebel_org_gain_effects) { get_rebel_types() });
 
 	for (RebelType const& rebel_type : get_rebel_types()) {
 		ret &= modifier_manager.register_technology_modifier_effect(
 			rebel_org_gain_effects.at(rebel_type),
-			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()),
-			FORMAT_x100_2DP_PC_NEG,
+			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()), FORMAT_x100_2DP_PC_NEG,
 			memory::fmt::format("${}_title$ $TECH_REBEL_ORG_GAIN$", rebel_type)
 		);
 	}

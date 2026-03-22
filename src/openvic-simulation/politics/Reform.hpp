@@ -9,7 +9,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
-namespace OpenVic {	
+namespace OpenVic {
 	struct ReformGroup;
 
 	// Reform type (i.e. political_issues)
@@ -42,10 +42,7 @@ namespace OpenVic {
 		const bool is_administrative;
 
 		ReformGroup(
-			std::string_view new_identifier,
-			index_t new_index,
-			ReformType const& new_reform_type,
-			bool new_is_ordered,
+			std::string_view new_identifier, index_t new_index, ReformType const& new_reform_type, bool new_is_ordered,
 			bool new_is_administrative
 		);
 		ReformGroup(ReformGroup&&) = default;
@@ -75,9 +72,8 @@ namespace OpenVic {
 		ReformGroup const& group;
 
 		Reform(
-			index_t new_index, std::string_view new_identifier,
-			colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_reform_group,
-			size_t new_ordinal, fixed_point_t new_administrative_multiplier,
+			index_t new_index, std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values,
+			ReformGroup const& new_reform_group, size_t new_ordinal, fixed_point_t new_administrative_multiplier,
 			RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
 			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
