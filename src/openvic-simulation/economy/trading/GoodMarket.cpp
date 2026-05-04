@@ -84,10 +84,13 @@ void GoodMarket::execute_orders(
 		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
 			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		}
+		buy_up_to_orders.clear();
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
 			market_sell_order.call_after_trade(SellResult::no_sales_result(good_definition), reusable_vectors[0]);
-		}
+		}		
+		market_sell_orders.clear();
+		
 		return;
 	}
 
