@@ -177,27 +177,31 @@ def build_snitch(env):
     )
 
     snitch_env.Append(CPPPATH=[[snitch_env.Dir(p) for p in [source_path, include_path]]])
-    sources = snitch_env.GlobRecursive("*.cpp", [source_path], Path(source_path) / unity_source)
+    # Mirror snitch's source tree into the per-config build dir
+    build_root = (env.get("build_dir") or env.Dir("#").abspath).replace("\\", "/")
+    snitch_out = build_root + "/snitch/" + source_path
+    snitch_env.VariantDir(snitch_out, source_path, duplicate=True)
+    sources = snitch_env.GlobRecursive("*.cpp", [snitch_out], snitch_out + "/" + unity_source)
 
     if UNITY_BUILD:
-        sources = [snitch_env.File(Path(source_path) / unity_source)]
+        sources = [snitch_env.File(snitch_out + "/" + unity_source)]
 
     env.snitch_sources = sources
 
     if not HEADER_ONLY:
         library = None
         project_name = "snitch"
-        library_name = "lib" + project_name + env["LIBSUFFIX"]
+        library_name = "lib" + project_name + env.get("suffix", "") + env["LIBSUFFIX"]
         if SHARED_BUILD:
             if snitch_env.get("is_msvc", False):
                 pass
             else:
                 snitch_env.Append(CXXFLAGS=["-fvisibility=hidden", "-fvisibility-inlines-hidden"])
 
-            library = snitch_env.SharedLibrary(target=Path(source_path) / library_name, source=sources)
+            library = snitch_env.SharedLibrary(target=snitch_out + "/" + library_name, source=sources)
         else:
-            library = snitch_env.StaticLibrary(target=Path(source_path) / library_name, source=sources)
-            env.Append(LIBPATH=[snitch_env.Dir(source_path)])
+            library = snitch_env.StaticLibrary(target=snitch_out + "/" + library_name, source=sources)
+            env.Append(LIBPATH=[snitch_env.Dir(snitch_out)])
             env.Prepend(LIBS=[library_name])
 
         Default([config, library])

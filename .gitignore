@@ -85,6 +85,9 @@ tests/benchmarks/bin/*
 compile_commands.json
 src/openvic-simulation/testing/test_results/results.txt
 
+# Out-of-source build directory
+build/
+
 # ccls
 .ccls-cache
 
