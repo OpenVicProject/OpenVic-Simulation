@@ -10,10 +10,11 @@
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/population/PopType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
+#include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -80,7 +81,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	} else {
 		size_multiplier = (
 			(
-				fixed_point_t::from_fraction<pop_sum_t>(
+				fp::from_fraction<pop_sum_t>(
 					total_worker_count_in_province,
 					base_workforce_size
 				) / size_modifier
@@ -198,7 +199,7 @@ void ResourceGatheringOperation::hire() {
 		proportion_to_hire = 1;
 	} else {
 		//hire all pops proportionally
-		proportion_to_hire = fixed_point_t::from_fraction<pop_sum_t>(max_employee_count_cache, available_worker_count);
+		proportion_to_hire = fp::from_fraction<pop_sum_t>(max_employee_count_cache, available_worker_count);
 	}
 
 	std::span<const Job> jobs = production_type.get_jobs();
@@ -256,13 +257,15 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		if (total_owner_count_in_state_cache > 0) {
 			switch (owner_job.effect_type) {
 				case Job::effect_t::OUTPUT:
-					output_multiplier += owner_job.effect_multiplier.mul_div(
+					output_multiplier += fp::mul_div(
+						owner_job.effect_multiplier,
 						total_owner_count_in_state_cache,
 						state_population
 					);
 					break;
 				case Job::effect_t::THROUGHPUT:
-					throughput_multiplier += owner_job.effect_multiplier.mul_div(
+					throughput_multiplier += fp::mul_div(
+						owner_job.effect_multiplier,
 						total_owner_count_in_state_cache,
 						state_population
 					);
@@ -323,9 +326,9 @@ fixed_point_t ResourceGatheringOperation::produce() {
 			const fixed_point_t effect_multiplier = job.effect_multiplier;
 			const fixed_point_t amount = job.amount;
 			const fixed_point_t effect = effect_multiplier != fixed_point_t::_1
-				&& fixed_point_t::from_fraction(employees_of_type, max_employee_count_cache) > amount
+				&& fp::from_fraction<pop_size_t>(employees_of_type, max_employee_count_cache) > amount
 				? effect_multiplier * amount //special Vic2 logic
-				: effect_multiplier.mul_div(employees_of_type, max_employee_count_cache);
+				: fp::mul_div(effect_multiplier, employees_of_type, max_employee_count_cache);
 
 			switch (job.effect_type) {
 				case Job::effect_t::OUTPUT:
@@ -377,7 +380,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 	if (revenue <= total_minimum_wage) {
 		for (Employee& employee : employees) {
 			const fixed_point_t income_for_this_pop = std::max(
-				fixed_point_t::mul_div(
+				fp::mul_div(
 					revenue,
 					employee.get_minimum_wage_cached(),
 					total_minimum_wage
@@ -396,13 +399,17 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				fixed_point_t::_1 - total_minimum_wage / revenue_left
 			);
 			const fixed_point_t owner_share = std::min(
-				fixed_point_t::from_fraction(2 * total_owner_count_in_state_cache, total_worker_count_in_province_cache),
+				fp::from_fraction(2 * total_owner_count_in_state_cache, total_worker_count_in_province_cache),
 				upper_limit
 			);
 
 			for (Pop& owner_pop : *owner_pops_cache_nullable) {
 				const fixed_point_t income_for_this_pop = std::max(
-					revenue_left * owner_share.mul_div<pop_sum_t>(owner_pop.get_size(), total_owner_count_in_state_cache),
+					revenue_left * fp::mul_div<pop_sum_t>(
+						owner_share,
+						owner_pop.get_size(),
+						total_owner_count_in_state_cache
+					),
 					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
 				);
 				owner_pop.add_rgo_owner_income(income_for_this_pop);
@@ -435,7 +442,11 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 
 				const pop_size_t employee_size = employee.get_size();
 				const fixed_point_t income_for_this_pop = std::max(
-					revenue_left.mul_div(employee_size, count_workers_to_be_paid),
+					fp::mul_div(
+						revenue_left,
+						employee_size,
+						count_workers_to_be_paid
+					),
 					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
 				);
 

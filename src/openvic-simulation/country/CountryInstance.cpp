@@ -45,6 +45,7 @@
 #include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
@@ -1331,7 +1332,7 @@ void CountryInstance::_update_production() {
 
 	for (auto const& [country, money_invested] : foreign_investments) {
 		if (country.get().exists()) {
-			const fixed_point_t investment_industrial_power = fixed_point_t::mul_div(
+			const fixed_point_t investment_industrial_power = fp::mul_div(
 				money_invested,
 				country_defines.get_country_investment_industrial_score_factor(),
 				100
@@ -1425,13 +1426,13 @@ void CountryInstance::_update_budget() {
 		administrative_efficiency_from_administrators.set(fixed_point_t::_1);
 		administrator_percentage.set(fixed_point_t::_0);
 	} else {		
-		administrator_percentage.set(fixed_point_t::from_fraction(administrators, total_non_colonial_population));
+		administrator_percentage.set(fp::from_fraction<pop_sum_t>(administrators, total_non_colonial_population));
 
-		const pop_sum_t desired_administrators = fixed_point_t::multiply_truncate(
+		const pop_sum_t desired_administrators = fp::multiply_truncate(
 			total_non_colonial_population,
 			desired_administrator_percentage.get_untracked()
 		);
-		const pop_sum_t effective_administrators = fixed_point_t::multiply_truncate(
+		const pop_sum_t effective_administrators = fp::multiply_truncate(
 			administrators,
 			fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency())
 		);
@@ -1439,7 +1440,7 @@ void CountryInstance::_update_budget() {
 			desired_administrators == 0
 			? fixed_point_t::_1
 			: std::min(
-				fixed_point_t::from_fraction(effective_administrators, desired_administrators)
+				fp::from_fraction(effective_administrators, desired_administrators)
 					* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier())),
 				fixed_point_t::_1
 			);
@@ -1564,14 +1565,14 @@ void CountryInstance::_update_population() {
 
 	for (auto const& [pop_type, pop_size] : get_population_by_type()) {
 		if (pop_type.research_leadership_optimum > 0 && pop_size > 0) {
-			const pop_sum_t optimum_size = fixed_point_t::multiply_truncate(
+			const pop_sum_t optimum_size = fp::multiply_truncate(
 				get_total_population(),
 				pop_type.research_leadership_optimum
 			);
 			const fixed_point_t factor = optimum_size == 0
 				? fixed_point_t::_1
 				: std::min(
-					fixed_point_t::from_fraction(
+					fp::from_fraction(
 						pop_size,
 						optimum_size
 					), fixed_point_t::_1
@@ -1638,7 +1639,7 @@ void CountryInstance::_update_military() {
 	}
 
 	military_power_from_land.set(
-		supply_consumption * fixed_point_t::mul_div(
+		supply_consumption * fp::mul_div(
 			sum_of_regiment_type_stats,
 			fixed_point_t::parse_raw(regular_army_size),
 			fixed_point_t::parse_raw(7 * (1 + unit_type_manager.get_regiment_type_count()))
@@ -1682,7 +1683,7 @@ void CountryInstance::_update_military() {
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
 	mobilisation_max_regiment_count = regiment_count
-		+ fixed_point_t::multiply_truncate(regiment_count, mobilisation_impact);
+		+ fp::multiply_truncate(regiment_count, mobilisation_impact);
 
 	mobilisation_potential_regiment_count = 0; // TODO - calculate max regiments from poor citizens
 	if (mobilisation_potential_regiment_count > mobilisation_max_regiment_count) {
@@ -1709,7 +1710,7 @@ void CountryInstance::_update_military() {
 	naval_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_naval_unit_start_experience());
 
 	recruit_time = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
-	combat_width = fixed_point_t::multiply_truncate(
+	combat_width = fp::multiply_truncate(
 		military_defines.get_base_combat_width(),
 		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
 	);
@@ -2213,7 +2214,7 @@ void CountryInstance::manage_national_stockpile(
 				const fixed_point_t weight = weights[good_index];
 				const fixed_point_t max_costs = max_costs_per_good[good_index];
 				
-				fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
+				fixed_point_t cash_available_for_good = fp::mul_div(
 					cash_left_to_spend_draft,
 					weight,
 					weights_sum
@@ -2470,7 +2471,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 
 	if (actual_administration_budget > 0) {
-		const fixed_point_t administration_salary = fixed_point_t::mul_div(
+		const fixed_point_t administration_salary = fp::mul_div(
 			pop_size * administration_salary_base_by_pop_type.at(pop_type).get_untracked(),
 			actual_administration_budget,
 			projected_administration_spending_unscaled_by_slider.get_untracked()
@@ -2482,7 +2483,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	}
 
 	if (actual_education_budget > 0) {
-		const fixed_point_t education_salary = fixed_point_t::mul_div(
+		const fixed_point_t education_salary = fp::mul_div(
 			pop_size * education_salary_base_by_pop_type.at(pop_type).get_untracked(),
 			actual_education_budget,
 			projected_education_spending_unscaled_by_slider.get_untracked()
@@ -2494,7 +2495,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	}
 
 	if (actual_military_budget > 0) {
-		const fixed_point_t military_salary = fixed_point_t::mul_div(
+		const fixed_point_t military_salary = fp::mul_div(
 			pop_size * military_salary_base_by_pop_type.at(pop_type).get_untracked(),
 			actual_military_budget,
 			projected_military_spending_unscaled_by_slider.get_untracked()
@@ -2506,7 +2507,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	}
 
 	if (actual_social_budget > 0) {
-		const fixed_point_t pension_income = fixed_point_t::mul_div(
+		const fixed_point_t pension_income = fp::mul_div(
 			pop_size * calculate_pensions_base(pop_type),
 			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
@@ -2516,7 +2517,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			actual_pensions_spending += pension_income;
 		}
 
-		const fixed_point_t unemployment_subsidies = fixed_point_t::mul_div(
+		const fixed_point_t unemployment_subsidies = fp::mul_div(
 			pop.get_unemployed() * calculate_unemployment_subsidies_base(pop_type),
 			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
@@ -2528,7 +2529,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	}
 
 	if (actual_import_subsidies_budget > 0) {
-		const fixed_point_t import_subsidies = fixed_point_t::mul_div(
+		const fixed_point_t import_subsidies = fp::mul_div(
 			effective_tariff_rate.get_untracked() // < 0
 				* pop.get_yesterdays_import_value().get_copy_of_value(),
 			actual_import_subsidies_budget, // < 0

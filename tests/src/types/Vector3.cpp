@@ -3,6 +3,7 @@
 
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 #include "Approx.hpp"
 #include "Helper.hpp" // IWYU pragma: keep
@@ -100,9 +101,9 @@ TEMPLATE_LIST_TEST_CASE("vec3_t Iterator", "[vec3_t][vec3_t-iterator]", VectorVa
 TEST_CASE("fvec3_t Length methods", "[vec3_t][fvec3_t][fvec3_t-length]") {
 	static constexpr fvec3_t vector1 = fvec3_t(10, 10, 10);
 	static constexpr fvec3_t vector2 = fvec3_t(20, 30, 40);
-	CONSTEXPR_CHECK(vector1.length_squared().sqrt() == testing::approx(testing::SQRT3 * 10));
-	CONSTEXPR_CHECK(vector2.length_squared().sqrt() == testing::approx(53.8516480713450403125));
-	CONSTEXPR_CHECK(vector1.distance_squared(vector2).sqrt() == testing::approx(37.41657386773941385584));
+	CONSTEXPR_CHECK(fp::sqrt(vector1.length_squared()) == testing::approx(testing::SQRT3 * 10));
+	CONSTEXPR_CHECK(fp::sqrt(vector2.length_squared()) == testing::approx(53.8516480713450403125));
+	CONSTEXPR_CHECK(fp::sqrt(vector1.distance_squared(vector2)) == testing::approx(37.41657386773941385584));
 }
 
 TEST_CASE("dvec3_t Length methods", "[vec3_t][dvec3_t][dvec3_t-length]") {

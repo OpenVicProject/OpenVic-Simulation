@@ -6,6 +6,7 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -200,7 +201,7 @@ void GoodMarket::execute_orders(
 						actual_bought_per_country[country_index_optional.value()] -= distributed_supply;
 					}
 
-					distributed_supply = fixed_point_t::mul_div(
+					distributed_supply = fp::mul_div(
 						remaining_supply,
 						purchasing_power_per_order[i],
 						purchasing_power_sum
@@ -351,7 +352,7 @@ void GoodMarket::execute_orders(
 					const fixed_point_t total_domestic_supply = supply_per_country[country_index];
 					quantity_sold_domestically = total_bought_domestically >= total_domestic_supply
 						? quantity_offered
-						: fixed_point_t::mul_div(
+						: fp::mul_div(
 							quantity_offered,
 							total_bought_domestically,
 							total_domestic_supply //> 0 as we're selling
@@ -359,7 +360,7 @@ void GoodMarket::execute_orders(
 					quantity_offered_as_export = quantity_offered - quantity_sold_domestically;
 				}
 
-				const fixed_point_t fair_share_of_exports = fixed_point_t::mul_div(
+				const fixed_point_t fair_share_of_exports = fp::mul_div(
 					quantity_offered_as_export,
 					total_quantity_traded_as_export,
 					total_quantity_offered_as_export
@@ -438,7 +439,7 @@ void GoodMarket::execute_buy_orders(
 					//no imports
 					money_spent_on_imports = 0;
 				} else {
-					const fixed_point_t money_spent_domestically = fixed_point_t::mul_div(
+					const fixed_point_t money_spent_domestically = fp::mul_div(
 						money_spent_total,
 						supply_in_my_country,
 						actual_bought_in_my_country

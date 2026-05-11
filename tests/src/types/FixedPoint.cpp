@@ -1,4 +1,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/String.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -40,15 +42,15 @@ TEST_CASE("fixed_point_t Linear algebra methods", "[fixed_point_t][fixed_point_t
 	static constexpr fixed_point_t one = 1;
 	static constexpr fixed_point_t two = 2;
 	static constexpr fixed_point_t three = 3;
-	CONSTEXPR_CHECK(one.sin() == 0.8414306640625_a);
-	CONSTEXPR_CHECK(two.sin() == 0.9093170166015625_a);
-	CONSTEXPR_CHECK(three.sin() == 0.1412200927734375_a);
-	CONSTEXPR_CHECK(one.cos() == 0.5403900146484375_a);
-	CONSTEXPR_CHECK(two.cos() == -0.4160003662109375_a);
-	CONSTEXPR_CHECK(three.cos() == -0.989959716796875_a);
+	CONSTEXPR_CHECK(fp::sin(one) == 0.8414306640625_a);
+	CONSTEXPR_CHECK(fp::sin(two) == 0.9093170166015625_a);
+	CONSTEXPR_CHECK(fp::sin(three) == 0.1412200927734375_a);
+	CONSTEXPR_CHECK(fp::cos(one) == 0.5403900146484375_a);
+	CONSTEXPR_CHECK(fp::cos(two) == -0.4160003662109375_a);
+	CONSTEXPR_CHECK(fp::cos(three) == -0.989959716796875_a);
 
-	CONSTEXPR_CHECK(fixed_point_t::_0_50.sin() == 0.4793853759765625_a);
-	CONSTEXPR_CHECK(fixed_point_t::_0_50.cos() == 0.87762451171875_a);
+	CONSTEXPR_CHECK(fp::sin(fixed_point_t::_0_50) == 0.4793853759765625_a);
+	CONSTEXPR_CHECK(fp::cos(fixed_point_t::_0_50) == 0.87762451171875_a);
 }
 
 TEST_CASE("fixed_point_t Constant methods", "[fixed_point_t][fixed_point_t-constants]") {
@@ -132,44 +134,19 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	CONSTEXPR_CHECK(fixed_point_t(10) == 10);
 	CONSTEXPR_CHECK(fixed_point_t::parse_raw(10) == fixed_point_t::epsilon * 10);
 
-	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355328LL) == fixed_point_t::max);
-	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355327LL) == fixed_point_t::max);
-	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355326LL).truncate<int64_t>() == 140737488355326LL);
-
-	static constexpr std::string_view fixed_point_str = "4.5432"sv;
-	CONSTEXPR_CHECK(fixed_point_t::parse(fixed_point_str) == 4.5432_a);
-	bool fixed_point_str_success;
-	CHECK(fixed_point_t::parse(fixed_point_str, &fixed_point_str_success) == 4.5432_a);
-	CHECK(fixed_point_str_success);
-
-	static constexpr std::string_view neg_fixed_point_str = "-4.5432"sv;
-	CONSTEXPR_CHECK(fixed_point_t::parse(neg_fixed_point_str) == -4.5432_a);
-	CHECK(fixed_point_t::parse(neg_fixed_point_str, &fixed_point_str_success) == -4.5432_a);
-	CHECK(fixed_point_str_success);
+	CHECK(fixed_point_t::parse_capped(140737488355328LL) == fixed_point_t::max);
+	CHECK(fixed_point_t::parse_capped(140737488355327LL) == fixed_point_t::max);
+	CHECK(fixed_point_t::parse_capped(140737488355326LL).truncate<int64_t>() == 140737488355326LL);
 
 	static constexpr std::string_view plus_fixed_point_str = "+4.5432"sv;
-	CONSTEXPR_CHECK(fixed_point_t::parse(plus_fixed_point_str) == 4.5432_a);
-	CHECK(fixed_point_t::parse(plus_fixed_point_str, &fixed_point_str_success) == 4.5432_a);
-	CHECK(fixed_point_str_success);
-
-	static constexpr std::string_view neg_zero_fixed_point_str = "-0"sv;
-	CONSTEXPR_CHECK(fixed_point_t::parse(neg_zero_fixed_point_str) == 0);
-	CHECK(fixed_point_t::parse(neg_zero_fixed_point_str, &fixed_point_str_success) == 0);
-	CHECK(fixed_point_str_success);
-
-	static constexpr std::string_view neg_0_25_fixed_point_str = "-0.25"sv;
-	CONSTEXPR_CHECK(fixed_point_t::parse(neg_0_25_fixed_point_str) == -0.25_a);
-	CHECK(fixed_point_t::parse(neg_0_25_fixed_point_str, &fixed_point_str_success) == -0.25_a);
-	CHECK(fixed_point_str_success);
-
 	fixed_point_t fp = fixed_point_t::_0;
 	CHECK(
-		fp.from_chars(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
+		fp::from_chars(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
 		std::errc::invalid_argument
 	);
 	CHECK(fp == 0.0_a);
 	CHECK(
-		fp.from_chars_with_plus(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
+		fp::from_chars_with_plus(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
 		std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
@@ -187,18 +164,18 @@ TEST_CASE("fixed_point_t string methods", "[fixed_point_t][fixed_point_t-string]
 	static constexpr fixed_point_t _0_55 = fixed_point_t::_0_50 + fixed_point_t::_1 / 20;
 	static constexpr fixed_point_t neg_0_55 = -_0_55;
 
-	CONSTEXPR_CHECK(constant_zero.to_array() == "0"sv);
-	CONSTEXPR_CHECK(one.to_array() == "1"sv);
-	CONSTEXPR_CHECK(constant_one.to_array() == "1"sv);
-	CONSTEXPR_CHECK(neg_one.to_array() == "-1"sv);
-	CONSTEXPR_CHECK(neg_two.to_array() == "-2"sv);
-	CONSTEXPR_CHECK(neg_three.to_array() == "-3"sv);
-	CONSTEXPR_CHECK(_2_55.to_array() == "2.54998779296875"sv);
-	CONSTEXPR_CHECK(neg_2_55.to_array() == "-2.54998779296875"sv);
-	CONSTEXPR_CHECK(_2_55.to_array(2) == "2.55"sv);
-	CONSTEXPR_CHECK(neg_2_55.to_array(2) == "-2.55"sv);
-	CONSTEXPR_CHECK(_0_55.to_array(2) == "0.55"sv);
-	CONSTEXPR_CHECK(neg_0_55.to_array(2) == "-0.55"sv);
+	CONSTEXPR_CHECK(fp::to_array(constant_zero) == "0"sv);
+	CONSTEXPR_CHECK(fp::to_array(one) == "1"sv);
+	CONSTEXPR_CHECK(fp::to_array(constant_one) == "1"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_one) == "-1"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_two) == "-2"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_three) == "-3"sv);
+	CONSTEXPR_CHECK(fp::to_array(_2_55) == "2.54998779296875"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_2_55) == "-2.54998779296875"sv);
+	CONSTEXPR_CHECK(fp::to_array(_2_55, 2) == "2.55"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_2_55, 2) == "-2.55"sv);
+	CONSTEXPR_CHECK(fp::to_array(_0_55, 2) == "0.55"sv);
+	CONSTEXPR_CHECK(fp::to_array(neg_0_55, 2) == "-0.55"sv);
 }
 
 TEST_CASE("fixed_point_t Other methods", "[fixed_point_t][fixed_point_t-other]") {
@@ -210,8 +187,8 @@ TEST_CASE("fixed_point_t Other methods", "[fixed_point_t][fixed_point_t-other]")
 	CONSTEXPR_CHECK_FALSE(fixed_point_t::_1_50.is_integer());
 	CONSTEXPR_CHECK_FALSE(fixed_point_t::_0_50.is_integer());
 	CONSTEXPR_CHECK_FALSE(fixed_point_t::_0_01.is_integer());
-	CONSTEXPR_CHECK(fixed_point_t::_0_50.sqrt() == 0.7071075439453125_a);
-	CONSTEXPR_CHECK((-fixed_point_t::_0_50).sqrt() == 0);
+	CONSTEXPR_CHECK(fp::sqrt(fixed_point_t::_0_50) == 0.7071075439453125_a);
+	CONSTEXPR_CHECK(fp::sqrt(-fixed_point_t::_0_50) == 0);
 }
 
 TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]") {
@@ -288,7 +265,7 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CONSTEXPR_CHECK(((int32_t)decimal4) == 3);
 
 	CONSTEXPR_CHECK(
-		fixed_point_t::mul_div(
+		fp::mul_div(
 			fixed_point_t::parse_raw(2),
 			fixed_point_t::parse_raw(3),
 			fixed_point_t::parse_raw(6)
@@ -296,13 +273,13 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	);
 
 	CONSTEXPR_CHECK(
-		fixed_point_t::multiply_truncate<int64_t>(
+		fp::multiply_truncate<int64_t>(
 			4294967295LL, //2^32 - 1
 			fixed_point_t::usable_max //2^31 / 2^16
 		) == 140737488322560LL //2^47 - 2^15
 	);
 	CONSTEXPR_CHECK(
-		fixed_point_t::multiply_truncate<int64_t>(
+		fp::multiply_truncate<int64_t>(
 			281474976710655LL, //2^48 - 1
 			fixed_point_t::_0_50
 		) == 140737488355327LL //2^47 - 1

@@ -17,6 +17,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -175,8 +176,9 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base
 callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_point_t> callback) {
 	return [callback](std::string_view identifier) mutable -> bool {
 		bool successful = false;
-		const fixed_point_t val = fixed_point_t::parse(identifier.data(), identifier.length(), &successful);
-		if (successful) {
+		fixed_point_t val;
+		const std::from_chars_result result = fp::from_chars_with_plus(val, identifier.data(), identifier.data()+identifier.length());
+		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
 		spdlog::error_s("Invalid fixed point identifier text: {}", identifier);

@@ -37,6 +37,7 @@
 #include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
@@ -77,7 +78,7 @@ fixed_point_t Pop::get_unemployment_fraction() const {
 	if (!get_type().can_be_unemployed) {
 		return 0;
 	}
-	return fixed_point_t::from_fraction(get_unemployed(), size);
+	return fp::from_fraction(get_unemployed(), size);
 }
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
@@ -422,7 +423,7 @@ void Pop::allocate_for_needs(
 			}
 
 			fixed_point_t weight = market_instance.get_good_instance(good_definition).get_price_inverse();
-			fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
+			fixed_point_t cash_available_for_good = fp::mul_div(
 				cash_left_to_spend_draft,
 				weight,
 				weights_sum
@@ -676,7 +677,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 
 		if (quantity_added_to_stockpile > 0) {
 			quantity_left_to_consume -= quantity_added_to_stockpile;
-			const fixed_point_t expense = fixed_point_t::mul_div(
+			const fixed_point_t expense = fp::mul_div(
 				money_spent,
 				quantity_added_to_stockpile,
 				quantity_bought
@@ -705,7 +706,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 			if (get_country_to_report_economy_nullable != nullptr) { \
 				get_country_to_report_economy_nullable->report_pop_need_consumption(pop.type, good_definition, consumed_quantity); \
 			} \
-			const fixed_point_t expense = fixed_point_t::mul_div( \
+			const fixed_point_t expense = fp::mul_div( \
 				money_spent, \
 				consumed_quantity, \
 				quantity_bought \

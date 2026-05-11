@@ -21,6 +21,7 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 using namespace OpenVic;
 
@@ -231,7 +232,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 			}
 			const ptrdiff_t i = it - input_goods.begin();
 
-			const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+			const fixed_point_t optimal_quantity = fp::mul_div(
 				demand_per_input[i],
 				max_possible_satisfaction_numerator,
 				max_possible_satisfaction_denominator
@@ -259,7 +260,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 
 		const fixed_point_t max_quantity_to_buy = good_demand - stockpiled_quantity;
 		if (max_quantity_to_buy > 0) {
-			const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+			const fixed_point_t optimal_quantity = fp::mul_div(
 				good_demand,
 				max_possible_satisfaction_numerator,
 				max_possible_satisfaction_denominator
@@ -490,11 +491,15 @@ fixed_point_t ArtisanalProducer::calculate_production_type_score(
 	static_assert(0 <= k);
 	static_assert(k <= 1);
 
-	return (
-		k * fixed_point_t::mul_div(costs, costs, revenue)
-		-(1+k)*costs
-		+ revenue
-	).mul_div(Pop::size_denominator, workforce); //factor out pop size without making values too small
+	return fp::mul_div(
+		(
+			k * fp::mul_div(costs, costs, revenue)
+			-(1+k)*costs
+			+ revenue
+		),
+		Pop::size_denominator,
+		workforce
+	); //factor out pop size without making values too small
 }
 
 ProductionType const* ArtisanalProducer::pick_production_type(
