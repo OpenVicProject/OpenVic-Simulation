@@ -72,18 +72,18 @@ static void print_rgo(ProvinceInstance const& province) {
 		SPDLOG_INFO(
 			"\tgood: {}, "
 			"production_type: {}, "
-			"size_multiplier: {}, "
-			"output_quantity_yesterday: {}, "
-			"revenue_yesterday: {}, "
-			"total owner income: {}, "
-			"total employee income: {}",
+			"size_multiplier: {:.3}, "
+			"output_quantity_yesterday: {:.3}, "
+			"revenue_yesterday: {:.3}, "
+			"total owner income: {:.3}, "
+			"total employee income: {:.3}",
 			production_type.output_good, //
 			production_type, //
-			rgo.get_size_multiplier().to_string(3), //
-			rgo.get_output_quantity_yesterday().to_string(3), //
-			rgo.get_revenue_yesterday().to_string(3), //
-			rgo.get_total_owner_income_cache().to_string(3), //
-			rgo.get_total_employee_income_cache().to_string(3)
+			rgo.get_size_multiplier(), //
+			rgo.get_output_quantity_yesterday(), //
+			rgo.get_revenue_yesterday(), //
+			rgo.get_total_owner_income_cache(), //
+			rgo.get_total_employee_income_cache()
 		);
 
 		bool logged_employees = false;
@@ -264,12 +264,12 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 			memory::string countries_str;
 			for (CountryInstance& country : countries) {
 				countries_str += fmt::format(
-					"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})", //
+					"\n\t{} - Total #{} ({:.1}), Prestige #{} ({:.1}), Industry #{} ({:.1}), Military #{} ({:.1})", //
 					country, //
-					country.get_total_rank(), country.total_score.get_untracked().to_string(1), //
-					country.get_prestige_rank(), country.get_prestige_untracked().to_string(1),
-					country.get_industrial_rank(), country.get_industrial_power_untracked().to_string(1),
-					country.get_military_rank(), country.military_power.get_untracked().to_string(1)
+					country.get_total_rank(), country.total_score.get_untracked(), //
+					country.get_prestige_rank(), country.get_prestige_untracked(),
+					country.get_industrial_rank(), country.get_industrial_power_untracked(),
+					country.get_military_rank(), country.military_power.get_untracked()
 				);
 			}
 			SPDLOG_INFO("{}:{}", title, countries_str);

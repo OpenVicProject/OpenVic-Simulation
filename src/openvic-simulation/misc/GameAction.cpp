@@ -309,8 +309,8 @@ bool GameActionManager::VariantVisitor::operator() (create_leader_argument_t con
 
 	if (country->get_create_leader_count() < 1) {
 		spdlog::error_s(
-			"GAME_ACTION_CREATE_LEADER called for country \"{}\" without enough leadership points ({}) to create any leaders!",
-			*country, country->get_leadership_point_stockpile().to_string(2)
+			"GAME_ACTION_CREATE_LEADER called for country \"{}\" without enough leadership points ({:.2}) to create any leaders!",
+			*country, country->get_leadership_point_stockpile()
 		);
 		return false;
 	}
