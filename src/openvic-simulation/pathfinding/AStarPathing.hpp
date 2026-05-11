@@ -8,6 +8,7 @@
 #include "openvic-simulation/pathfinding/PathingBase.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct MapDefinition;
