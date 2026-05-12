@@ -25,42 +25,68 @@ opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation head
 
 env.FinalizeOptions()
 
+suffix = ".{}.{}".format(env["platform"], env["target"])
+if env.dev_build:
+    suffix += ".dev"
+if env["precision"] == "double":
+    suffix += ".double"
+suffix += "." + env["arch"]
+if env["platform"] == "windows":
+    if env.get("debug_crt", False):
+        suffix += ".mdd"
+    elif env.get("use_static_cpp", False):
+        suffix += ".mt"
+    else:
+        suffix += ".md"
+if env.get("use_asan", False):
+    suffix += ".san"
+env["suffix"] = suffix
+
+build_dir = env.Dir("build/" + suffix.lstrip(".")).abspath.replace("\\", "/")
+env["build_dir"] = build_dir
+
 env.exposed_includes = []
 
 SConscript("deps/SCsub", "env")
 
 env.openvic_simulation = {}
 
-Default(
-    env.CommandNoCache(
-        "src/openvic-simulation/gen/commit_info.gen.hpp",
-        env.Value(env.get_git_info()),
-        env.Run(env.git_builder),
-        name_prefix="sim",
-    )
+# Tweak this if you want to use different folders, or more folders, to store your source code in.
+source_path = "src/openvic-simulation"
+include_path = "src"
+# Mirror the simulation source tree into the per-config build dir
+sim_variant = build_dir + "/" + source_path  # forward slashes so VariantDir matches
+sim_variant_parent = build_dir + "/" + include_path  # variant of "src/"
+env.VariantDir(sim_variant, source_path, duplicate=True)
+
+env.Append(CPPPATH=[[env.Dir(p) for p in [sim_variant, sim_variant_parent]]])
+
+gen_commit_info = env.CommandNoCache(
+    sim_variant + "/gen/commit_info.gen.hpp",
+    env.Value(env.get_git_info()),
+    env.Run(env.git_builder),
+    name_prefix="sim",
 )
-Default(
-    env.CommandNoCache(
-        "src/openvic-simulation/gen/license_info.gen.hpp",
-        ["#COPYRIGHT", "#LICENSE.md"],
-        env.Run(env.license_builder),
-        name_prefix="sim",
-    )
+gen_license_info = env.CommandNoCache(
+    sim_variant + "/gen/license_info.gen.hpp",
+    ["#COPYRIGHT", "#LICENSE.md"],
+    env.Run(env.license_builder),
+    name_prefix="sim",
 )
-Default(
-    env.CommandNoCache(
-        "src/openvic-simulation/gen/author_info.gen.hpp",
-        "#AUTHORS.md",
-        env.Run(env.author_builder),
-        name_prefix="sim",
-        sections={
-            "Senior Developers": "AUTHORS_SENIOR_DEVELOPERS",
-            "Developers": "AUTHORS_DEVELOPERS",
-            "Contributors": "AUTHORS_CONTRIBUTORS",
-            "Consultants": "AUTHORS_CONSULTANTS",
-        },
-    )
+gen_author_info = env.CommandNoCache(
+    sim_variant + "/gen/author_info.gen.hpp",
+    "#AUTHORS.md",
+    env.Run(env.author_builder),
+    name_prefix="sim",
+    sections={
+        "Senior Developers": "AUTHORS_SENIOR_DEVELOPERS",
+        "Developers": "AUTHORS_DEVELOPERS",
+        "Contributors": "AUTHORS_CONTRIBUTORS",
+        "Consultants": "AUTHORS_CONSULTANTS",
+    },
 )
+gen_files = gen_commit_info + gen_license_info + gen_author_info
+Default(gen_commit_info, gen_license_info, gen_author_info)
 
 # For future reference:
 # - CCFLAGS are compilation flags shared between C and C++
@@ -70,26 +96,24 @@ Default(
 # - CPPDEFINES are for pre-processor defines
 # - LINKFLAGS are for linking flags
 
-# Tweak this if you want to use different folders, or more folders, to store your source code in.
-source_path = "src/openvic-simulation"
-include_path = "src"
-env.Append(CPPPATH=[[env.Dir(p) for p in [source_path, include_path]]])
-sources = env.GlobRecursive("*.cpp", [source_path])
+# Exclude pch.cpp from the regular source list so it isn't compiled twice
+# (env.PCH below builds it once with /Yc).
+pch_cpp_variant = sim_variant + "/pch.cpp"
+sources = env.GlobRecursive("*.cpp", [sim_variant], pch_cpp_variant)
 env.simulation_sources = sources
-
-suffix = ".{}.{}".format(env["platform"], env["target"])
-if env.dev_build:
-    suffix += ".dev"
-if env["precision"] == "double":
-    suffix += ".double"
-suffix += "." + env["arch"]
-
-# Expose it when included from another project
-env["suffix"] = suffix
 
 library = None
 env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
 library_name = "libopenvic-simulation{}{}".format(suffix, env["LIBSUFFIX"])
+
+# Precompiled header
+if env.get("is_msvc", False):
+    pch_header_rel = "openvic-simulation/pch.hpp"
+    env["PCHSTOP"] = pch_header_rel
+    pch_pch, pch_obj = env.PCH(pch_cpp_variant)
+    env["PCH"] = pch_pch
+    env.Append(CCFLAGS=["/FI" + pch_header_rel])
+    sources.append(pch_obj)
 
 default_args = []
 
@@ -106,12 +130,17 @@ if env["build_ovsim_library"]:
     library = env.StaticLibrary(target=env.File(os.path.join(BINDIR, library_name)), source=sources)
     default_args += [library]
 
+    # VariantDir(..., duplicate=True) copies sources into build_dir but does
+    # not register the copies as targets, so `scons -c` leaves them behind.
+    env.Clean(library, env.Dir(build_dir))
+
     env.Append(LIBPATH=[env.Dir(BINDIR)])
     env.Prepend(LIBS=[library_name])
 
     env.openvic_simulation["LIBPATH"] = env["LIBPATH"]
     env.openvic_simulation["LIBS"] = env["LIBS"]
-    env.openvic_simulation["INCPATH"] = [env.Dir(include_path)] + env.exposed_includes
+    env.openvic_simulation["INCPATH"] = [env.Dir(sim_variant_parent)] + env.exposed_includes
+    env.openvic_simulation["GEN_FILES"] = gen_files
 
 headless_program = None
 env["PROGSUFFIX"] = suffix + env["PROGSUFFIX"]
@@ -119,10 +148,12 @@ env["PROGSUFFIX"] = suffix + env["PROGSUFFIX"]
 if env["build_ovsim_headless"]:
     headless_name = "openvic-simulation"
     headless_env = env.Clone()
-    headless_path = ["src/headless"]
+    headless_src = "src/headless"
+    headless_variant = build_dir + "/" + headless_src
+    headless_env.VariantDir(headless_variant, headless_src, duplicate=True)
     headless_env.Append(CPPDEFINES=["OPENVIC_SIM_HEADLESS"])
-    headless_env.Append(CPPPATH=[headless_env.Dir(headless_path)])
-    headless_env.headless_sources = env.GlobRecursive("*.cpp", headless_path)
+    headless_env.Append(CPPPATH=[headless_env.Dir(headless_variant)])
+    headless_env.headless_sources = env.GlobRecursive("*.cpp", [headless_variant])
     if not env["build_ovsim_library"]:
         headless_env.headless_sources += sources
     headless_program = headless_env.Program(
@@ -131,6 +162,10 @@ if env["build_ovsim_headless"]:
         PROGSUFFIX=".headless" + env["PROGSUFFIX"],
     )
     default_args += [headless_program]
+
+    # Also wipe the per-config build dir when the headless target is cleaned,
+    # in case the library target isn't built in this configuration.
+    headless_env.Clean(headless_program, headless_env.Dir(build_dir))
 
 if env["build_ovsim_tests"]:
     tests_env = SConscript("tests/SCsub", "env")

@@ -55,7 +55,6 @@ def build_std_function(env):
 
 
 def build_memory(env):
-    import os
     from pathlib import Path
 
     import methods
@@ -113,18 +112,22 @@ def build_memory(env):
             CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion"]
         )
     memory_env.Append(CPPPATH=[[memory_env.Dir(p) for p in [source_path, Path(inner_include_path)]]])
-    sources = env.GlobRecursive("*.cpp", [source_path])
+    # Mirror memory's source tree into the per-config build dir
+    build_root = (env.get("build_dir") or env.Dir("#").abspath).replace("\\", "/")
+    out_dir = build_root + "/memory/" + source_path
+    memory_env.VariantDir(out_dir, source_path, duplicate=True)
+    sources = env.GlobRecursive("*.cpp", [out_dir])
     env.memory_sources = sources
 
-    library_name = "libmemory" + env["LIBSUFFIX"]
-    library = memory_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    library_name = "libmemory" + env.get("suffix", "") + env["LIBSUFFIX"]
+    library = memory_env.StaticLibrary(target=out_dir + "/" + library_name, source=sources)
     Default([config, node_size_impl, library])
 
     env.memory = {}
     env.memory["INCPATH"] = [memory_env.Dir(include_path)]
 
     env.Append(CPPPATH=env.memory["INCPATH"])
-    env.Append(LIBPATH=[memory_env.Dir(source_path)])
+    env.Append(LIBPATH=[memory_env.Dir(out_dir)])
     env.Prepend(LIBS=[library_name])
 
     env.exposed_includes += env.memory["INCPATH"]
@@ -174,11 +177,15 @@ def build_spdlog(env):
     env.spdlog["INCPATH"] = [spdlog_env.Dir(include_path)]
 
     spdlog_env.Append(CPPPATH=[source_dir, env.spdlog["INCPATH"]])
-    sources = env.GlobRecursive("*.cpp", [source_path])
+    # Mirror spdlog's source tree into the per-config build dir.
+    build_root = (env.get("build_dir") or env.Dir("#").abspath).replace("\\", "/")
+    spdlog_out = build_root + "/spdlog/" + source_path
+    spdlog_env.VariantDir(spdlog_out, source_path, duplicate=True)
+    sources = env.GlobRecursive("*.cpp", [spdlog_out])
     env.spdlog_sources = sources
 
-    library_name = "libspdlog" + env["LIBSUFFIX"]
-    library = spdlog_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    library_name = "libspdlog" + env.get("suffix", "") + env["LIBSUFFIX"]
+    library = spdlog_env.StaticLibrary(target=spdlog_out + "/" + library_name, source=sources)
     Default(library)
 
     env.Append(CPPPATH=[env.spdlog["INCPATH"]])
@@ -186,7 +193,7 @@ def build_spdlog(env):
         env.Append(CXXFLAGS=[f"/external:I{env.spdlog['INCPATH'][0]}"])
     else:
         env.Append(CXXFLAGS=["-isystem", env.spdlog["INCPATH"][0]])
-    env.Append(LIBPATH=[source_dir])
+    env.Append(LIBPATH=[spdlog_env.Dir(spdlog_out)])
     env.Prepend(LIBS=[library_name])
 
     env.exposed_includes += env.spdlog["INCPATH"]
