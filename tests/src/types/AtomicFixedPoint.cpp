@@ -1,4 +1,5 @@
 #include <thread>
+#include <vector>
 
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
