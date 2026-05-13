@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

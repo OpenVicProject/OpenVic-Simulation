@@ -10,6 +10,7 @@
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct GameRulesManager;
