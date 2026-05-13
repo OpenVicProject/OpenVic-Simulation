@@ -44,12 +44,12 @@ source_path = "src"  # relative to this SCsub (i.e. tests/src under the sim root
 
 tests_name = "openvic-simulation"
 tests_env = env.Clone()
-# Mirror tests/src into the per-config build dir
+# Out-of-source build: variant tree holds object files only.
 tests_variant = env["build_dir"] + "/tests/" + source_path
-tests_env.VariantDir(tests_variant, source_path, duplicate=True)
+tests_env.VariantDir(tests_variant, source_path, duplicate=False)
 tests_env.Append(CPPDEFINES=["OPENVIC_SIMULATION_TESTS"])
-tests_env.Append(CPPPATH=[tests_env.Dir(tests_variant)])
-tests_env.tests_sources = env.GlobRecursive("*.cpp", [tests_variant])
+tests_env.Append(CPPPATH=[tests_env.Dir(tests_variant), tests_env.Dir(source_path)])
+tests_env.tests_sources = env.GlobRecursiveVariant("*.cpp", source_path, tests_variant)
 
 SConscript("deps/SCsub", {"env": tests_env})
 

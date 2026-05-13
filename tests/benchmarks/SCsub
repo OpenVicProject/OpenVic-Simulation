@@ -44,13 +44,13 @@ source_path = "src"  # relative to this SCsub (i.e. tests/benchmarks/src under t
 
 benchmarks_name = "openvic-simulation"
 benchmarks_env = env.Clone()
-# Mirror benchmarks/src into the per-config build dir
+# Out-of-source build: variant tree holds object files only.
 benchmarks_variant = env["build_dir"] + "/tests/benchmarks/" + source_path
-benchmarks_env.VariantDir(benchmarks_variant, source_path, duplicate=True)
+benchmarks_env.VariantDir(benchmarks_variant, source_path, duplicate=False)
 benchmarks_env.Append(CPPDEFINES=["OPENVIC_SIMULATION_BENCHMARKS"])
 
-benchmarks_env.Append(CPPPATH=[benchmarks_env.Dir(benchmarks_variant)])
-benchmarks_env.benchmarks_sources = env.GlobRecursive("*.cpp", [benchmarks_variant])
+benchmarks_env.Append(CPPPATH=[benchmarks_env.Dir(benchmarks_variant), benchmarks_env.Dir(source_path)])
+benchmarks_env.benchmarks_sources = env.GlobRecursiveVariant("*.cpp", source_path, benchmarks_variant)
 
 SConscript("deps/SCsub", {"env": benchmarks_env, "parent_env": env})
 
