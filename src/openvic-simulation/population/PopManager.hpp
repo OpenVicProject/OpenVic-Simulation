@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/population/PopType.hpp"

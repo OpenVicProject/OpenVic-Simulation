@@ -3,6 +3,7 @@
 #include <climits>
 #include <cstddef>
 #include <functional>
+#include <tuple>
 
 namespace OpenVic {
 	static constexpr std::size_t MURMUR3_SEED = 0x7F07C65;
