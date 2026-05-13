@@ -513,11 +513,11 @@ bool UnitInstanceManager::create_leader(
 	const fixed_point_t leader_creation_cost = military_defines.get_leader_recruit_cost();
 	if (country.get_leadership_point_stockpile() < leader_creation_cost) {
 		spdlog::error_s(
-			"Country \"{}\" does not have enough leadership points ({}) to create a {} (cost: {})",
+			"Country \"{}\" does not have enough leadership points ({:.2}) to create a {} (cost: {:.2})",
 			country,
-			country.get_leadership_point_stockpile().to_string(2),
+			country.get_leadership_point_stockpile(),
 			get_branched_leader_name(branch),
-			leader_creation_cost.to_string(2)
+			leader_creation_cost
 		);
 		return false;
 	}
