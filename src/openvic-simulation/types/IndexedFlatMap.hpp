@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstddef>
 #include <iterator>
+#include <tuple>
 #include <utility>
 
 #include <type_safe/strong_typedef.hpp>
@@ -12,7 +13,6 @@
 
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
