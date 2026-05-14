@@ -348,7 +348,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		if (ticks_passed != 0 && duration != test_duration_t::zero()) {
 			const test_duration_t tick_tps = total_tick_duration / ticks_passed;
 			const test_duration_t total_tps = duration / ticks_passed;
-			SPDLOG_INFO(
+			spdlog::info(
 				"Ran {} / {} ticks, total time {} at {} per tick, tick time only {} at {} per tick. "
 				"Tick lengths ranged from {} to {}.",
 				ticks_passed, TICK_COUNT, duration, total_tps, total_tick_duration, tick_tps, //
