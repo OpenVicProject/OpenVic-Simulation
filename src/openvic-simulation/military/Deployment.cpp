@@ -6,7 +6,6 @@
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

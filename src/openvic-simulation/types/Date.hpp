@@ -9,13 +9,14 @@
 #include <limits>
 #include <numeric>
 #include <ostream>
-#include <string>
 #include <system_error>
 
 #include <fmt/format.h>
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/core/memory/Formatting.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BuyUpToOrder;

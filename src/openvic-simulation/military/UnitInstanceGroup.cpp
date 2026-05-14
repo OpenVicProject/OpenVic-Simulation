@@ -1,7 +1,5 @@
 #include "UnitInstanceGroup.hpp"
 
-#include <vector>
-
 #include <fmt/std.h>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
@@ -13,7 +11,6 @@
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

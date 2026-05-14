@@ -3,15 +3,13 @@
 #include <functional>
 #include <string_view>
 
-#include <plf_colony.h>
-
+#include "openvic-simulation/core/memory/Colony.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp" //below other imports that undef the macros
 

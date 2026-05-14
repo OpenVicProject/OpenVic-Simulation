@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -11,7 +12,6 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BuildingType;

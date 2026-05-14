@@ -1,12 +1,11 @@
 #pragma once
 
 #include <variant>
-#include <vector>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	enum class conditional_weight_type_t : uint8_t {

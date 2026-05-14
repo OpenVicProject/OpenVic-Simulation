@@ -10,7 +10,6 @@
 #include <memory>
 #include <span>
 #include <type_traits>
-#include <vector>
 
 #include <range/v3/algorithm/move.hpp>
 #include <range/v3/iterator/operations.hpp>

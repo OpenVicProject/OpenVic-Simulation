@@ -5,7 +5,7 @@
 
 #include <foonathan/memory/tracking.hpp>
 
-namespace OpenVic::utility {
+namespace OpenVic::memory {
 	struct MemoryTracker {
 		void on_node_allocation(void* mem, std::size_t size, std::size_t) {
 			uint64_t new_mem_usage = _memory_usage.fetch_add(size, std::memory_order_acq_rel) + size;
@@ -53,7 +53,7 @@ namespace OpenVic::memory {
 	template<class RawAllocator>
 	using tracker =
 #ifdef DEBUG_ENABLED
-		foonathan::memory::tracked_allocator<OpenVic::utility::MemoryTracker, RawAllocator>
+		foonathan::memory::tracked_allocator<OpenVic::memory::MemoryTracker, RawAllocator>
 #else
 		RawAllocator
 #endif

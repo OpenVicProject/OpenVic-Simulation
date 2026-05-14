@@ -3,13 +3,13 @@
 #include <mutex>
 #include <span>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

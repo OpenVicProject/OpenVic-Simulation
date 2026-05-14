@@ -2,13 +2,13 @@
 
 #include <functional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct MarketInstance;

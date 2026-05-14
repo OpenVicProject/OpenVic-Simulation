@@ -2,8 +2,8 @@
 
 #include <functional>
 
-#include <plf_colony.h>
-
+#include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
@@ -22,7 +22,6 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;

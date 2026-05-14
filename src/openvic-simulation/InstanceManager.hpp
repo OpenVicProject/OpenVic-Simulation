@@ -4,6 +4,7 @@
 
 #include <function2/function2.hpp>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
@@ -23,7 +24,6 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 

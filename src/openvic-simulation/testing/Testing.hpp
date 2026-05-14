@@ -1,10 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <spdlog/spdlog.h>
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
 #include "openvic-simulation/testing/test_scripts/A_001_file_tests.cpp"

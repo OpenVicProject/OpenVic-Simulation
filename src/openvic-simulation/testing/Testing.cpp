@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "openvic-simulation/testing/TestScript.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

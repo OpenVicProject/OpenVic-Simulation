@@ -6,7 +6,6 @@
 #include <fmt/std.h>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

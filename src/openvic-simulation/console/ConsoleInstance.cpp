@@ -9,6 +9,8 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
@@ -21,7 +23,6 @@
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace std::string_view_literals;

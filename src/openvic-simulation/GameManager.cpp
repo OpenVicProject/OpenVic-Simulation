@@ -9,8 +9,9 @@
 
 #include <spdlog/spdlog.h>
 
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <functional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/population/PopIdInProvince.hpp"
@@ -13,7 +14,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include <type_safe/strong_typedef.hpp>
 

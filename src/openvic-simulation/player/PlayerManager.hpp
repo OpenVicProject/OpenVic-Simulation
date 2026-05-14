@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

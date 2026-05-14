@@ -5,10 +5,11 @@
 #include <string_view>
 #include <variant>
 
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct ConditionManager;

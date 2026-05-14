@@ -1,7 +1,6 @@
 #include "DiplomaticHistory.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/history/DiplomaticHistory.hpp"
 
 using namespace OpenVic;

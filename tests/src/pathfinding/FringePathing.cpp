@@ -3,7 +3,6 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include "Helper.hpp"
 #include "pathfinding/Pathing.hpp"

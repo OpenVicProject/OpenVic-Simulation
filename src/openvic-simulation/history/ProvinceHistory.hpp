@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/population/Pop.hpp"
@@ -14,7 +15,6 @@
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

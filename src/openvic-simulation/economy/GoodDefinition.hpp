@@ -2,11 +2,11 @@
 
 #include <functional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GoodDefinitionManager;

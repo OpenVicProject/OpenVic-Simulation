@@ -6,7 +6,7 @@
 #include <string_view>
 
 #include "openvic-simulation/core/Assert.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	template<size_t Size>

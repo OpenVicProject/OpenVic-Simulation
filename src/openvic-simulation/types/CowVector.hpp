@@ -9,7 +9,6 @@
 #include <memory>
 #include <span>
 #include <type_traits>
-#include <vector>
 
 #include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/types/BasicIterator.hpp"
