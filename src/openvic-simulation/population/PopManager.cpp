@@ -75,9 +75,9 @@ bool PopManager::add_pop_type(
 	colour_t colour,
 	Strata* strata,
 	pop_sprite_t sprite,
-	fixed_point_map_t<GoodDefinition const*>&& life_needs,
-	fixed_point_map_t<GoodDefinition const*>&& everyday_needs,
-	fixed_point_map_t<GoodDefinition const*>&& luxury_needs,
+	fixed_point_map_t<good_index_t>&& life_needs,
+	fixed_point_map_t<good_index_t>&& everyday_needs,
+	fixed_point_map_t<good_index_t>&& luxury_needs,
 	PopType::income_type_t life_needs_income_types,
 	PopType::income_type_t everyday_needs_income_types,
 	PopType::income_type_t luxury_needs_income_types,
@@ -188,7 +188,7 @@ bool PopManager::add_pop_type(
 		static_cast<PopType const*>(nullptr),
 		std::move(country_migration_target),
 		std::move(migration_target),
-		PopType::poptype_weight_map_t { PopType::poptype_weight_map_t::create_empty() },
+		PopType::poptype_weight_map_t { PopType::poptype_weight_map_t{ create_empty } },
 		std::move(ideologies),
 		PopType::issue_weight_map_t{}
 	))) {
@@ -331,14 +331,29 @@ bool PopManager::load_pop_type_file(
 		"unemployment", ZERO_OR_ONE, expect_bool(assign_variable_callback(unemployment))
 	)(root);
 
+
+	fixed_point_map_t<good_index_t> life_needs_index_based {}, everyday_needs_index_based {}, luxury_needs_index_based {};
+	life_needs_index_based.reserve(life_needs.size());
+	for (auto [k, v] : life_needs) {
+		life_needs_index_based[k->index] = v;
+	}
+	everyday_needs_index_based.reserve(everyday_needs.size());
+	for (auto [k, v] : everyday_needs) {
+		everyday_needs_index_based[k->index] = v;
+	}
+	luxury_needs_index_based.reserve(luxury_needs.size());
+	for (auto [k, v] : luxury_needs) {
+		luxury_needs_index_based[k->index] = v;
+	}
+
 	ret &= add_pop_type(
 		filestem,
 		colour,
 		strata,
 		sprite,
-		std::move(life_needs),
-		std::move(everyday_needs),
-		std::move(luxury_needs),
+		std::move(life_needs_index_based),
+		std::move(everyday_needs_index_based),
+		std::move(luxury_needs_index_based),
 		life_needs_income_types,
 		everyday_needs_income_types,
 		luxury_needs_income_types,
@@ -492,10 +507,15 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
+	memory::FixedVector<ModifierEffectCache::strata_effects_t, strata_index_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
-	strata_effects = std::move(decltype(ModifierEffectCache::strata_effects){get_stratas()});
+	strata_effects = std::move(
+		decltype(ModifierEffectCache::strata_effects) {
+			generate_values,
+			strata_index_t(get_strata_count())
+		}
+	);
 
 	bool ret = true;
 
@@ -509,7 +529,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			);
 		};
 
-		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects.at(strata);
+		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects[strata.index];
 
 		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", FORMAT_x100_1DP_PC_POS, HAS_NO_EFFECT);
 		strata_modifier(this_strata_effects.vote, "_vote", FORMAT_x100_1DP_PC_POS);

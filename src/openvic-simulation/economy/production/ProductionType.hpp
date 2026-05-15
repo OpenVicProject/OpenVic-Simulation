@@ -119,7 +119,7 @@ namespace OpenVic {
 
 	public:
 		constexpr ProductionTypeManager()
-			: good_to_rgo_production_type { decltype(good_to_rgo_production_type)::create_empty() } {}
+			: good_to_rgo_production_type { decltype(good_to_rgo_production_type){create_empty} } {}
 
 		bool add_production_type(
 			GameRulesManager const& game_rules_manager,

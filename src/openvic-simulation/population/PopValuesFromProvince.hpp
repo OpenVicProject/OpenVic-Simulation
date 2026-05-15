@@ -1,7 +1,9 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -17,14 +19,17 @@ namespace OpenVic {
 
 	struct PopStrataValuesFromProvince {
 	private:
+		const strata_index_t strata_index;
 		fixed_point_t PROPERTY(shared_life_needs_scalar);
 		fixed_point_t PROPERTY(shared_everyday_needs_scalar);
 		fixed_point_t PROPERTY(shared_luxury_needs_scalar);
 	public:
+		constexpr PopStrataValuesFromProvince(const strata_index_t new_strata_index)
+			: strata_index { new_strata_index } {}
+
 		void update_pop_strata_values_from_province(
 			PopsDefines const& defines,
 			ModifierEffectCache const& modifier_effect_cache,
-			Strata const& strata,
 			ProvinceInstance const& province
 		);
 	};
@@ -35,7 +40,7 @@ namespace OpenVic {
 		ModifierEffectCache const& modifier_effect_cache;
 		ProductionTypeManager const& production_type_manager;
 		fixed_point_t PROPERTY(max_cost_multiplier);
-		OV_IFLATMAP_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
+		memory::FixedVector<PopStrataValuesFromProvince, strata_index_t> PROPERTY(effects_by_strata);
 		//excludes availability of goods on market
 		memory::vector<std::pair<ProductionType const*, fixed_point_t>> SPAN_PROPERTY(ranked_artisanal_production_types);
 	public:
@@ -48,9 +53,8 @@ namespace OpenVic {
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProductionTypeManager const& new_production_type_manager,
 			PopsDefines const& new_defines,
-			decltype(effects_by_strata)::keys_span_type strata_keys
+			const strata_index_t strata_size
 		);
-		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 
 		void update_pop_values_from_province(ProvinceInstance& province);
 	};

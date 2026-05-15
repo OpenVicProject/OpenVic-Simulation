@@ -8,6 +8,7 @@
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -19,11 +20,10 @@ ProvinceHistoryEntry::ProvinceHistoryEntry(
 	Date new_date
 ) : HistoryEntry { new_date },
 	province { new_province },
-	_province_building_levels(
-		building_type_manager.get_province_building_types().size(),
+	province_building_levels {
+		province_building_index_t(building_type_manager.get_province_building_types().size()),
 		building_level_t(0)
-	),
-	province_building_levels(_province_building_levels)
+	}
 {}
 
 ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager)

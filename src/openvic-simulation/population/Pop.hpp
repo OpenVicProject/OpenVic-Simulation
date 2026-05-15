@@ -22,7 +22,6 @@ namespace OpenVic {
 	struct CountryInstance;
 	struct CountryParty;
 	struct Culture;
-	struct GoodDefinition;
 	struct Ideology;
 	struct MarketInstance;
 	struct MilitaryDefines;
@@ -153,8 +152,8 @@ namespace OpenVic {
 			public: \
 				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
-				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
-				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+				fixed_point_map_t<good_index_t> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
+				ordered_map<good_index_t, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
@@ -174,7 +173,7 @@ namespace OpenVic {
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
-			fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
+			fixed_point_map_t<good_index_t> const& scaled_needs,
 			forwardable_span<fixed_point_t> money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_vector,
 			fixed_point_t& price_inverse_sum,
@@ -183,7 +182,7 @@ namespace OpenVic {
 		void pop_tick_without_cleanup(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
@@ -231,7 +230,7 @@ namespace OpenVic {
 		void pop_tick(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK

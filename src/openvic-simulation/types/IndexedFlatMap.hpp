@@ -15,6 +15,7 @@
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 #define OV_IFLATMAP_PROPERTY(KEYTYPE, VALUETYPE, NAME) OV_IFLATMAP_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, private)
@@ -190,21 +191,17 @@ namespace OpenVic {
 			// There is no check for keys.data() being identical as KeyType objects are considered functionally equivalent if their index values match.
 			return true;
 		}
-		
+
+	public:
 		//vector
-		constexpr IndexedFlatMap()
+		constexpr IndexedFlatMap(const create_empty_t)
 		requires std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>
 		: values(), keys(), min_index(0), max_index(0) {}
 
 		//FixedVector
-		constexpr IndexedFlatMap()
+		constexpr IndexedFlatMap(const create_empty_t t)
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
-		: values(0), keys(), min_index(0), max_index(0) {}
-
-	public:
-		static constexpr IndexedFlatMap create_empty() {
-			return {};
-		}
+		: values(t), keys(), min_index(0), max_index(0) {}
 
 		/** vector
 		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
@@ -270,7 +267,7 @@ namespace OpenVic {
 		) : keys(new_keys),
 			min_index { new_keys.front().index },
 			max_index { new_keys.back().index },
-			values { new_keys.size() } {
+			values { create_empty, new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
@@ -364,7 +361,7 @@ namespace OpenVic {
 		) : keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
-			values { new_keys.size() } {
+			values { create_empty, new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
@@ -429,7 +426,7 @@ namespace OpenVic {
 			: keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
-			values { new_keys.size() } {
+			values { create_empty, new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;

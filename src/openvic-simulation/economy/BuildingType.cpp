@@ -206,14 +206,17 @@ bool BuildingTypeManager::load_buildings_file(
 
 	auto& building_type_effects = modifier_manager.modifier_effect_cache.building_type_effects;
 	building_type_effects = std::move(
-		decltype(ModifierEffectCache::building_type_effects){get_building_types()}
+		decltype(ModifierEffectCache::building_type_effects) {
+			generate_values,
+			building_type_index_t(get_building_type_count())
+		}
 	);
 
 	for (BuildingType const& building_type : get_building_types()) {
 		using enum ModifierEffect::format_t;
 		using enum ModifierEffect::target_t;
 
-		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects.at(building_type);
+		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects[building_type.index];
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";

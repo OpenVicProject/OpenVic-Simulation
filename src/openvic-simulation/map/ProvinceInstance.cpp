@@ -36,15 +36,14 @@ ProvinceInstance::ProvinceInstance(
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { province_instance_deps.rgo_deps },
 	pops_cache_by_type { province_instance_deps.pop_types },
-	_buildings(
+	buildings {
 		new_province_definition.is_water()
-			? 0
-			: province_instance_deps.building_type_manager.get_province_building_types().size(),
-			[&province_instance_deps](const size_t i) -> BuildingType const& {
+			? province_building_index_t(0)
+			: province_building_index_t(province_instance_deps.building_type_manager.get_province_building_types().size()),
+			[&province_instance_deps](const province_building_index_t i) -> BuildingType const& {
 				return province_instance_deps.building_type_manager.get_province_building_types()[i];
 			}
-	),
-	buildings(_buildings)
+	}
 {
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
@@ -376,7 +375,7 @@ void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	TypedSpan<good_index_t, char> reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
@@ -507,7 +506,7 @@ void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	TypedSpan<good_index_t, char> reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK

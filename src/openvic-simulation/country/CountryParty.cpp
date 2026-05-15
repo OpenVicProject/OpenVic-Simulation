@@ -1,7 +1,6 @@
 #include "CountryParty.hpp"
 
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/PartyPolicy.hpp"
 
 using namespace OpenVic;
 
@@ -17,7 +16,3 @@ CountryParty::CountryParty(
 	end_date { new_end_date },
 	ideology { new_ideology },
 	policies { std::move(new_policies) } {}
-
-PartyPolicy const* CountryParty::get_policies(PartyPolicyGroup const& key) const {
-	return policies.at(key);
-}
