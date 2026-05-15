@@ -1,6 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -221,7 +222,7 @@ namespace OpenVic {
 		};
 
 	private:
-		OV_IFLATMAP_PROPERTY(BuildingType, building_type_effects_t, building_type_effects);
+		memory::FixedVector<building_type_effects_t, building_type_index_t> PROPERTY(building_type_effects);
 
 		/* GoodDefinition Effects */
 	public:
@@ -245,7 +246,7 @@ namespace OpenVic {
 		};
 
 	private:
-		OV_IFLATMAP_PROPERTY(GoodDefinition, good_effects_t, good_effects);
+		memory::FixedVector<good_effects_t, good_index_t> SPAN_PROPERTY(good_effects);
 
 		/* UnitType Effects */
 	public:
@@ -296,9 +297,9 @@ namespace OpenVic {
 
 	private:
 		regiment_type_effects_t PROPERTY(army_base_effects);
-		OV_IFLATMAP_PROPERTY(RegimentType, regiment_type_effects_t, regiment_type_effects);
+		memory::FixedVector<regiment_type_effects_t, regiment_type_index_t> PROPERTY(regiment_type_effects);
 		ship_type_effects_t PROPERTY(navy_base_effects);
-		OV_IFLATMAP_PROPERTY(ShipType, ship_type_effects_t, ship_type_effects);
+		memory::FixedVector<ship_type_effects_t, ship_type_index_t> PROPERTY(ship_type_effects);
 
 		/* Unit terrain Effects */
 	public:
@@ -316,11 +317,11 @@ namespace OpenVic {
 		};
 
 	private:
-		OV_IFLATMAP_PROPERTY(TerrainType, unit_terrain_effects_t, unit_terrain_effects);
+		memory::FixedVector<unit_terrain_effects_t, terrain_type_index_t> PROPERTY(unit_terrain_effects);
 
 		/* Rebel Effects */
 		ModifierEffect const* PROPERTY(rebel_org_gain_all, nullptr);
-		OV_IFLATMAP_PROPERTY(RebelType, ModifierEffect const*, rebel_org_gain_effects);
+		memory::FixedVector<ModifierEffect const*, rebel_type_index_t> PROPERTY(rebel_org_gain_effects);
 
 		/* Pop Effects */
 	public:
@@ -338,23 +339,32 @@ namespace OpenVic {
 			constexpr strata_effects_t() {};
 		};
 
+	
+	building_type_effects_t const& get_building_type_effects(BuildingType const& key) const;
+	good_effects_t const& get_good_effects(GoodDefinition const& key) const;
+	regiment_type_effects_t const& get_regiment_type_effects(RegimentType const& key) const;
+	ship_type_effects_t const& get_ship_type_effects(ShipType const& key) const;
+	unit_terrain_effects_t const& get_unit_terrain_effects(TerrainType const& key) const;
+	ModifierEffect const* get_rebel_org_gain_effects(RebelType const& key) const;
+	strata_effects_t const& get_strata_effects(Strata const& key) const;
+	ModifierEffect const* get_research_bonus_effects(TechnologyFolder const& key) const;
+
 	private:
-		OV_IFLATMAP_PROPERTY(Strata, strata_effects_t, strata_effects);
+		memory::FixedVector<strata_effects_t, strata_index_t> SPAN_PROPERTY(strata_effects);
 
 		/* Technology Effects */
-		OV_IFLATMAP_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
-		constexpr ModifierEffectCache() :
-			building_type_effects { decltype(building_type_effects)::create_empty() },
-			good_effects { decltype(good_effects)::create_empty() },
-			regiment_type_effects { decltype(regiment_type_effects)::create_empty() },
-			ship_type_effects { decltype(ship_type_effects)::create_empty() },
-			unit_terrain_effects { decltype(unit_terrain_effects)::create_empty() },
-			rebel_org_gain_effects { decltype(rebel_org_gain_effects)::create_empty() },
-			strata_effects { decltype(strata_effects)::create_empty() },
-			research_bonus_effects { decltype(research_bonus_effects)::create_empty() }
-			{}
+		memory::FixedVector<ModifierEffect const*, technology_folder_index_t> SPAN_PROPERTY(research_bonus_effects);
 
-	public:
-		ModifierEffectCache(ModifierEffectCache&&) = default;
+		// These values are replaced via moving during data loading.
+		constexpr ModifierEffectCache() :
+			building_type_effects { create_empty },
+			good_effects { create_empty },
+			regiment_type_effects { create_empty },
+			ship_type_effects { create_empty },
+			unit_terrain_effects { create_empty },
+			rebel_org_gain_effects { create_empty },
+			strata_effects { create_empty },
+			research_bonus_effects { create_empty }
+			{}
 	};
 }

@@ -6,6 +6,8 @@
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/politics/Reform.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
@@ -85,7 +87,9 @@ bool MapInstance::apply_history_to_provinces(
 	const Date date,
 	CountryInstanceManager& country_manager,
 	MilitaryDefines const& military_defines,
-	PopDeps const& pop_deps
+	PopDeps const& pop_deps,
+	TypedSpan<pop_type_index_t, const PopType> pop_types,
+	TypedSpan<reform_index_t, const Reform> reforms
 ) {
 	bool ret = true;
 
@@ -124,13 +128,16 @@ bool MapInstance::apply_history_to_provinces(
 						pop_history_entry->get_pops(),
 						pop_deps
 					);
-					province.setup_pop_test_values();
+					province.setup_pop_test_values(reforms);
 
 					//update pops so OOB can use up to date max_supported_regiments
 					province._update_pops(military_defines);
 				}
 
-				ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);
+				ret &= province.set_rgo_production_type_nullable(
+					pop_types,
+					rgo_production_type_nullable
+				);
 			}
 		}
 	}

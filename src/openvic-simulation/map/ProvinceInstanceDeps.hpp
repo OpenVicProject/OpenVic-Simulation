@@ -14,7 +14,6 @@ namespace OpenVic {
 		BuildingTypeManager const& building_type_manager;
 		GameRulesManager const& game_rules_manager;
 		PopsAggregateDeps const& pops_aggregate_deps;
-		forwardable_span<const PopType> pop_types;
 		ResourceGatheringOperationDeps const& rgo_deps;
 		forwardable_span<const Strata> stratas;
 	};

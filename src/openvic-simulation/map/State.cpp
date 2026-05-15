@@ -7,7 +7,9 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
@@ -17,19 +19,13 @@ State::State(
 	ProvinceInstance* new_capital,
 	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 	colony_status_t new_colony_status,
-	PopsAggregateDeps const& pops_aggregate_deps,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys
-) : PopsAggregate {
-		pops_aggregate_deps,
-		strata_keys,
-		pop_type_keys
-	},
+	PopsAggregateDeps const& pops_aggregate_deps
+) : PopsAggregate { pops_aggregate_deps },
 	state_set { new_state_set },
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
-	pops_cache_by_type { pop_type_keys }
+	pops_cache_by_type { generate_values, pops_aggregate_deps.pop_type_count }
 {
 	_update_country();
 }
@@ -49,14 +45,10 @@ CountryInstance* State::get_owner() const {
 		: capital->get_owner();
 }
 
-memory::vector<std::reference_wrapper<Pop>> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
-	return pops_cache_by_type.at(pop_type);
-}
-
 void State::update_gamestate() {
 	clear_pops_aggregate();
 
-	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type) {
 		pops_cache.clear();
 	}
 
@@ -65,13 +57,17 @@ void State::update_gamestate() {
 		coastal |= province.province_definition.is_coastal();
 		add_pops_aggregate(province);
 
-		for (auto const& [pop_type, province_pops_of_type] : province.get_pops_cache_by_type()) {
-			memory::vector<std::reference_wrapper<Pop>>& state_pops_of_type = pops_cache_by_type.at(pop_type);
-			state_pops_of_type.insert(
-				state_pops_of_type.end(),
-				province_pops_of_type.begin(),
-				province_pops_of_type.end()
-			);
+		{
+			pop_type_index_t pop_type_index {};
+			for (auto const& province_pops_of_type : province.get_pops_cache_by_type()) {
+				memory::vector<std::reference_wrapper<Pop>>& state_pops_of_type = pops_cache_by_type[pop_type_index];
+				state_pops_of_type.insert(
+					state_pops_of_type.end(),
+					province_pops_of_type.begin(),
+					province_pops_of_type.end()
+				);
+				++pop_type_index;
+			}
 		}
 	}
 
@@ -178,9 +174,7 @@ bool StateManager::add_state_set(
 			/* TODO: capital province logic */
 			state_set, &capital,
 			std::move(provinces), capital.get_colony_status(),
-			pops_aggregate_deps,
-			strata_keys,
-			pop_type_keys
+			pops_aggregate_deps
 		);
 
 		for (ProvinceInstance& province : state.get_provinces()) {

@@ -9,6 +9,7 @@
 #include "openvic-simulation/population/PopManager.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -81,7 +82,6 @@ bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) 
 	return ret;
 }
 
-
 ProductionType const* ProductionTypeManager::get_good_to_rgo_production_type(GoodDefinition const& key) const {
 	return good_to_rgo_production_type.at(key);
 }
@@ -90,7 +90,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 	GoodDefinitionManager const& good_definition_manager,
 	PopManager const& pop_manager,
 	NodeTools::callback_t<
-		PopType const*,
+		pop_type_index_t,
 		Job::effect_t,
 		fixed_point_t,
 		fixed_point_t
@@ -99,7 +99,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 	return [this, &good_definition_manager, &pop_manager, emplace_callback](ast::NodeCPtr node) mutable -> bool {
 		using enum Job::effect_t;
 
-		std::string_view pop_type {};
+		std::string_view pop_type_identifier {};
 		Job::effect_t effect_type { THROUGHPUT };
 		fixed_point_t effect_multiplier = 1, desired_workforce_share = 1;
 
@@ -107,15 +107,22 @@ node_callback_t ProductionTypeManager::_expect_job(
 			{ "input", INPUT }, { "output", OUTPUT }, { "throughput", THROUGHPUT }
 		};
 
-		bool ret = expect_dictionary_keys(
-			"poptype", ONE_EXACTLY, expect_identifier(assign_variable_callback(pop_type)),
+		if(!expect_dictionary_keys(
+			"poptype", ONE_EXACTLY, expect_identifier(assign_variable_callback(pop_type_identifier)),
 			"effect", ONE_EXACTLY, expect_identifier(expect_mapped_string(effect_map, assign_variable_callback(effect_type))),
 			"effect_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(effect_multiplier)),
 			"amount", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(desired_workforce_share))
-		)(node);
+		)(node)) {
+			return false;
+		}
 
-		PopType const* const found_pop_type = pop_manager.get_pop_type_by_identifier(pop_type);
-		return ret & emplace_callback(found_pop_type, effect_type, effect_multiplier, desired_workforce_share);
+		PopType const* const found_pop_type = pop_manager.get_pop_type_by_identifier(pop_type_identifier);
+		if (found_pop_type == nullptr) {
+			return pop_type_identifier == "artisan" // Victoria 2 misconfiguration
+				? true
+				: false;
+		}
+		return emplace_callback(found_pop_type->index, effect_type, effect_multiplier, desired_workforce_share);
 	};
 }
 
@@ -139,6 +146,7 @@ node_callback_t ProductionTypeManager::_expect_job_list(
 
 bool ProductionTypeManager::add_production_type(
 	GameRulesManager const& game_rules_manager,
+	TypedSpan<pop_type_index_t, const PopType> pop_types,	
 	const std::string_view identifier,
 	std::optional<Job>&& owner_before_move,
 	memory::vector<Job>&& jobs,
@@ -196,24 +204,9 @@ bool ProductionTypeManager::add_production_type(
 			return false;
 		}
 
-		if (owner_before_move->pop_type == nullptr) {
-			spdlog::error_s("Production type {} owner has an invalid pop type.", identifier);
-			return false;
-		}
-
 		if (jobs.empty()) {
 			spdlog::error_s("Production type {} lacks jobs ('employees').", identifier);
 			return false;
-		}
-
-		for (size_t i = 0; i < jobs.size(); i++) {
-			if (jobs[i].pop_type == nullptr) {
-				spdlog::error_s(
-					"Production type {} has invalid pop type in employees[{}].",
-					identifier, i
-				);
-				return false;
-			}
 		}
 	}
 
@@ -240,10 +233,9 @@ bool ProductionTypeManager::add_production_type(
 		if (rgo_owner_sprite <= 0
 			&& template_type == RGO
 			&& owner_after_move.has_value()
-			&& owner_after_move->pop_type != nullptr
 		) {
 			/* Set rgo owner sprite to that of the first RGO owner we find. */
-			rgo_owner_sprite = owner_after_move->pop_type->sprite;
+			rgo_owner_sprite = pop_types[owner_after_move->pop_type_index].sprite;
 		}
 	}
 
@@ -408,6 +400,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 			ret &= add_production_type(
 				game_rules_manager,
+				pop_manager.get_pop_types(),
 				key, std::move(owner), std::move(jobs), template_type, base_workforce_size, std::move(input_goods), output_good,
 				base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
 			);

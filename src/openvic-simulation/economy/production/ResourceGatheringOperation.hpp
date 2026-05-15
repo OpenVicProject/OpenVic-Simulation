@@ -5,9 +5,10 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -40,7 +41,10 @@ namespace OpenVic {
 		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
-		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, employee_count_per_type_cache);
+		memory::FixedVector<
+			pop_size_t,
+			pop_type_index_t
+		> SPAN_PROPERTY(employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
 		void hire();

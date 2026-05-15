@@ -10,6 +10,8 @@
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -39,7 +41,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(industrial_power);
 		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
 
-		OV_IFLATMAP_PROPERTY(PopType, memory::vector<std::reference_wrapper<Pop>>, pops_cache_by_type);
+		memory::FixedVector<
+			memory::vector<std::reference_wrapper<Pop>>,
+			pop_type_index_t
+		> SPAN_PROPERTY(pops_cache_by_type);
 
 		void _update_country();
 
@@ -51,9 +56,7 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 			colony_status_t new_colony_status,
-			PopsAggregateDeps const& pops_aggregate_deps,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys
+			PopsAggregateDeps const& pops_aggregate_deps
 		);
 		State(State&&) = delete;
 		State(State const&) = delete;

@@ -2,10 +2,11 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -41,15 +42,20 @@ TerrainTypeMapping::TerrainTypeMapping(
 
 bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
-	IndexedFlatMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
+	memory::FixedVector<ModifierEffectCache::unit_terrain_effects_t, terrain_type_index_t>& unit_terrain_effects =
 		modifier_manager.modifier_effect_cache.unit_terrain_effects;
 
-	unit_terrain_effects = std::move(decltype(ModifierEffectCache::unit_terrain_effects){get_terrain_types()});
+	unit_terrain_effects = std::move(
+		decltype(ModifierEffectCache::unit_terrain_effects) {
+			generate_values,
+			terrain_type_index_t(get_terrain_type_count())
+		}
+	);
 
 	bool ret = true;
 	for (TerrainType const& terrain_type : get_terrain_types()) {
 		const std::string_view identifier = terrain_type.get_identifier();
-		ModifierEffectCache::unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects.at(terrain_type);
+		ModifierEffectCache::unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects[terrain_type.index];
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.attack, ModifierManager::get_flat_identifier("attack", identifier),
 			FORMAT_x100_1DP_PC_POS, "UA_ATTACK"

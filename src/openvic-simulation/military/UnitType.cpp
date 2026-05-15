@@ -4,8 +4,10 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "modifier/ModifierEffectCache.hpp"
-#include "types/UnitBranchType.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -382,24 +384,34 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
 
-	IndexedFlatMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
+	memory::FixedVector<ModifierEffectCache::regiment_type_effects_t, regiment_type_index_t>& regiment_type_effects =
 		modifier_manager.modifier_effect_cache.regiment_type_effects;
 
-	regiment_type_effects = std::move(decltype(ModifierEffectCache::regiment_type_effects){get_regiment_types()});
+	regiment_type_effects = std::move(
+		decltype(ModifierEffectCache::regiment_type_effects) {
+			generate_values,
+			regiment_type_index_t(get_regiment_type_count())
+		}
+	);
 
 	for (RegimentType const& regiment_type : get_regiment_types()) {
-		generate_stat_modifiers(regiment_type_effects.at(regiment_type), regiment_type.get_identifier());
+		generate_stat_modifiers(regiment_type_effects[regiment_type.index], regiment_type.get_identifier());
 	}
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
 
-	IndexedFlatMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
+	memory::FixedVector<ModifierEffectCache::ship_type_effects_t, ship_type_index_t>& ship_type_effects =
 		modifier_manager.modifier_effect_cache.ship_type_effects;
 
-	ship_type_effects = std::move(decltype(ModifierEffectCache::ship_type_effects){get_ship_types()});
+	ship_type_effects = std::move(
+		decltype(ModifierEffectCache::ship_type_effects) {
+			generate_values,
+			ship_type_index_t(get_ship_type_count())
+		}
+	);
 
 	for (ShipType const& ship_type : get_ship_types()) {
-		generate_stat_modifiers(ship_type_effects.at(ship_type), ship_type.get_identifier());
+		generate_stat_modifiers(ship_type_effects[ship_type.index], ship_type.get_identifier());
 	}
 
 	return ret;

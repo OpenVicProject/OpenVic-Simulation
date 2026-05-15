@@ -2,7 +2,8 @@
 
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct Ideology;
@@ -11,7 +12,7 @@ namespace OpenVic {
 
 	struct CountryParty : HasIdentifierAndColour {
 	private:
-		OV_IFLATMAP_PROPERTY(PartyPolicyGroup, PartyPolicy const*, policies);
+		memory::FixedVector<PartyPolicy const*, party_policy_group_index_t> PROPERTY(policies);
 
 	public:
 		const Date start_date;

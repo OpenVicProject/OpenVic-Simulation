@@ -3,12 +3,14 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 
 namespace OpenVic {
 	struct PopType;
@@ -17,22 +19,22 @@ namespace OpenVic {
 		enum struct effect_t { THROUGHPUT, INPUT, OUTPUT };
 
 	public:
-		PopType const* const pop_type;
+		const pop_type_index_t pop_type_index;
 		const effect_t effect_type;
 		const fixed_point_t effect_multiplier;
 		const fixed_point_t amount;
 		
 		constexpr Job(
-			PopType const* const new_pop_type,
+			const pop_type_index_t new_pop_type_index,
 			const effect_t new_effect_type,
 			const fixed_point_t new_effect_multiplier,
 			const fixed_point_t new_amount
-		) : pop_type { new_pop_type },
+		) : pop_type_index { new_pop_type_index },
 			effect_type { new_effect_type },
 			effect_multiplier { new_effect_multiplier },
 			amount { new_amount } {}
 
-		constexpr Job() : Job(nullptr, effect_t::THROUGHPUT, fixed_point_t::_0, fixed_point_t::_0) {};
+		constexpr Job() : Job({}, effect_t::THROUGHPUT, fixed_point_t::_0, fixed_point_t::_0) {};
 	};
 
 	struct GameRulesManager;
@@ -106,7 +108,7 @@ namespace OpenVic {
 		NodeTools::node_callback_t _expect_job(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
 			NodeTools::callback_t<
-				PopType const*,
+				pop_type_index_t,
 				Job::effect_t,
 				fixed_point_t,
 				fixed_point_t
@@ -119,10 +121,11 @@ namespace OpenVic {
 
 	public:
 		constexpr ProductionTypeManager()
-			: good_to_rgo_production_type { decltype(good_to_rgo_production_type)::create_empty() } {}
+			: good_to_rgo_production_type { decltype(good_to_rgo_production_type){create_empty} } {}
 
 		bool add_production_type(
 			GameRulesManager const& game_rules_manager,
+			TypedSpan<pop_type_index_t, const PopType> pop_types,
 			const std::string_view identifier,
 			std::optional<Job>&& owner,
 			memory::vector<Job>&& jobs,

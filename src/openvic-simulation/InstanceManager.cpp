@@ -3,6 +3,7 @@
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -37,6 +38,7 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_end_date(),
 		new_definition_manager.get_define_manager().get_diplomacy_defines(),
 		new_definition_manager.get_define_manager().get_economy_defines(),
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 		new_definition_manager.get_research_manager().get_invention_manager().get_inventions(),
 		new_game_rules_manager,
 		good_instance_manager.get_good_instances(),
@@ -45,10 +47,22 @@ InstanceManager::InstanceManager(
 		market_instance,
 		new_definition_manager.get_define_manager().get_military_defines(),
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		{
-			new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
-			new_definition_manager.get_politics_manager().get_issue_manager().get_party_policies(),
-			new_definition_manager.get_politics_manager().get_issue_manager().get_reforms()
+		PopsAggregateDeps{
+			ideology_index_t(
+				new_definition_manager.get_politics_manager().get_ideology_manager().get_ideology_count()
+			),
+			party_policy_index_t(
+				new_definition_manager.get_politics_manager().get_issue_manager().get_party_policy_count()
+			),
+			pop_type_index_t(
+				new_definition_manager.get_pop_manager().get_pop_type_count()
+			),
+			reform_index_t(
+				new_definition_manager.get_politics_manager().get_issue_manager().get_reform_count()
+			),
+			strata_index_t(
+				new_definition_manager.get_pop_manager().get_strata_count()
+			)
 		},
 		new_definition_manager.get_pop_manager().get_pop_types(),
 		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
@@ -59,10 +73,22 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_military_manager().get_unit_type_manager()
 	},
 	pops_aggregate_deps {
-		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
-		new_definition_manager.get_politics_manager().get_issue_manager().get_party_policies(),
-		new_definition_manager.get_politics_manager().get_issue_manager().get_reforms()
-	},
+			ideology_index_t(
+				new_definition_manager.get_politics_manager().get_ideology_manager().get_ideology_count()
+			),
+			party_policy_index_t(
+				new_definition_manager.get_politics_manager().get_issue_manager().get_party_policy_count()
+			),
+			pop_type_index_t(
+				new_definition_manager.get_pop_manager().get_pop_type_count()
+			),
+			reform_index_t(
+				new_definition_manager.get_politics_manager().get_issue_manager().get_reform_count()
+			),
+			strata_index_t(
+				new_definition_manager.get_pop_manager().get_strata_count()
+			)
+		},
 	pop_deps {
 		artisanal_producer_deps,
 		market_instance,
@@ -71,13 +97,12 @@ InstanceManager::InstanceManager(
 	rgo_deps {
 		market_instance,
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		new_definition_manager.get_pop_manager().get_pop_types()
+		pop_type_index_t(new_definition_manager.get_pop_manager().get_pop_type_count())
 	},
 	province_instance_deps {
 		new_definition_manager.get_economy_manager().get_building_type_manager(),
 		new_game_rules_manager,
 		pops_aggregate_deps,
-		new_definition_manager.get_pop_manager().get_pop_types(),
 		rgo_deps,
 		new_definition_manager.get_pop_manager().get_stratas()
 	},
@@ -89,6 +114,7 @@ InstanceManager::InstanceManager(
 		good_instance_manager,
 		new_definition_manager.get_define_manager().get_pops_defines(),
 		new_definition_manager.get_pop_manager().get_pop_types(),
+		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		thread_pool
 	},
 	unit_instance_manager {
@@ -213,8 +239,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_economy_manager().get_production_type_manager(),
-		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
-		definition_manager.get_pop_manager().get_stratas(),
+		strata_index_t(definition_manager.get_pop_manager().get_strata_count()),
 		good_instance_manager.get_good_instances(),
 		country_instance_manager.get_country_instances(),
 		map_instance.get_province_instances()
@@ -251,7 +276,9 @@ bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
 		definition_manager.get_define_manager().get_military_defines(),
-		pop_deps
+		pop_deps,
+		definition_manager.get_pop_manager().get_pop_types(),
+		definition_manager.get_politics_manager().get_issue_manager().get_reforms()
 	);
 
 	// It is important that province history is applied before country history as province history includes

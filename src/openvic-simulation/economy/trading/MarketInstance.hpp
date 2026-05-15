@@ -2,11 +2,11 @@
 
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct BuyUpToOrder;
 	struct CountryDefines;
-	struct GoodDefinition;
 	struct GoodInstance;
 	struct GoodInstanceManager;
 	struct MarketSellOrder;
@@ -26,11 +26,11 @@ namespace OpenVic {
 			country_defines { new_country_defines },
 			good_instance_manager { new_good_instance_manager } {}
 
-		bool get_is_available(GoodDefinition const& good_definition) const;
-		fixed_point_t get_max_next_price(GoodDefinition const& good_definition) const;
-		fixed_point_t get_min_next_price(GoodDefinition const& good_definition) const;
-		fixed_point_t get_max_money_to_allocate_to_buy_quantity(GoodDefinition const& good_definition, const fixed_point_t quantity) const;
-		GoodInstance const& get_good_instance(GoodDefinition const& good_definition) const;
+		bool get_is_available(const good_index_t good_index) const;
+		fixed_point_t get_max_next_price(const good_index_t good_index) const;
+		fixed_point_t get_min_next_price(const good_index_t good_index) const;
+		fixed_point_t get_max_money_to_allocate_to_buy_quantity(const good_index_t good_index, const fixed_point_t quantity) const;
+		GoodInstance const& get_good_instance(const good_index_t good_index) const;
 		void place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order);
 		void place_market_sell_order(MarketSellOrder&& market_sell_order, memory::vector<fixed_point_t>& reusable_vector);
 		void execute_orders();
