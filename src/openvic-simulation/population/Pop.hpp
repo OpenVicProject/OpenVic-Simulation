@@ -18,22 +18,22 @@
 #include <type_safe/strong_typedef.hpp>
 
 namespace OpenVic {
-	struct BaseIssue;
 	struct BuyResult;
 	struct CountryInstance;
 	struct CountryParty;
 	struct Culture;
 	struct GoodDefinition;
 	struct Ideology;
-	struct IssueManager;
 	struct MarketInstance;
 	struct MilitaryDefines;
+	struct PartyPolicy;
 	struct PopDeps;
 	struct PopManager;
 	struct PopType;
 	struct PopValuesFromProvince;
 	struct ProvinceInstance;
 	struct RebelType;
+	struct Reform;
 	struct Religion;
 	struct SellResult;
 
@@ -125,13 +125,13 @@ namespace OpenVic {
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
 		// equivalents of these distributions will have a total size equal to their total population size.
 		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
+		OV_IFLATMAP_PROPERTY(PartyPolicy, fixed_point_t, supporter_equivalents_by_party_policy);
+		OV_IFLATMAP_PROPERTY(Reform, fixed_point_t, supporter_equivalents_by_reform);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
 	
 	public:
 		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
 		// the support as a proportion of 1.0
-		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
 		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
 
 		static constexpr pop_size_t size_denominator = 200000;
@@ -202,7 +202,6 @@ namespace OpenVic {
 		Pop(
 			ProvinceInstance& new_location,
 			PopBase const& pop_base,
-			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 			PopDeps const& pop_deps,
 			const pop_id_in_province_t new_id_in_province
 		);
@@ -211,7 +210,7 @@ namespace OpenVic {
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
-		void setup_pop_test_values(IssueManager const& issue_manager);
+		void setup_pop_test_values();
 		bool convert_to_equivalent();
 		void update_location_based_attributes();
 

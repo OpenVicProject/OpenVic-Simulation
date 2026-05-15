@@ -10,7 +10,6 @@
 
 namespace OpenVic {
 	struct BuildingTypeManager;
-	struct IssueManager;
 	struct MapDefinition;
 	struct MarketInstance;
 	struct MilitaryDefines;
@@ -78,7 +77,6 @@ namespace OpenVic {
 			ProvinceHistoryManager const& history_manager,
 			const Date date,
 			CountryInstanceManager& country_manager,
-			IssueManager const& issue_manager,
 			MilitaryDefines const& military_defines,
 			PopDeps const& pop_deps
 		);

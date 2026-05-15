@@ -17,9 +17,9 @@ namespace OpenVic {
 	struct CountryInstance;
 	struct CountryParty;
 	struct Culture;
-	struct Ideology;
 	struct MapDefinition;
 	struct Pop;
+	struct PopsAggregateDeps;
 	struct PopType;
 	struct ProvinceInstance;
 	struct Religion;
@@ -51,9 +51,9 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 			colony_status_t new_colony_status,
+			PopsAggregateDeps const& pops_aggregate_deps,
 			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
-			forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const PopType> pop_type_keys
 		);
 		State(State&&) = delete;
 		State(State const&) = delete;
@@ -99,9 +99,9 @@ namespace OpenVic {
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
+			PopsAggregateDeps const& pops_aggregate_deps,
 			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
-			forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const PopType> pop_type_keys
 		);
 
 	public:
@@ -111,9 +111,9 @@ namespace OpenVic {
 		bool generate_states(
 			MapDefinition const& map_definition,
 			MapInstance& map_instance,
+			PopsAggregateDeps const& pops_aggregate_deps,
 			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys,
-			forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const PopType> pop_type_keys
 		);
 
 		void reset();

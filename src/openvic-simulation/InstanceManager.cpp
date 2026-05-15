@@ -38,7 +38,6 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_diplomacy_defines(),
 		new_definition_manager.get_define_manager().get_economy_defines(),
 		new_definition_manager.get_research_manager().get_invention_manager().get_inventions(),
-		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 		new_game_rules_manager,
 		good_instance_manager.get_good_instances(),
 		good_instance_manager,
@@ -46,6 +45,11 @@ InstanceManager::InstanceManager(
 		market_instance,
 		new_definition_manager.get_define_manager().get_military_defines(),
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		{
+			new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+			new_definition_manager.get_politics_manager().get_issue_manager().get_party_policies(),
+			new_definition_manager.get_politics_manager().get_issue_manager().get_reforms()
+		},
 		new_definition_manager.get_pop_manager().get_pop_types(),
 		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
 		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
@@ -54,9 +58,15 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		new_definition_manager.get_military_manager().get_unit_type_manager()
 	},
+	pops_aggregate_deps {
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		new_definition_manager.get_politics_manager().get_issue_manager().get_party_policies(),
+		new_definition_manager.get_politics_manager().get_issue_manager().get_reforms()
+	},
 	pop_deps {
 		artisanal_producer_deps,
-		market_instance
+		market_instance,
+		pops_aggregate_deps
 	},
 	rgo_deps {
 		market_instance,
@@ -66,7 +76,7 @@ InstanceManager::InstanceManager(
 	province_instance_deps {
 		new_definition_manager.get_economy_manager().get_building_type_manager(),
 		new_game_rules_manager,
-		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		pops_aggregate_deps,
 		new_definition_manager.get_pop_manager().get_pop_types(),
 		rgo_deps,
 		new_definition_manager.get_pop_manager().get_stratas()
@@ -240,8 +250,6 @@ bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
-		// TODO - the following argument is for generating test pop attributes
-		definition_manager.get_politics_manager().get_issue_manager(),
 		definition_manager.get_define_manager().get_military_defines(),
 		pop_deps
 	);
@@ -254,9 +262,9 @@ bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 	ret &= map_instance.get_state_manager().generate_states(
 		definition_manager.get_map_definition(),
 		map_instance,
+		pops_aggregate_deps,
 		definition_manager.get_pop_manager().get_stratas(),
-		definition_manager.get_pop_manager().get_pop_types(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
+		definition_manager.get_pop_manager().get_pop_types()
 	);
 
 	bool all_has_state = true;

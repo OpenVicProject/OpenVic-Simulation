@@ -1,8 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BuildingType;
@@ -11,7 +12,6 @@ namespace OpenVic {
 	struct Crime;
 	struct DiplomacyDefines;
 	struct EconomyDefines;
-	struct Ideology;
 	struct Invention;
 	struct GameRulesManager;
 	struct GoodInstance;
@@ -35,7 +35,6 @@ namespace OpenVic {
 		DiplomacyDefines const& diplomacy_defines;
 		EconomyDefines const& economy_defines;
 		forwardable_span<const Invention> inventions;
-		forwardable_span<const Ideology> ideologies;
 		GameRulesManager const& game_rules_manager;
 		forwardable_span<const GoodInstance> good_instances;
 		GoodInstanceManager& good_instance_manager;
@@ -43,8 +42,9 @@ namespace OpenVic {
 		MarketInstance& market_instance;
 		MilitaryDefines const& military_defines;
 		ModifierEffectCache const& modifier_effect_cache;
+		const PopsAggregateDeps pops_aggregate_deps;
 		forwardable_span<const PopType> pop_types;
-		forwardable_span<const ReformGroup> reforms;
+		forwardable_span<const ReformGroup> reform_groups;
 		forwardable_span<const RegimentType> regiment_types;
 		forwardable_span<const ShipType> ship_types;
 		forwardable_span<const Strata> stratas;

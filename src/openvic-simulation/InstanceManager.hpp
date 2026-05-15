@@ -21,6 +21,7 @@
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/population/PopDeps.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
@@ -46,6 +47,7 @@ namespace OpenVic {
 		
 		ArtisanalProducerDeps artisanal_producer_deps;
 		CountryInstanceDeps country_instance_deps;
+		PopsAggregateDeps pops_aggregate_deps;
 		PopDeps pop_deps;
 		ResourceGatheringOperationDeps rgo_deps;
 		ProvinceInstanceDeps province_instance_deps;

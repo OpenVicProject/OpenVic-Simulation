@@ -35,7 +35,6 @@ namespace OpenVic {
 	struct GoodDefinition;
 	struct Ideology;
 	struct InstanceManager;
-	struct IssueManager;
 	struct MapInstance;
 	struct MilitaryDefines;
 	struct PopDeps;
@@ -228,7 +227,7 @@ namespace OpenVic {
 
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
-		void setup_pop_test_values(IssueManager const& issue_manager);
+		void setup_pop_test_values();
 		memory::colony<Pop>& get_mutable_pops();
 	private:
 		template<typename T>
