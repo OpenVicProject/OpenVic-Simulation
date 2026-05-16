@@ -9,7 +9,7 @@
 
 namespace OpenVic {
 	template<
-		derived_from_specialization_of<type_safe::strong_typedef> IndexType,
+		is_strongly_typed IndexType,
 		typename ValueType,
 		size_t _Extent = std::dynamic_extent
 	>
@@ -17,16 +17,16 @@ namespace OpenVic {
 	public:
 		using forwardable_span<ValueType, _Extent>::forwardable_span;
 
-		constexpr IndexType size() const {
+		[[nodiscard]] constexpr IndexType size() const {
 			return IndexType(forwardable_span<ValueType, _Extent>::size());
 		}
 
-		constexpr forwardable_span<ValueType, _Extent>::reference operator[](const IndexType _Off) const {
-			assert(_Off < size());
-			return forwardable_span<ValueType, _Extent>::operator[](static_cast<std::size_t>(type_safe::get(_Off)));
+		[[nodiscard]] constexpr forwardable_span<ValueType, _Extent>::reference operator[](const IndexType index) const {
+			assert(index < size());
+			return forwardable_span<ValueType, _Extent>::operator[](static_cast<std::size_t>(type_safe::get(index)));
 		}
 
-		constexpr operator TypedSpan<IndexType, const ValueType, _Extent>() {
+		[[nodiscard]] constexpr operator TypedSpan<IndexType, const ValueType, _Extent>() const {
 			return TypedSpan<IndexType, const ValueType, _Extent>{*this};
 		}
 	};
