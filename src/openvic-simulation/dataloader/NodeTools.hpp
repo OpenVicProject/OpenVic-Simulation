@@ -70,7 +70,7 @@ using namespace std::string_view_literals;
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
 	constexpr void reserve_more(reservable auto& t, size_t size) {
-		t.reserve(t.capacity() + size);
+		t.reserve(t.size() + size);
 	}
 
 	namespace NodeTools {
