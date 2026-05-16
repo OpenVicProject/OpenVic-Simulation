@@ -38,13 +38,13 @@ namespace OpenVic::_detail {
 		/**
 		* @brief Creates an uninitialised vector with fixed capacity
 		*/
-		explicit FixedVector(const size_t capacity)
+		constexpr explicit FixedVector(const size_t capacity)
 			: _max_size(capacity),
 			_size(0),
 			_allocator(),
 			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {}
 
-		FixedVector(const size_t size, T const& value_for_all_indices)
+		constexpr FixedVector(const size_t size, T const& value_for_all_indices)
 			: _max_size(size),
 			_size(size),
 			_allocator(),
@@ -58,7 +58,7 @@ namespace OpenVic::_detail {
 		requires (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
-		FixedVector(const size_t size, GeneratorTemplateType&& generator)
+		constexpr FixedVector(const size_t size, GeneratorTemplateType&& generator)
 			: _max_size(size),
 			_size(size),
 			_allocator(),
@@ -87,7 +87,7 @@ namespace OpenVic::_detail {
 				)
 			};
 		}
-		FixedVector(const size_t size, GeneratorTemplateType&& generator)
+		constexpr FixedVector(const size_t size, GeneratorTemplateType&& generator)
 			: _max_size(size),
 			_size(size),
 			_allocator(),
@@ -111,61 +111,61 @@ namespace OpenVic::_detail {
 		FixedVector(FixedVector&&) = delete;
 		FixedVector& operator=(FixedVector&&) = delete;
 
-		~FixedVector() {
+		constexpr ~FixedVector() {
 			clear();
 			allocator_traits::deallocate(_allocator, _data_start_ptr, _max_size);
 		}
 		
 		using iterator = T*;
-		using const_iterator = const T*;
+		using const_iterator = T const*;
 
-		iterator begin() { return _data_start_ptr; }
-		const_iterator begin() const { return _data_start_ptr; }
-		const_iterator cbegin() const { return _data_start_ptr; }
+		constexpr iterator begin() { return _data_start_ptr; }
+		constexpr const_iterator begin() const { return _data_start_ptr; }
+		constexpr const_iterator cbegin() const { return _data_start_ptr; }
 
-		iterator end() { return begin() + _size; }
-		const_iterator end() const { return begin() + _size; }
-		const_iterator cend() const { return cbegin() + _size; }
+		constexpr iterator end() { return begin() + _size; }
+		constexpr const_iterator end() const { return begin() + _size; }
+		constexpr const_iterator cend() const { return cbegin() + _size; }
 		
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		reverse_iterator rbegin() { return reverse_iterator(end()); }
-		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
-		const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
+		constexpr reverse_iterator rbegin() { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
 
-		reverse_iterator rend() { return reverse_iterator(begin()); }
-		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
-		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
+		constexpr reverse_iterator rend() { return reverse_iterator(begin()); }
+		constexpr const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+		constexpr const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
 
-		T& operator[](const size_t index) {
+		constexpr T& operator[](const size_t index) {
 			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _data_start_ptr[index];
 		}
-		const T& operator[](const size_t index) const {
+		constexpr T const& operator[](const size_t index) const {
 			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _data_start_ptr[index];
 		}
 
-		T& front() {
+		constexpr T& front() {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *begin();
 		}
-		const T& front() const {
+		constexpr T const& front() const {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *cbegin();
 		}
-		T& back() {
+		constexpr T& back() {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(end()-1);
 		}
-		const T& back() const {
+		constexpr T const& back() const {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(cend()-1);
 		}
 
 		template <typename... Args>
-		iterator emplace_back(Args&&... args) {
+		constexpr iterator emplace_back(Args&&... args) {
 			if (_size >= _max_size) {
 				return end();
 			}
@@ -178,7 +178,7 @@ namespace OpenVic::_detail {
 			return end()-1;
 		}
 
-		void pop_back() {
+		constexpr void pop_back() {
     		if (_size > 0) {
 				allocator_traits::destroy(
 					_allocator,
@@ -188,7 +188,7 @@ namespace OpenVic::_detail {
 			}
 		}
 
-		void clear() {
+		constexpr void clear() {
 			for (iterator it = end(); it != begin(); ) {
 				--it;
 				allocator_traits::destroy(
