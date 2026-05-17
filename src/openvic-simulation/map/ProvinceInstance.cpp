@@ -284,6 +284,12 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	}
 
 	if (controller != nullptr) {
+		controller->make_room_for_province_modifier_sum(modifier_sum);
+	}
+}
+
+void ProvinceInstance::update_country_modifier_sum() {
+	if (controller != nullptr) {
 		controller->contribute_province_modifier_sum(modifier_sum);
 	}
 }
