@@ -1840,6 +1840,10 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	// TODO - calculate stats for each unit type (locked and unlocked)
 }
 
+void CountryInstance::make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum) {
+	modifier_sum.make_room_for(province_modifier_sum);
+}
+
 void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
 	modifier_sum.add_modifier_sum(province_modifier_sum);
 }
