@@ -686,6 +686,7 @@ namespace OpenVic {
 
 	public:
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		constexpr void for_each_contributing_modifier(
