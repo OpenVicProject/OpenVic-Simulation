@@ -1,41 +1,21 @@
 #pragma once
 
 #include <cassert>
-#include <charconv>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <limits>
-#include <string_view>
-#include <system_error>
-#include <type_traits>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-#include <type_safe/strong_typedef.hpp>
-
-#include "openvic-simulation/types/StackString.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/string/CharConv.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/core/Math.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
-
-/* Sin lookup table */
-#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
-
-/* Base e exponential lookup table */
-#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"
-
-/* Base 2001 exponential lookup table */
-#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
 
 namespace OpenVic {
 	enum class midpoint_rounding { AWAY_ZERO, TO_ZERO };
+	
+	template<typename T>
+	concept integral_max_size_4 = std::integral<T> && sizeof(T) <= 4;
 
 	struct fixed_point_t {
 		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
@@ -59,17 +39,16 @@ namespace OpenVic {
 		 *   overflowing. For larger values this will not work and the result will be missing its most significant bits. */
 
 	private:
-		value_type PROPERTY_RW_CUSTOM_NAME(value, get_raw_value, set_raw_value);
-
-		static_assert(_detail::LUT::SIN_PRECISION == PRECISION);
-		static_assert(_detail::LUT::_2_16_EXP_e_DIVISOR == 1 << PRECISION);
-		static_assert(_detail::LUT::_2_16_EXP_2001_DIVISOR == 1 << PRECISION);
-
+		value_type value;
+	public:
+		[[nodiscard]] constexpr value_type const& get_raw_value() const {
+			return value;
+		}
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		OV_ALWAYS_INLINE constexpr fixed_point_t get_frac() const {
 			return parse_raw(value & FRAC_MASK);
 		}
-
+	private:
 		struct raw_value_t {
 			explicit raw_value_t() = default;
 		};
@@ -147,41 +126,12 @@ namespace OpenVic {
 			return value <=> static_cast<value_type>(rhs) << PRECISION;
 		}
 
-		OV_SPEED_INLINE constexpr fixed_point_t sin() const {
-			using namespace _detail::LUT;
-
-			value_type num = (*this % pi2 * one_div_pi2).get_raw_value();
-
-			const bool negative = num < 0;
-			if (negative) {
-				num = -num;
-			}
-
-			const value_type index = num >> SIN_SHIFT;
-			const value_type a = SIN[index];
-			const value_type b = SIN[index + 1];
-
-			const value_type fraction = (num - (index << SIN_SHIFT)) << SIN_COUNT_LOG2;
-			const value_type result = a + (((b - a) * fraction) >> SIN_PRECISION);
-			return !negative ? parse_raw(result) : parse_raw(-result);
-		}
-
-		OV_SPEED_INLINE constexpr fixed_point_t cos() const {
-			return (*this + pi_half).sin();
-		}
-
 		OV_SPEED_INLINE constexpr bool is_negative() const {
 			return value < 0;
 		}
 
 		OV_SPEED_INLINE constexpr fixed_point_t abs() const {
 			return !is_negative() ? parse_raw(value) : parse_raw(-value);
-		}
-
-		OV_SPEED_INLINE constexpr fixed_point_t sqrt() const {
-			return !is_negative()
-				? parse_raw(OpenVic::sqrt(static_cast<uint64_t>(value) << PRECISION))
-				: _0;
 		}
 
 		OV_SPEED_INLINE constexpr bool is_integer() const {
@@ -196,19 +146,15 @@ namespace OpenVic {
 			return value >> PRECISION;
 		}
 
+		OV_SPEED_INLINE void warn_if_truncated() const;
+
 		template<std::integral T>
 		OV_SPEED_INLINE explicit constexpr operator T() const {
-#ifdef DEV_ENABLED
+			#ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
-				if (OV_unlikely(value != 0 && abs() < fixed_point_t::_1)) {
-					spdlog::warn_s(
-						"0 < abs(Fixed point) < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
-						get_raw_value(),
-						static_cast<float>(*this)
-					);
-				}
+				warn_if_truncated();
 			}
-#endif
+			#endif
 			return unsafe_truncate<T>();
 		}
 
@@ -219,21 +165,6 @@ namespace OpenVic {
 		template<std::integral T>
 		OV_SPEED_INLINE constexpr T truncate() const {
 			return static_cast<T>(*this);
-		}
-		
-		template<is_strongly_typed StrongType>
-		OV_SPEED_INLINE static constexpr StrongType multiply_truncate(StrongType const& integer, fixed_point_t const& fp) {
-			return StrongType(multiply_truncate(
-				type_safe::get(integer),
-				fp
-			));
-		}
-
-		template<std::integral T>
-		OV_SPEED_INLINE static constexpr T multiply_truncate(T const& integer, fixed_point_t const& fp) {
-			return static_cast<T>(
-				(static_cast<value_type>(integer) * fp.get_raw_value()) >> PRECISION
-			);
 		}
 
 		template<std::floating_point T>
@@ -323,220 +254,26 @@ namespace OpenVic {
 			return static_cast<T>(round_to_int64<T>((value / static_cast<T>(ONE)) * T { 100000 })) / T { 100000 };
 		}
 
-		OV_SPEED_INLINE constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
-			if (first == nullptr || first >= last) {
-				return { last, std::errc::value_too_large };
-			}
-
-			if (is_negative()) {
-				*first = '-';
-				++first;
-				if (last - first <= 1) {
-					return { last, std::errc::value_too_large };
-				}
-			}
-
-			std::to_chars_result result {};
-			if (decimal_places == static_cast<size_t>(-1)) {
-				result = OpenVic::to_chars(first, last, abs().unsafe_truncate<int64_t>());
-				if (OV_unlikely(result.ec != std::errc {})) {
-					return result;
-				}
-				if (OV_unlikely(last - result.ptr <= 1)) {
-					return result;
-				}
-
-				fixed_point_t frac = abs().get_frac();
-				if (frac != _0) {
-					*result.ptr = '.';
-					++result.ptr;
-					do {
-						if (OV_unlikely(last - result.ptr <= 1)) {
-							return { last, std::errc::value_too_large };
-						}
-						frac *= 10;
-						*result.ptr = static_cast<char>('0' + frac.unsafe_truncate<int64_t>());
-						++result.ptr;
-						frac = frac.get_frac();
-					} while (frac != _0);
-				}
-				return result;
-			}
-
-			// Add the specified number of decimal places, potentially 0 (so no decimal point)
-			fixed_point_t err = _0_50;
-			for (size_t i = decimal_places; i > 0; --i) {
-				err /= 10;
-			}
-			fixed_point_t val = this->abs() + err;
-
-
-			result = OpenVic::to_chars(first, last, val.unsafe_truncate<int64_t>());
-			if (OV_unlikely(result.ec != std::errc {})) {
-				return result;
-			}
-
-			if (decimal_places > 0) {
-				if (OV_unlikely(last - result.ptr <= 1)) {
-					return result;
-				}
-				val = val.get_frac();
-				*result.ptr = '.';
-				result.ptr++;
-				do {
-					if (OV_unlikely(last - result.ptr <= 1)) {
-						return result;
-					}
-					val *= 10;
-					*result.ptr = static_cast<char>('0' + val.unsafe_truncate<int64_t>());
-					++result.ptr;
-					val = val.get_frac();
-				} while (--decimal_places > 0);
-			}
-			return result;
-		}
-
-		struct stack_string;
-		OV_SPEED_INLINE  constexpr stack_string to_array(size_t decimal_places = -1) const;
-
-		struct stack_string final : StackString<25> {
-		protected:
-			using StackString::StackString;
-			friend OV_SPEED_INLINE constexpr stack_string fixed_point_t::to_array(size_t decimal_places) const;
-		};
-
-		OV_SPEED_INLINE memory::string to_string(size_t decimal_places = -1) const {
-			stack_string result = to_array(decimal_places);
-			if (OV_unlikely(result.empty())) {
-				return {};
-			}
-
-			return result;
-		}
-
 		// Deterministic
 		OV_ALWAYS_INLINE static constexpr fixed_point_t parse_raw(value_type value) {
 			return fixed_point_t { raw_value, value };
 		}
 
+		OV_SPEED_INLINE static constexpr fixed_point_t parse_capped(const int32_t value) { return fixed_point_t(value); }
+
 		template<std::integral T>
-		static constexpr fixed_point_t parse_capped(const T value) {
-			fixed_point_t result;
-			if (value > std::numeric_limits<int32_t>::max()) {
-				if (value >= fixed_point_t::max.truncate<T>()) {
-					if (std::is_constant_evaluated()) {
-						assert(value >= fixed_point_t::max.truncate<T>());
-					} else {
-						spdlog::error_s("parse_capped value exceeded int32 max. Falling back to fixed_point_t::max");
-					}
-					result = fixed_point_t::max;
-				} else {
-					if (!std::is_constant_evaluated()) {
-						spdlog::warn_s("parse_capped value exceeded int32 max. It still fits but exceeds fixed_point_t::usable_max");
-					}
-					result = fixed_point_t::parse_raw(value << PRECISION);
-				}
-			} else {
-				result = fixed_point_t(static_cast<int32_t>(value));
-			}
+		requires (sizeof(T) < 4)
+		OV_SPEED_INLINE static constexpr  fixed_point_t parse_capped(const T value) { return fixed_point_t(static_cast<int32_t>(value)); }
 
-			return result;
-		}
+		static fixed_point_t parse_capped(const int64_t value);
+		static fixed_point_t parse_capped(const uint64_t value);
 		
-		template<is_strongly_typed StrongType>
-		OV_SPEED_INLINE static constexpr fixed_point_t from_fraction(StrongType const& numerator, StrongType const& denominator) {
-			return from_fraction(type_safe::get(numerator), type_safe::get(denominator));
-		}
-
-		template<integral_max_size_4 TNumerator, integral_max_size_4 TDenominator>
-		OV_SPEED_INLINE static constexpr fixed_point_t from_fraction(const TNumerator numerator, const TDenominator denominator) {
-			return parse_raw((static_cast<value_type>(numerator) << PRECISION) / static_cast<value_type>(denominator));
-		}
-
-		static constexpr fixed_point_t from_fraction(const int64_t numerator, const int64_t denominator) {
-			assert(numerator < 140737488355328LL); //2^47
-			assert(numerator >= -140737488355328LL); //- 2^47
-			return parse_raw((numerator << PRECISION) / denominator);
-		}
-
-		static constexpr fixed_point_t from_fraction(const uint64_t numerator, const uint64_t denominator) {
-			assert(numerator < 281474976710656ULL); //2^48
-			return parse_raw((numerator << PRECISION) / denominator);
-		}
-
-		// Deterministic
-		OV_SPEED_INLINE constexpr std::from_chars_result from_chars(char const* begin, char const* end) {
-			if (begin == nullptr || begin >= end) {
-				return { begin, std::errc::invalid_argument };
-			}
-
-			if (char const& c = *(end - 1); c == 'f' || c == 'F') {
-				--end;
-				if (begin == end) {
-					return { begin, std::errc::invalid_argument };
-				}
-			}
-
-			char const* dot_pointer = begin;
-			while (*dot_pointer != '.' && ++dot_pointer != end) {}
-			// "."
-			if (dot_pointer == begin && dot_pointer + 1 == end) {
-				return { begin, std::errc::invalid_argument };
-			}
-
-			fixed_point_t result = 0;
-			std::from_chars_result from_chars = {};
-			if (dot_pointer != begin) {
-				// Non-empty integer part, may be negative
-				from_chars = from_chars_integer(begin, dot_pointer, result);
-			}
-
-			if (from_chars.ec != std::errc{}) {
-				return from_chars;
-			}
-
-			if (dot_pointer + 1 < end) {
-				// Non-empty fractional part, cannot be negative
-				fixed_point_t adder;
-				from_chars = from_chars_fraction(dot_pointer + 1, end, adder);
-				result += result.is_negative() || (*begin == '-' && result == _0) ? -adder : adder;
-			}
-
-			if (from_chars.ec != std::errc{}) {
-				return { begin, from_chars.ec };
-			}
-
-			value = result.value;
-			return from_chars;
-		}
-
-		OV_SPEED_INLINE constexpr std::from_chars_result from_chars_with_plus(char const* begin, char const* end) {
-			if (begin && *begin == '+') {
-				begin++;
-				if (begin < end && *begin == '-') {
-					return std::from_chars_result { begin, std::errc::invalid_argument };
-				}
-			}
-
-			return from_chars(begin, end);
-		}
-
-		// Deterministic
-		OV_SPEED_INLINE static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
-			fixed_point_t value = 0;
-			std::from_chars_result result = value.from_chars_with_plus(str, end);
-			if (successful) {
-				*successful = result.ec == std::errc {};
-			}
-			return value;
-		}
-
-		OV_SPEED_INLINE static constexpr fixed_point_t parse(char const* str, size_t length, bool* successful = nullptr) {
-			return parse(str, str + length, successful);
-		}
-
-		OV_SPEED_INLINE static constexpr fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
-			return parse(str.data(), str.length(), successful);
+		template<std::integral T>
+		requires (sizeof(T) >= 4)
+		static fixed_point_t parse_capped(const T value) {
+			return std::is_signed_v<T>
+				? parse_capped(static_cast<int64_t>(value))
+				: parse_capped(static_cast<uint64_t>(value));
 		}
 
 		// Not Deterministic
@@ -544,32 +281,7 @@ namespace OpenVic {
 			return parse_raw(value * ONE + 0.5f * (value < 0 ? -1 : 1));
 		}
 
-		// Not Deterministic
-		OV_SPEED_INLINE static fixed_point_t parse_unsafe(char const* value) {
-			char* endpointer;
-			double double_value = std::strtod(value, &endpointer);
-
-			if (*endpointer != '\0') {
-				spdlog::error_s("Unsafe fixed point parse failed to parse the end of a string: \"{}\"", endpointer);
-			}
-
-			value_type integer_value = static_cast<long>(double_value * ONE + 0.5 * (double_value < 0 ? -1 : 1));
-
-			return parse_raw(integer_value);
-		}
-
-		OV_SPEED_INLINE explicit operator memory::string() const {
-			return to_string();
-		}
-
-		friend std::ostream& operator<<(std::ostream& stream, fixed_point_t const& obj) {
-			stack_string result = obj.to_array();
-			if (OV_unlikely(result.empty())) {
-				return stream;
-			}
-
-			return stream << static_cast<std::string_view>(result);
-		}
+		friend std::ostream& operator<<(std::ostream& stream, fixed_point_t const& obj);
 
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
 			return parse_raw(-obj.value);
@@ -680,21 +392,6 @@ namespace OpenVic {
 			return *this;
 		}
 
-		template<is_strongly_typed StrongType>
-		OV_SPEED_INLINE constexpr fixed_point_t mul_div(StrongType const& numerator, StrongType const& denominator) const {
-			return mul_div(type_safe::get(numerator), type_safe::get(denominator));
-		}
-
-		template<std::integral T>
-		OV_SPEED_INLINE constexpr fixed_point_t mul_div(T const& numerator, T const& denominator) const {
-			return parse_raw(value * numerator / denominator);
-		}
-
-		//Preserves accuracy. Performing a normal multiplication of small values results in 0.
-		OV_SPEED_INLINE constexpr static fixed_point_t mul_div(fixed_point_t const& a, fixed_point_t const& b, fixed_point_t const& denominator) {
-			return a.mul_div(b.value, denominator.value);
-		}
-
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value % rhs.value);
 		}
@@ -743,93 +440,12 @@ namespace OpenVic {
 			return static_cast<T>(*this) <=> rhs;
 		}
 
-	private:
-		// Deterministic
-		// Can produce negative values
-		OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_integer(char const* str, char const* const end, fixed_point_t& value) {
-			int64_t parsed_value = 0;
-			std::from_chars_result result = string_to_int64(str, end, parsed_value);
-			if (result.ec == std::errc{}) {
-				if (parsed_value > std::numeric_limits<int32_t>::max()) {
-					result.ec = std::errc::value_too_large;
-				} else {
-					value = fixed_point_t(static_cast<int32_t>(parsed_value));
-				}
-			}
-			return result;
-		}
-
-		// Deterministic
-		// Cannot produce negative values
-		OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_fraction(char const* begin, char const* end, fixed_point_t& value) {
-			if (begin && *begin == '-') {
-				return { begin, std::errc::invalid_argument };
-			}
-
-			end = end - begin > PRECISION ? begin + PRECISION : end;
-			uint64_t parsed_value;
-			std::from_chars_result result = string_to_uint64(begin, end, parsed_value);
-			if (result.ec != std::errc{}) {
-				return result;
-			}
-
-			for (ptrdiff_t remaining_shift = PRECISION - (end - begin); remaining_shift > 0; remaining_shift--) {
-				parsed_value *= 10;
-			}
-			uint64_t decimal = pow(static_cast<uint64_t>(10), PRECISION);
-			int64_t ret = 0;
-			for (int i = PRECISION - 1; i >= 0; --i) {
-				decimal >>= 1;
-				if (parsed_value >= decimal) {
-					parsed_value -= decimal;
-					ret |= 1 << i;
-				}
-			}
-			value = parse_raw(ret);
-			return result;
-		}
-
-		template<size_t N, std::array<int64_t, N> EXP_LUT>
-		OV_SPEED_INLINE static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {
-			const bool negative = x.is_negative();
-			value_type bits = negative ? -x.value : x.value;
-			fixed_point_t result = _1;
-
-			for (size_t index = 0; bits != 0 && index < EXP_LUT.size(); ++index, bits >>= 1) {
-				if (bits & 1LL) {
-					result *= parse_raw(EXP_LUT[index]);
-				}
-			}
-
-			if (bits != 0) {
-				spdlog::error_s("Fixed point exponential overflow!");
-			}
-
-			if (negative) {
-				return _1 / result;
-			} else {
-				return result;
-			}
-		}
-
 	public:
-		OV_SPEED_INLINE static constexpr fixed_point_t exp(fixed_point_t const& x) {
-			return _exp_internal<_detail::LUT::_2_16_EXP_e.size(), _detail::LUT::_2_16_EXP_e>(x);
-		}
-
-		OV_SPEED_INLINE static constexpr fixed_point_t exp_2001(fixed_point_t const& x) {
-			return _exp_internal<_detail::LUT::_2_16_EXP_2001.size(), _detail::LUT::_2_16_EXP_2001>(x);
-		}
+		static fixed_point_t exp(fixed_point_t const& x);
+		static fixed_point_t exp_2001(fixed_point_t const& x);
 	};
 
 	static_assert(sizeof(fixed_point_t) == fixed_point_t::SIZE, "fixed_point_t is not 8 bytes");
-
-	OV_SPEED_INLINE constexpr fixed_point_t::stack_string fixed_point_t::to_array(size_t decimal_places) const {
-		stack_string str {};
-		std::to_chars_result result = to_chars(str._array.data(), str._array.data() + str._array.size(), decimal_places);
-		str._string_size = result.ptr - str.data();
-		return str;
-	}
 
 	inline constexpr fixed_point_t fixed_point_t::max = parse_raw(std::numeric_limits<value_type>::max());
 	inline constexpr fixed_point_t fixed_point_t::min = parse_raw(std::numeric_limits<value_type>::min());
@@ -857,11 +473,6 @@ namespace OpenVic {
 	inline constexpr fixed_point_t fixed_point_t::deg2rad = parse_raw(1143LL);
 	inline constexpr fixed_point_t fixed_point_t::rad2deg = parse_raw(3754936LL);
 	inline constexpr fixed_point_t fixed_point_t::e = parse_raw(178145LL);
-
-	template<>
-	[[nodiscard]] OV_SPEED_INLINE constexpr fixed_point_t abs(fixed_point_t num) {
-		return num.abs();
-	}
 }
 
 template<>

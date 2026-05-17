@@ -25,6 +25,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 
 #include "../types/Colour.hpp" // IWYU pragma: keep
@@ -441,7 +442,7 @@ TEST_CASE(
 		std::string_view sv = ptr->value().view();
 
 		fixed_point_t check = 0;
-		std::from_chars_result result = check.from_chars(sv.data(), sv.data() + sv.size());
+		std::from_chars_result result = fp::from_chars(check, sv.data(), sv.data() + sv.size());
 		CHECK_IF(result.ec == std::errc {});
 		else {
 			return false;
@@ -495,7 +496,7 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 				if (auto const* id = dryad::node_try_cast<IdentifierValue>(value->value())) {
 					std::string_view sv = id->value().view();
 					fixed_point_t fp = 0;
-					std::from_chars_result result = fp.from_chars(sv.data(), sv.data() + sv.size());
+					std::from_chars_result result = fp::from_chars(fp, sv.data(), sv.data() + sv.size());
 					CHECK_OR_CONTINUE(result.ec == std::errc {});
 					if (fp <= 1) {
 						fp *= 255;
@@ -706,7 +707,7 @@ TEST_CASE("NodeTools expect vector functions", "[NodeTools][NodeTools-expect-fun
 			typename decltype(val)::type check;
 			std::from_chars_result result = [&] {
 				if constexpr (std::same_as<decltype(check), fixed_point_t>) {
-					return check.from_chars(sv.data(), sv.data() + sv.size());
+					return fp::from_chars(check, sv.data(), sv.data() + sv.size());
 				} else {
 					return from_chars(sv.data(), sv.data() + sv.size(), check);
 				}

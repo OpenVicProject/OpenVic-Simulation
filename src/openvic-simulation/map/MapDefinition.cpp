@@ -17,18 +17,20 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/io/BMP.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/string/CharConv.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -111,7 +113,9 @@ ProvinceDefinition::distance_t MapDefinition::calculate_distance_between(
 		)
 	);
 
-	return fvec2_t { min_x, to_pos.y - from_pos.y }.length_squared().sqrt();
+	return fp::sqrt(
+		fvec2_t { min_x, to_pos.y - from_pos.y }.length_squared()
+	);
 }
 
 using adjacency_t = ProvinceDefinition::adjacency_t;

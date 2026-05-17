@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -64,7 +65,10 @@ bool ProvinceDefinition::load_positions(
 			const fixed_point_t rotation = get_building_rotation(building_type_manager.get_port_building_type());
 
 			/* At 0 rotation the port faces west, as rotation increases the port rotates anti-clockwise. */
-			const fvec2_t port_dir { -rotation.cos(), rotation.sin() };
+			const fvec2_t port_dir {
+				-fp::cos(rotation),
+				fp::sin(rotation)
+			};
 			const ivec2_t port_facing_position = static_cast<ivec2_t>(*port_position + port_dir / 4);
 
 			ProvinceDefinition const* province_ptr = map_definition.get_province_definition_at(port_facing_position);

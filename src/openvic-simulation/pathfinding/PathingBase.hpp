@@ -8,6 +8,7 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 #include <foonathan/memory/default_allocator.hpp>
@@ -64,11 +65,15 @@ namespace OpenVic {
 		}
 
 		virtual fixed_point_t _estimate_cost(search_const_iterator from_it, search_const_iterator end_it) {
-			return fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }.sqrt();
+			return fp::sqrt(
+				fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }
+			);
 		}
 
 		virtual fixed_point_t _compute_cost(search_const_iterator from_it, search_const_iterator end_it) {
-			return fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }.sqrt();
+			return fp::sqrt(
+				fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }
+			);
 		}
 
 		virtual bool _solve( //

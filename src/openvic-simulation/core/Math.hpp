@@ -6,14 +6,15 @@
 #include <type_traits>
 
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
     template<typename T>
-    [[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num);
+    [[nodiscard]] OV_SPEED_INLINE constexpr T abs(const T num);
 
 	template<typename T>
 	requires std::integral<T> || std::floating_point<T>
-	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num) {
+	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(const T num) {
 		if (std::is_constant_evaluated()) {
 			return num < 0 ? -num : num;
 		} else {
@@ -21,9 +22,14 @@ namespace OpenVic {
 		}
 	}
 
+    template<>
+	[[nodiscard]] OV_SPEED_INLINE constexpr fixed_point_t abs(const fixed_point_t  num) {
+		return num.abs();
+	}
+
     template<typename T>
-	requires (!(std::integral<T> || std::floating_point<T>))
-	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T num);
+	requires (!(std::integral<T> || std::floating_point<T> || std::is_same_v<T, fixed_point_t>))
+	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T const& num);
 
 	template<std::floating_point T>
 	OV_SPEED_INLINE constexpr int64_t round_to_int64(T num) {
@@ -56,32 +62,6 @@ namespace OpenVic {
 			}
 		}
 		return ret;
-	}
-
-	OV_SPEED_INLINE constexpr uint64_t sqrt(uint64_t n) {
-		uint64_t x = n;
-		uint64_t c = 0;
-		uint64_t d = 1ull << 62;
-
-		while (d > n) {
-			d >>= 2;
-		}
-
-		for (; d != 0; d >>= 2) {
-			if (x >= c + d) {
-				x -= c + d;
-				c = (c >> 1) + d;
-			} else {
-				c >>= 1;
-			}
-		}
-
-		// round up
-		if (x > 0) {
-			c += 1;
-		}
-
-		return c;
 	}
 
 	OV_SPEED_INLINE constexpr bool is_power_of_two(uint64_t n) {
