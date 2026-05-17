@@ -149,6 +149,10 @@ void MapInstance::update_modifier_sums(const Date today, StaticModifierCache con
 	for (ProvinceInstance& province : get_province_instances()) {
 		province.update_modifier_sum(today, static_modifier_cache);
 	}
+
+	for (ProvinceInstance& province : get_province_instances()) {
+		province.update_country_modifier_sum();
+	}
 }
 
 void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
