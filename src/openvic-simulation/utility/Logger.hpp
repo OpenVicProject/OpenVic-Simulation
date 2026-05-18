@@ -9,7 +9,8 @@
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/Stack.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace spdlog {
 	template<typename... Args>

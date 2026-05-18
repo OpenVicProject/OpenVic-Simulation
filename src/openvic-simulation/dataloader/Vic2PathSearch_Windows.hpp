@@ -9,7 +9,7 @@
 
 #include <Windows.h>
 
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic::Windows {

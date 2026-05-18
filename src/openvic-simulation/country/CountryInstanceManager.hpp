@@ -3,11 +3,11 @@
 #include <functional>
 #include <string_view>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

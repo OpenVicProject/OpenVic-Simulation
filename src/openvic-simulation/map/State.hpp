@@ -3,12 +3,12 @@
 #include <functional>
 
 #include <fmt/base.h>
-#include <plf_colony.h>
 
+#include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

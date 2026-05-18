@@ -3,13 +3,12 @@
 #include <concepts>
 #include <functional>
 #include <optional>
-#include <string>
 #include <string_view>
 #include <type_traits>
 
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic::utility {

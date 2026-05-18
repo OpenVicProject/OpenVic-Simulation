@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "openvic-simulation/economy/trading/SellResult.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;

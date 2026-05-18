@@ -3,13 +3,13 @@
 #include <optional>
 #include <string_view>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/gen/commit_info.gen.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 

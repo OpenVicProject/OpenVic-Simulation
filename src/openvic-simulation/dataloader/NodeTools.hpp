@@ -5,7 +5,6 @@
 #include <functional>
 #include <optional>
 #include <type_traits>
-#include <vector>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -24,9 +23,10 @@
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 #include <function2/function2.hpp>
 

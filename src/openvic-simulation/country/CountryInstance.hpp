@@ -1,10 +1,13 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 #include <utility>
 
 #include <fmt/base.h>
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
@@ -27,7 +30,6 @@
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/reactive/DerivedState.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 

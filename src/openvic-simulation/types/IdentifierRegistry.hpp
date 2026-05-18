@@ -1,8 +1,8 @@
 #pragma once
 
 #include <concepts>
-#include <vector>
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"

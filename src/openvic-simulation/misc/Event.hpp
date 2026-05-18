@@ -1,11 +1,12 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/politics/IssueGroup.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct EventManager;

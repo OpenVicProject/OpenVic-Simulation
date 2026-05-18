@@ -12,6 +12,8 @@
 #include <spdlog/logger.h>
 #include <spdlog/sinks/callback_sink.h>
 
+#include <openvic-simulation/core/memory/MemoryTracker.hpp>
+#include <openvic-simulation/core/memory/Vector.hpp>
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
@@ -20,9 +22,7 @@
 #include <openvic-simulation/economy/production/ResourceGatheringOperation.hpp>
 #include <openvic-simulation/pathfinding/AStarPathing.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
-#include <openvic-simulation/utility/Containers.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
-#include <openvic-simulation/utility/MemoryTracker.hpp>
 
 using namespace OpenVic;
 
@@ -37,7 +37,7 @@ inline static void print_memory_usage( //
 #else
 		spdlog::source_loc {},
 #endif
-		spdlog::level::info, "{} Memory Usage: {} Bytes", prefix, OpenVic::utility::MemoryTracker::get_memory_usage()
+		spdlog::level::info, "{} Memory Usage: {} Bytes", prefix, OpenVic::memory::MemoryTracker::get_memory_usage()
 	);
 #endif
 #endif
@@ -365,7 +365,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	SPDLOG_INFO("===== Ending game session... =====");
 	ret &= game_manager.end_game_session();
 
-	SPDLOG_INFO("Max Memory Usage: {} Bytes", OpenVic::utility::MemoryTracker::get_max_memory_usage());
+	SPDLOG_INFO("Max Memory Usage: {} Bytes", OpenVic::memory::MemoryTracker::get_max_memory_usage());
 
 	return ret;
 }

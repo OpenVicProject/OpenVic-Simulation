@@ -1,7 +1,4 @@
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
-
-#include "utility/Containers.hpp"
 
 namespace OpenVic {
 	class A_001_file_tests : public TestScript {

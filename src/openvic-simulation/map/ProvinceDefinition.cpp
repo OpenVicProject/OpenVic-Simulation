@@ -6,7 +6,6 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

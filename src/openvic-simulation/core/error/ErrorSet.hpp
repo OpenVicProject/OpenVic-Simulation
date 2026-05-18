@@ -4,7 +4,7 @@
 #include <cstddef>
 
 #include "openvic-simulation/core/error/Error.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	// Set of all reported errors, if empty operates as if set to Error::OK

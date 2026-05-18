@@ -4,7 +4,6 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

@@ -4,9 +4,9 @@
 #include <ranges>
 #include <string_view>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct ProvinceDefinition;

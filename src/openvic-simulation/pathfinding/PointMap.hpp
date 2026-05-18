@@ -3,16 +3,15 @@
 #include <cstdint>
 #include <span>
 #include <utility>
-#include <vector>
 
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
+#include "openvic-simulation/core/Hash.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	struct PointMap {

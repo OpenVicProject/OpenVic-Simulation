@@ -11,6 +11,7 @@
 
 #include <function2/function2.hpp>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"

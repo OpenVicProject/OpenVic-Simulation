@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <limits>
 #include <system_error>
-#include <vector>
 
 #include <fmt/std.h>
 
@@ -31,7 +30,6 @@
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

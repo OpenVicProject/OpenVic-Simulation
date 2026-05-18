@@ -3,10 +3,11 @@
 #include <algorithm>
 #include <system_error>
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 

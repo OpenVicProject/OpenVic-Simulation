@@ -1,10 +1,8 @@
 #pragma once
-#include <memory>
-#include <vector>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/Requirement.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 

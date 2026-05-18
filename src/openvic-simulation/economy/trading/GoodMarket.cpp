@@ -7,7 +7,6 @@
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;

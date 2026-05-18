@@ -8,7 +8,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

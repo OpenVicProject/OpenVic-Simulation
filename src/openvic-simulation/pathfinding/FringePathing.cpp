@@ -1,7 +1,5 @@
 #include "openvic-simulation/pathfinding/FringePathing.hpp"
 
-#include <vector>
-
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
@@ -13,7 +11,6 @@
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

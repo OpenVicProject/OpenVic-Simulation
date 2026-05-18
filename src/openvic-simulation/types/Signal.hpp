@@ -10,13 +10,18 @@
 #include <optional>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
-#include "openvic-simulation/types/CowPtr.hpp"
-#include "openvic-simulation/types/CowVector.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/thread/NullMutex.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/CowVector.hpp"
+
+// For OpenVic::_detail::signal::make_shared
+#ifdef DEBUG_ENABLED
+	#include "openvic-simulation/core/memory/allocators/NewAllocator.hpp"
+#else
+	#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#endif
 
 // Based heavily on https://github.com/palacaze/sigslot and https://github.com/mousebyte/sigslot20
 

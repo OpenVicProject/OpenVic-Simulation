@@ -4,12 +4,12 @@
 #include <optional>
 #include <string_view>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

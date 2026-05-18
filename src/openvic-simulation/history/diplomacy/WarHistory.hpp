@@ -3,9 +3,9 @@
 #include <optional>
 #include <type_traits>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/history/Period.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

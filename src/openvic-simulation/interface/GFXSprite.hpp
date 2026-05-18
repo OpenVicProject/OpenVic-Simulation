@@ -1,5 +1,7 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/interface/LoadBase.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 

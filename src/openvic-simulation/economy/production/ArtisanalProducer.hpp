@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"

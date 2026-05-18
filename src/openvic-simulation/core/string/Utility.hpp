@@ -11,7 +11,7 @@
 #include <range/v3/view/join.hpp>
 #include <range/v3/view/transform.hpp>
 
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	inline constexpr bool ascii_equal_case_insensitive(std::string_view const& lhs, std::string_view const& rhs) {

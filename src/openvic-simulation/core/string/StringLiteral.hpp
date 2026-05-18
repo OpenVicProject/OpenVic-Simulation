@@ -6,7 +6,7 @@
 #include <string_view>
 #include <type_traits>
 
-#include <openvic-simulation/types/BasicIterator.hpp>
+#include "openvic-simulation/types/BasicIterator.hpp"
 
 namespace OpenVic {
 	template<std::size_t N, typename CharT, class Traits>

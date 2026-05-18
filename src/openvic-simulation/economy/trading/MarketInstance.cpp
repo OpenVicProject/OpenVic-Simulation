@@ -6,7 +6,6 @@
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 

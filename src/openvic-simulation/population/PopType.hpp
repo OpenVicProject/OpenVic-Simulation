@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
@@ -11,7 +12,6 @@
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;

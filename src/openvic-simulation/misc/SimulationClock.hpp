@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <vector>
 
 #include "openvic-simulation/utility/Getters.hpp"
 

@@ -17,7 +17,6 @@
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include <type_safe/strong_typedef.hpp>
 

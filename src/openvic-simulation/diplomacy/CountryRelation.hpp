@@ -9,9 +9,10 @@
 #include <tuple>
 #include <type_traits>
 
+#include "openvic-simulation/core/Compare.hpp"
+#include "openvic-simulation/core/Hash.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

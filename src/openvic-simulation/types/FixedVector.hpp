@@ -203,7 +203,7 @@ namespace OpenVic::_detail {
 
 #include <foonathan/memory/std_allocator.hpp>
 
-#include "openvic-simulation/utility/MemoryTracker.hpp"
+#include "openvic-simulation/core/memory/MemoryTracker.hpp"
 
 namespace OpenVic::memory {
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
