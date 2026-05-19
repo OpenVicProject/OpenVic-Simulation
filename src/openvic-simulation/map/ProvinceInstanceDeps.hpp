@@ -5,7 +5,7 @@
 namespace OpenVic {
 	struct BuildingTypeManager;
 	struct GameRulesManager;
-	struct Ideology;
+	struct PopsAggregateDeps;
 	struct PopType;
 	struct ResourceGatheringOperationDeps;
 	struct Strata;
@@ -13,7 +13,7 @@ namespace OpenVic {
 	struct ProvinceInstanceDeps {
 		BuildingTypeManager const& building_type_manager;
 		GameRulesManager const& game_rules_manager;
-		forwardable_span<const Ideology> ideologies;
+		PopsAggregateDeps const& pops_aggregate_deps;
 		forwardable_span<const PopType> pop_types;
 		ResourceGatheringOperationDeps const& rgo_deps;
 		forwardable_span<const Strata> stratas;

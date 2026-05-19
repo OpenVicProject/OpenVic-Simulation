@@ -39,6 +39,7 @@
 #include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
@@ -67,9 +68,9 @@ CountryInstance::CountryInstance(
 ) : FlagStrings { "country" },
 	HasIndex { new_country_definition.index },
 	PopsAggregate {
+		country_instance_deps.pops_aggregate_deps,
 		country_instance_deps.stratas,
-		country_instance_deps.pop_types,
-		country_instance_deps.ideologies
+		country_instance_deps.pop_types
 	},
 	/* Main attributes */
 	country_definition { new_country_definition },
@@ -151,8 +152,8 @@ CountryInstance::CountryInstance(
 	invention_unlock_levels { country_instance_deps.inventions },
 
 	/* Politics */
-	upper_house_proportion_by_ideology { country_instance_deps.ideologies },
-	reforms { country_instance_deps.reforms },
+	upper_house_proportion_by_ideology { country_instance_deps.pops_aggregate_deps.ideologies },
+	reforms { country_instance_deps.reform_groups },
 	flag_overrides_by_government_type { country_instance_deps.government_types },
 	crime_unlock_levels { country_instance_deps.crimes },
 

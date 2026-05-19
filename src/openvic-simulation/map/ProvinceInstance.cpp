@@ -1,5 +1,6 @@
 #include "ProvinceInstance.hpp"
 #include "ProvinceInstanceDeps.hpp"
+#include "population/PopsAggregateDeps.hpp"
 
 #include <type_traits>
 
@@ -26,9 +27,9 @@ ProvinceInstance::ProvinceInstance(
 	HasIndex { new_province_definition.index },
 	FlagStrings { "province" },
 	PopsAggregate {
+		province_instance_deps.pops_aggregate_deps,
 		province_instance_deps.stratas,
-		province_instance_deps.pop_types,
-		province_instance_deps.ideologies
+		province_instance_deps.pop_types
 	},
 	province_definition { new_province_definition },
 	game_rules_manager { province_instance_deps.game_rules_manager },
@@ -191,7 +192,6 @@ bool ProvinceInstance::add_pop_vec(
 			pops.emplace(
 				*this,
 				pop,
-				get_supporter_equivalents_by_ideology().get_keys(),
 				pop_deps,
 				++last_pop_id
 			);
@@ -527,9 +527,9 @@ void ProvinceInstance::initialise_rgo() {
 	rgo.initialise_rgo_size_multiplier();
 }
 
-void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {
+void ProvinceInstance::setup_pop_test_values() {
 	for (Pop& pop : pops) {
-		pop.setup_pop_test_values(issue_manager);
+		pop.setup_pop_test_values();
 	}
 }
 

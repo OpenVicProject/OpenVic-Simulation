@@ -17,10 +17,14 @@ State::State(
 	ProvinceInstance* new_capital,
 	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 	colony_status_t new_colony_status,
+	PopsAggregateDeps const& pops_aggregate_deps,
 	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
-	forwardable_span<const Ideology> ideology_keys
-) : PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
+	forwardable_span<const PopType> pop_type_keys
+) : PopsAggregate {
+		pops_aggregate_deps,
+		strata_keys,
+		pop_type_keys
+	},
 	state_set { new_state_set },
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
@@ -131,9 +135,9 @@ void StateSet::update_gamestate() {
 
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
+	PopsAggregateDeps const& pops_aggregate_deps,
 	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
-	forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const PopType> pop_type_keys
 ) {
 	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
@@ -174,7 +178,9 @@ bool StateManager::add_state_set(
 			/* TODO: capital province logic */
 			state_set, &capital,
 			std::move(provinces), capital.get_colony_status(),
-			strata_keys, pop_type_keys, ideology_keys
+			pops_aggregate_deps,
+			strata_keys,
+			pop_type_keys
 		);
 
 		for (ProvinceInstance& province : state.get_provinces()) {
@@ -188,9 +194,9 @@ bool StateManager::add_state_set(
 bool StateManager::generate_states(
 	MapDefinition const& map_definition,
 	MapInstance& map_instance,
+	PopsAggregateDeps const& pops_aggregate_deps,
 	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys,
-	forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const PopType> pop_type_keys
 ) {
 	state_sets.clear();
 	state_sets.reserve(map_definition.get_region_count());
@@ -200,7 +206,13 @@ bool StateManager::generate_states(
 
 	for (Region const& region : map_definition.get_regions()) {
 		if (!region.is_meta) {
-			if (add_state_set(map_instance, region, strata_keys, pop_type_keys, ideology_keys)) {
+			if (add_state_set(
+				map_instance,
+				region,
+				pops_aggregate_deps,
+				strata_keys,
+				pop_type_keys
+			)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
 				ret = false;

@@ -5,7 +5,10 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/PartyPolicy.hpp" // IWYU pragma: keep for IndexedFlatMap
+#include "openvic-simulation/politics/Reform.hpp" // IWYU pragma: keep for IndexedFlatMap
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
@@ -14,9 +17,9 @@
 
 using namespace OpenVic;
 PopsAggregate::PopsAggregate(
+	PopsAggregateDeps const& pops_aggregate_deps,
 	decltype(population_by_strata)::keys_span_type strata_keys,
-	decltype(population_by_type)::keys_span_type pop_type_keys,
-	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys
+	decltype(population_by_type)::keys_span_type pop_type_keys
 ) : population_by_strata { strata_keys },
 	militancy_by_strata_running_total_raw { strata_keys },
 	life_needs_fulfilled_by_strata_running_total_raw { strata_keys },
@@ -28,7 +31,9 @@ PopsAggregate::PopsAggregate(
 	luxury_needs_fulfilled_by_strata { strata_keys },
 	population_by_type { pop_type_keys },
 	unemployed_pops_by_type { pop_type_keys },
-	supporter_equivalents_by_ideology { ideology_keys } {}
+	supporter_equivalents_by_ideology { pops_aggregate_deps.ideologies },
+	supporter_equivalents_by_party_policy { pops_aggregate_deps.party_policies },
+	supporter_equivalents_by_reform { pops_aggregate_deps.reforms } {}
 
 pop_sum_t PopsAggregate::get_population_by_type(PopType const& pop_type) const {
 	return population_by_type.at(pop_type);
@@ -38,15 +43,6 @@ pop_sum_t PopsAggregate::get_unemployed_pops_by_type(PopType const& pop_type) co
 }
 fixed_point_t PopsAggregate::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
 	return supporter_equivalents_by_ideology.at(ideology);
-}
-fixed_point_t PopsAggregate::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
-	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
-
-	if (it != supporter_equivalents_by_issue.end()) {
-		return it->second;
-	} else {
-		return 0;
-	}
 }
 fixed_point_t PopsAggregate::get_vote_equivalents_by_party(CountryParty const& party) const {
 	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
@@ -114,7 +110,8 @@ void PopsAggregate::clear_pops_aggregate() {
 	population_by_type.fill(0);
 	unemployed_pops_by_type.fill(0);
 	supporter_equivalents_by_ideology.fill(fixed_point_t::_0);
-	supporter_equivalents_by_issue.clear();
+	supporter_equivalents_by_party_policy.fill(fixed_point_t::_0);
+	supporter_equivalents_by_reform.fill(fixed_point_t::_0);
 	vote_equivalents_by_party.clear();
 	population_by_culture.clear();
 	population_by_religion.clear();
@@ -150,7 +147,8 @@ void PopsAggregate::add_pops_aggregate(PopsAggregate& part) {
 	population_by_type += part.get_population_by_type();
 	unemployed_pops_by_type += part.get_unemployed_pops_by_type();
 	supporter_equivalents_by_ideology += part.get_supporter_equivalents_by_ideology();
-	supporter_equivalents_by_issue += part.get_supporter_equivalents_by_issue();
+	supporter_equivalents_by_party_policy += part.get_supporter_equivalents_by_party_policy();
+	supporter_equivalents_by_reform += part.get_supporter_equivalents_by_reform();
 	vote_equivalents_by_party += part.get_vote_equivalents_by_party();
 	population_by_culture += part.get_population_by_culture();
 	population_by_religion += part.get_population_by_religion();
@@ -186,7 +184,8 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	unemployed_pops_by_type.at(pop_type) += pop.get_unemployed();
 	// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 	supporter_equivalents_by_ideology += pop.get_supporter_equivalents_by_ideology();
-	supporter_equivalents_by_issue += pop.get_supporter_equivalents_by_issue();
+	supporter_equivalents_by_party_policy += pop.get_supporter_equivalents_by_party_policy();
+	supporter_equivalents_by_reform += pop.get_supporter_equivalents_by_reform();
 	vote_equivalents_by_party += pop.get_vote_equivalents_by_party();
 	population_by_culture[&pop.culture] += pop_size;
 	population_by_religion[&pop.religion] += pop_size;

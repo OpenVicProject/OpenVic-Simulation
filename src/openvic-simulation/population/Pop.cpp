@@ -29,9 +29,11 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/IssueManager.hpp"
+#include "openvic-simulation/politics/PartyPolicy.hpp"
+#include "openvic-simulation/politics/Reform.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/population/Religion.hpp"
@@ -57,7 +59,6 @@ PopBase::PopBase(
 Pop::Pop(
 	ProvinceInstance& new_location,
 	PopBase const& pop_base,
-	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 	PopDeps const& pop_deps,
 	const pop_id_in_province_t new_id_in_province
 ) : PopBase { pop_base },
@@ -71,7 +72,9 @@ Pop::Pop(
 			}
 			: std::optional<ArtisanalProducer> {}
 	},
-	supporter_equivalents_by_ideology { ideology_keys } {
+	supporter_equivalents_by_ideology { pop_deps.pops_aggregate_deps.ideologies },
+	supporter_equivalents_by_party_policy { pop_deps.pops_aggregate_deps.party_policies },
+	supporter_equivalents_by_reform { pop_deps.pops_aggregate_deps.reforms } {
 		reserve_needs_fulfilled_goods();
 	}
 
@@ -82,7 +85,7 @@ fixed_point_t Pop::get_unemployment_fraction() const {
 	return fp::from_fraction(get_unemployed(), size);
 }
 
-void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
+void Pop::setup_pop_test_values() {
 	/* Returns +/- range% of size. */
 	const auto test_size = [this](int32_t range) -> pop_size_t {
 		return size * ((rand() % (2 * range + 1)) - range) / 100;
@@ -127,17 +130,20 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		test_weight_indexed(supporter_equivalents_by_ideology, ideology, 1, 5);
 	}
 	supporter_equivalents_by_ideology.rescale(type_safe::get(size));
-
-	supporter_equivalents_by_issue.clear();
-	for (BaseIssue const& issue : issue_manager.get_party_policies()) {
-		test_weight_ordered(supporter_equivalents_by_issue, issue, 3, 6);
+	
+	supporter_equivalents_by_party_policy.fill(0);
+	for (PartyPolicy const& party_policy : supporter_equivalents_by_party_policy.get_keys()) {
+		test_weight_indexed(supporter_equivalents_by_party_policy, party_policy, 3, 6);
 	}
-	for (Reform const& reform : issue_manager.get_reforms()) {
+	supporter_equivalents_by_party_policy.rescale(type_safe::get(size));
+	
+	supporter_equivalents_by_reform.fill(0);
+	for (Reform const& reform : supporter_equivalents_by_reform.get_keys()) {
 		if (!reform.group.is_civilizing()) {
-			test_weight_ordered(supporter_equivalents_by_issue, reform, 3, 6);
+			test_weight_indexed(supporter_equivalents_by_reform, reform, 3, 6);
 		}
 	}
-	rescale_fixed_point_map(supporter_equivalents_by_issue, type_safe::get(size));
+	supporter_equivalents_by_reform.rescale(type_safe::get(size));
 
 	if (!vote_equivalents_by_party.empty()) {
 		for (auto& [party, value] : vote_equivalents_by_party) {
@@ -194,16 +200,6 @@ void Pop::update_location_based_attributes() {
 
 fixed_point_t Pop::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
 	return supporter_equivalents_by_ideology.at(ideology);
-}
-
-fixed_point_t Pop::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
-	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
-
-	if (it != supporter_equivalents_by_issue.end()) {
-		return it->second;
-	} else {
-		return 0;
-	}
 }
 
 fixed_point_t Pop::get_vote_equivalents_by_party(CountryParty const& party) const {
