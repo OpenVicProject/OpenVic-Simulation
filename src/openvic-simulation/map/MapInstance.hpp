@@ -83,9 +83,9 @@ namespace OpenVic {
 			PopDeps const& pop_deps
 		);
 
-		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(InstanceManager const& instance_manager);
+		void update_modifier_sums(const Date today);
+		void update_gamestate();
 		void map_tick();
-		void initialise_for_new_game(InstanceManager const& instance_manager);
+		void initialise_for_new_game();
 	};
 }

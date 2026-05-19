@@ -299,16 +299,12 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	return ret;
 }
 
-void CountryInstanceManager::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
-	for (CountryInstance& country : get_country_instances()) {
-		country.update_modifier_sum(today, static_modifier_cache);
-	}
+void CountryInstanceManager::update_modifier_sums(const Date today) {
+	thread_pool.process(work_t::COUNTRY_UPDATE_MODIFIER_SUMS_AFTER_MAP);
 }
 
-void CountryInstanceManager::update_gamestate(const Date today, MapInstance& map_instance) {
-	for (CountryInstance& country : get_country_instances()) {
-		country.update_gamestate(today, map_instance);
-	}
+void CountryInstanceManager::update_gamestate(const Date today) {
+	thread_pool.process(work_t::COUNTRY_UPDATE_GAMESTATE_AFTER_MAP);
 
 	// TODO - work out how to have ranking effects applied (e.g. static modifiers) applied at game start
 	// we can't just move update_rankings to the top of this function as it will choose initial GPs based on
@@ -318,10 +314,10 @@ void CountryInstanceManager::update_gamestate(const Date today, MapInstance& map
 }
 
 void CountryInstanceManager::country_manager_tick_before_map() {
-	thread_pool.process_country_ticks_before_map();
+	thread_pool.process(work_t::COUNTRY_TICK_BEFORE_MAP);
 }
 
 void CountryInstanceManager::country_manager_tick_after_map() {
-	thread_pool.process_country_ticks_after_map();
+	thread_pool.process(work_t::COUNTRY_TICK_AFTER_MAP);
 	shared_country_values.update_costs();
 }

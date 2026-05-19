@@ -1,10 +1,12 @@
 #include "ThreadPool.hpp"
+#include "ThreadDeps.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
@@ -13,20 +15,13 @@ using namespace OpenVic;
 
 void ThreadPool::loop_until_cancelled(
 	work_t& work_type,
-	GameRulesManager const& game_rules_manager,
-	GoodInstanceManager const& good_instance_manager,
-	ModifierEffectCache const& modifier_effect_cache,
-	PopsDefines const& pop_defines,
-	ProductionTypeManager const& production_type_manager,
-	forwardable_span<const CountryInstance> country_keys,
-	forwardable_span<const GoodDefinition> good_keys,
-	forwardable_span<const Strata> strata_keys,
+	const ThreadDeps deps,
 	forwardable_span<WorkBundle> work_bundles
 ) {
-	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
+	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { deps.good_keys };
 
-	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size(), fixed_point_t::_0 };
-	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size(), fixed_point_t::_0 };
+	memory::FixedVector<fixed_point_t> reusable_country_map_0 { deps.country_keys.size(), fixed_point_t::_0 };
+	memory::FixedVector<fixed_point_t> reusable_country_map_1 { deps.country_keys.size(), fixed_point_t::_0 };
 	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_0_span { reusable_country_map_0 };
 	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_1_span { reusable_country_map_1 };
 
@@ -41,12 +36,12 @@ void ThreadPool::loop_until_cancelled(
 	std::span<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors_span = std::span(reusable_vectors);
 	memory::vector<good_index_t> reusable_good_index_vector;
 	PopValuesFromProvince reusable_pop_values {
-		game_rules_manager,
-		good_instance_manager,
-		modifier_effect_cache,
-		production_type_manager,
-		pop_defines,
-		strata_keys
+		deps.game_rules_manager,
+		deps.good_instance_manager,
+		deps.modifier_effect_cache,
+		deps.production_type_manager,
+		deps.pop_defines,
+		deps.strata_keys
 	};
 
 	while (!is_cancellation_requested) {
@@ -67,11 +62,11 @@ void ThreadPool::loop_until_cancelled(
 			work_type = work_t::NONE;
 		}
 
-		switch (work_type_copy) {
-			case work_t::NONE:
-				break;
-			case work_t::GOOD_EXECUTE_ORDERS:
-				for (WorkBundle& work_bundle : work_bundles) {
+		for (WorkBundle& work_bundle : work_bundles) {
+			switch (work_type_copy) {
+				case work_t::NONE:
+					break;
+				case work_t::GOOD_EXECUTE_ORDERS:
 					for (GoodMarket& good : work_bundle.goods_chunk) {
 						good.execute_orders(
 							reusable_country_map_0_span,
@@ -79,10 +74,8 @@ void ThreadPool::loop_until_cancelled(
 							reusable_vectors_span.first<GoodMarket::VECTORS_FOR_EXECUTE_ORDERS>()
 						);
 					}
-				}
-				break;
-			case work_t::PROVINCE_TICK:
-				for (WorkBundle& work_bundle : work_bundles) {
+					break;
+				case work_t::PROVINCE_TICK:
 					for (ProvinceInstance& province : work_bundle.provinces_chunk) {
 						province.province_tick(
 							current_date,
@@ -92,23 +85,20 @@ void ThreadPool::loop_until_cancelled(
 							reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
 						);
 					}
-				}
-				break;
-			case work_t::PROVINCE_INITIALISE_FOR_NEW_GAME:
-				for (WorkBundle& work_bundle : work_bundles) {
+					break;
+				case work_t::PROVINCE_INITIALISE_FOR_NEW_GAME:
 					for (ProvinceInstance& province : work_bundle.provinces_chunk) {
 						province.initialise_for_new_game(
 							current_date,
+							deps.map_instance,
 							reusable_pop_values,
 							work_bundle.random_number_generator,
 							reusable_goods_mask,
 							reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
 						);
 					}
-				}
-				break;
-			case work_t::COUNTRY_TICK_BEFORE_MAP:
-				for (WorkBundle& work_bundle : work_bundles) {
+					break;
+				case work_t::COUNTRY_TICK_BEFORE_MAP:
 					for (CountryInstance& country : work_bundle.countries_chunk) {
 						country.country_tick_before_map(
 							reusable_goods_mask,
@@ -116,15 +106,47 @@ void ThreadPool::loop_until_cancelled(
 							reusable_good_index_vector
 						);
 					}
-				}
-				break;
-			case work_t::COUNTRY_TICK_AFTER_MAP:
-				for (WorkBundle& work_bundle : work_bundles) {
+					break;
+				case work_t::COUNTRY_TICK_AFTER_MAP:
 					for (CountryInstance& country : work_bundle.countries_chunk) {
 						country.country_tick_after_map(current_date);
 					}
-				}
-				break;
+					break;
+				case work_t::PROVINCE_UPDATE_GAMESTATE:
+					for (ProvinceInstance& province : work_bundle.provinces_chunk) {
+						province.update_gamestate(
+							current_date,
+							deps.military_defines
+						);
+					}
+					break;
+				case work_t::COUNTRY_UPDATE_GAMESTATE_AFTER_MAP:
+					for (CountryInstance& country : work_bundle.countries_chunk) {
+						country.update_gamestate(current_date);
+					}
+					break;
+				case work_t::PROVINCE_UPDATE_MODIFIER_SUMS:
+					for (ProvinceInstance& province : work_bundle.provinces_chunk) {
+						province.update_modifier_sum(
+							current_date,
+							deps.static_modifier_cache
+						);
+					}
+					break;
+				case work_t::COUNTRY_UPDATE_MODIFIER_SUMS_BEFORE_MAP:
+					for (CountryInstance& country : work_bundle.countries_chunk) {
+						country.update_modifier_sum_before_map(
+							current_date,
+							deps.static_modifier_cache
+						);
+					}
+					break;
+				case work_t::COUNTRY_UPDATE_MODIFIER_SUMS_AFTER_MAP:
+					for (CountryInstance& country : work_bundle.countries_chunk) {
+						country.update_modifier_sum_after_map(current_date);
+					}
+					break;
+			}
 		}
 
 		{
@@ -136,7 +158,7 @@ void ThreadPool::loop_until_cancelled(
 	}
 }
 
-void ThreadPool::process_work(const work_t work_type) {
+void ThreadPool::process(const work_t work_type) {
 	{
 		std::unique_lock<std::mutex> thread_lock { thread_mutex };
 		if (is_cancellation_requested) {
@@ -181,13 +203,7 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::initialise_threadpool(
-	GameRulesManager const& game_rules_manager,
-	GoodInstanceManager const& good_instance_manager,
-	ModifierEffectCache const& modifier_effect_cache,
-	PopsDefines const& pop_defines,
-	ProductionTypeManager const& production_type_manager,
-	forwardable_span<const GoodDefinition> good_keys,
-	forwardable_span<const Strata> strata_keys,
+	ThreadDeps const& deps,
 	forwardable_span<GoodInstance> goods,
 	forwardable_span<CountryInstance> countries,
 	forwardable_span<ProvinceInstance> provinces
@@ -256,27 +272,13 @@ void ThreadPool::initialise_threadpool(
 			[
 				this,
 				&work_for_thread = work_per_thread[i],
-				&game_rules_manager,
-				&good_instance_manager,
-				&modifier_effect_cache,
-				&pop_defines,
-				&production_type_manager,
-				countries,
-				good_keys,
-				strata_keys,
+				deps,
 				work_bundles_begin,
 				work_bundles_end
 			]() -> void {
 				loop_until_cancelled(
 					work_for_thread,
-					game_rules_manager,
-					good_instance_manager,
-					modifier_effect_cache,
-					pop_defines,
-					production_type_manager,
-					countries,
-					good_keys,
-					strata_keys,
+					deps,
 					std::span<WorkBundle>{ work_bundles_begin, work_bundles_end }
 				);
 			}
@@ -284,24 +286,4 @@ void ThreadPool::initialise_threadpool(
 
 		work_bundles_begin = work_bundles_end;
 	}
-}
-
-void ThreadPool::process_good_execute_orders() {
-	process_work(work_t::GOOD_EXECUTE_ORDERS);
-}
-
-void ThreadPool::process_province_ticks() {
-	process_work(work_t::PROVINCE_TICK);
-}
-
-void ThreadPool::process_province_initialise_for_new_game() {
-	process_work(work_t::PROVINCE_INITIALISE_FOR_NEW_GAME);
-}
-
-void ThreadPool::process_country_ticks_before_map() {
-	process_work(work_t::COUNTRY_TICK_BEFORE_MAP);
-}
-
-void ThreadPool::process_country_ticks_after_map(){
-	process_work(work_t::COUNTRY_TICK_AFTER_MAP);
 }
