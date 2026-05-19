@@ -326,7 +326,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		size_t ticks_passed = 0;
 		test_duration_t min_tick_duration = test_duration_t::max(), //
 			max_tick_duration = test_duration_t::min(), //
-			total_tick_duration;
+			total_tick_duration {};
 		const test_time_point_t start_time = testing_clock_t::now();
 		while (++ticks_passed < TICK_COUNT) {
 			const test_time_point_t tick_start = testing_clock_t::now();
