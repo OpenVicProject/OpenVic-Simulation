@@ -4,6 +4,7 @@
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/ThreadDeps.hpp"
 
 using namespace OpenVic;
 
@@ -132,8 +133,8 @@ void InstanceManager::update_gamestate() {
 	update_modifier_sums();
 
 	// Update gamestate...
-	map_instance.update_gamestate(*this);
-	country_instance_manager.update_gamestate(today, map_instance);
+	map_instance.update_gamestate();
+	country_instance_manager.update_gamestate(today);
 	unit_instance_manager.update_gamestate();
 
 	gamestate_updated();
@@ -198,13 +199,19 @@ bool InstanceManager::setup() {
 	}
 
 	thread_pool.initialise_threadpool(
-		game_rules_manager,
-		good_instance_manager,
-		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		definition_manager.get_define_manager().get_pops_defines(),
-		definition_manager.get_economy_manager().get_production_type_manager(),
-		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
-		definition_manager.get_pop_manager().get_stratas(),
+		ThreadDeps{
+			game_rules_manager,
+			good_instance_manager,
+			map_instance,
+			definition_manager.get_define_manager().get_military_defines(),
+			definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+			definition_manager.get_define_manager().get_pops_defines(),
+			definition_manager.get_economy_manager().get_production_type_manager(),
+			definition_manager.get_modifier_manager().get_static_modifier_cache(),
+			country_instance_manager.get_country_instances(),
+			definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
+			definition_manager.get_pop_manager().get_stratas()
+		},
 		good_instance_manager.get_good_instances(),
 		country_instance_manager.get_country_instances(),
 		map_instance.get_province_instances()
@@ -270,8 +277,8 @@ bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 	OV_ERR_FAIL_COND_V_MSG(!all_has_state, false, "At least one land province has no state");
 
 	update_modifier_sums();
-	map_instance.initialise_for_new_game(*this);
-	country_instance_manager.update_gamestate(today, map_instance);
+	map_instance.initialise_for_new_game();
+	country_instance_manager.update_gamestate(today);
 	market_instance.execute_orders();
 
 	return ret;
@@ -324,12 +331,8 @@ void InstanceManager::update_modifier_sums() {
 	// full copy of all the modifiers affecting them in their modifier sum, but provinces only having their directly/locally
 	// applied modifiers in their modifier sum, hence requiring owner country modifier effect values to be looked up when
 	// determining the value of a global effect on the province.
-	country_instance_manager.update_modifier_sums(
-		today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-	);
-	map_instance.update_modifier_sums(
-		today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-	);
+	country_instance_manager.update_modifier_sums(today);
+	map_instance.update_modifier_sums(today);
 }
 
 bool InstanceManager::queue_game_action(game_action_t&& game_action) {

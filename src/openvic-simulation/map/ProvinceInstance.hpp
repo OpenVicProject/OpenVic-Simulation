@@ -96,6 +96,7 @@ namespace OpenVic {
 		bool PROPERTY_RW(connected_to_capital, false);
 		bool PROPERTY_RW(is_overseas, false);
 		bool PROPERTY(has_empty_adjacent_province, false);
+		memory::vector<std::reference_wrapper<const ProvinceInstance>> SPAN_PROPERTY(adjacencies);
 		memory::vector<std::reference_wrapper<const ProvinceInstance>> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
@@ -122,6 +123,7 @@ namespace OpenVic {
 		void _update_pops(MilitaryDefines const& military_defines);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
+		void update_adjecencies();
 
 		OV_IFLATMAP_PROPERTY(PopType, memory::vector<std::reference_wrapper<Pop>>, pops_cache_by_type);
 	public:
@@ -181,9 +183,8 @@ namespace OpenVic {
 			PopDeps const& pop_deps
 		);
 		size_t get_pop_count() const;
+		void update_modifier_sum(const Date today, StaticModifierCache const& static_modifier_cache);
 
-		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
-		void update_country_modifier_sum();
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 
 		void for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
@@ -198,7 +199,7 @@ namespace OpenVic {
 				get_owner_modifier_sum().for_each_contributing_modifier(effect, std::move(callback));
 			}
 		}
-		void update_gamestate(InstanceManager const& instance_manager);
+		void update_gamestate(const Date today, MilitaryDefines const& military_defines);
 		static constexpr size_t VECTORS_FOR_PROVINCE_TICK = std::max(
 			ResourceGatheringOperation::VECTORS_FOR_RGO_TICK,
 			Pop::VECTORS_FOR_POP_TICK
@@ -215,6 +216,7 @@ namespace OpenVic {
 		);
 		void initialise_for_new_game(
 			const Date today,
+			MapInstance const& map_instance,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
