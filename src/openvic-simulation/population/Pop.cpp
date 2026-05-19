@@ -46,6 +46,8 @@
 
 using namespace OpenVic;
 
+constexpr pop_size_t TRUNCATION_ACCEPTABLE_BELOW_SIZE = 16;
+
 PopBase::PopBase(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
@@ -296,7 +298,9 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 template<bool IsTaxable>
 void Pop::add_artisanal_revenue(const fixed_point_t revenue) {
 	if (OV_unlikely(revenue == 0)) {
-		spdlog::warn_s("Adding artisanal_revenue of 0 to pop. Context{}", get_pop_context_text());
+		if (size >= TRUNCATION_ACCEPTABLE_BELOW_SIZE) {
+			spdlog::warn_s("Adding artisanal_revenue of 0 to pop. Context{}", get_pop_context_text());
+		}
 		return;
 	}
 
@@ -331,7 +335,9 @@ template void Pop::add_artisanal_revenue<false>(const fixed_point_t revenue);
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
 		if (OV_unlikely(amount == 0)) { \
-			spdlog::warn_s("Adding " #name " of 0 to pop. Context{}", get_pop_context_text()); \
+			if (size >= TRUNCATION_ACCEPTABLE_BELOW_SIZE) { \
+				spdlog::warn_s("Adding " #name " of 0 to pop. Context{}", get_pop_context_text()); \
+			} \
 			return; \
 		} \
 		if (OV_unlikely(amount < 0)) { \
@@ -350,7 +356,9 @@ OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == 0)) { \
-			spdlog::warn_s("Adding " #name " of 0 to pop. Context:{}", get_pop_context_text()); \
+			if (size >= TRUNCATION_ACCEPTABLE_BELOW_SIZE) { \
+				spdlog::warn_s("Adding " #name " of 0 to pop. Context:{}", get_pop_context_text()); \
+			} \
 			return; \
 		} \
 		name += amount; \
