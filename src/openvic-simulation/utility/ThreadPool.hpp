@@ -5,25 +5,18 @@
 #include <mutex>
 #include <thread>
 
-#include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct GameRulesManager;
-	struct GoodDefinition;
-	struct GoodInstanceManager;
 	struct CountryInstance;
 	struct GoodInstance;
-	struct ModifierEffectCache;
-	struct PopsDefines;
-	struct ProductionTypeManager;
-	struct Strata;
+	struct ProvinceInstance;
+	struct ThreadDeps;
 	
 	//bundle work so they always have the same rng regardless of hardware concurrency
 	struct WorkBundle {
@@ -46,18 +39,23 @@ namespace OpenVic {
 			provinces_chunk { new_provinces_chunk }
 			{}
 	};
+	
+	enum struct work_t : uint8_t {
+		NONE,
+		GOOD_EXECUTE_ORDERS,
+		PROVINCE_INITIALISE_FOR_NEW_GAME,
+		PROVINCE_TICK,
+		COUNTRY_TICK_BEFORE_MAP,
+		COUNTRY_TICK_AFTER_MAP,
+		PROVINCE_UPDATE_GAMESTATE,
+		COUNTRY_UPDATE_GAMESTATE_AFTER_MAP,
+		PROVINCE_UPDATE_MODIFIER_SUMS,
+		COUNTRY_UPDATE_MODIFIER_SUMS_BEFORE_MAP,
+		COUNTRY_UPDATE_MODIFIER_SUMS_AFTER_MAP
+	};
 
 	struct ThreadPool {
 	private:
-		enum struct work_t : uint8_t {
-			NONE,
-			GOOD_EXECUTE_ORDERS,
-			PROVINCE_INITIALISE_FOR_NEW_GAME,
-			PROVINCE_TICK,
-			COUNTRY_TICK_BEFORE_MAP,
-			COUNTRY_TICK_AFTER_MAP
-		};
-
 		constexpr static size_t WORK_BUNDLE_COUNT = 32;
 		std::array<WorkBundle, WORK_BUNDLE_COUNT> all_work_bundles;
 		memory::vector<std::thread> threads;
@@ -72,39 +70,21 @@ namespace OpenVic {
 
 		void loop_until_cancelled(
 			work_t& work_type,
-			GameRulesManager const& game_rules_manager,
-			GoodInstanceManager const& good_instance_manager,
-			ModifierEffectCache const& modifier_effect_cache,
-			PopsDefines const& pop_defines,
-			ProductionTypeManager const& production_type_manager,
-			forwardable_span<const CountryInstance> country_keys,
-			const good_index_t good_count,
-			const strata_index_t strata_count,
+			const ThreadDeps deps,
 			forwardable_span<WorkBundle> work_bundles
 		);
 		void await_completion();
-		void process_work(const work_t work_type);
 
 	public:
 		ThreadPool(Date const& new_current_date);
 		~ThreadPool();
 
 		void initialise_threadpool(
-			GameRulesManager const& game_rules_manager,
-			GoodInstanceManager const& good_instance_manager,
-			ModifierEffectCache const& modifier_effect_cache,
-			PopsDefines const& pop_defines,
-			ProductionTypeManager const& production_type_manager,
-			const strata_index_t strata_count,
+			ThreadDeps const& deps,
 			forwardable_span<GoodInstance> goods,
 			forwardable_span<CountryInstance> countries,
 			forwardable_span<ProvinceInstance> provinces
 		);
-
-		void process_good_execute_orders();
-		void process_province_ticks();
-		void process_province_initialise_for_new_game();
-		void process_country_ticks_before_map();
-		void process_country_ticks_after_map();
+		void process(const work_t work_type);
 	};
 }

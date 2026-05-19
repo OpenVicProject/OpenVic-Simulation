@@ -1781,7 +1781,7 @@ static constexpr Modifier const& get_country_status_static_effect(
 	}
 }
 
-void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
+void CountryInstance::update_modifier_sum_before_map(Date today, StaticModifierCache const& static_modifier_cache) {
 	// Update sum of national modifiers
 	modifier_sum.clear();
 
@@ -1855,19 +1855,23 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	// TODO - calculate stats for each unit type (locked and unlocked)
 }
 
-void CountryInstance::make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum) {
-	modifier_sum.make_room_for(province_modifier_sum);
+void CountryInstance::update_modifier_sum_after_map(Date today) {
+	for (ProvinceInstance const* const province_ptr : controlled_provinces) {
+		if (OV_likely(province_ptr != nullptr)) {
+			modifier_sum.add_modifier_sum(province_ptr->get_modifier_sum());
+		}
+	}
 }
 
-void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
-	modifier_sum.add_modifier_sum(province_modifier_sum);
+void CountryInstance::make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum) {
+	modifier_sum.make_room_for(province_modifier_sum);
 }
 
 fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
 	return modifier_sum.get_modifier_effect_value(effect);
 }
 
-void CountryInstance::update_gamestate(const Date today, MapInstance& map_instance) {
+void CountryInstance::update_gamestate_after_map(const Date today) {
 	if (is_civilised()) {
 		civilisation_progress = 0;
 	} else {
@@ -1931,14 +1935,14 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 		province->set_connected_to_capital(false);
 		province->set_is_overseas(province_definition.get_continent() != capital_continent);
 
-		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
-			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
-			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
-			CountryInstance* neighbour = map_instance.get_province_instance_by_definition(adjacency.get_to()).get_owner();
-			if (neighbour != nullptr && neighbour != this) {
-				neighbouring_countries.insert(neighbour);
-			}
-		}
+		// for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		// 	// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
+		// 	// and water provinces don't have an owner so they'll get caught by the later checks anyway.
+		// 	CountryInstance* neighbour = map_instance.get_province_instance_by_definition(adjacency.get_to()).get_owner();
+		// 	if (neighbour != nullptr && neighbour != this) {
+		// 		neighbouring_countries.insert(neighbour);
+		// 	}
+		// }
 	}
 
 	if (occupied_provinces_proportion != 0) {
@@ -1948,21 +1952,21 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 
 	if (capital != nullptr) {
 		capital->set_connected_to_capital(true);
-		memory::vector<std::reference_wrapper<const ProvinceInstance>> province_checklist { *capital };
+		// memory::vector<std::reference_wrapper<const ProvinceInstance>> province_checklist { *capital };
 
-		for (size_t index = 0; index < province_checklist.size(); ++index) {
-			ProvinceInstance const& province = province_checklist[index];
+		// for (size_t index = 0; index < province_checklist.size(); ++index) {
+		// 	ProvinceInstance const& province = province_checklist[index];
 
-			for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
-				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(adjacency.get_to());
+		// 	for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
+		// 		ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(adjacency.get_to());
 
-				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
-					adjacent_province.set_connected_to_capital(true);
-					adjacent_province.set_is_overseas(false);
-					province_checklist.emplace_back(adjacent_province);
-				}
-			}
-		}
+		// 		if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
+		// 			adjacent_province.set_connected_to_capital(true);
+		// 			adjacent_province.set_is_overseas(false);
+		// 			province_checklist.emplace_back(adjacent_province);
+		// 		}
+		// 	}
+		// }
 	}
 
 	// Order of updates might need to be changed/functions split up to account for dependencies
