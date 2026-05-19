@@ -78,7 +78,7 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 		inputs_bought_fraction_v = inputs_bought_numerator / inputs_bought_denominator;
 
 	distinct_goods_to_buy = 0;
-	wants_more_mask.fill(false);
+	std::fill(wants_more_mask.begin(), wants_more_mask.end(), false);
 
 	for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 		GoodDefinition const& input_good = *it.key();
@@ -92,7 +92,7 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 		if (should_report_input_demand && country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_input_demand(
 				production_type,
-				input_good,
+				input_good.index,
 				desired_quantity
 			);
 		}
@@ -105,8 +105,8 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 			inputs_bought_denominator = base_desired_quantity;
 		}
 
-		max_price_per_input[i] = market_instance.get_max_next_price(input_good);
-		wants_more_mask.set(input_good, true);
+		max_price_per_input[i] = market_instance.get_max_next_price(input_good.index);
+		wants_more_mask[input_good.index] = true;
 		distinct_goods_to_buy++;
 	}
 
@@ -141,12 +141,12 @@ void ArtisanalProducer::artisan_tick_handler::produce(
 
 		//Consume input good
 		fixed_point_t consumed_quantity = base_desired_quantity * inputs_bought_fraction;
-		costs_of_production += consumed_quantity * market_instance.get_good_instance(input_good).get_price();
+		costs_of_production += consumed_quantity * market_instance.get_good_instance(input_good.index).get_price();
 
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_input_consumption(
 				production_type,
-				input_good,
+				input_good.index,
 				consumed_quantity
 			);
 		}
@@ -167,7 +167,7 @@ void ArtisanalProducer::artisan_tick_handler::produce(
 		);
 
 		if (good_stockpile >= demand_per_input[i]) {
-			wants_more_mask.set(input_good, false);
+			wants_more_mask[input_good.index] = false;
 			distinct_goods_to_buy--;
 		}
 	}
@@ -201,7 +201,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 		fixed_point_t total_stockpile_value = 0;
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
-			if (!wants_more_mask.at(input_good)) {
+			if (!wants_more_mask[input_good.index]) {
 				continue;
 			}
 			const ptrdiff_t i = it - input_goods.begin();
@@ -226,7 +226,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
-			char& wants_more = wants_more_mask.at(input_good);
+			char& wants_more = wants_more_mask[input_good.index];
 			if (!wants_more) {
 				continue;
 			}
@@ -251,7 +251,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 	//Place buy orders for each input
 	for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 		GoodDefinition const& input_good = *it.key();
-		if (!wants_more_mask.at(input_good)) {
+		if (!wants_more_mask[input_good.index]) {
 			continue;
 		}
 		const ptrdiff_t index_in_input_goods = it - input_goods.begin();
@@ -266,7 +266,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 				max_possible_satisfaction_denominator
 			);
 			const fixed_point_t money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
-				input_good,
+				input_good.index,
 				optimal_quantity - stockpiled_quantity
 			);
 			max_quantity_to_buy_per_good[&input_good] = max_quantity_to_buy;
@@ -288,16 +288,16 @@ void ArtisanalProducer::artisan_tick(
 	Pop& pop,
 	PopValuesFromProvince const& values_from_province,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	TypedSpan<good_index_t, char> reusable_goods_mask,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_map_0,
 	memory::vector<fixed_point_t>& reusable_map_1,
-	fixed_point_map_t<GoodDefinition const*>& goods_to_sell
+	fixed_point_map_t<good_index_t>& goods_to_sell
 ) {
 	CountryInstance* const country_to_report_economy_nullable = pop.get_location().get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
-	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+	TypedSpan<good_index_t, char> wants_more_mask = reusable_goods_mask;
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
 
@@ -392,23 +392,24 @@ void ArtisanalProducer::artisan_tick(
 			continue;
 		}
 
-		goods_to_sell[&good] = stockpiled_quantity;
+		goods_to_sell[good.index] = stockpiled_quantity;
 	}
 
 	reusable_map_0.clear();
 	reusable_map_1.clear();
-	reusable_goods_mask.fill(0);
+	std::fill(reusable_goods_mask.begin(), reusable_goods_mask.end(), 0);
 }
 
-fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity) {
+fixed_point_t ArtisanalProducer::add_to_stockpile(const good_index_t good_index, const fixed_point_t quantity) {
 	if (OV_unlikely(quantity < 0)) {
 		spdlog::error_s(
 			"Attempted to add negative quantity {} of {} to artisan stockpile.",
-			quantity, good
+			quantity, good_index
 		);
 		return 0;
 	}
 
+	GoodDefinition const& good = stockpile.get_key_at_index(good_index);
 	auto it = max_quantity_to_buy_per_good.find(&good);
 	if (it == max_quantity_to_buy_per_good.end()) {
 		return 0;
@@ -416,25 +417,25 @@ fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, co
 
 	fixed_point_t& max_quantity_to_buy = it.value();
 	const fixed_point_t quantity_added_to_stockpile = std::min(quantity, max_quantity_to_buy);
-	stockpile.at(good) += quantity_added_to_stockpile;
+	stockpile.at_index(good_index) += quantity_added_to_stockpile;
 	max_quantity_to_buy -= quantity_added_to_stockpile;
 	return quantity_added_to_stockpile;
 }
 
-void ArtisanalProducer::subtract_from_stockpile(GoodDefinition const& good, const fixed_point_t sold_quantity) {
+void ArtisanalProducer::subtract_from_stockpile(const good_index_t good_index, const fixed_point_t sold_quantity) {
 	if (OV_unlikely(sold_quantity < 0)) {
 		spdlog::error_s(
 			"Attempted to subtract negative quantity {} of {} to artisan stockpile.",
-			sold_quantity, good
+			sold_quantity, good_index
 		);
 		return;
 	}
 
-	fixed_point_t& stockpiled_quantity = stockpile.at(good);
+	fixed_point_t& stockpiled_quantity = stockpile.at_index(good_index);
 	if (OV_unlikely(stockpiled_quantity < sold_quantity)) {
 		spdlog::error_s(
 			"Attempted to subtract more {} of {} from artisan stockpile than it has {}.",
-			sold_quantity, good, stockpiled_quantity
+			sold_quantity, good_index, stockpiled_quantity
 		);
 
 		stockpiled_quantity = 0;

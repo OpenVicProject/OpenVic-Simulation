@@ -44,10 +44,10 @@ namespace OpenVic {
 
 	struct BuyUpToOrder : GoodBuyUpToOrder {
 	public:
-		GoodDefinition const& good;
+		const good_index_t good_index;
 
 		constexpr BuyUpToOrder(
-			GoodDefinition const& new_good,
+			const good_index_t new_good_index,
 			const std::optional<country_index_t> new_country_index_optional,
 			const fixed_point_t new_max_quantity,
 			const fixed_point_t new_money_to_spend,
@@ -60,7 +60,7 @@ namespace OpenVic {
 				new_actor,
 				new_after_trade
 			},
-			good { new_good }
+			good_index { new_good_index }
 			{}
 
 			constexpr void call_after_trade(BuyResult const& buy_result) const {

@@ -7,9 +7,10 @@
 #include <type_traits>
 
 #include "openvic-simulation/core/memory/String.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
-#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
+#include "openvic-simulation/types/TypedSpan.hpp"
 
 namespace OpenVic::utility {
 #if !defined(_MSC_VER)
@@ -166,6 +167,35 @@ namespace OpenVic {
 			return property;
 		}
 	}
+
+	// Primary template: Default to forwardable_span
+	template <typename Container, typename = void>
+	struct SpanSelector {
+		using type = OpenVic::forwardable_span<
+			std::add_const_t<typename Container::value_type>
+		>;
+
+		static constexpr type get(const Container& container) {
+			return container;
+		}
+	};
+
+	// Specialization: Triggered if Container has an size_type that is strongly typed
+	template <typename Container>
+	requires (
+		requires { typename Container::size_type; }
+		&& is_strongly_typed<typename Container::size_type>
+	)
+	struct SpanSelector<Container, void> {
+		using type = OpenVic::TypedSpan<
+			typename Container::size_type,
+			std::add_const_t<typename Container::value_type>
+		>;
+
+		static constexpr type get(const Container& container) {
+			return container; // Assumes TypedSpan can be constructed from the container
+		}
+	};
 }
 
 /*
@@ -229,7 +259,8 @@ ACCESS:
 	NAME; \
 \
 public: \
-	[[nodiscard]] constexpr OpenVic::forwardable_span<std::add_const_t<typename decltype(NAME)::value_type>> get_##NAME() const { \
-		return NAME; \
+	[[nodiscard]] constexpr auto get_##NAME() const \
+	-> typename OpenVic::SpanSelector<decltype(NAME)>::type { \
+		return OpenVic::SpanSelector<decltype(NAME)>::get(NAME); \
 	} \
 	ACCESS:

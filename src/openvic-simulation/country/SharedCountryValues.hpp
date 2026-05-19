@@ -3,6 +3,7 @@
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
@@ -44,12 +45,15 @@ namespace OpenVic {
 		void update_costs();
 
 	public:
+		memory::vector<RegimentType> const& regiment_types;
+
 		SharedPopTypeValues& get_shared_pop_type_values(PopType const& pop_type);
 
 		SharedCountryValues(
 			PopsDefines const& new_pop_defines,
 			GoodInstanceManager const& new_good_instance_manager,
-			decltype(shared_pop_type_values)::keys_span_type pop_type_keys
+			decltype(shared_pop_type_values)::keys_span_type pop_type_keys,
+			memory::vector<RegimentType> const& new_regiment_types
 		);
 		SharedCountryValues(SharedCountryValues&&) = delete;
 		SharedCountryValues(SharedCountryValues const&) = delete;

@@ -2,6 +2,7 @@
 #include "ResourceGatheringOperationDeps.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
@@ -158,7 +159,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 		market_instance.place_market_sell_order(
 			{
-				production_type.output_good,
+				production_type.output_good.index,
 				country_to_report_economy_nullable == nullptr
 					? std::nullopt
 					: std::optional<country_index_t>{country_to_report_economy_nullable->index},

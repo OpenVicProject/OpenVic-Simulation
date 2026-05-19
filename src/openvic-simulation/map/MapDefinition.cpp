@@ -27,7 +27,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -870,25 +869,23 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	memory::FixedVector<fixed_point_map_t<TerrainType const*>> _terrain_type_pixels_list(
-		province_definitions.size(),
-		[](const size_t i) { return fixed_point_map_t<TerrainType const*>{}; }
+	const province_index_t province_count(province_definitions.size());
+	memory::FixedVector<fixed_point_map_t<TerrainType const*>, province_index_t> terrain_type_pixels_list(
+		province_count,
+		[](const province_index_t i) { return fixed_point_map_t<TerrainType const*>{}; }
 	);
-	TypedSpan<province_index_t, fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list { _terrain_type_pixels_list };
 
 	bool ret = true;
 	ordered_set<colour_t> unrecognised_province_colours;
 
-	memory::FixedVector<fixed_point_t> _pixels_per_province(
-		province_definitions.size(),
-		[](const size_t i) { return fixed_point_t::_0; }
+	memory::FixedVector<fixed_point_t, province_index_t> pixels_per_province(
+		province_count,
+		[](const province_index_t i) { return fixed_point_t::_0; }
 	);
-	TypedSpan<province_index_t, fixed_point_t> pixels_per_province { _pixels_per_province };
-	memory::FixedVector<fvec2_t> _pixel_position_sum_per_province(
-		province_definitions.size(),
-		[](const size_t i) { return fvec2_t{}; }
+	memory::FixedVector<fvec2_t, province_index_t> pixel_position_sum_per_province(
+		province_count,
+		[](const province_index_t i) { return fvec2_t{}; }
 	);
-	TypedSpan<province_index_t, fvec2_t> pixel_position_sum_per_province { _pixel_position_sum_per_province };
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {

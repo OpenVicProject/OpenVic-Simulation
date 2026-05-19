@@ -98,8 +98,7 @@ namespace OpenVic {
 		memory::vector<std::reference_wrapper<const ProvinceInstance>> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
-		memory::FixedVector<BuildingInstance> _buildings;
-		TypedSpan<province_building_index_t, BuildingInstance> buildings;
+		memory::FixedVector<BuildingInstance, province_building_index_t> buildings;
 	public:
 		constexpr TypedSpan<province_building_index_t, const BuildingInstance> get_buildings() const {
 			return buildings;
@@ -205,7 +204,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
@@ -215,7 +214,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK

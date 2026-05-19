@@ -52,9 +52,9 @@ namespace OpenVic {
 		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
 
 	private:
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(life_needs);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(everyday_needs);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(luxury_needs);
+		fixed_point_map_t<good_index_t> PROPERTY(life_needs);
+		fixed_point_map_t<good_index_t> PROPERTY(everyday_needs);
+		fixed_point_map_t<good_index_t> PROPERTY(luxury_needs);
 		income_type_t PROPERTY(life_needs_income_types);
 		income_type_t PROPERTY(everyday_needs_income_types);
 		income_type_t PROPERTY(luxury_needs_income_types);
@@ -97,9 +97,9 @@ namespace OpenVic {
 			index_t new_index,
 			Strata const& new_strata,
 			pop_sprite_t new_sprite,
-			fixed_point_map_t<GoodDefinition const*>&& new_life_needs,
-			fixed_point_map_t<GoodDefinition const*>&& new_everyday_needs,
-			fixed_point_map_t<GoodDefinition const*>&& new_luxury_needs,
+			fixed_point_map_t<good_index_t>&& new_life_needs,
+			fixed_point_map_t<good_index_t>&& new_everyday_needs,
+			fixed_point_map_t<good_index_t>&& new_luxury_needs,
 			income_type_t new_life_needs_income_types,
 			income_type_t new_everyday_needs_income_types,
 			income_type_t new_luxury_needs_income_types,

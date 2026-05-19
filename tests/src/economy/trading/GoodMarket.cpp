@@ -58,7 +58,7 @@ TEST_CASE("GoodMarket no trading when good isn't available", "[GoodMarket]") {
 
 	Trader buyer {
 		.buy_callback=[](BuyResult const& buy_result) -> void {
-			CHECK(buy_result.good_definition == good_definition);
+			CHECK(buy_result.good_index == good_definition.index);
 			CHECK(buy_result.quantity_bought == 0);
 			CHECK(buy_result.money_spent_total == 0);
 			CHECK(buy_result.money_spent_on_imports == 0);
@@ -76,7 +76,7 @@ TEST_CASE("GoodMarket no trading when good isn't available", "[GoodMarket]") {
 
 	Trader seller {
 		.sell_callback=[](SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) -> void {
-			CHECK(sell_result.good_definition == good_definition);
+			CHECK(sell_result.good_index == good_definition.index);
 			CHECK(sell_result.quantity_sold == 0);
 			CHECK(sell_result.money_gained == 0);
 		}

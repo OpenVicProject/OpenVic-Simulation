@@ -7,8 +7,6 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct GoodDefinition;
-
 	struct GoodMarketSellOrder {
 		using actor_t = void*;
 		using callback_t = void (*)(actor_t, SellResult const&, memory::vector<fixed_point_t>&);
@@ -39,10 +37,10 @@ namespace OpenVic {
 
 	struct MarketSellOrder : GoodMarketSellOrder {
 	public:
-		GoodDefinition const& good;
+		const good_index_t good_index;
 
 		constexpr MarketSellOrder(
-			GoodDefinition const& new_good,
+			const good_index_t new_good_index,
 			const std::optional<country_index_t> new_country_index_optional,
 			const fixed_point_t new_quantity,
 			const actor_t new_actor,
@@ -53,7 +51,7 @@ namespace OpenVic {
 				new_actor,
 				new_after_trade
 			},
-			good { new_good }
+			good_index { new_good_index }
 			{}
 	};
 }

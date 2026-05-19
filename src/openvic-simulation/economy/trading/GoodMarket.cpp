@@ -82,12 +82,12 @@ void GoodMarket::execute_orders(
 			= 0;
 
 		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
-			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
+			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition.index));
 		}
 		buy_up_to_orders.clear();
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			market_sell_order.call_after_trade(SellResult::no_sales_result(good_definition), reusable_vectors[0]);
+			market_sell_order.call_after_trade(SellResult::no_sales_result(good_definition.index), reusable_vectors[0]);
 		}		
 		market_sell_orders.clear();
 		
@@ -109,7 +109,7 @@ void GoodMarket::execute_orders(
 			}
 
 			demand_sum += buy_up_to_order.max_quantity;
-			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
+			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition.index));
 		}
 
 		if (game_rules_manager.get_use_optimal_pricing()) {
@@ -317,7 +317,7 @@ void GoodMarket::execute_orders(
 				}
 				market_sell_order.call_after_trade(
 					{
-						good_definition,
+						good_definition.index,
 						quantity_sold,
 						money_gained
 					},
@@ -377,7 +377,7 @@ void GoodMarket::execute_orders(
 				}
 				market_sell_order.call_after_trade(
 					{
-						good_definition,
+						good_definition.index,
 						quantity_sold,
 						money_gained
 					},
@@ -415,7 +415,7 @@ void GoodMarket::execute_buy_orders(
 		const fixed_point_t quantity_bought = quantity_bought_per_order[i];
 
 		if (quantity_bought == 0) {
-			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
+			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition.index));
 		} else {
 			quantity_traded_yesterday += quantity_bought;
 			const fixed_point_t money_spent_total = std::max(
@@ -448,7 +448,7 @@ void GoodMarket::execute_buy_orders(
 				}
 			}
 			buy_up_to_order.call_after_trade({
-				good_definition,
+				good_definition.index,
 				quantity_bought,
 				money_spent_total,
 				money_spent_on_imports

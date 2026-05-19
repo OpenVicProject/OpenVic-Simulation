@@ -3,6 +3,7 @@
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -89,6 +90,7 @@ InstanceManager::InstanceManager(
 		good_instance_manager,
 		new_definition_manager.get_define_manager().get_pops_defines(),
 		new_definition_manager.get_pop_manager().get_pop_types(),
+		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		thread_pool
 	},
 	unit_instance_manager {
@@ -213,8 +215,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_economy_manager().get_production_type_manager(),
-		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
-		definition_manager.get_pop_manager().get_stratas(),
+		strata_index_t(definition_manager.get_pop_manager().get_strata_count()),
 		good_instance_manager.get_good_instances(),
 		country_instance_manager.get_country_instances(),
 		map_instance.get_province_instances()

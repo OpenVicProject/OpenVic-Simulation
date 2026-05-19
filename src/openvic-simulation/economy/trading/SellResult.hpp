@@ -1,26 +1,25 @@
 #pragma once
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct GoodDefinition;
-
 	struct SellResult {
 	public:
-		GoodDefinition const& good_definition;
+		const good_index_t good_index;
 		const fixed_point_t quantity_sold;
 		const fixed_point_t money_gained;
 
 		constexpr SellResult(
-			GoodDefinition const& new_good_definition,
+			const good_index_t new_good_index,
 			const fixed_point_t new_quantity_sold,
 			const fixed_point_t new_money_gained
-		) : good_definition { new_good_definition },
+		) : good_index { new_good_index },
 			quantity_sold { new_quantity_sold },
 			money_gained { new_money_gained } {}
 
-		static constexpr SellResult no_sales_result(GoodDefinition const& good_definition) {
-			return { good_definition, 0, 0 };
+		static constexpr SellResult no_sales_result(const good_index_t good_index) {
+			return { good_index, 0, 0 };
 		}
 	};
 }

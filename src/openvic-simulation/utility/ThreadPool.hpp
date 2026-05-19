@@ -10,6 +10,9 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
+#include "openvic-simulation/population/PopValuesFromProvince.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct GameRulesManager;
@@ -75,8 +78,8 @@ namespace OpenVic {
 			PopsDefines const& pop_defines,
 			ProductionTypeManager const& production_type_manager,
 			forwardable_span<const CountryInstance> country_keys,
-			forwardable_span<const GoodDefinition> good_keys,
-			forwardable_span<const Strata> strata_keys,
+			const good_index_t good_count,
+			const strata_index_t strata_count,
 			forwardable_span<WorkBundle> work_bundles
 		);
 		void await_completion();
@@ -92,8 +95,7 @@ namespace OpenVic {
 			ModifierEffectCache const& modifier_effect_cache,
 			PopsDefines const& pop_defines,
 			ProductionTypeManager const& production_type_manager,
-			forwardable_span<const GoodDefinition> good_keys,
-			forwardable_span<const Strata> strata_keys,
+			const strata_index_t strata_count,
 			forwardable_span<GoodInstance> goods,
 			forwardable_span<CountryInstance> countries,
 			forwardable_span<ProvinceInstance> provinces

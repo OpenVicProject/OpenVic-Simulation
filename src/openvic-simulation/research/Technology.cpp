@@ -3,6 +3,8 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -245,10 +247,15 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	IndexedFlatMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
+	memory::FixedVector<ModifierEffect const*, technology_folder_index_t>& research_bonus_effects =
 		modifier_manager.modifier_effect_cache.research_bonus_effects;
 
-	research_bonus_effects = std::move(decltype(ModifierEffectCache::research_bonus_effects){get_technology_folders()});
+	research_bonus_effects = std::move(
+		decltype(ModifierEffectCache::research_bonus_effects) {
+			generate_values,
+			technology_folder_index_t(get_technology_folder_count())
+		}
+	);
 
 	bool ret = true;
 
@@ -256,7 +263,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 		const memory::string modifier_identifier = memory::fmt::format("{}_research_bonus", folder);
 
 		ret &= modifier_manager.register_base_country_modifier_effect(
-			research_bonus_effects.at(folder), modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
+			research_bonus_effects[folder.index], modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
 		);
 	}
 
