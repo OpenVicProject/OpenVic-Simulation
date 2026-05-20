@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {

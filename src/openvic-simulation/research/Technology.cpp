@@ -1,9 +1,9 @@
 #include "Technology.hpp"
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;

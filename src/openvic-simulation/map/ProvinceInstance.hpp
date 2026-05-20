@@ -3,8 +3,10 @@
 #include <functional>
 
 #include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"
@@ -18,9 +20,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {

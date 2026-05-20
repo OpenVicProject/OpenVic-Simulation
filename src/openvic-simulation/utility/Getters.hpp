@@ -8,9 +8,9 @@
 
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
-#include "openvic-simulation/types/TypedSpan.hpp"
 
 namespace OpenVic::utility {
 #if !defined(_MSC_VER)

@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/thread/SpinMutex.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
@@ -25,7 +26,6 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"

@@ -4,9 +4,9 @@
 #include <foonathan/memory/std_allocator.hpp>
 
 #include "openvic-simulation/core/memory/MemoryTracker.hpp"
-#include "openvic-simulation/core/stl/containers/CowVector.hpp"
+#include "openvic-simulation/core/stl/containers/RingBuffer.hpp"
 
 namespace OpenVic::memory {
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
-	using cow_vector = ::OpenVic::stl::cow_vector<T, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
+	using RingBuffer = ::OpenVic::stl::RingBuffer<T, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
 }

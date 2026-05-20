@@ -10,7 +10,7 @@
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
-namespace OpenVic {
+namespace OpenVic::stl {
 	/**
 	 * A Copy-On-Write pointer
 	 *

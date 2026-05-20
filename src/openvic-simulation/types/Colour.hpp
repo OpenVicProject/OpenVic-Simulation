@@ -25,10 +25,10 @@
 
 #include <range/v3/algorithm/rotate.hpp>
 
+#include "openvic-simulation/core/stl/containers/StackString.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/StackString.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>

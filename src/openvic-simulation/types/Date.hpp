@@ -19,9 +19,9 @@
 #include "openvic-simulation/core/Hash.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/stl/containers/StackString.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

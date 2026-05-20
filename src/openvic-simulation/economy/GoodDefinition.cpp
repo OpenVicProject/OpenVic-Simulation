@@ -1,8 +1,8 @@
 #include "GoodDefinition.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

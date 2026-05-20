@@ -20,6 +20,7 @@
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/stl/MutableIterator.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
@@ -28,7 +29,6 @@
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 
 #define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
 #define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)

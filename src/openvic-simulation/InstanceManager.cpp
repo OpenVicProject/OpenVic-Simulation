@@ -2,8 +2,8 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

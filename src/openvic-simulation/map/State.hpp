@@ -5,12 +5,12 @@
 #include <fmt/base.h>
 
 #include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

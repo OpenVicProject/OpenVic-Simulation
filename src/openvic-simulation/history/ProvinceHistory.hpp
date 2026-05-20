@@ -2,7 +2,9 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/population/Pop.hpp"
@@ -10,9 +12,7 @@
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
