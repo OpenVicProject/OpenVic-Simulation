@@ -1,5 +1,10 @@
 #include "ThreadPool.hpp"
 
+#include <array>
+#include <cstddef>
+#include <span>
+#include <thread>
+
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -28,7 +33,7 @@ void ThreadPool::loop_until_cancelled(
 	memory::FixedVector<fixed_point_t, country_index_t> reusable_country_map_0 { country_index_t(country_keys.size()), fixed_point_t::_0 };
 	memory::FixedVector<fixed_point_t, country_index_t> reusable_country_map_1 { country_index_t(country_keys.size()), fixed_point_t::_0 };
 
-	static constexpr size_t VECTOR_COUNT = std::max(
+	static constexpr std::size_t VECTOR_COUNT = std::max(
 		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,
 		std::max(
 			CountryInstance::VECTORS_FOR_COUNTRY_TICK,
@@ -204,14 +209,14 @@ void ThreadPool::initialise_threadpool(
 	auto countries_begin = countries.begin();
 	auto provinces_begin = provinces.begin();
 
-	for (size_t i = 0; i < WORK_BUNDLE_COUNT; i++) {
-		const size_t goods_chunk_size = i < goods_remainder
+	for (std::size_t i = 0; i < WORK_BUNDLE_COUNT; i++) {
+		const std::size_t goods_chunk_size = i < goods_remainder
 			? goods_quotient + 1
 			: goods_quotient;
-		const size_t countries_chunk_size = i < countries_remainder
+		const std::size_t countries_chunk_size = i < countries_remainder
 			? countries_quotient + 1
 			: countries_quotient;
-		const size_t provinces_chunk_size = i < provinces_remainder
+		const std::size_t provinces_chunk_size = i < provinces_remainder
 			? provinces_quotient + 1
 			: provinces_quotient;
 
@@ -234,7 +239,10 @@ void ThreadPool::initialise_threadpool(
 		provinces_begin = provinces_end;
 	}
 
-	const size_t max_worker_threads = std::max<size_t>(std::thread::hardware_concurrency(), 1);
+	const std::size_t max_worker_threads = std::min(
+		std::max<std::size_t>(std::thread::hardware_concurrency(), 1),
+		WORK_BUNDLE_COUNT
+	);
 	threads.reserve(max_worker_threads);
 	work_per_thread.resize(max_worker_threads, work_t::NONE);
 
@@ -242,8 +250,8 @@ void ThreadPool::initialise_threadpool(
 	const auto [work_bundles_quotient, work_bundles_remainder] = std::ldiv(WORK_BUNDLE_COUNT, max_worker_threads);
 	auto work_bundles_begin = all_work_bundles.begin();
 
-	for (size_t i = 0; i < max_worker_threads; ++i) {
-		const size_t work_bundles_chunk_size = i < work_bundles_remainder
+	for (std::size_t i = 0; i < max_worker_threads; ++i) {
+		const std::size_t work_bundles_chunk_size = i < work_bundles_remainder
 			? work_bundles_quotient + 1
 			: work_bundles_quotient;
 
