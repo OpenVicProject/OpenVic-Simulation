@@ -1,5 +1,7 @@
 #include "GoodMarket.hpp"
+
 #include <algorithm>
+#include <mutex>
 
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
@@ -56,12 +58,12 @@ void GoodMarket::update_next_price_limits() {
 }
 
 void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
-	const std::lock_guard<std::mutex> lock_guard { buy_lock };
+	const std::lock_guard<spin_mutex> lock_guard { buy_lock };
 	buy_up_to_orders.push_back(std::move(buy_up_to_order));
 }
 
 void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) {
-	const std::lock_guard<std::mutex> lock_guard { sell_lock };
+	const std::lock_guard<spin_mutex> lock_guard { sell_lock };
 	market_sell_orders.push_back(std::move(market_sell_order));
 }
 

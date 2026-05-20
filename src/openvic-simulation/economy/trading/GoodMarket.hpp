@@ -1,9 +1,9 @@
 #pragma once
 
-#include <mutex>
 #include <span>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/thread/SpinMutex.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -19,8 +19,8 @@ namespace OpenVic {
 	struct GoodMarket {
 	private:
 		static constexpr int32_t exponential_price_change_shift = 7;
-		std::mutex buy_lock;
-		std::mutex sell_lock;
+		spin_mutex buy_lock;
+		spin_mutex sell_lock;
 		GameRulesManager const& game_rules_manager;
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;

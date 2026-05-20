@@ -1,13 +1,13 @@
 #pragma once
 
 #include <functional>
-#include <mutex>
 #include <utility>
 
 #include <fmt/base.h>
 
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/thread/SpinMutex.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
@@ -168,7 +168,7 @@ namespace OpenVic {
 		ValueHistory<fixed_point_t> PROPERTY(balance_history);
 		OV_STATE_PROPERTY(fixed_point_t, gold_income);
 		atomic_fixed_point_t PROPERTY(cash_stockpile);
-		std::mutex taxable_income_mutex;
+		spin_mutex taxable_income_mutex;
 		OV_IFLATMAP_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
 		OV_STATE_PROPERTY(fixed_point_t, tax_efficiency);
 		IndexedFlatMap<Strata, DerivedState<fixed_point_t>> PROPERTY(effective_tax_rate_by_strata);
@@ -304,7 +304,7 @@ namespace OpenVic {
 
 		/* Trade */
 		struct good_data_t {
-			memory::unique_ptr<std::mutex> mutex;
+			memory::unique_ptr<spin_mutex> mutex;
 			fixed_point_t stockpile_amount;
 			fixed_point_t stockpile_change_yesterday; // positive if we gained, negative if we lost
 			fixed_point_t quantity_traded_yesterday; // positive if we bought, negative if we sold
