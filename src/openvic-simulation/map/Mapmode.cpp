@@ -240,6 +240,10 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, Buildin
 				MapInstance const& map_instance, ProvinceInstance const& province,
 				CountryInstance const* player_country, ProvinceInstance const* selected_province
 			) -> Mapmode::base_stripe_t {
+				if (province.province_definition.is_water()) {
+					return colour_argb_t::null();
+				}
+
 				BuildingType const& infrastructure_building_type = *infrastructure_building_type_ptr;
 				BuildingInstance const& infrastructure = province.get_buildings()[infrastructure_building_type.province_building_index.value()];
 				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
@@ -253,7 +257,6 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, Buildin
 				default:
 					return colour_argb_t { 0, val, 0, ALPHA_VALUE };
 				}
-				return colour_argb_t::null();
 			},
 			"MAPMODE_6"
 		);
