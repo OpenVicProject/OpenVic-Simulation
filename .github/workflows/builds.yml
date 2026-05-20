@@ -1,54 +1,94 @@
 name: 🖥️ Builds
 
-on: [push, pull_request, merge_group]
-
-env:
-  GH_BASE_BRANCH: master
+on:
+  push:
+    branches: ['master']
+    paths:
+      - '.github/workflows/builds.yml'
+      - '.github/actions/openvic-sim-build/action.yml'
+      - '**/{SConstruct,SCsub,*.py}'
+      - '**/*.{hpp,cpp,inc}'
+      - 'scripts'
+      - 'deps/**'
+      - 'tests/**'
+      - 'AUTHORS.md'
+      - 'COPYRIGHT'
+      - 'LICENSE.md'
+      - '.pre-commit-config.yaml'
+      - 'pyproject.toml'
+      - '.clang-format'
+      - '.clang-tidy'
+      - '.gitmodules'
+  pull_request:
+    paths:
+      - '.github/workflows/builds.yml'
+      - '.github/actions/openvic-sim-build/action.yml'
+      - '**/{SConstruct,SCsub,*.py}'
+      - '**/*.{hpp,cpp,inc}'
+      - 'scripts'
+      - 'deps/**'
+      - 'tests/**'
+      - 'AUTHORS.md'
+      - 'COPYRIGHT'
+      - 'LICENSE.md'
+      - '.pre-commit-config.yaml'
+      - 'pyproject.toml'
+      - '.clang-format'
+      - '.clang-tidy'
+      - '.gitmodules'
+  merge_group:
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}|${{ github.ref_name }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}|${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions: {}
 
 jobs:
-  static-checks:
+  static-checks-builds:
     name: Code style, file formatting, and docs
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    if: github.run_attempt > 1 || github.event_name == 'workflow_dispatch' || !vars.DISABLE_BUILDS
+    outputs:
+      changed-files: '"${{ steps.changed-files.outputs.clangd_all_changed_files }}"' # Wrap with quotes to bookend internal quote separators.
+      sources-changed: ${{ steps.changed-files.outputs.sources_any_changed }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 2
+          fetch-depth: 0 # Treeless clone. Slightly less performant than a shallow clone, but makes finding diffs instantaneous.
+          filter: tree:0 # See: https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
+          persist-credentials: false
 
       - name: Install APT dependencies
-        uses: awalsh128/cache-apt-pkgs-action@latest
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
         with:
           packages: libxml2-utils
 
       - name: Get changed files
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config diff.wsErrorHighlight all
-          if [ "${{ github.event_name }}" == "pull_request" -o "${{ github.event.forced }}" == "true" -o "${{ github.event.created }}" == "true" ]; then
-            files=$(git diff-tree --no-commit-id --name-only -r HEAD^1..HEAD 2> /dev/null || true)
-          elif [ "${{ github.event_name }}" == "push" -a "${{ github.event.created }}" == "false" ]; then
-            files=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }}..${{ github.event.after }} 2> /dev/null || true)
-          fi
-          echo "$files" >> changed.txt
-          cat changed.txt
-          files=$(echo "$files" | xargs -I {} sh -c 'echo "\"./{}\""' | tr '\n' ' ')
-          echo "CHANGED_FILES=$files" >> $GITHUB_ENV
-
-      - name: Style checks via pre-commit
-        uses: pre-commit/action@v3.0.1
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
-          extra_args: --files ${{ env.CHANGED_FILES }}
+          safe_output: false # Output passed to environment variable to avoid command injection.
+          separator: '" "' # To account for paths with spaces, ensure our items are split by quotes internally.
+          skip_initial_fetch: true
+          files_yaml_from_source_file: .github/changed-files.yml
 
-  build:
-    runs-on: ${{matrix.os}}
-    name: ${{matrix.name}}
-    needs: static-checks
-    permissions: write-all
+      - name: Style checks via prek
+        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+        env:
+          CHANGED_FILES: '"${{ steps.changed-files.outputs.everything_all_changed_files }}"' # Wrap with quotes to bookend internal quote separators
+        with:
+          extra-args: --files ${{ env.CHANGED_FILES }}
+
+  build-master:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    needs: static-checks-builds
+    if: needs.static-checks-builds.outputs.sources-changed == 'true' || github.event_name != 'pull_request'
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -59,125 +99,70 @@ jobs:
             target: template_debug
             platform: windows
             arch: x86_64
+            test-bin-suffix: .md.exe
+
           - identifier: windows-release
             os: windows-latest
             name: 🏁 Windows Release
             target: template_release
             platform: windows
             arch: x86_64
+            test-bin-suffix: .md.exe
+
           - identifier: macos-debug
             os: macos-latest
             name: 🍎 macOS (universal) Debug
             target: template_debug
             platform: macos
             arch: universal
+
           - identifier: macos-release
             os: macos-latest
             name: 🍎 macOS (universal) Release
             target: template_release
             platform: macos
             arch: universal
+
           - identifier: linux-debug
-            os: ubuntu-latest
+            os: ubuntu-22.04
             name: 🐧 Linux Debug
-            runner: ubuntu-20.04
             target: template_debug
             platform: linux
             arch: x86_64
+
           - identifier: linux-release
-            os: ubuntu-latest
+            os: ubuntu-22.04
             name: 🐧 Linux Release
-            runner: ubuntu-20.04
             target: template_release
             platform: linux
             arch: x86_64
 
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
 
-      - name: Setup build cache
-        uses: OpenVicProject/openvic-cache@master
+      - name: Build
+        uses: ./.github/actions/openvic-sim-build
         with:
-          cache-name: ${{ matrix.identifier }}
-          base-branch: ${{ env.GH_BASE_BRANCH }}
-        continue-on-error: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Set up SCons
-        shell: bash
-        run: |
-          python -c "import sys; print(sys.version)"
-          python -m pip install scons
-          scons --version
-
-      - name: Linux dependencies
-        if: ${{ matrix.platform == 'linux' }}
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -qqq build-essential pkg-config libtbb-dev
-          g++ --version
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 12
-          sudo update-alternatives --set g++ /usr/bin/g++-12
-          g++ --version
-
-      - name: Compile with SCons
-        uses: OpenVicProject/openvic-build@master
-        with:
-          platform: ${{ matrix.platform }}
+          identifier: ${{ matrix.identifier }}
           target: ${{ matrix.target }}
-          sconsflags: arch=${{ matrix.arch }} build_ovsim_library=yes run_ovsim_tests=yes build_ovsim_benchmarks=yes
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
 
-      - name: Delete compilation files
-        if: ${{ matrix.platform == 'windows' }}
+      - name: Run tests
         run: |
-          Remove-Item bin/* -Include *.exp,*.pdb -Force
-
-      - name: Upload library artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.repository.name }}-${{ matrix.identifier }}-library
-          path: |
-            ${{ github.workspace }}/bin/libopenvic-simulation.*
-
-      - name: Upload executable artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.repository.name }}-${{ matrix.identifier }}-executable
-          path: |
-            ${{ github.workspace }}/bin/openvic-simulation.headless.*
-
-      - name: Archive Release
-        uses: thedoctor0/zip-release@0.7.6
-        with:
-          type: "zip"
-          filename: "../../../libopenvic-simulation.${{ matrix.platform }}.${{ matrix.arch }}.zip"
-          directory: "${{ github.workspace }}/bin/"
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-
-      - name: Create and upload asset
-        uses: ncipollo/release-action@v1.13.0
-        with:
-          allowUpdates: true
-          artifacts: "libopenvic-simulation.${{ matrix.platform }}.${{ matrix.arch }}.zip"
-          omitNameDuringUpdate: true
-          omitBodyDuringUpdate: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+          ./tests/bin/openvic-simulation.tests.${{ matrix.platform }}.${{ matrix.target }}.${{ matrix.arch }}${{ matrix.test-bin-suffix || '' }}
 
   merge-library-files:
-    runs-on: ubuntu-latest
-    needs: build
     name: 📚 Merge Library Files
+    runs-on: ubuntu-latest
+    needs: build-master
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           delete-merged: true
           name: ${{ github.event.repository.name }}-library
