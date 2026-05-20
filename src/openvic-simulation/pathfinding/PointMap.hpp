@@ -4,6 +4,8 @@
 #include <span>
 #include <utility>
 
+#include <foonathan/memory/default_allocator.hpp>
+
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 

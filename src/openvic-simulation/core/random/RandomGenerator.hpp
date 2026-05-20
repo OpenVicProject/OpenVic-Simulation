@@ -6,9 +6,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "openvic-simulation/core/Typedefs.hpp"
-
 #include <XoshiroCpp.hpp>
+
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	template<std::uniform_random_bit_generator T>

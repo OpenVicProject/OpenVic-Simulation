@@ -2,18 +2,18 @@
 
 #include <fmt/format.h>
 
+#include <type_safe/strong_typedef.hpp>
+
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
-
-#include <type_safe/strong_typedef.hpp>
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

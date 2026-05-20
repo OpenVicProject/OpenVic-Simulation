@@ -1,13 +1,13 @@
 #include "openvic-simulation/pathfinding/FringePathing.hpp"
 
-#include <tsl/ordered_map.h>
-#include <tsl/ordered_set.h>
-
 #include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <range/v3/algorithm/find.hpp>
 #include <range/v3/algorithm/heap_algorithm.hpp>
+
+#include <tsl/ordered_map.h>
+#include <tsl/ordered_set.h>
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"

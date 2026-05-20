@@ -1,9 +1,9 @@
 #include "MapDefinition.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <charconv>
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>

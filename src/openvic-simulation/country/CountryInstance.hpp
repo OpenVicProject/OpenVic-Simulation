@@ -16,6 +16,7 @@
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
@@ -24,7 +25,6 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
@@ -220,7 +220,7 @@ namespace OpenVic {
 		bool PROPERTY(was_social_budget_cut_yesterday, false);
 		atomic_fixed_point_t PROPERTY(actual_pensions_spending);
 		atomic_fixed_point_t PROPERTY(actual_unemployment_subsidies_spending);
-		
+
 		//base here means not scaled by slider or pop size
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> education_salary_base_by_pop_type;
@@ -298,7 +298,7 @@ namespace OpenVic {
 		DerivedState<fixed_point_t> projected_import_subsidies;
 		DerivedState<fixed_point_t> projected_spending;
 		DerivedState<bool> has_import_subsidies;
-		
+
 		fixed_point_t get_taxable_income_by_strata(Strata const& strata) const;
 		// TODO - national foci
 

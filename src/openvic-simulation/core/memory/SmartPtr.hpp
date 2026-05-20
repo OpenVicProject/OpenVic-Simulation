@@ -16,14 +16,14 @@ namespace OpenVic::memory {
 
 	template<>
 	struct will_optimize_deleter_for<foonathan::memory::heap_allocator> : std::true_type {};
-	
+
 	template<>
 	struct will_optimize_deleter_for<foonathan::memory::malloc_allocator> : std::true_type {};
-	
+
 	template<>
 	struct will_optimize_deleter_for<foonathan::memory::new_allocator> : std::true_type {};
 
-	
+
 #ifdef DEBUG_ENABLED
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
 	using unique_ptr = foonathan::memory::unique_ptr<T, tracker<RawAllocator>>;

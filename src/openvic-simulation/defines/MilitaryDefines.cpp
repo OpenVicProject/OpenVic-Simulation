@@ -1,8 +1,8 @@
 #include "MilitaryDefines.hpp"
 
-#include "openvic-simulation/military/CombatWidth.hpp"
-
 #include <type_safe/strong_typedef.hpp>
+
+#include "openvic-simulation/military/CombatWidth.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

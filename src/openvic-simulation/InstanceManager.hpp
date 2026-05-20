@@ -4,10 +4,10 @@
 
 #include <function2/function2.hpp>
 
-#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
-#include "openvic-simulation/country/CountryInstanceManager.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
+#include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerDeps.hpp"
@@ -44,7 +44,7 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
-		
+
 		ArtisanalProducerDeps artisanal_producer_deps;
 		CountryInstanceDeps country_instance_deps;
 		PopsAggregateDeps pops_aggregate_deps;

@@ -16,5 +16,6 @@
 #include <variant>
 #include <vector>
 
-#include <spdlog/spdlog.h>
 #include <fmt/format.h>
+
+#include <spdlog/spdlog.h>

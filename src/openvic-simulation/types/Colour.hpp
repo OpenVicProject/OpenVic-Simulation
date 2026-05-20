@@ -25,10 +25,10 @@
 
 #include <range/v3/algorithm/rotate.hpp>
 
-#include "openvic-simulation/types/StackString.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/StackString.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>
@@ -796,7 +796,7 @@ struct fmt::formatter<T> {
 			if (_specs.align() != align::none) {
 				report_error("invalid format specifier");
 			}
-			
+
 			if (_specs.alt()) {
 				report_error("invalid format specifier");
 			}
@@ -865,7 +865,7 @@ struct fmt::formatter<T> {
 						out = detail::write(out, "0x");
 					}
 				}
-				
+
 				if (!upper) {
 					std::array<char, T::stack_string::array_length> lower;
 					size_t i = 0;
@@ -879,7 +879,7 @@ struct fmt::formatter<T> {
 					return detail::write(out, string_view { lower.data(), i }, specs, ctx.locale());
 				}
 			} else if (_specs.alt()) {
-				*out++ = '#'; 
+				*out++ = '#';
 			}
 
 			return detail::write(out, string_view { result.data(), result.size() }, specs, ctx.locale());

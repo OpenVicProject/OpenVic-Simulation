@@ -1,5 +1,4 @@
 #include "Pop.hpp"
-#include "PopDeps.hpp"
 
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
@@ -8,13 +7,14 @@
 #include <ranges>
 
 #include <fmt/std.h>
+
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -23,8 +23,8 @@
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
-#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
+#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -33,18 +33,19 @@
 #include "openvic-simulation/politics/Reform.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
-#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/Religion.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
+#include "PopDeps.hpp"
 
 using namespace OpenVic;
 
@@ -130,13 +131,13 @@ void Pop::setup_pop_test_values() {
 		test_weight_indexed(supporter_equivalents_by_ideology, ideology, 1, 5);
 	}
 	supporter_equivalents_by_ideology.rescale(type_safe::get(size));
-	
+
 	supporter_equivalents_by_party_policy.fill(0);
 	for (PartyPolicy const& party_policy : supporter_equivalents_by_party_policy.get_keys()) {
 		test_weight_indexed(supporter_equivalents_by_party_policy, party_policy, 3, 6);
 	}
 	supporter_equivalents_by_party_policy.rescale(type_safe::get(size));
-	
+
 	supporter_equivalents_by_reform.fill(0);
 	for (Reform const& reform : supporter_equivalents_by_reform.get_keys()) {
 		if (!reform.group.is_civilizing()) {
@@ -499,7 +500,7 @@ void Pop::pop_tick_without_cleanup(
 	money_to_spend_per_good.resize(good_keys.size(), 0);
 	cash_allocated_for_artisanal_spending = 0;
 	fill_needs_fulfilled_goods_with_false();
-	
+
 	fixed_point_map_t<GoodDefinition const*> goods_to_sell {};
 	if (artisanal_producer_optional.has_value()) {
 		//execute artisan_tick before needs
@@ -532,7 +533,7 @@ void Pop::pop_tick_without_cleanup(
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
 	}
-	
+
 	//unemployment subsidies are based on yesterdays unemployment
 	employed = 0;
 	//import subsidies are based on yesterday
@@ -614,7 +615,7 @@ void Pop::pop_tick_without_cleanup(
 		if (max_quantity_to_buy <= 0) {
 			continue;
 		}
-		
+
 		GoodDefinition const& good_definition = *it;
 		const fixed_point_t money_to_spend = money_to_spend_per_good[i];
 
@@ -657,7 +658,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 		return;
 	}
 
-	Pop& pop = *static_cast<Pop*>(actor);	
+	Pop& pop = *static_cast<Pop*>(actor);
 	CountryInstance* const country_to_report_economy_nullable = pop.get_location().get_country_to_report_economy();
 
 	fixed_point_t money_spent = buy_result.money_spent_total;

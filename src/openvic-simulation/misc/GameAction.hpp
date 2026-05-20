@@ -99,8 +99,8 @@ X(start_land_unit_recruitment, regiment_type_index_t, province_index_t, pop_id_i
 struct none_argument_t : type_safe::strong_typedef<none_argument_t, std::monostate> {
 	using strong_typedef::strong_typedef;
 	constexpr none_argument_t(std::monostate const& value) : strong_typedef(value) {}
-	constexpr none_argument_t(std::monostate&& value) 
-		: strong_typedef(static_cast<std::monostate&&>(value)) {} 
+	constexpr none_argument_t(std::monostate&& value)
+		: strong_typedef(static_cast<std::monostate&&>(value)) {}
 };
 #define USING_ARG_TYPE(name, ...) \
 struct ARG_TYPE(name) \

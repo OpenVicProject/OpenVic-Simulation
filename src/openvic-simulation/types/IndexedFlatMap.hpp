@@ -7,14 +7,14 @@
 #include <tuple>
 #include <utility>
 
-#include <type_safe/strong_typedef.hpp>
-
 #include <function2/function2.hpp>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 #define OV_IFLATMAP_PROPERTY(KEYTYPE, VALUETYPE, NAME) OV_IFLATMAP_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, private)
@@ -190,7 +190,7 @@ namespace OpenVic {
 			// There is no check for keys.data() being identical as KeyType objects are considered functionally equivalent if their index values match.
 			return true;
 		}
-		
+
 		//vector
 		constexpr IndexedFlatMap()
 		requires std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>
@@ -551,7 +551,7 @@ namespace OpenVic {
 		constexpr keys_span_type const& get_keys() const {
 			return keys;
 		}
-		
+
 		constexpr forwardable_span<ValueType> get_values() {
 			return values;
 		}

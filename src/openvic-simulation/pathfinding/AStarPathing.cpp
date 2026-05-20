@@ -1,13 +1,14 @@
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 
-#include <tsl/ordered_set.h>
-
 #include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <range/v3/algorithm/find.hpp>
 #include <range/v3/algorithm/heap_algorithm.hpp>
 
+#include <tsl/ordered_set.h>
+
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -15,7 +16,6 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
 

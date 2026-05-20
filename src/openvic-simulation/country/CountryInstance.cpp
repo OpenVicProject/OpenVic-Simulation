@@ -1,6 +1,4 @@
 #include "CountryInstance.hpp"
-#include "CountryInstanceDeps.hpp"
-#include "CountryInstanceManager.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -11,8 +9,9 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
-#include "openvic-simulation/country/SharedCountryValues.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/defines/DiplomacyDefines.hpp"
 #include "openvic-simulation/defines/EconomyDefines.hpp"
@@ -26,9 +25,9 @@
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
-#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Government.hpp"
@@ -40,6 +39,8 @@
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
@@ -48,11 +49,11 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/population/PopSize.hpp"
-#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
+
+#include "CountryInstanceDeps.hpp"
+#include "CountryInstanceManager.hpp"
 
 using namespace OpenVic;
 
@@ -82,7 +83,7 @@ CountryInstance::CountryInstance(
 	market_instance { country_instance_deps.market_instance },
 	modifier_effect_cache { country_instance_deps.modifier_effect_cache },
 	unit_type_manager { country_instance_deps.unit_type_manager },
-	
+
 	fallback_date_for_never_completing_research { country_instance_deps.fallback_date_for_never_completing_research },
 	country_defines { country_instance_deps.country_defines },
 	diplomacy_defines { country_instance_deps.diplomacy_defines },
@@ -357,7 +358,7 @@ bool CountryInstance::may_build_in(const BuildingRestrictionCategory restriction
 				return rule_set.may_build_factory_domestically();
 		}
 	}
-	
+
 	if (is_at_war_with(owner)) {
 		//Not allowed to build in hostile lands.
 		return false;
@@ -535,7 +536,7 @@ fixed_point_t CountryInstance::get_taxable_income_by_strata(Strata const& strata
 			running_total += taxable_income;
 		}
 	}
-	
+
 	return running_total;
 }
 DerivedState<fixed_point_t>& CountryInstance::get_effective_tax_rate_by_strata(Strata const& strata) {
@@ -1425,7 +1426,7 @@ void CountryInstance::_update_budget() {
 	if (total_non_colonial_population == 0) {
 		administrative_efficiency_from_administrators.set(fixed_point_t::_1);
 		administrator_percentage.set(fixed_point_t::_0);
-	} else {		
+	} else {
 		administrator_percentage.set(fp::from_fraction<pop_sum_t>(administrators, total_non_colonial_population));
 
 		const pop_sum_t desired_administrators = fp::multiply_truncate(
@@ -1436,7 +1437,7 @@ void CountryInstance::_update_budget() {
 			administrators,
 			fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency())
 		);
-		const fixed_point_t administrative_efficiency_from_administrators_unclamped = 
+		const fixed_point_t administrative_efficiency_from_administrators_unclamped =
 			desired_administrators == 0
 			? fixed_point_t::_1
 			: std::min(
@@ -2159,7 +2160,7 @@ void CountryInstance::manage_national_stockpile(
 	for (auto [good_instance, good_data] : goods_data) {
 		const good_index_t good_index = good_instance.index;
 		if (good_data.is_automated || !good_data.is_selling) {
-			const fixed_point_t quantity_to_allocate_for = good_data.is_automated 
+			const fixed_point_t quantity_to_allocate_for = good_data.is_automated
 				? good_data.government_needs - good_data.stockpile_amount
 				: good_data.stockpile_cutoff - good_data.stockpile_amount;
 			const fixed_point_t max_quantity_to_buy = good_data.is_automated
@@ -2213,13 +2214,13 @@ void CountryInstance::manage_national_stockpile(
 
 				const fixed_point_t weight = weights[good_index];
 				const fixed_point_t max_costs = max_costs_per_good[good_index];
-				
+
 				fixed_point_t cash_available_for_good = fp::mul_div(
 					cash_left_to_spend_draft,
 					weight,
 					weights_sum
 				);
-				
+
 				if (cash_available_for_good >= max_costs) {
 					cash_left_to_spend_draft -= max_costs;
 					money_to_spend_per_good[good_index] = max_costs;
@@ -2239,7 +2240,7 @@ void CountryInstance::manage_national_stockpile(
 				}
 			}
 		}
-		
+
 		for (const good_index_t good_index : good_indices_to_buy) {
 			const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_index];
 			const fixed_point_t money_to_spend = money_to_spend_per_good[good_index];
