@@ -4,6 +4,9 @@
 
 #include <fmt/core.h>
 
+#include <foonathan/memory/default_allocator.hpp>
+#include <foonathan/memory/std_allocator.hpp>
+
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
@@ -11,9 +14,6 @@
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
-
-#include <foonathan/memory/default_allocator.hpp>
-#include <foonathan/memory/std_allocator.hpp>
 
 namespace OpenVic {
 	template<typename ValueT, typename KeyT = PointMap::points_key_type>

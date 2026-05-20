@@ -9,26 +9,26 @@
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
-#include <tsl/ordered_set.h>
+#include <function2/function2.hpp>
 
 #include <spdlog/common.h>
 
+#include <tsl/ordered_set.h>
+
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/core/ui/TextFormat.hpp"
-#include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-
-#include <function2/function2.hpp>
+#include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/TslHelper.hpp"
 
 #define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
 #define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
@@ -95,7 +95,7 @@ using namespace std::string_view_literals;
 
 		template<typename Fn, typename Map>
 		concept MapKeyValueCallback = Callback<Fn, Map const&, std::string_view, ast::NodeCPtr>;
-		
+
 		template<typename Map>
 		constexpr static MapKeyValueCallback<Map> auto ignore_map(KeyValueCallback auto&& callback) {
 			return [default_callback = MOV(callback)](
@@ -188,7 +188,7 @@ using namespace std::string_view_literals;
 				}
 				spdlog::error_s(
 					"Invalid uint: {} (valid range: [0, {}])",
-					val, static_cast<uint64_t>(std::numeric_limits<T>::max()) 
+					val, static_cast<uint64_t>(std::numeric_limits<T>::max())
 				);
 				return false;
 			}, base);

@@ -71,6 +71,9 @@ InsertNewlineAtEOF: true
 InsertBraces: true
 MaxEmptyLinesToKeep: 2
 RequiresClausePosition: OwnLine
+SortIncludes:
+  Enabled: true
+  IgnoreCase: true
 IncludeCategories:
   - Regex: <[[:alnum:]_]+>
     Priority: 1
@@ -80,17 +83,29 @@ IncludeCategories:
     Priority: 3
   - Regex: ^<lexy-vdf/
     Priority: 4
-  - Regex: ^<tsl/
+  - Regex: ^<boost/
     Priority: 5
   - Regex: ^<dryad/
     Priority: 6
   - Regex: ^<fmt/
     Priority: 7
-  - Regex: ^<range
+  - Regex: ^<foonathan
     Priority: 8
-  - Regex: ^<spdlog/
+  - Regex: ^<function2/
     Priority: 9
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<plf_colony.h>
     Priority: 10
-  - Regex: .*
+  - Regex: ^<range
     Priority: 11
+  - Regex: ^<spdlog/
+    Priority: 12
+  - Regex: ^<tsl/
+    Priority: 13
+  - Regex: ^<type_safe/
+    Priority: 14
+  - Regex: ^<XoshiroCpp.hpp>
+    Priority: 15
+  - Regex: ^"openvic-simulation/
+    Priority: 16
+  - Regex: .*
+    Priority: 17

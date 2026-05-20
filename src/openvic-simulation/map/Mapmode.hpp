@@ -1,12 +1,12 @@
 #pragma once
 
+#include <function2/function2.hpp>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-
-#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct BuildingTypeManager;

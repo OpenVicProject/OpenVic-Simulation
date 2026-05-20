@@ -7,13 +7,13 @@
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/testing/TestScript.hpp"
 #include "openvic-simulation/testing/test_scripts/A_001_file_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_002_economy_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_003_military_unit_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_004_networking_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_005_nation_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_006_politics_tests.cpp"
+#include "openvic-simulation/testing/TestScript.hpp"
 
 namespace OpenVic {
 

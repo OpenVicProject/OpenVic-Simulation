@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <functional>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
@@ -14,8 +16,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-
-#include <type_safe/strong_typedef.hpp>
 
 namespace OpenVic {
 	struct BuyResult;
@@ -128,7 +128,7 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(PartyPolicy, fixed_point_t, supporter_equivalents_by_party_policy);
 		OV_IFLATMAP_PROPERTY(Reform, fixed_point_t, supporter_equivalents_by_reform);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-	
+
 	public:
 		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
 		// the support as a proportion of 1.0

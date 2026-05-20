@@ -1,14 +1,14 @@
 #pragma once
 
+#include <boost/int128/detail/int128_imp.hpp>
+
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
-
-#include <boost/int128/detail/int128_imp.hpp>
 
 namespace OpenVic {
 	struct CountryDefinition;

@@ -1,5 +1,4 @@
 #include "FixedPoint.hpp"
-#include "String.hpp"
 
 #include <concepts>
 #include <cstdint>
@@ -9,6 +8,8 @@
 
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+
+#include "String.hpp"
 
 /* Base e exponential lookup table */
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"

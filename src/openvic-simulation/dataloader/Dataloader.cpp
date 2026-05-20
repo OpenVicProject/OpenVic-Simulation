@@ -12,13 +12,13 @@
 
 #include <fmt/std.h>
 
+#include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/string/Utility.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

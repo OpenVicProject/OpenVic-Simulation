@@ -4,8 +4,8 @@
 
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	template<

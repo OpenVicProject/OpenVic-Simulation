@@ -6,12 +6,12 @@
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/memory/Vector.hpp"
-
 #include <function2/function2.hpp>
+
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/dataloader/ModManager.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;

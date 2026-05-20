@@ -15,14 +15,14 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/Hash.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
-#include "openvic-simulation/core/error/ErrorMacros.hpp"
-#include "openvic-simulation/types/StackString.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/core/Hash.hpp"
+#include "openvic-simulation/types/StackString.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days

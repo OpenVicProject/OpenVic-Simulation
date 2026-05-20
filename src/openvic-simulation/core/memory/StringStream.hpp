@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <sstream>
+#include <string>
 
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>

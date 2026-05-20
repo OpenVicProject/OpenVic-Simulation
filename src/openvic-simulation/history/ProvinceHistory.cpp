@@ -2,9 +2,9 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"

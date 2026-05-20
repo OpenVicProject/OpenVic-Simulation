@@ -1,5 +1,4 @@
 #include "ArtisanalProducer.hpp"
-#include "ArtisanalProducerDeps.hpp"
 
 #include <cstddef>
 #include <limits>
@@ -22,6 +21,8 @@
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
+
+#include "ArtisanalProducerDeps.hpp"
 
 using namespace OpenVic;
 
@@ -237,13 +238,13 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 				max_possible_satisfaction_numerator,
 				max_possible_satisfaction_denominator
 			);
-			
+
 			const fixed_point_t stockpiled_quantity = stockpile.at(input_good);
 			if (stockpiled_quantity >= optimal_quantity) {
 				at_or_below_optimum = false;
 				wants_more = false;
 				--distinct_goods_to_buy;
-			}				
+			}
 		}
 	}
 
@@ -342,7 +343,7 @@ void ArtisanalProducer::artisan_tick(
 			old_production_type,
 			wants_more_mask
 		};
-		
+
 		const bool should_report_input_demand = old_production_type_ptr == new_production_type_ptr;
 		tick_handler.calculate_inputs(stockpile, should_report_input_demand);
 		tick_handler.produce(costs_of_production, current_production, stockpile);
@@ -357,7 +358,7 @@ void ArtisanalProducer::artisan_tick(
 			);
 		}
 	}
-	
+
 	if (new_production_type_ptr != old_production_type_ptr) {
 		set_production_type(new_production_type_ptr);
 		ProductionType const& new_production_type = *new_production_type_ptr;
@@ -375,7 +376,7 @@ void ArtisanalProducer::artisan_tick(
 			new_production_type,
 			wants_more_mask
 		};
-		
+
 		constexpr bool should_report_input_demand = true;
 		tick_handler.calculate_inputs(stockpile, should_report_input_demand);
 		tick_handler.allocate_money_for_inputs(
@@ -522,7 +523,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 	} else if (base_chance_to_switch_while_profitable > 0) {
 		const fixed_point_t current_score = calculate_production_type_score(
 			revenue,
-			costs,		
+			costs,
 			pop.get_size()
 		);
 
@@ -576,7 +577,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 	if (!should_pick_new_production_type) {
 		return production_type_nullable;
 	}
-	
+
 	fixed_point_t weights_sum = 0;
 	memory::vector<fixed_point_t> weights {};
 	weights.reserve(ranked_artisanal_production_types.size());

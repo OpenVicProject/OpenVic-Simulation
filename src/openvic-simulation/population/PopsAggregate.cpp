@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -12,8 +14,6 @@
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
-
-#include <type_safe/strong_typedef.hpp>
 
 using namespace OpenVic;
 PopsAggregate::PopsAggregate(

@@ -6,10 +6,10 @@
 
 #include "openvic-simulation/core/memory/Colony.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -31,7 +31,7 @@ namespace OpenVic {
 		friend struct StateManager;
 
 	private:
-		CountryInstance* previous_country_ptr = nullptr;	
+		CountryInstance* previous_country_ptr = nullptr;
 
 		ProvinceInstance* PROPERTY_PTR(capital);
 		memory::vector<std::reference_wrapper<ProvinceInstance>> SPAN_PROPERTY(provinces);

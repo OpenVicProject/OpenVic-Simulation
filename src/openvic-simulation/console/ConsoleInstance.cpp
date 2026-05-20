@@ -9,12 +9,12 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
-#include "openvic-simulation/core/error/ErrorMacros.hpp"
-#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/military/Wargoal.hpp"

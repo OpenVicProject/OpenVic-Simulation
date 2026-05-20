@@ -1,5 +1,6 @@
 #include "ResourceGatheringOperation.hpp"
-#include "ResourceGatheringOperationDeps.hpp"
+
+#include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -18,7 +19,7 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
-#include <type_safe/strong_typedef.hpp>
+#include "ResourceGatheringOperationDeps.hpp"
 
 using namespace OpenVic;
 
@@ -433,7 +434,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				if (employee_pop_type.is_slave) {
 					continue;
 				}
-				
+
 				const fixed_point_t minimum_wage = employee.get_minimum_wage_cached();
 				if (minimum_wage > 0 && incomes[i] == minimum_wage) {
 					continue;

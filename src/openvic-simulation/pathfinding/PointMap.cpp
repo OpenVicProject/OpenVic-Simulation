@@ -5,16 +5,16 @@
 #include <span>
 #include <type_traits>
 
+#include <fmt/core.h>
+
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
-
-#include <fmt/core.h>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/Vector.hpp"
 
 using namespace OpenVic;
 

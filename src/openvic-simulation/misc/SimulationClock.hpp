@@ -2,9 +2,9 @@
 
 #include <chrono>
 
-#include "openvic-simulation/utility/Getters.hpp"
-
 #include <function2/function2.hpp>
+
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	/* Conditionally advances game depending on speed and pause state. */

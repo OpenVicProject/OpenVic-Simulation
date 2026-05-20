@@ -1,13 +1,13 @@
 #pragma once
 
-#include "DependencyTracker.hpp"
-
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/reactive/DependencyTracker.hpp"
+
+#include "DependencyTracker.hpp"
 
 namespace OpenVic {
 	template <typename T>
@@ -77,7 +77,7 @@ namespace OpenVic {
 			recalculate_if_dirty();
 			return cached_value;
 		}
-		
+
 		//special case where connection may be discarded as the observer handles it
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
 		requires OpenVic::_detail::signal::Callable<Pmf, Ptr>

@@ -1,8 +1,8 @@
 #include "Wargoal.hpp"
 
-#include <range/v3/algorithm/contains.hpp>
-
 #include <openvic-dataloader/v2script/Parser.hpp>
+
+#include <range/v3/algorithm/contains.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 

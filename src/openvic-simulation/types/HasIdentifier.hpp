@@ -3,8 +3,8 @@
 #include <cassert>
 #include <concepts>
 #include <cstddef>
-#include <string_view>
 #include <ostream>
+#include <string_view>
 
 #include <fmt/base.h>
 
