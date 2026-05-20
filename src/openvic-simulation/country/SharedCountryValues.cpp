@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/military/UnitType.hpp" // IWYU pragma: keep for RegimentType size
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
@@ -11,10 +12,12 @@ using namespace OpenVic;
 SharedCountryValues::SharedCountryValues(
 	PopsDefines const& new_pop_defines,
 	GoodInstanceManager const& new_good_instance_manager,
-	decltype(shared_pop_type_values)::keys_span_type pop_type_keys
+	decltype(shared_pop_type_values)::keys_span_type pop_type_keys,
+	memory::vector<RegimentType> const& new_regiment_types
 ) : pop_defines { new_pop_defines },
 	good_instance_manager { new_good_instance_manager },
-	shared_pop_type_values { pop_type_keys }
+	shared_pop_type_values { pop_type_keys },
+	regiment_types { new_regiment_types }
 	{}
 
 SharedPopTypeValues& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) {
@@ -35,8 +38,8 @@ void SharedPopTypeValues::update_costs(PopsDefines const& pop_defines, GoodInsta
 
 	#define UPDATE_NEED_COSTS(need_category) \
 		base_##need_category##_need_costs = 0; \
-		for (auto const& [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
-			GoodInstance const& good_instance = good_instance_manager.get_good_instance_by_definition(*good_definition_ptr); \
+		for (auto const& [good_index, quantity] : pop_type.get_##need_category##_needs()) { \
+			GoodInstance const& good_instance = *good_instance_manager.get_good_instance_by_index(good_index); \
 			base_##need_category##_need_costs += good_instance.get_price() * quantity; \
 		} \
 		base_##need_category##_need_costs *= pop_defines.get_base_goods_demand(); \

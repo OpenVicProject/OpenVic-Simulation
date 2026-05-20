@@ -19,16 +19,14 @@ void ThreadPool::loop_until_cancelled(
 	PopsDefines const& pop_defines,
 	ProductionTypeManager const& production_type_manager,
 	forwardable_span<const CountryInstance> country_keys,
-	forwardable_span<const GoodDefinition> good_keys,
-	forwardable_span<const Strata> strata_keys,
+	const good_index_t good_count,
+	const strata_index_t strata_count,
 	forwardable_span<WorkBundle> work_bundles
 ) {
-	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
+	memory::FixedVector<char, good_index_t> reusable_goods_mask { good_count, {} };
 
-	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size(), fixed_point_t::_0 };
-	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size(), fixed_point_t::_0 };
-	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_0_span { reusable_country_map_0 };
-	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_1_span { reusable_country_map_1 };
+	memory::FixedVector<fixed_point_t, country_index_t> reusable_country_map_0 { country_index_t(country_keys.size()), fixed_point_t::_0 };
+	memory::FixedVector<fixed_point_t, country_index_t> reusable_country_map_1 { country_index_t(country_keys.size()), fixed_point_t::_0 };
 
 	static constexpr size_t VECTOR_COUNT = std::max(
 		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,
@@ -46,7 +44,7 @@ void ThreadPool::loop_until_cancelled(
 		modifier_effect_cache,
 		production_type_manager,
 		pop_defines,
-		strata_keys
+		strata_count
 	};
 
 	while (!is_cancellation_requested) {
@@ -74,8 +72,8 @@ void ThreadPool::loop_until_cancelled(
 				for (WorkBundle& work_bundle : work_bundles) {
 					for (GoodMarket& good : work_bundle.goods_chunk) {
 						good.execute_orders(
-							reusable_country_map_0_span,
-							reusable_country_map_1_span,
+							reusable_country_map_0,
+							reusable_country_map_1,
 							reusable_vectors_span.first<GoodMarket::VECTORS_FOR_EXECUTE_ORDERS>()
 						);
 					}
@@ -186,8 +184,7 @@ void ThreadPool::initialise_threadpool(
 	ModifierEffectCache const& modifier_effect_cache,
 	PopsDefines const& pop_defines,
 	ProductionTypeManager const& production_type_manager,
-	forwardable_span<const GoodDefinition> good_keys,
-	forwardable_span<const Strata> strata_keys,
+	const strata_index_t strata_count,
 	forwardable_span<GoodInstance> goods,
 	forwardable_span<CountryInstance> countries,
 	forwardable_span<ProvinceInstance> provinces
@@ -201,8 +198,8 @@ void ThreadPool::initialise_threadpool(
 
 
 	const auto [goods_quotient, goods_remainder] = std::ldiv(goods.size(), WORK_BUNDLE_COUNT);
-	const auto [countries_quotient, countries_remainder] = std::ldiv(countries.size(), WORK_BUNDLE_COUNT);
-	const auto [provinces_quotient, provinces_remainder] = std::ldiv(provinces.size(), WORK_BUNDLE_COUNT);
+	const auto [countries_quotient, countries_remainder] = std::ldiv(countries.size(),WORK_BUNDLE_COUNT);
+	const auto [provinces_quotient, provinces_remainder] = std::ldiv(provinces.size(),WORK_BUNDLE_COUNT);
 	auto goods_begin = goods.begin();
 	auto countries_begin = countries.begin();
 	auto provinces_begin = provinces.begin();
@@ -262,8 +259,8 @@ void ThreadPool::initialise_threadpool(
 				&pop_defines,
 				&production_type_manager,
 				countries,
-				good_keys,
-				strata_keys,
+				good_count = good_index_t(goods.size()),
+				strata_count,
 				work_bundles_begin,
 				work_bundles_end
 			]() -> void {
@@ -275,8 +272,8 @@ void ThreadPool::initialise_threadpool(
 					pop_defines,
 					production_type_manager,
 					countries,
-					good_keys,
-					strata_keys,
+					good_count,
+					strata_count,
 					std::span<WorkBundle>{ work_bundles_begin, work_bundles_end }
 				);
 			}

@@ -8,6 +8,8 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/fixed_point/Fraction.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -67,18 +69,18 @@ namespace OpenVic {
 			Pop& pop,
 			PopValuesFromProvince const& values_from_province,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_map_0,
 			memory::vector<fixed_point_t>& reusable_map_1,
-			fixed_point_map_t<GoodDefinition const*>& goods_to_sell
+			fixed_point_map_t<good_index_t>& goods_to_sell
 		);
 
 		//thread safe if called once per good and stockpile already has an entry.
 		//adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
-		fixed_point_t add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity);
-		void subtract_from_stockpile(GoodDefinition const& good, const fixed_point_t sold_quantity);
+		fixed_point_t add_to_stockpile(const good_index_t good_index, const fixed_point_t quantity);
+		void subtract_from_stockpile(const good_index_t good_index, const fixed_point_t sold_quantity);
 
 		//optional to handle invalid
 		static std::optional<fixed_point_t> estimate_production_type_score(
@@ -99,7 +101,7 @@ namespace OpenVic {
 			memory::vector<fixed_point_t>& max_price_per_input;
 			Pop& pop;
 			ProductionType const& production_type;
-			IndexedFlatMap<GoodDefinition, char>& wants_more_mask;
+			TypedSpan<good_index_t, char> wants_more_mask;
 
 		public:
 			artisan_tick_handler(
@@ -109,7 +111,7 @@ namespace OpenVic {
 				memory::vector<fixed_point_t>& new_max_price_per_input,
 				Pop& new_pop,
 				ProductionType const& new_production_type,
-				IndexedFlatMap<GoodDefinition, char>& new_wants_more_mask
+				TypedSpan<good_index_t, char> new_wants_more_mask
 			) : country_to_report_economy_nullable { new_country_to_report_economy_nullable },
 				demand_per_input { new_demand_per_input },
 				market_instance { new_market_instance },

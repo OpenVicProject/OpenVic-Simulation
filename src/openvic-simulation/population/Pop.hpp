@@ -14,7 +14,6 @@
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {
@@ -22,11 +21,8 @@ namespace OpenVic {
 	struct CountryInstance;
 	struct CountryParty;
 	struct Culture;
-	struct GoodDefinition;
-	struct Ideology;
 	struct MarketInstance;
 	struct MilitaryDefines;
-	struct PartyPolicy;
 	struct PopDeps;
 	struct PopManager;
 	struct PopType;
@@ -124,9 +120,9 @@ namespace OpenVic {
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
 		// equivalents of these distributions will have a total size equal to their total population size.
-		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
-		OV_IFLATMAP_PROPERTY(PartyPolicy, fixed_point_t, supporter_equivalents_by_party_policy);
-		OV_IFLATMAP_PROPERTY(Reform, fixed_point_t, supporter_equivalents_by_reform);
+		memory::FixedVector<fixed_point_t, ideology_index_t> SPAN_PROPERTY(supporter_equivalents_by_ideology);
+		memory::FixedVector<fixed_point_t, party_policy_index_t> SPAN_PROPERTY(supporter_equivalents_by_party_policy);
+		memory::FixedVector<fixed_point_t, reform_index_t> SPAN_PROPERTY(supporter_equivalents_by_reform);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
 
 	public:
@@ -153,8 +149,8 @@ namespace OpenVic {
 			public: \
 				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
-				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
-				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+				fixed_point_map_t<good_index_t> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
+				ordered_map<good_index_t, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
@@ -174,7 +170,7 @@ namespace OpenVic {
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
-			fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
+			fixed_point_map_t<good_index_t> const& scaled_needs,
 			forwardable_span<fixed_point_t> money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_vector,
 			fixed_point_t& price_inverse_sum,
@@ -183,7 +179,7 @@ namespace OpenVic {
 		void pop_tick_without_cleanup(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
@@ -210,7 +206,7 @@ namespace OpenVic {
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
-		void setup_pop_test_values();
+		void setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms);
 		bool convert_to_equivalent();
 		void update_location_based_attributes();
 
@@ -231,7 +227,7 @@ namespace OpenVic {
 		void pop_tick(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK

@@ -16,6 +16,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
@@ -26,25 +27,20 @@ ProvinceInstance::ProvinceInstance(
 ) : HasIdentifierAndColour { new_province_definition },
 	HasIndex { new_province_definition.index },
 	FlagStrings { "province" },
-	PopsAggregate {
-		province_instance_deps.pops_aggregate_deps,
-		province_instance_deps.stratas,
-		province_instance_deps.pop_types
-	},
+	PopsAggregate {	province_instance_deps.pops_aggregate_deps },
 	province_definition { new_province_definition },
 	game_rules_manager { province_instance_deps.game_rules_manager },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { province_instance_deps.rgo_deps },
-	pops_cache_by_type { province_instance_deps.pop_types },
-	_buildings(
+	pops_cache_by_type { generate_values, province_instance_deps.pops_aggregate_deps.pop_type_count },
+	buildings {
 		new_province_definition.is_water()
-			? 0
-			: province_instance_deps.building_type_manager.get_province_building_types().size(),
-			[&province_instance_deps](const size_t i) -> BuildingType const& {
+			? province_building_index_t(0)
+			: province_building_index_t(province_instance_deps.building_type_manager.get_province_building_types().size()),
+			[&province_instance_deps](const province_building_index_t i) -> BuildingType const& {
 				return province_instance_deps.building_type_manager.get_province_building_types()[i];
 			}
-	),
-	buildings(_buildings)
+	}
 {
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
@@ -52,10 +48,6 @@ ProvinceInstance::ProvinceInstance(
 
 ModifierSum const& ProvinceInstance::get_owner_modifier_sum() const {
 	return owner->get_modifier_sum();
-}
-
-memory::vector<std::reference_wrapper<Pop>> const& ProvinceInstance::get_pops_cache_by_type(PopType const& key) const {
-	return pops_cache_by_type.at(key);
 }
 
 void ProvinceInstance::set_state(State* new_state) {
@@ -71,7 +63,10 @@ GoodDefinition const* ProvinceInstance::get_rgo_good() const {
 	return &(rgo.get_production_type_nullable()->output_good);
 }
 
-bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
+bool ProvinceInstance::set_rgo_production_type_nullable(
+	TypedSpan<pop_type_index_t, const PopType> pop_types,
+	ProductionType const* rgo_production_type_nullable
+) {
 	bool is_valid_operation = true;
 	if (rgo_production_type_nullable != nullptr) {
 		ProductionType const& rgo_production_type = *rgo_production_type_nullable;
@@ -82,7 +77,7 @@ bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rg
 			);
 			is_valid_operation = false;
 		}
-		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(rgo_production_type);
+		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(pop_types, rgo_production_type);
 	}
 
 	rgo.set_production_type_nullable(rgo_production_type_nullable);
@@ -215,7 +210,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 
 	has_unaccepted_pops = false;
 
-	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type) {
 		pops_cache.clear();
 	}
 
@@ -227,7 +222,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
-		pops_cache_by_type.at(pop.get_type()).push_back(pop);
+		pops_cache_by_type[pop.get_type().index].push_back(pop);
 		pop.update_gamestate(military_defines, owner, pop_size_per_regiment_multiplier);
 		add_pops_aggregate(pop);
 		if (pop.get_culture_status() == Pop::culture_status_t::UNACCEPTED) {
@@ -310,17 +305,15 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 	}
 }
 
-bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
+bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(
+	TypedSpan<pop_type_index_t, const PopType> pop_types,
+	ProductionType const& production_type
+) {
 	bool is_valid_operation = true;
 	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : pops) {
 		for (Job const& job : jobs) {
-			PopType const* const job_pop_type_ptr = job.pop_type;
-			if (job_pop_type_ptr == nullptr) {
-				continue;
-			}
-
-			PopType const& job_pop_type = *job_pop_type_ptr;
+			PopType const& job_pop_type = pop_types[job.pop_type_index];
 			PopType const& old_pop_type = pop.get_type();
 			if (job_pop_type != old_pop_type) {
 				PopType const* const equivalent_ptr = old_pop_type.get_equivalent();
@@ -376,7 +369,7 @@ void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	TypedSpan<good_index_t, char> reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
@@ -507,7 +500,7 @@ void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	TypedSpan<good_index_t, char> reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
@@ -527,9 +520,9 @@ void ProvinceInstance::initialise_rgo() {
 	rgo.initialise_rgo_size_multiplier();
 }
 
-void ProvinceInstance::setup_pop_test_values() {
+void ProvinceInstance::setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms) {
 	for (Pop& pop : pops) {
-		pop.setup_pop_test_values();
+		pop.setup_pop_test_values(reforms);
 	}
 }
 

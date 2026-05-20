@@ -31,27 +31,17 @@ bool GameActionManager::VariantVisitor::operator() (set_speed_argument_t const& 
 
 bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& argument) const {
 	const auto [country_index, new_is_ai] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AI called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	const bool old_ai = country->is_ai();
-	country->set_ai(new_is_ai);
-	return old_ai != country->is_ai();
+	const bool old_ai = country.is_ai();
+	country.set_ai(new_is_ai);
+	return old_ai != country.is_ai();
 }
 
 // Production
 bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
 	const auto [country_index, province_index, province_building_index] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
-
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid country index: {}", country_index);
-		return false;
-	}
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 	
 	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
 
@@ -63,19 +53,14 @@ bool GameActionManager::VariantVisitor::operator() (expand_province_building_arg
 	return province->expand_building(
 		instance_manager.definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		province_building_index,
-		*country
+		country
 	);
 }
 
 // Budget
 bool GameActionManager::VariantVisitor::operator() (set_strata_tax_argument_t const& argument) const {
 	const auto [country_index, strata_index, tax_rate] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
-
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid country index: {}", country_index);
-		return false;
-	}
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	Strata const* strata = instance_manager.definition_manager.get_pop_manager().get_strata_by_index(strata_index);
 
@@ -84,123 +69,78 @@ bool GameActionManager::VariantVisitor::operator() (set_strata_tax_argument_t co
 		return false;
 	}
 
-	country->set_strata_tax_rate_slider_value(*strata, tax_rate);
+	country.set_strata_tax_rate_slider_value(*strata, tax_rate);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_army_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_ARMY_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_army_spending_slider_value(spending);
+	country.set_army_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_navy_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_NAVY_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_navy_spending_slider_value(spending);
+	country.set_navy_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_construction_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_CONSTRUCTION_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_construction_spending_slider_value(spending);
+	country.set_construction_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_education_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_EDUCATION_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_education_spending_slider_value(spending);
+	country.set_education_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_administration_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_ADMINISTRATION_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_administration_spending_slider_value(spending);
+	country.set_administration_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_social_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_SOCIAL_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_social_spending_slider_value(spending);
+	country.set_social_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_military_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_MILITARY_SPENDING called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_military_spending_slider_value(spending);
+	country.set_military_spending_slider_value(spending);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_tariff_rate_argument_t const& argument) const {
 	const auto [country_index, tariff_rate] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_TARIFF_RATE called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	country->set_tariff_rate_slider_value(tariff_rate);
+	country.set_tariff_rate_slider_value(tariff_rate);
 	return false;
 }
 
 // Technology
 bool GameActionManager::VariantVisitor::operator() (start_research_argument_t const& argument) const {
 	const auto [country_index, technology_index] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
-
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid country index: {}", country_index);
-		return false;
-	}
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	Technology const* technology = instance_manager.definition_manager
 		.get_research_manager()
@@ -212,11 +152,11 @@ bool GameActionManager::VariantVisitor::operator() (start_research_argument_t co
 		return false;
 	}
 
-	Technology const* old_research = country->get_current_research_untracked();
+	Technology const* old_research = country.get_current_research_untracked();
 
-	country->start_research(*technology, instance_manager.get_today());
+	country.start_research(*technology, instance_manager.get_today());
 
-	return old_research != country->get_current_research_untracked();
+	return old_research != country.get_current_research_untracked();
 }
 
 // Politics
@@ -226,12 +166,7 @@ bool GameActionManager::VariantVisitor::operator() (start_research_argument_t co
 // Trade
 bool GameActionManager::VariantVisitor::operator() (set_good_automated_argument_t const& argument) const {
 	const auto [country_index, good_index, new_is_automated] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
-
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_GOOD_AUTOMATED called with invalid country index: {}", country_index);
-		return false;
-	}
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
 
@@ -240,7 +175,7 @@ bool GameActionManager::VariantVisitor::operator() (set_good_automated_argument_
 		return false;
 	}
 
-	CountryInstance::good_data_t& good_data = country->get_good_data(*good);
+	CountryInstance::good_data_t& good_data = country.get_good_data(*good);
 
 	const bool old_automated = good_data.is_automated;
 
@@ -251,12 +186,7 @@ bool GameActionManager::VariantVisitor::operator() (set_good_automated_argument_
 
 bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argument_t const& argument) const {
 	const auto [country_index, good_index, new_is_selling, new_cutoff] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
-
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid country index: {}", country_index);
-		return false;
-	}
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
 
@@ -265,12 +195,12 @@ bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argumen
 		return false;
 	}
 
-	CountryInstance::good_data_t& good_data = country->get_good_data(*good);
+	CountryInstance::good_data_t& good_data = country.get_good_data(*good);
 
 	if (OV_unlikely(good_data.is_automated)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_GOOD_TRADE_ORDER called for automated good! Country: {}, good: {}",
-			*country, *good
+			country, *good
 		);
 		return false;
 	}
@@ -287,7 +217,7 @@ bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argumen
 			good_data.stockpile_cutoff,
 			*good,
 			good_data.is_selling ? "selling" : "buying",
-			*country
+			country
 		);
 		good_data.stockpile_cutoff = 0;
 	}
@@ -300,23 +230,18 @@ bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argumen
 // Military
 bool GameActionManager::VariantVisitor::operator() (create_leader_argument_t const& argument) const {
 	const auto [country_index, unit_branch] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_CREATE_LEADER called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	if (country->get_create_leader_count() < 1) {
+	if (country.get_create_leader_count() < 1) {
 		spdlog::error_s(
 			"GAME_ACTION_CREATE_LEADER called for country \"{}\" without enough leadership points ({:.2}) to create any leaders!",
-			*country, country->get_leadership_point_stockpile()
+			country, country.get_leadership_point_stockpile()
 		);
 		return false;
 	}
 
 	return instance_manager.get_unit_instance_manager().create_leader(
-		*country,
+		country,
 		unit_branch,
 		instance_manager.get_today()
 	);
@@ -341,50 +266,29 @@ bool GameActionManager::VariantVisitor::operator() (set_use_leader_argument_t co
 
 bool GameActionManager::VariantVisitor::operator() (set_auto_create_leaders_argument_t const& argument) const {
 	const auto [country_index, new_should_auto_create] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AUTO_CREATE_LEADERS called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	const bool old_auto_create = country->get_auto_create_leaders();
-
-	country->set_auto_create_leaders(new_should_auto_create);
-
-	return old_auto_create != country->get_auto_create_leaders();
+	const bool old_auto_create = country.get_auto_create_leaders();
+	country.set_auto_create_leaders(new_should_auto_create);
+	return old_auto_create != country.get_auto_create_leaders();
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_auto_assign_leaders_argument_t const& argument) const {
 	const auto [country_index, new_should_auto_assign] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AUTO_ASSIGN_LEADERS called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	const bool old_auto_assign = country->get_auto_assign_leaders();
-
-	country->set_auto_assign_leaders(new_should_auto_assign);
-
-	return old_auto_assign != country->get_auto_assign_leaders();
+	const bool old_auto_assign = country.get_auto_assign_leaders();
+	country.set_auto_assign_leaders(new_should_auto_assign);
+	return old_auto_assign != country.get_auto_assign_leaders();
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t const& argument) const {
 	const auto [country_index, new_is_mobilised] = argument;
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
-	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_MOBILISE called with invalid country index: {}", country_index);
-		return false;
-	}
-
-	const bool old_mobilise = country->is_mobilised();
-
-	country->set_mobilised(new_is_mobilised);
-
-	return old_mobilise != country->is_mobilised();
+	const bool old_mobilise = country.is_mobilised();
+	country.set_mobilised(new_is_mobilised);
+	return old_mobilise != country.is_mobilised();
 }
 
 bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_argument_t const& argument) const {

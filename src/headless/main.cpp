@@ -87,13 +87,17 @@ static void print_rgo(ProvinceInstance const& province) {
 		);
 
 		bool logged_employees = false;
-		for (auto [pop_type, employees_of_type] : rgo.get_employee_count_per_type_cache()) {
-			if (employees_of_type > 0) {
-				if (!logged_employees) {
-					SPDLOG_INFO("\temployess:");
-					logged_employees = true;
+		{
+			pop_type_index_t pop_type_index {};
+			for (const pop_size_t employees_of_type : rgo.get_employee_count_per_type_cache()) {
+				if (employees_of_type > 0) {
+					if (!logged_employees) {
+						SPDLOG_INFO("\temployess:");
+						logged_employees = true;
+					}
+					SPDLOG_INFO("\t\t{} {}", employees_of_type, pop_type_index);
 				}
-				SPDLOG_INFO("\t\t{} {}", employees_of_type, pop_type);
+				++pop_type_index;
 			}
 		}
 	}

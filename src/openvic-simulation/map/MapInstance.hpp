@@ -14,8 +14,10 @@ namespace OpenVic {
 	struct MarketInstance;
 	struct MilitaryDefines;
 	struct PopDeps;
+	struct PopType;
 	struct ProvinceHistoryManager;
 	struct ProvinceInstanceDeps;
+	struct Reform;
 	struct ThreadPool;
 
 	/* REQUIREMENTS:
@@ -78,7 +80,9 @@ namespace OpenVic {
 			const Date date,
 			CountryInstanceManager& country_manager,
 			MilitaryDefines const& military_defines,
-			PopDeps const& pop_deps
+			PopDeps const& pop_deps,
+			TypedSpan<pop_type_index_t, const PopType> pop_types,
+			TypedSpan<reform_index_t, const Reform> reforms
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

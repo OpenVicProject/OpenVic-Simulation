@@ -23,9 +23,9 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
@@ -391,9 +391,9 @@ namespace OpenVic {
 		combat_width_t PROPERTY(combat_width, combat_width_t(1));
 		int32_t PROPERTY(dig_in_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
-		OV_IFLATMAP_PROPERTY(RegimentType, technology_unlock_level_t, regiment_type_unlock_levels);
+		memory::FixedVector<technology_unlock_level_t, regiment_type_index_t> PROPERTY(regiment_type_unlock_levels);
 		regiment_allowed_cultures_t PROPERTY(allowed_regiment_cultures, regiment_allowed_cultures_t::NO_CULTURES);
-		OV_IFLATMAP_PROPERTY(ShipType, technology_unlock_level_t, ship_type_unlock_levels);
+		memory::FixedVector<technology_unlock_level_t, ship_type_index_t> PROPERTY(ship_type_unlock_levels);
 		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, technology_unlock_level_t { 0 });
 		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, technology_unlock_level_t { 0 });
 		memory::vector<technology_unlock_level_t> SPAN_PROPERTY(unit_variant_unlock_levels);
@@ -552,12 +552,18 @@ namespace OpenVic {
 
 		[[nodiscard]] bool has_leader_with_name(std::string_view name) const;
 
-		template<unit_branch_t Branch>
-		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change);
-
-		bool modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change);
-		bool unlock_unit_type(UnitType const& unit_type);
+		[[nodiscard]] constexpr bool is_unit_type_unlocked(const regiment_type_index_t regiment_type_index) const {
+			return is_unlocked(regiment_type_unlock_levels[regiment_type_index]);
+		}
+		[[nodiscard]] constexpr bool is_unit_type_unlocked(const ship_type_index_t ship_type_index) const {
+			return is_unlocked(ship_type_unlock_levels[ship_type_index]);
+		}
 		[[nodiscard]] bool is_unit_type_unlocked(UnitType const& unit_type) const;
+
+		bool modify_unit_type_unlock(UnitType const&, technology_unlock_level_t unlock_level_change);
+		bool modify_unit_type_unlock(const regiment_type_index_t regiment_type_index, technology_unlock_level_t unlock_level_change);
+		bool modify_unit_type_unlock(const ship_type_index_t ship_type_index, technology_unlock_level_t unlock_level_change);
+		bool unlock_unit_type(UnitType const& unit_type);
 
 		bool modify_building_type_unlock(
 			BuildingType const& building_type, technology_unlock_level_t unlock_level_change
@@ -622,6 +628,29 @@ namespace OpenVic {
 		);
 
 	private:
+		OV_ALWAYS_INLINE static constexpr bool is_unlocked(const technology_unlock_level_t unlock_level) {
+			return unlock_level > 0;
+		}
+
+		template<typename IndexT>
+		constexpr bool validate_unit_unlock_change(
+			const IndexT index,
+			const technology_unlock_level_t unlock_level,
+			const technology_unlock_level_t unlock_level_change
+		) const {
+			// This catches subtracting below 0 or adding above the int types maximum value
+			if (unlock_level + unlock_level_change < 0) {
+				spdlog::error_s(
+					"Attempted to change unlock level for {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+					index, *this, unlock_level,
+					unlock_level_change, unlock_level + unlock_level_change
+				);
+				return false;
+			}
+
+			return true;
+		}
+
 		static void after_buy(void* actor, BuyResult const& buy_result);
 		//matching GoodMarketSellOrder::callback_t
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
@@ -629,7 +658,7 @@ namespace OpenVic {
 		void calculate_government_good_needs();
 
 		void manage_national_stockpile(
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
@@ -667,7 +696,7 @@ namespace OpenVic {
 
 		void update_gamestate(const Date today, MapInstance& map_instance);
 		void country_tick_before_map(
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
@@ -683,10 +712,10 @@ namespace OpenVic {
 
 		//thread safe
 		void report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax);
-		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_pop_need_demand(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_pop_need_consumption(PopType const& pop_type, const good_index_t good_index, const fixed_point_t quantity);
+		void report_pop_need_demand(PopType const& pop_type, const good_index_t good_index, const fixed_point_t quantity);
+		void report_input_consumption(ProductionType const& production_type, const good_index_t good_index, const fixed_point_t quantity);
+		void report_input_demand(ProductionType const& production_type, const good_index_t good_index, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void request_salaries_and_welfare_and_import_subsidies(Pop& pop);
 		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type);

@@ -98,8 +98,7 @@ namespace OpenVic {
 		memory::vector<std::reference_wrapper<const ProvinceInstance>> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
-		memory::FixedVector<BuildingInstance> _buildings;
-		TypedSpan<province_building_index_t, BuildingInstance> buildings;
+		memory::FixedVector<BuildingInstance, province_building_index_t> buildings;
 	public:
 		constexpr TypedSpan<province_building_index_t, const BuildingInstance> get_buildings() const {
 			return buildings;
@@ -119,10 +118,16 @@ namespace OpenVic {
 		pop_id_in_province_t last_pop_id{0};
 		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		void _update_pops(MilitaryDefines const& military_defines);
-		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
+		bool convert_rgo_worker_pops_to_equivalent(
+			TypedSpan<pop_type_index_t, const PopType> pop_types,
+			ProductionType const& production_type
+		);
 		void initialise_rgo();
 
-		OV_IFLATMAP_PROPERTY(PopType, memory::vector<std::reference_wrapper<Pop>>, pops_cache_by_type);
+		memory::FixedVector<
+			memory::vector<std::reference_wrapper<Pop>>,
+			pop_type_index_t
+		> SPAN_PROPERTY(pops_cache_by_type);
 	public:
 		ProvinceDefinition const& province_definition;
 
@@ -142,7 +147,10 @@ namespace OpenVic {
 		void set_state(State* new_state);
 
 		GoodDefinition const* get_rgo_good() const;
-		bool set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable);
+		bool set_rgo_production_type_nullable(
+			TypedSpan<pop_type_index_t, const PopType> pop_types,
+			ProductionType const* rgo_production_type_nullable
+		);
 
 		bool set_owner(CountryInstance* new_owner);
 		bool set_controller(CountryInstance* new_controller);
@@ -205,7 +213,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
@@ -215,7 +223,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
@@ -227,7 +235,7 @@ namespace OpenVic {
 
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
-		void setup_pop_test_values();
+		void setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms);
 		memory::colony<Pop>& get_mutable_pops();
 	private:
 		template<typename T>

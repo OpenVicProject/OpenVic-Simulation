@@ -9,7 +9,6 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
@@ -17,10 +16,9 @@ using namespace OpenVic;
 void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 	PopsDefines const& defines,
 	ModifierEffectCache const& modifier_effect_cache,
-	Strata const& strata,
 	ProvinceInstance const& province
 ) {
-	ModifierEffectCache::strata_effects_t const& strata_effects = modifier_effect_cache.get_strata_effects(strata);
+	ModifierEffectCache::strata_effects_t const& strata_effects = modifier_effect_cache.get_strata_effects()[strata_index];
 	fixed_point_t shared_base_needs_scalar = defines.get_base_goods_demand()
 		* (fixed_point_t::_1 + province.get_modifier_effect_value(*modifier_effect_cache.get_goods_demand()));
 
@@ -48,22 +46,20 @@ PopValuesFromProvince::PopValuesFromProvince(
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionTypeManager const& new_production_type_manager,
 	PopsDefines const& new_defines,
-	decltype(effects_by_strata)::keys_span_type strata_keys
+	const strata_index_t strata_size
 ) : game_rules_manager { new_game_rules_manager },
 	good_instance_manager { new_good_instance_manager },
 	modifier_effect_cache { new_modifier_effect_cache },
 	production_type_manager { new_production_type_manager },
 	defines { new_defines },
-	effects_by_strata { strata_keys }
-	{}
-
-PopStrataValuesFromProvince const& PopValuesFromProvince::get_effects_by_strata(Strata const& key) const {
-	return effects_by_strata.at(key);
-}
+	effects_by_strata {
+		generate_values,
+		strata_size
+	} {}
 
 void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance& province) {
-	for (auto [strata, values] : effects_by_strata) {
-		values.update_pop_strata_values_from_province(defines, modifier_effect_cache, strata, province);
+	for (auto& values : effects_by_strata) {
+		values.update_pop_strata_values_from_province(defines, modifier_effect_cache, province);
 	}
 
 	max_cost_multiplier = 1;	

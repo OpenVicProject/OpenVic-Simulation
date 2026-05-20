@@ -43,8 +43,7 @@ namespace OpenVic {
 		std::optional<ProductionType const*> PROPERTY(rgo_production_type_nullable);
 		std::optional<life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		memory::FixedVector<building_level_t> _province_building_levels;
-		TypedSpan<province_building_index_t, building_level_t> province_building_levels;
+		memory::FixedVector<building_level_t, province_building_index_t> province_building_levels;
 	public:
 		constexpr TypedSpan<province_building_index_t, const building_level_t> get_province_building_levels() const {
 			return province_building_levels;

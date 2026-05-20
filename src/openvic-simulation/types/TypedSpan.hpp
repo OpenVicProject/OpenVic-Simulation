@@ -17,6 +17,13 @@ namespace OpenVic {
 	public:
 		using forwardable_span<ValueType, _Extent>::forwardable_span;
 
+		template<typename OtherT>
+		constexpr TypedSpan(OtherT& other)
+			: forwardable_span<ValueType, _Extent>(
+				other.data(),
+				get_index_as_size_t(other.size())
+			) { }
+
 		[[nodiscard]] constexpr IndexType size() const {
 			return IndexType(forwardable_span<ValueType, _Extent>::size());
 		}

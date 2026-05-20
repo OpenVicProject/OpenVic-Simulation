@@ -21,6 +21,7 @@ CountryInstanceManager::CountryInstanceManager(
 	GoodInstanceManager const& new_good_instance_manager,
 	PopsDefines const& new_pop_defines,
 	forwardable_span<const PopType> pop_type_keys,
+	memory::vector<RegimentType> const& regiment_types,
 	ThreadPool& new_thread_pool
 ) : thread_pool { new_thread_pool },
   	country_definition_manager { new_country_definition_manager },
@@ -28,16 +29,18 @@ CountryInstanceManager::CountryInstanceManager(
 	shared_country_values {
 		new_pop_defines,
 		new_good_instance_manager,
-		pop_type_keys
+		pop_type_keys,
+		regiment_types
 	},
-	country_instance_by_definition {
-		new_country_definition_manager.get_country_definitions(),
+	country_instances {
+		country_index_t(new_country_definition_manager.get_country_definition_count()),
 		[
 			this,
+			&new_country_definition_manager,
 			&country_instance_deps
-		](CountryDefinition const& country_definition)->auto{
+		](const country_index_t country_index)->auto{
 			return std::make_tuple(
-				std::ref(country_definition),
+				std::ref(*new_country_definition_manager.get_country_definition_by_index(country_index)),
 				std::ref(shared_country_values),
 				std::ref(country_instance_deps)
 			);
@@ -52,7 +55,7 @@ CountryInstanceManager::CountryInstanceManager(
 void CountryInstanceManager::update_rankings(const Date today) {
 	total_ranking.clear();
 
-	for (CountryInstance& country : get_country_instances()) {
+	for (CountryInstance& country : country_instances) {
 		if (country.exists()) {
 			total_ranking.emplace_back(country);
 		}
@@ -184,23 +187,13 @@ CountryInstance const* CountryInstanceManager::get_country_instance_by_identifie
 	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
 	return country_definition == nullptr
 		? nullptr
-		: &get_country_instance_by_definition(*country_definition);
-}
-CountryInstance* CountryInstanceManager::get_country_instance_by_index(typename CountryInstance::index_t index) {
-	return country_instance_by_definition.contains_index(index)
-		? &country_instance_by_definition.at_index(index)
-		: nullptr;
-}
-CountryInstance const* CountryInstanceManager::get_country_instance_by_index(typename CountryInstance::index_t index) const {
-	return country_instance_by_definition.contains_index(index)
-		? &country_instance_by_definition.at_index(index)
-		: nullptr;
+		: &(country_instances[country_definition->index]);
 }
 CountryInstance& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) {
-	return country_instance_by_definition.at(country_definition);
+	return get_country_instance_by_index(country_definition.index);
 }
 CountryInstance const& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) const {
-	return country_instance_by_definition.at(country_definition);
+	return get_country_instance_by_index(country_definition.index);
 }
 
 bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
@@ -216,7 +209,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	const Date starting_last_war_loss_date = today - RECENT_WAR_LOSS_TIME_LIMIT;
 	FlagStrings& global_flags = instance_manager.get_global_flags();
 
-	for (CountryInstance& country_instance : get_country_instances()) {
+	for (CountryInstance& country_instance : country_instances) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
 		if (!country_instance.country_definition.is_dynamic_tag) {
@@ -300,13 +293,13 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 }
 
 void CountryInstanceManager::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
-	for (CountryInstance& country : get_country_instances()) {
+	for (CountryInstance& country : country_instances) {
 		country.update_modifier_sum(today, static_modifier_cache);
 	}
 }
 
 void CountryInstanceManager::update_gamestate(const Date today, MapInstance& map_instance) {
-	for (CountryInstance& country : get_country_instances()) {
+	for (CountryInstance& country : country_instances) {
 		country.update_gamestate(today, map_instance);
 	}
 

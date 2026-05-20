@@ -6,6 +6,7 @@
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
 
+using namespace OpenVic;
 using namespace OpenVic::_detail;
 
 // A simple test type to demonstrate a more complex object.
@@ -67,7 +68,7 @@ int DestructionCounter::destructor_count = 0;
 // A simple test case to check the basic constructor and accessors with a simple type.
 TEST_CASE("FixedVector Construction and basic accessors","[FixedVector]") {
 	constexpr size_t capacity = 5;
-	FixedVector<int> vec { capacity };
+	FixedVector<int> vec { create_empty, capacity };
 
 	// Initial state check
 	CHECK(vec.size() == 0);
@@ -111,7 +112,7 @@ TEST_CASE("FixedVector Generator constructor (tuple)","[FixedVector]") {
 // Test emplace_back, pop_back, and clear with a complex type.
 TEST_CASE("FixedVector Manipulation (emplace_back, pop_back, clear)","[FixedVector]") {
 	constexpr size_t capacity = 4;
-	FixedVector<ComplexType> vec { capacity };
+	FixedVector<ComplexType> vec { create_empty, capacity };
 
 	// Emplace elements with multiple arguments
 	vec.emplace_back(1, "hello");
@@ -153,7 +154,7 @@ TEST_CASE("FixedVector Manipulation (emplace_back, pop_back, clear)","[FixedVect
 // Test that accessor methods return references to the same memory location
 TEST_CASE("FixedVector Accessor reference consistency","[FixedVector]") {
 	constexpr size_t capacity = 3;
-	FixedVector<int> vec { capacity };
+	FixedVector<int> vec { create_empty, capacity };
 
 	vec.emplace_back(1);
 	CHECK(&vec.front() == &vec.back());
@@ -171,7 +172,7 @@ TEST_CASE("FixedVector Accessor reference consistency","[FixedVector]") {
 // Test with a non-copyable and non-movable type to ensure in-place construction.
 TEST_CASE("FixedVector Non-copyable, non-movable type","[FixedVector]") {
 	constexpr size_t capacity = 2;
-	FixedVector<NonCopyableNonMovable> vec { capacity };
+	FixedVector<NonCopyableNonMovable> vec { create_empty, capacity };
 
 	// This should work because emplace_back constructs in place
 	const int value0 = 1;
@@ -196,7 +197,7 @@ TEST_CASE("FixedVector Destruction, Clear, and Refill","[FixedVector]") {
 
 	{
 		// Use a scope to test the FixedVector's destructor
-		FixedVector<DestructionCounter> vec { capacity };
+		FixedVector<DestructionCounter> vec { create_empty, capacity };
 
 		// Emplace a few objects
 		vec.emplace_back();

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct Ideology;
-	struct PartyPolicy;
-	struct Reform;
-
 	struct PopsAggregateDeps {
-		forwardable_span<const Ideology> ideologies;
-		forwardable_span<const PartyPolicy> party_policies;
-		forwardable_span<const Reform> reforms;
+		ideology_index_t ideology_count;
+		party_policy_index_t party_policy_count;
+		pop_type_index_t pop_type_count;
+		reform_index_t reform_count;
+		strata_index_t strata_count;
 	};
 }
