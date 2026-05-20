@@ -47,14 +47,22 @@ namespace OpenVic {
 		PopsDefines const& defines;
 		GameRulesManager const& game_rules_manager;
 
-		PopValuesFromProvince(
+		constexpr PopValuesFromProvince(
 			GameRulesManager const& new_game_rules_manager,
 			GoodInstanceManager const& new_good_instance_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProductionTypeManager const& new_production_type_manager,
 			PopsDefines const& new_defines,
 			const strata_index_t strata_size
-		);
+		) : game_rules_manager { new_game_rules_manager },
+			good_instance_manager { new_good_instance_manager },
+			modifier_effect_cache { new_modifier_effect_cache },
+			production_type_manager { new_production_type_manager },
+			defines { new_defines },
+			effects_by_strata {
+				generate_values,
+				strata_size
+			} {}
 
 		void update_pop_values_from_province(ProvinceInstance& province);
 	};

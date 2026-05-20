@@ -5,7 +5,6 @@
 #include <mutex>
 #include <thread>
 
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
@@ -65,8 +64,6 @@ namespace OpenVic {
 		std::atomic<size_t> active_work_count = 0;
 		bool is_cancellation_requested = false;
 		Date const& current_date;
-		bool is_good_execute_orders_requested = false;
-		bool is_province_tick_requested = false;
 
 		void loop_until_cancelled(
 			work_t& work_type,

@@ -40,23 +40,6 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 		* (fixed_point_t::_1 + province.get_modifier_effect_value(*strata_effects.get_luxury_needs()));
 }
 
-PopValuesFromProvince::PopValuesFromProvince(
-	GameRulesManager const& new_game_rules_manager,
-	GoodInstanceManager const& new_good_instance_manager,
-	ModifierEffectCache const& new_modifier_effect_cache,
-	ProductionTypeManager const& new_production_type_manager,
-	PopsDefines const& new_defines,
-	const strata_index_t strata_size
-) : game_rules_manager { new_game_rules_manager },
-	good_instance_manager { new_good_instance_manager },
-	modifier_effect_cache { new_modifier_effect_cache },
-	production_type_manager { new_production_type_manager },
-	defines { new_defines },
-	effects_by_strata {
-		generate_values,
-		strata_size
-	} {}
-
 void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance& province) {
 	for (auto& values : effects_by_strata) {
 		values.update_pop_strata_values_from_province(defines, modifier_effect_cache, province);
