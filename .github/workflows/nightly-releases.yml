@@ -1,0 +1,88 @@
+name: 🌘 Nightly Releases
+on:
+  schedule:
+    - cron: '23 0 * * *'
+  workflow_dispatch:
+
+env:
+  TARGET_REPO: OpenVic-Simulation-nightly-builds
+
+permissions: {}
+
+jobs:
+  check-nightly:
+    name: Check for new commits
+    if: github.event_name == 'workflow_dispatch' || !vars.DISABLE_SIM_NIGHTLYS
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.check_for_new_commits.outputs.commit }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Retrieve HEAD commit hash
+        id: head
+        shell: bash
+        run: echo "head=$(git rev-parse HEAD)" | tee -a "${GITHUB_OUTPUT}"
+
+      - name: Cache nightly commit hash
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+        with:
+          path: .nightly_commit_hash
+          key: release-nightly-${{ steps.head.outputs.head }}
+          restore-keys: |
+            release-nightly-
+
+      - name: Check for new commits
+        id: check_for_new_commits
+        shell: bash
+        run: |
+          relevant_files=(
+            "deps/*"
+            "misc/*"
+            "scripts"
+            "src/*.hpp"
+            "src/*.cpp"
+            ':!src/openvic-simulation/pch.hpp'
+            ':!src/openvic-simulation/pch.cpp'
+            "pyproject.toml"
+            "SConstruct"
+            ".github/workflows/builds.yml"
+            ".github/workflows/nightly-builds.yml"
+          )
+          if [[ -f .nightly_commit_hash ]]; then
+            limit_args=(
+              "$(cat .nightly_commit_hash)..HEAD"
+            )
+          else
+            limit_args=(
+              --since="24 hours ago"
+            )
+          fi
+          echo "commit=$(git log --format=%H -1 "${limit_args[@]}" -- "${relevant_files[@]}")" | tee -a "${GITHUB_OUTPUT}"
+
+      - name: Record new nightly commit hash
+        env:
+          HEAD: ${{ steps.head.outputs.head }}
+        shell: bash
+        run: echo "${HEAD}" | tee .nightly_commit_hash
+
+  nightly-release:
+    name: Publish GitHub release
+    needs: check-nightly
+    if: needs.check-nightly.outputs.commit
+    permissions:
+      contents: write  # May be needed to publish release
+      id-token: write  # Needed for trusted publishing
+    uses: ./.github/workflows/reusable-release.yml
+    with:
+      prerelease: true
+      target: ${{ github.env.TARGET_REPO }}
+      scons-flags: 'use_hot_reload=no build_ovsim_tests=no debug_symbols=yes'
+

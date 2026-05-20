@@ -1,0 +1,149 @@
+name: 🖥️ Reusable Release
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: false
+        default: 'OpenVic-Simulation'
+        type: string
+      prerelease:
+        required: true
+        type: boolean
+      scons-flags:
+        required: false
+        default: 'use_hot_reload=no build_ovsim_tests=no debug_symbols=no'
+        type: string
+    secrets:
+      ARCHIVE_REPO_TOKEN:
+        required: false
+      GPG_SIGNING_KEY:
+        required: false
+      RELEASE_KEY:
+        required: false
+  workflow_dispatch:
+    inputs:
+      target:
+        description: |
+          TARGET repo to publish this release to
+        required: false
+        default: 'OpenVic-Simulation'
+        type: string
+      prerelease:
+        description: Pre-release
+        default: false
+        type: boolean
+      scons-flags:
+        description: |
+          Additional flags to send to SCons
+        required: false
+        default: 'use_hot_reload=no build_ovsim_tests=no debug_symbols=no'
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}|${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  static-checks-release:
+    name: Code style, file formatting, and docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0 # Treeless clone. Slightly less performant than a shallow clone, but makes finding diffs instantaneous.
+          filter: tree:0 # See: https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
+
+      - name: Install APT dependencies
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: libxml2-utils
+
+      - name: Style checks via prek
+        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+
+  build-release:
+    name: ${{ matrix.name }}
+    needs: static-checks-release
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - identifier: windows-release
+            os: windows-latest
+            name: 🏁 Windows Release
+            target: template_release
+            platform: windows
+            arch: x86_64
+            scons-flags: ''
+
+          - identifier: macos-release
+            os: macos-latest
+            name: 🍎 macOS (universal) Release
+            target: template_release
+            platform: macos
+            arch: universal
+            scons-flags: 'lto=full'
+
+          - identifier: linux-release
+            os: ubuntu-latest
+            name: 🐧 Linux Release
+            runner: ubuntu-20.04
+            target: template_release
+            platform: linux
+            arch: x86_64
+            scons-flags: 'lto=full use_static_cpp=yes'
+
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      identifier: ${{ matrix.identifier }}
+      os: ${{ matrix.runner || matrix.os }}
+      name: ${{ matrix.name }}
+      target: ${{ matrix.target }}
+      platform: ${{ matrix.platform }}
+      arch: ${{ matrix.arch }}
+      scons-flags: ${{ matrix.scons-flags }} ${{ inputs.scons-flags }}
+
+  upload-release-assets:
+    name: Upload Release Assets
+    runs-on: ubuntu-latest
+    needs: build-release
+    permissions:
+      id-token: write  # Needed for trusted publishing
+      contents: write  # Needed by gh to publish release to Github
+    steps:
+      - name: Download library assets
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: "${{ github.workspace }}/library"
+          pattern: "libopenvic-simulation.*"
+          merge-multiple: true
+
+      - name: Download executable assets
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: "openvic-simulation.headless.*"
+          merge-multiple: true
+
+      - name: Zip library assets
+        uses: thedoctor0/zip-release@b57d897cb5d60cb78b51a507f63fa184cfe35554 # v0.7.6
+        with:
+          type: "zip"
+          filename: "libopenvic-simulation.zip"
+          directory: "${{ github.workspace }}/library/"
+
+      - name: Create and upload asset
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        with:
+          allowUpdates: true
+          artifacts: "${{ github.workspace }}/*"
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
+          prerelease: ${{ inputs.prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: ${{ inputs.target }}

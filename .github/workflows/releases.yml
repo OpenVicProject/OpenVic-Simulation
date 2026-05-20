@@ -1,0 +1,17 @@
+name: 🖥️ Releases
+
+on:
+  push:
+    tags: ["**"]
+
+permissions: {}
+
+jobs:
+  release:
+    name: Publish GitHub release
+    permissions:
+      contents: write  # May be needed to publish release
+      id-token: write  # Needed for trusted publishing
+    uses: ./.github/workflows/reusable-release.yml
+    with:
+      prerelease: ${{ contains('["alpha", "beta", "rc", "snapshot"]', github.ref) }}
