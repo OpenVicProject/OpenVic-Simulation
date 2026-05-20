@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <mutex>
 
 #include <type_safe/strong_typedef.hpp>
 
@@ -2407,11 +2408,11 @@ void CountryInstance::country_tick_after_map(const Date today) {
 }
 
 CountryInstance::good_data_t::good_data_t()
-	: mutex { memory::make_unique<std::mutex>() }
+	: mutex { memory::make_unique<spin_mutex>() }
 	{ }
 
 void CountryInstance::good_data_t::clear_daily_recorded_data() {
-	const std::lock_guard<std::mutex> lock_guard { *mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *mutex };
 	stockpile_change_yesterday
 		= quantity_traded_yesterday
 		= money_traded_yesterday
@@ -2431,24 +2432,24 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 }
 
 void CountryInstance::report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax) {
-	const std::lock_guard<std::mutex> lock_guard { taxable_income_mutex };
+	const std::lock_guard<spin_mutex> lock_guard { taxable_income_mutex };
 	taxable_income_by_pop_type.at(pop_type) += gross_income;
 	cash_stockpile += paid_as_tax;
 }
 
 void CountryInstance::report_pop_need_consumption(PopType const& pop_type, const good_index_t good_index, const fixed_point_t quantity) {
 	good_data_t& good_data = goods_data.at_index(good_index);
-	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 	good_data.need_consumption_per_pop_type[&pop_type] += quantity;
 }
 void CountryInstance::report_pop_need_demand(PopType const& pop_type, const good_index_t good_index, const fixed_point_t quantity) {
 	good_data_t& good_data = goods_data.at_index(good_index);
-	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 	good_data.pop_demand += quantity;
 }
 void CountryInstance::report_input_consumption(ProductionType const& production_type, const good_index_t good_index, const fixed_point_t quantity) {
 	good_data_t& good_data = goods_data.at_index(good_index);
-	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 	good_data.input_consumption_per_production_type[&production_type] += quantity;
 }
 void CountryInstance::report_input_demand(ProductionType const& production_type, const good_index_t good_index, const fixed_point_t quantity) {
@@ -2458,7 +2459,7 @@ void CountryInstance::report_input_demand(ProductionType const& production_type,
 		switch (game_rules_manager.get_artisanal_input_demand_category()) {
 			case demand_category::FactoryNeeds: break;
 			case demand_category::PopNeeds: {
-				const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+				const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 				good_data.pop_demand += quantity;
 				return;
 			}
@@ -2466,12 +2467,12 @@ void CountryInstance::report_input_demand(ProductionType const& production_type,
 		}
 	}
 
-	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 	good_data.factory_demand += quantity;
 }
 void CountryInstance::report_output(ProductionType const& production_type, const fixed_point_t quantity) {
 	good_data_t& good_data = get_good_data(production_type.output_good);
-	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
+	const std::lock_guard<spin_mutex> lock_guard { *good_data.mutex };
 	good_data.production_per_production_type[&production_type] += quantity;
 }
 
