@@ -1,12 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <iterator>
+#include <memory>
 #include <type_traits>
 #include <utility>
-
-#include <range/v3/algorithm/copy.hpp>
 
 #include "openvic-simulation/core/Assert.hpp"
 
@@ -35,21 +35,15 @@ namespace OpenVic {
 
 	private:
 		Container container;
-		size_type valid_size {};
 		std::atomic<size_type> pending_extra_size {};
 
 		constexpr void flush_pending_room() {
 			if (pending_extra_size > size_type{}) {
+				size_type valid_size { size() };
 				container.resize(valid_size + pending_extra_size);
+				container.resize(valid_size);
 				pending_extra_size = size_type{};
 			}
-		}
-
-		constexpr size_type get_invalid_element_count() const {
-			return container.size() - valid_size;
-		}
-		constexpr bool has_invalid_element() const {
-			return container.size() > valid_size;
 		}
 
 	public:
@@ -62,8 +56,7 @@ namespace OpenVic {
 		// Forwarding constructor for custom allocators or initial capacities
 		template <typename... Args>
 		constexpr explicit bulk_insert_wrapper(Args&&... args)
-			: container(std::forward<Args>(args)...),
-			  valid_size(container.size()) {}
+			: container(std::forward<Args>(args)...) {}
 
 		// thread safe
 		constexpr void make_room_for(const size_type count) noexcept {
@@ -113,23 +106,23 @@ namespace OpenVic {
 		}
 
 		constexpr iterator end() noexcept {
-			return std::next(begin(), valid_size);
+			return container.end();
 		}
 		constexpr const_iterator end() const noexcept {
-			return std::next(begin(), valid_size);
+			return container.end();
 		}
 		constexpr const_iterator cend() const noexcept {
-			return std::next(cbegin(), valid_size);
+			return container.cend();
 		}
 
 		constexpr reverse_iterator rbegin() noexcept {
-			return std::make_reverse_iterator(end());
+			return container.rbegin();
 		}
 		constexpr const_reverse_iterator rbegin() const noexcept {
-			return std::make_reverse_iterator(end());
+			return container.rbegin();
 		}
 		constexpr const_reverse_iterator crbegin() const noexcept {
-			return std::make_reverse_iterator(cend());
+			return container.crbegin();
 		}
 
 		constexpr reverse_iterator rend() noexcept {
@@ -143,20 +136,18 @@ namespace OpenVic {
 		}
 
 		// Capacity based on std::vector
-		constexpr bool empty() const noexcept { return valid_size <= size_type{}; }
-		constexpr size_type size() const noexcept { return valid_size; }
+		constexpr bool empty() const noexcept { return size() <= size_type{}; }
+		constexpr size_type size() const noexcept { return container.size(); }
 		constexpr size_type max_size() const noexcept { return container.max_size(); }
 		// reserve() is omitted as we manage that via make_room_for
 		constexpr size_type capacity() const noexcept { return container.capacity(); }
 		constexpr void shrink_to_fit() {
 			pending_extra_size = size_type{};
-			container.resize(valid_size);
 			container.shrink_to_fit();
 		}
 
 		// Modifiers based on std::vector
 		constexpr void clear() noexcept {
-			valid_size = size_type{};
 			pending_extra_size = size_type{};
 			container.clear();
 		}
@@ -172,48 +163,18 @@ namespace OpenVic {
 
 		constexpr void push_back(value_type const& value) {
 			flush_pending_room();
-			if (has_invalid_element()) {
-				container[valid_size] = value;
-			} else {
-				container.push_back(value);
-			}
-			++valid_size;
+			container.push_back(value);
 
 		}
 		constexpr void push_back(value_type&& value) {
 			flush_pending_room();
-			if (has_invalid_element()) {
-				container[valid_size] = std::move(value);
-			} else {
-				container.push_back(std::move(value));
-			}
-			++valid_size;
+			container.push_back(std::move(value));
 		}
 
 		template<typename... Args>
 		requires std::is_trivially_destructible_v<value_type>
 		constexpr reference emplace_back(Args&&... args) {
-			const size_type old_total_size = container.size();
-			if (old_total_size > valid_size) {
-				// ensure container.emplace_back places it after the last valid element
-				container.resize(valid_size);
-			}
-
-			reference result = container.emplace_back(std::forward<Args>(args)...);
-			++valid_size;
-
-			if (old_total_size > valid_size) {
-				// restore extra default constructed elements so they can be overwritten in append_range
-				// since we're resizing anyway at this point, might as well resize for pending_extra_size
-				const size_type desired_size = std::max(
-					old_total_size,
-					valid_size + pending_extra_size
-				);
-				container.resize(desired_size);
-				pending_extra_size = size_type{};
-			}
-
-			return result;
+			return container.emplace_back(std::forward<Args>(args)...);
 		}
 
 		template <typename OtherContainerT>
@@ -225,18 +186,14 @@ namespace OpenVic {
 		constexpr void append_range(const InputIt first, const InputIt last) {
 			flush_pending_room();
 			
-			const size_type new_valid_size = valid_size + std::distance(first, last);
-			if (new_valid_size > container.size()) {
+			const size_type new_valid_size = size() + std::distance(first, last);
+			if (new_valid_size > container.capacity()) {
 				assert(!"append_range called without make_room_for");
-				container.resize(new_valid_size);
+				container.reserve(new_valid_size);
 			}
 
-			ranges::copy(
-				first,
-				last,
-				end()
-			);
-			valid_size = new_valid_size;
+			std::uninitialized_copy(first, last, end());
+			container.resize(new_valid_size);
 		}
 
 		// resize() is omitted as we manage that via make_room_for
