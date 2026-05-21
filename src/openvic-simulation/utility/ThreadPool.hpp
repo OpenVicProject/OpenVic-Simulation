@@ -1,12 +1,13 @@
 #pragma once
 
+#include <array>
 #include <condition_variable>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <thread>
 
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
@@ -58,17 +59,15 @@ namespace OpenVic {
 			COUNTRY_TICK_AFTER_MAP
 		};
 
-		constexpr static size_t WORK_BUNDLE_COUNT = 32;
+		constexpr static std::size_t WORK_BUNDLE_COUNT = 32;
 		std::array<WorkBundle, WORK_BUNDLE_COUNT> all_work_bundles;
 		memory::vector<std::thread> threads;
 		memory::vector<work_t> work_per_thread;
 		std::mutex thread_mutex, completed_mutex;
 		std::condition_variable thread_condition, completed_condition;
-		std::atomic<size_t> active_work_count = 0;
+		std::atomic<std::size_t> active_work_count = 0;
 		bool is_cancellation_requested = false;
 		Date const& current_date;
-		bool is_good_execute_orders_requested = false;
-		bool is_province_tick_requested = false;
 
 		void loop_until_cancelled(
 			work_t& work_type,
