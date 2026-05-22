@@ -75,7 +75,7 @@ namespace OpenVic {
 		bool load_inventions_file(
 			TechnologyManager const& tech_manager,
 			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
+			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ovdl::v2script::ast::Node const* root
 		); // inventions/*.txt
 
 		bool generate_invention_links(TechnologyManager& tech_manager);

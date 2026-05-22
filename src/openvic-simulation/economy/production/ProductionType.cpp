@@ -86,7 +86,7 @@ ProductionType const* ProductionTypeManager::get_good_to_rgo_production_type(Goo
 	return good_to_rgo_production_type.at(key);
 }
 
-node_callback_t ProductionTypeManager::_expect_job(
+NodeTools::node_callback_t ProductionTypeManager::_expect_job(
 	GoodDefinitionManager const& good_definition_manager,
 	PopManager const& pop_manager,
 	NodeTools::callback_t<
@@ -96,7 +96,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 		fixed_point_t
 	> emplace_callback
 ) {
-	return [this, &good_definition_manager, &pop_manager, emplace_callback](ast::NodeCPtr node) mutable -> bool {
+	return [this, &good_definition_manager, &pop_manager, emplace_callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		using enum Job::effect_t;
 
 		std::string_view pop_type_identifier {};
@@ -126,11 +126,11 @@ node_callback_t ProductionTypeManager::_expect_job(
 	};
 }
 
-node_callback_t ProductionTypeManager::_expect_job_list(
+NodeTools::node_callback_t ProductionTypeManager::_expect_job_list(
 	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-	callback_t<memory::vector<Job>&&> callback
+	NodeTools::callback_t<memory::vector<Job>&&> callback
 ) {
-	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) mutable -> bool {
+	return [this, &good_definition_manager, &pop_manager, callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		memory::vector<Job> jobs;
 		bool ret = expect_list(
 			_expect_job(
@@ -265,7 +265,7 @@ bool ProductionTypeManager::load_production_types_file(
 	ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
 		[this, &expected_types, &templates, &template_target_map, &template_symbol, &output_goods_symbol]
-		(std::string_view key, ast::NodeCPtr value) -> bool {
+		(std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			expected_types++;
 
 			std::string_view template_id = "";
@@ -302,9 +302,9 @@ bool ProductionTypeManager::load_production_types_file(
 	)(parser.get_file_node());
 
 	/* Pass #2: create and populate the template map */
-	ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
+	ordered_map<std::string_view, ovdl::v2script::ast::Node const*> template_node_map;
 	ret &= expect_dictionary(
-		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &expected_types, &templates, &template_node_map](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			if (templates.contains(key)) {
 				template_node_map.emplace(key, value);
 				expected_types--;
@@ -319,7 +319,7 @@ bool ProductionTypeManager::load_production_types_file(
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(
 		[this, &game_rules_manager, &good_definition_manager, &pop_manager, &template_target_map, &template_node_map](
-			std::string_view key, ast::NodeCPtr node) -> bool {
+			std::string_view key, ovdl::v2script::ast::Node const* node) -> bool {
 			using enum ProductionType::template_type_t;
 
 			if (template_node_map.contains(key)) {
@@ -344,7 +344,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 			auto parse_node = expect_dictionary_keys(
 				"template", ZERO_OR_ONE, success_callback, /* Already parsed using expect_key in Pass #1 above. */
-				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
+				"bonus", ZERO_OR_MORE, [&bonuses](ovdl::v2script::ast::Node const* bonus_node) -> bool {
 					using enum scope_type_t;
 
 					ConditionScript trigger { STATE, NO_SCOPE, NO_SCOPE };

@@ -1,5 +1,7 @@
 #include "EconomyDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view EconomyDefines::get_name() const {
 	return "economy";
 }
 
-node_callback_t EconomyDefines::expect_defines() {
+NodeTools::node_callback_t EconomyDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"MAX_DAILY_RESEARCH", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_daily_research)),
 		"LOAN_BASE_INTEREST", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(loan_base_interest)),

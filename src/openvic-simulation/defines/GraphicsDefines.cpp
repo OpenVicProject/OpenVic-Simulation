@@ -1,5 +1,7 @@
 #include "GraphicsDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view GraphicsDefines::get_name() const {
 	return "graphics";
 }
 
-node_callback_t GraphicsDefines::expect_defines() {
+NodeTools::node_callback_t GraphicsDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"CITIES_SPRAWL_OFFSET", ONE_EXACTLY, expect_uint(assign_variable_callback(cities_sprawl_offset)),
 		"CITIES_SPRAWL_WIDTH", ONE_EXACTLY, expect_uint(assign_variable_callback(cities_sprawl_width)),

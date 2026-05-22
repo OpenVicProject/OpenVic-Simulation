@@ -625,18 +625,18 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 	return ret;
 }
 
-bool MapDefinition::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_province_positions(BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root) {
 	return expect_province_definition_dictionary(
-		[this, &building_type_manager](ProvinceDefinition& province, ast::NodeCPtr node) -> bool {
+		[this, &building_type_manager](ProvinceDefinition& province, ovdl::v2script::ast::Node const* node) -> bool {
 			return province.load_positions(*this, building_type_manager, node);
 		}
 	)(root);
 }
 
-bool MapDefinition::load_region_colours(ast::NodeCPtr root, memory::vector<colour_t>& colours) {
+bool MapDefinition::load_region_colours(ovdl::v2script::ast::Node const* root, memory::vector<colour_t>& colours) {
 	return expect_dictionary_reserve_length(
 		colours,
-		[&colours](std::string_view key, ast::NodeCPtr value) -> bool {
+		[&colours](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			if (key != "color") {
 				spdlog::error_s("Invalid key in region colours: \"{}\"", key);
 				return false;
@@ -645,10 +645,10 @@ bool MapDefinition::load_region_colours(ast::NodeCPtr root, memory::vector<colou
 	})(root);
 }
 
-bool MapDefinition::load_region_file(ast::NodeCPtr root, std::span<const colour_t> colours) {
+bool MapDefinition::load_region_file(ovdl::v2script::ast::Node const* root, std::span<const colour_t> colours) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
-		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
+		[this, &colours](std::string_view region_identifier, ovdl::v2script::ast::Node const* region_node) -> bool {
 			memory::vector<std::reference_wrapper<const ProvinceDefinition>> provinces;
 
 			bool ret = expect_list_reserve_length(
@@ -1109,10 +1109,10 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 	return ret;
 }
 
-bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
 	bool ret = expect_dictionary_reserve_length(
 		climates,
-		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		[this, &modifier_manager](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 			if (identifier.empty()) {
 				spdlog::error_s("Invalid climate identifier - empty!");
 				return false;
@@ -1168,10 +1168,10 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 	return ret;
 }
 
-bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
 	bool ret = expect_dictionary_reserve_length(
 		continents,
-		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		[this, &modifier_manager](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 
 			if (identifier.empty()) {
 				spdlog::error_s("Invalid continent identifier - empty!");

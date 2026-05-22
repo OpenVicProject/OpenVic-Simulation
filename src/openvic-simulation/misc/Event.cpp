@@ -142,10 +142,10 @@ bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_m
 	);
 }
 
-bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {
+bool EventManager::load_event_file(IssueManager const& issue_manager, ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_reserve_length(
 		events,
-		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &issue_manager](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			using enum scope_type_t;
 
 			Event::event_type_t type;
@@ -193,7 +193,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"news_desc_short", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(news_desc_short)),
 				"election", ZERO_OR_ONE, expect_bool(assign_variable_callback(election)),
 				"issue_group", ZERO_OR_ONE, issue_manager.expect_base_issue_group_identifier(assign_variable_callback(election_issue_group)),
-				"option", ONE_OR_MORE, [initial_scope](ast::NodeCPtr node) -> bool {
+				"option", ONE_OR_MORE, [initial_scope](ovdl::v2script::ast::Node const* node) -> bool {
 					std::string_view name;
 					EffectScript effect;
 					ConditionalWeightFactorMul ai_chance {
@@ -228,12 +228,12 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 	)(root);
 }
 
-bool EventManager::load_on_action_file(ast::NodeCPtr root) {
-	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
+bool EventManager::load_on_action_file(ovdl::v2script::ast::Node const* root) {
+	bool ret = expect_dictionary([this](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 		OnAction::weight_map_t weighted_events;
 		bool ret = expect_dictionary_reserve_length(
 			weighted_events,
-			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
+			[this, &identifier, &weighted_events](std::string_view weight_str, ovdl::v2script::ast::Node const* event_node) -> bool {
 				bool ret = false;
 				uint64_t weight;
 				std::from_chars_result result = string_to_uint64(weight_str, weight);
@@ -248,7 +248,10 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 
 				if (event != nullptr) {
 					ret &= map_callback(weighted_events, event)(weight);
-				} else if (ast::FlatValue const* event_name = dryad::node_try_cast<ast::FlatValue>(event_node); event_name && event_name->value()) {
+				} else if (
+					ovdl::v2script::ast::FlatValue const* event_name = dryad::node_try_cast<ovdl::v2script::ast::FlatValue>(event_node);
+					event_name && event_name->value()
+				) {
 					spdlog::warn_s(
 						"Non-existing event {} loaded on action {} with weight {}!",
 						event_name->value().view(), identifier, weight

@@ -65,7 +65,7 @@ namespace OpenVic {
 		TerrainTypeMapping::index_t terrain_texture_limit = 0, terrain_texture_count = 0;
 
 		NodeTools::node_callback_t _load_terrain_type_categories(ModifierManager const& modifier_manager);
-		bool _load_terrain_type_mapping(std::string_view key, ast::NodeCPtr value);
+		bool _load_terrain_type_mapping(std::string_view key, ovdl::v2script::ast::Node const* value);
 
 	public:
 		bool add_terrain_type(
@@ -90,7 +90,7 @@ namespace OpenVic {
 
 		TerrainTypeMapping::index_t get_terrain_texture_limit() const;
 
-		bool load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_terrain_types(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

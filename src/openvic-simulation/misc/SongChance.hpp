@@ -26,7 +26,7 @@ namespace OpenVic {
 		IdentifierRegistry<SongChance> IDENTIFIER_REGISTRY(song_chance);
 		//Songs.txt
 	public:
-		bool load_songs_file(ast::NodeCPtr root);
+		bool load_songs_file(ovdl::v2script::ast::Node const* root);
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

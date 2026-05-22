@@ -1,6 +1,7 @@
 #include "Technology.hpp"
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
@@ -132,12 +133,12 @@ bool TechnologyManager::add_technology_school(std::string_view identifier, Modif
 	);
 }
 
-bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root) {
+bool TechnologyManager::load_technology_file_folders_and_areas(ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_keys(
-		"folders", ONE_EXACTLY, [this](ast::NodeCPtr root_value) -> bool {
+		"folders", ONE_EXACTLY, [this](ovdl::v2script::ast::Node const* root_value) -> bool {
 			const bool ret = expect_dictionary_reserve_length(
 				technology_folders,
-				[this](std::string_view folder_key, ast::NodeCPtr folder_value) -> bool {
+				[this](std::string_view folder_key, ovdl::v2script::ast::Node const* folder_value) -> bool {
 					if (!add_technology_folder(folder_key)) {
 						spdlog::error_s("Failed to add and retrieve technology folder: \"{}\"", folder_key);
 						return false;
@@ -168,7 +169,7 @@ bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr roo
 }
 
 bool TechnologyManager::load_technology_file_schools(
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root
 ) {
 	if (!technology_folders.is_locked() || !technology_areas.is_locked()) {
 		spdlog::error_s("Cannot load technology schools until technology folders and areas are locked!");
@@ -178,10 +179,10 @@ bool TechnologyManager::load_technology_file_schools(
 		/* Never fail because of "folders", even if it's missing or there are duplicate entries,
 		 * those issues will have been caught by load_technology_file_folders_and_areas. */
 		"folders", ZERO_OR_MORE, success_callback,
-		"schools", ONE_EXACTLY, [this, &modifier_manager](ast::NodeCPtr root_value) -> bool {
+		"schools", ONE_EXACTLY, [this, &modifier_manager](ovdl::v2script::ast::Node const* root_value) -> bool {
 			const bool ret = expect_dictionary_reserve_length(
 				technology_schools,
-				[this, &modifier_manager](std::string_view school_key, ast::NodeCPtr school_value) -> bool {
+				[this, &modifier_manager](std::string_view school_key, ovdl::v2script::ast::Node const* school_value) -> bool {
 					ModifierValue modifiers;
 
 					bool ret = NodeTools::expect_dictionary(
@@ -203,10 +204,10 @@ bool TechnologyManager::load_technology_file_schools(
 
 bool TechnologyManager::load_technologies_file(
 	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-	BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+	BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root
 ) {
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
-		std::string_view tech_key, ast::NodeCPtr tech_value
+		std::string_view tech_key, ovdl::v2script::ast::Node const* tech_value
 	) -> bool {
 		using enum scope_type_t;
 

@@ -1,5 +1,7 @@
 #include "PopsDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view PopsDefines::get_name() const {
 	return "pops";
 }
 
-node_callback_t PopsDefines::expect_defines() {
+NodeTools::node_callback_t PopsDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"BASE_CLERGY_FOR_LITERACY", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_clergy_for_literacy)),
 		"MAX_CLERGY_FOR_LITERACY", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_clergy_for_literacy)),

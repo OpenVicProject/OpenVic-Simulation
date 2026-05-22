@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"

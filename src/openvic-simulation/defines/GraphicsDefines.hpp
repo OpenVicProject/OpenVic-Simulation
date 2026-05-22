@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

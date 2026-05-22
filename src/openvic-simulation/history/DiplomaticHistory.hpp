@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/history/diplomacy/AllianceHistory.hpp"
 #include "openvic-simulation/history/diplomacy/ReparationsHistory.hpp"
 #include "openvic-simulation/history/diplomacy/SubjectHistory.hpp"
@@ -58,7 +58,7 @@ namespace OpenVic {
 		 * should be checked for by functions that use get_wars() */
 		[[nodiscard]] memory::vector<std::reference_wrapper<const WarHistory>> get_wars(Date date) const;
 
-		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
-		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);
+		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ovdl::v2script::ast::Node const* root);
+		bool load_war_history_file(DefinitionManager const& definition_manager, ovdl::v2script::ast::Node const* root);
 	};
 }

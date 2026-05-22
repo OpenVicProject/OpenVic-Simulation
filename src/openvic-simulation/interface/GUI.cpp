@@ -41,7 +41,7 @@ bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMa
 }
 
 bool Element::_fill_elements_key_map(
-	NodeTools::case_insensitive_key_map_t& key_map, callback_t<memory::unique_base_ptr<Element>&&> callback, UIManager const& ui_manager
+	NodeTools::case_insensitive_key_map_t& key_map, NodeTools::callback_t<memory::unique_base_ptr<Element>&&> callback, UIManager const& ui_manager
 ) {
 	bool ret = true;
 	ret &= add_key_map_entries(key_map,
@@ -73,8 +73,8 @@ bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMana
 	return ret;
 }
 
-node_callback_t Scene::expect_scene(
-	std::string_view scene_name, callback_t<memory::unique_base_ptr<Scene>&&> callback, UIManager const& ui_manager
+NodeTools::node_callback_t Scene::expect_scene(
+	std::string_view scene_name, NodeTools::callback_t<memory::unique_base_ptr<Scene>&&> callback, UIManager const& ui_manager
 ) {
 	return _expect_instance<Scene, Scene>([scene_name, callback](memory::unique_base_ptr<Scene>&& scene) mutable -> bool {
 		scene->_set_name(scene_name);

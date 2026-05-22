@@ -6,7 +6,7 @@
 #include "openvic-simulation/core/string/StringLiteral.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/types/OptionalBool.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -163,7 +163,7 @@ namespace OpenVic {
 		#define COMMA ,
 
 		static NodeTools::node_callback_t expect_rule_set(NodeTools::callback_t<RuleSet&&> ruleset_callback) {
-			return [ruleset_callback](ast::NodeCPtr root) mutable -> bool {
+			return [ruleset_callback](ovdl::v2script::ast::Node const* root) mutable -> bool {
 				RuleSet ruleset;
 				using enum NodeTools::dictionary_entry_t::expected_count_t;
 				bool outer_result = NodeTools::expect_dictionary_keys(

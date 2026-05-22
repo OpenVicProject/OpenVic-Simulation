@@ -67,7 +67,7 @@ namespace OpenVic {
 			bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 		);
 
-		bool load_goods_file(ast::NodeCPtr root);
+		bool load_goods_file(ovdl::v2script::ast::Node const* root);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

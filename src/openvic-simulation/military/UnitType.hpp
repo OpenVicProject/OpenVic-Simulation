@@ -5,7 +5,8 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -180,8 +181,8 @@ namespace OpenVic {
 			ShipType::ship_type_args_t const& ship_type_args
 		);
 
-		static NodeTools::Callback<std::string_view> auto expect_branch_str(
-			NodeTools::Callback<unit_branch_t> auto callback
+		static Callback<std::string_view> auto expect_branch_str(
+			Callback<unit_branch_t> auto callback
 		) {
 			using enum unit_branch_t;
 			static const string_map_t<unit_branch_t> branch_map {
@@ -189,7 +190,7 @@ namespace OpenVic {
 			};
 			return NodeTools::expect_mapped_string(branch_map, callback);
 		}
-		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<unit_branch_t> auto callback) {
+		static NodeTools::NodeCallback auto expect_branch_identifier(Callback<unit_branch_t> auto callback) {
 			return NodeTools::expect_identifier(expect_branch_str(callback));
 		}
 

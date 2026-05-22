@@ -83,7 +83,7 @@ namespace OpenVic {
 			ConditionalWeightBase&& add_economic_reform
 		);
 
-		bool load_ideology_file(ast::NodeCPtr root);
+		bool load_ideology_file(ovdl::v2script::ast::Node const* root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

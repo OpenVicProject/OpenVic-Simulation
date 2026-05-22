@@ -54,7 +54,7 @@ namespace OpenVic {
 		memory::vector<PopBase> SPAN_PROPERTY(pops);
 
 		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager, ovdl::v2script::ast::Node const* root, bool *non_integer_size
 		);
 	public:
 		ProvinceDefinition const& province;
@@ -73,12 +73,12 @@ namespace OpenVic {
 		ProvinceHistoryMap(ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager);
 
 		memory::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
-		bool _load_history_entry(DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root)
+		bool _load_history_entry(DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ovdl::v2script::ast::Node const* root)
 			override;
 
 	private:
 		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
+			DefinitionManager const& definition_manager, Date date, ovdl::v2script::ast::Node const* root, bool* non_integer_size
 		);
 	};
 
@@ -102,10 +102,10 @@ namespace OpenVic {
 		ProvinceHistoryMap const* get_province_history(ProvinceDefinition const* province) const;
 
 		bool load_province_history_file(
-			DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, ProvinceDefinition const& province, ovdl::v2script::ast::Node const* root
 		);
 		bool load_pop_history_file(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
+			DefinitionManager const& definition_manager, Date date, ovdl::v2script::ast::Node const* root, bool* non_integer_size
 		);
 	};
 }

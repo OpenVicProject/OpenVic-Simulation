@@ -7,7 +7,7 @@ using namespace OpenVic;
 using namespace OpenVic::GFX;
 using namespace OpenVic::NodeTools;
 
-node_callback_t Object::expect_objects(length_callback_t length_callback, callback_t<memory::unique_base_ptr<Object>&&> callback) {
+NodeTools::node_callback_t Object::expect_objects(length_callback_t length_callback, NodeTools::callback_t<memory::unique_base_ptr<Object>&&> callback) {
 	return expect_dictionary_keys_and_length(
 		length_callback,
 
@@ -107,7 +107,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 		"actorfile", ONE_EXACTLY, expect_string(assign_variable_callback_string(model_file)),
 		"scale", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scale)),
 
-		"attach", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
+		"attach", ZERO_OR_MORE, [this](ovdl::v2script::ast::Node const* node) -> bool {
 			std::string_view actor_name {}, attach_node {};
 			Attachment::attach_id_t attach_id = 0;
 
@@ -127,7 +127,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 		"idle", ZERO_OR_ONE, expect_string(bind_set_animation(this, "idle"sv)),
 		"move", ZERO_OR_ONE, expect_string(bind_set_animation(this, "move"sv)),
 		"attack", ZERO_OR_ONE, expect_string(bind_set_animation(this, "attack"sv)),
-		"animation", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
+		"animation", ZERO_OR_MORE, [this](ovdl::v2script::ast::Node const* node) -> bool {
 			std::string_view name {}, file {};
 			fixed_point_t scroll_time = 0;
 
@@ -239,7 +239,7 @@ bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 
 	ret &= add_key_map_entries(key_map,
 		"texturefile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
-		"noOfFrames", ZERO_OR_ONE, expect_uint((callback_t<int>)[this](frame_t frames_read) -> bool {
+		"noOfFrames", ZERO_OR_ONE, expect_uint((NodeTools::callback_t<int>)[this](frame_t frames_read) -> bool {
 			if (frames_read < 1) {
 				spdlog::error_s(
 					"Billboard {} had an invalid number of frames {}, setting number of frames to 1",

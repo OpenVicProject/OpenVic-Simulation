@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
@@ -72,7 +73,7 @@ bool RebelManager::add_rebel_type(
 }
 
 bool RebelManager::load_rebels_file(
-	IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
+	IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ovdl::v2script::ast::Node const* root
 ) {
 	spdlog::scope scope { "common/rebel_types.txt" };
 
@@ -108,7 +109,7 @@ bool RebelManager::load_rebels_file(
 
 	bool ret = expect_dictionary_reserve_length(
 		rebel_types,
-		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 			using enum scope_type_t;
 
 			spdlog::scope scope { fmt::format("rebel type {}", identifier) };
@@ -138,7 +139,7 @@ bool RebelManager::load_rebels_file(
 				"government", ONE_EXACTLY, government_type_manager.expect_government_type_dictionary_reserve_length(
 					desired_governments,
 					[this, &government_type_manager, &desired_governments](
-						GovernmentType const& from, ast::NodeCPtr value
+						GovernmentType const& from, ovdl::v2script::ast::Node const* value
 					) -> bool {
 						return government_type_manager.expect_government_type_identifier(
 							[&desired_governments, &from](GovernmentType const& to) -> bool {

@@ -89,7 +89,7 @@ namespace OpenVic {
 
 		bool load_national_foci_file(
 			PopManager const& pop_manager, IdeologyManager const& ideology_manager,
-			GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
+			GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

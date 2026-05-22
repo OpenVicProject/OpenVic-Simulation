@@ -1,6 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"

@@ -2,6 +2,7 @@
 
 #include <range/v3/algorithm/contains.hpp>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 
 using namespace OpenVic;
@@ -64,11 +65,11 @@ bool GovernmentTypeManager::add_government_type(
 }
 
 /* REQUIREMENTS: FS-525, SIM-27 */
-bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root) {
+bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ovdl::v2script::ast::Node const* root) {
 	spdlog::scope scope { "common/governments.txt" };
 	bool ret = expect_dictionary_reserve_length(
 		government_types,
-		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {
+		[this, &ideology_manager](std::string_view government_type_identifier, ovdl::v2script::ast::Node const* government_type_value) -> bool {
 			memory::vector<std::reference_wrapper<const Ideology>> ideologies;
 			bool elections = false, appoint_ruling_party = false;
 			Timespan term_duration = 0;
@@ -86,7 +87,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 
 			ret &= expect_dictionary(
 				[this, &ideology_manager, &ideologies, government_type_identifier](
-					std::string_view key, ast::NodeCPtr value
+					std::string_view key, ovdl::v2script::ast::Node const* value
 				) -> bool {
 					static const string_set_t reserved_keys = { "election", "duration", "appoint_ruling_party", "flagType" };
 					if (reserved_keys.contains(key)) {

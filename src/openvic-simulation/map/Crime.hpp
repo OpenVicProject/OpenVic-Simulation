@@ -33,7 +33,7 @@ namespace OpenVic {
 			bool default_active
 		);
 
-		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_crime_modifiers(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

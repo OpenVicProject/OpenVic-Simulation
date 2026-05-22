@@ -1,5 +1,6 @@
 #include "NationalValue.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
@@ -20,11 +21,11 @@ bool NationalValueManager::add_national_value(std::string_view identifier, Modif
 	);
 }
 
-bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
 	spdlog::scope scope { "common/nationalvalues.txt" };
 	bool ret = expect_dictionary_reserve_length(
 		national_values,
-		[this, &modifier_manager](std::string_view national_value_identifier, ast::NodeCPtr value) -> bool {
+		[this, &modifier_manager](std::string_view national_value_identifier, ovdl::v2script::ast::Node const* value) -> bool {
 			spdlog::scope scope { fmt::format("national value {}", national_value_identifier) };
 			ModifierValue modifiers;
 			bool ret = NodeTools::expect_dictionary(

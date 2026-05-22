@@ -49,7 +49,7 @@ namespace OpenVic {
 			Timespan term_duration, std::string_view flag_type
 		);
 
-		bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);
+		bool load_government_types_file(IdeologyManager const& ideology_manager, ovdl::v2script::ast::Node const* root);
 
 		bool is_valid_flag_type(std::string_view type) const;
 	};

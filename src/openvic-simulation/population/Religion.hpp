@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
@@ -38,6 +38,6 @@ namespace OpenVic {
 			std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 		);
 
-		bool load_religion_file(ast::NodeCPtr root);
+		bool load_religion_file(ovdl::v2script::ast::Node const* root);
 	};
 }

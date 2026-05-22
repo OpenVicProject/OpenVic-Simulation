@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -72,7 +72,7 @@ namespace OpenVic {
 
 		StaticModifierCache();
 
-		bool load_static_modifiers(ModifierManager& modifier_manager, const ast::NodeCPtr root);
+		bool load_static_modifiers(ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* const root);
 
 	public:
 		StaticModifierCache(StaticModifierCache&&) = default;

@@ -2,6 +2,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/military/CombatWidth.hpp"
 
 using namespace OpenVic;
@@ -13,7 +14,7 @@ std::string_view MilitaryDefines::get_name() const {
 	return "military";
 }
 
-node_callback_t MilitaryDefines::expect_defines() {
+NodeTools::node_callback_t MilitaryDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"DIG_IN_INCREASE_EACH_DAYS", ONE_EXACTLY, expect_days(assign_variable_callback(dig_in_increase_each_days)),
 		"REINFORCE_SPEED", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(reinforce_speed)),

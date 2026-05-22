@@ -3,7 +3,7 @@
 #include <string_view>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
@@ -56,6 +56,6 @@ namespace OpenVic {
 
 		bool add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers);
 
-		bool load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_leader_traits_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 	};
 } // namespace OpenVic

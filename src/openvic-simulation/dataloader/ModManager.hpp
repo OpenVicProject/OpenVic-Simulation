@@ -6,7 +6,7 @@
 
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -47,7 +47,7 @@ namespace OpenVic {
 	public:
 		ModManager();
 
-		bool load_mod_file(ast::NodeCPtr root);
+		bool load_mod_file(ovdl::v2script::ast::Node const* root);
 		void set_loaded_mods(memory::vector<std::reference_wrapper<const Mod>>&& new_loaded_mods);
 		size_t get_loaded_mod_count() const;
 	};

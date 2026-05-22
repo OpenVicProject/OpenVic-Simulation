@@ -6,6 +6,7 @@
 
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -74,11 +75,11 @@ namespace OpenVic {
 			CountryDefinition::government_colour_map_t&& alternative_colours
 		);
 
-		bool load_country_colours(ast::NodeCPtr root);
+		bool load_country_colours(ovdl::v2script::ast::Node const* root);
 
-		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
+		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ovdl::v2script::ast::Node const* root);
 		bool load_country_data_file(
-			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ovdl::v2script::ast::Node const* root
 		);
 	};
 }

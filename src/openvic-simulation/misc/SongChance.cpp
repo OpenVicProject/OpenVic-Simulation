@@ -1,5 +1,7 @@
 #include "SongChance.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -11,12 +13,12 @@ bool SongChance::parse_scripts(DefinitionManager const& definition_manager) {
 	return chance.parse_scripts(definition_manager);
 }
 
-bool SongChanceManager::load_songs_file(ast::NodeCPtr root) {
+bool SongChanceManager::load_songs_file(ovdl::v2script::ast::Node const* root) {
 	bool ret = true;
 
 	ret &= expect_dictionary_reserve_length(
 		song_chances,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			using enum scope_type_t;
 
 			if (key != "song") {

@@ -70,13 +70,13 @@ namespace OpenVic {
 			ModifierValue& modifier_value,
 			const std::string_view prefix,
 			const std::string_view key,
-			const ast::NodeCPtr value
+			ovdl::v2script::ast::Node const* const value
 		) const;
 
 		bool _add_modifier_cb(
 			ModifierValue& modifier_value,
 			ModifierEffect const* const effect,
-			const ast::NodeCPtr value
+			ovdl::v2script::ast::Node const* const value
 		) const;
 
 		NodeTools::key_value_callback_t _expect_modifier_effect(
@@ -102,9 +102,9 @@ namespace OpenVic {
 			const IconModifier::icon_t icon,
 			const Modifier::modifier_type_t type = Modifier::modifier_type_t::EVENT
 		);
-		bool load_event_modifiers(const ast::NodeCPtr root);
+		bool load_event_modifiers(ovdl::v2script::ast::Node const* const root);
 
-		bool load_static_modifiers(const ast::NodeCPtr root);
+		bool load_static_modifiers(ovdl::v2script::ast::Node const* const root);
 
 		bool add_triggered_modifier(
 			const std::string_view identifier,
@@ -112,7 +112,7 @@ namespace OpenVic {
 			const IconModifier::icon_t icon,
 			ConditionScript&& trigger
 		);
-		bool load_triggered_modifiers(const ast::NodeCPtr root);
+		bool load_triggered_modifiers(ovdl::v2script::ast::Node const* const root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 		void lock_all_modifier_except_base_country_effects();

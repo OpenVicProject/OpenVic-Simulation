@@ -1,5 +1,6 @@
 #include "NationalFocus.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -98,14 +99,14 @@ inline bool NationalFocusManager::add_national_focus(
 
 bool NationalFocusManager::load_national_foci_file(
 	PopManager const& pop_manager, IdeologyManager const& ideology_manager,
-	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root
 ) {
 	spdlog::scope scope { "common/national_focus.txt" };
 	size_t expected_national_foci = 0;
 
 	bool ret = expect_dictionary_reserve_length(
 		national_focus_groups,
-		[this, &expected_national_foci](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		[this, &expected_national_foci](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 			return expect_length(add_variable_callback(expected_national_foci))(node) & add_national_focus_group(identifier);
 		}
 	)(root);
@@ -116,11 +117,11 @@ bool NationalFocusManager::load_national_foci_file(
 
 	ret &= expect_national_focus_group_dictionary(
 		[this, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
-			NationalFocusGroup const& group, ast::NodeCPtr group_node
+			NationalFocusGroup const& group, ovdl::v2script::ast::Node const* group_node
 		) -> bool {
 			return expect_dictionary(
 				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
-					std::string_view identifier, ast::NodeCPtr node
+					std::string_view identifier, ovdl::v2script::ast::Node const* node
 				) -> bool {
 					spdlog::scope scope { fmt::format("national focus {}", identifier) };
 					using enum scope_type_t;
@@ -141,7 +142,7 @@ bool NationalFocusManager::load_national_foci_file(
 					auto expect_base_province_modifier_cb = modifier_manager.expect_base_province_modifier(modifiers);
 					bool ret = NodeTools::expect_dictionary_keys_and_default(
 						[&good_definition_manager, &encourage_goods, &pop_manager, &encourage_pop_types, &expect_base_province_modifier_cb](
-							std::string_view key, ast::NodeCPtr value
+							std::string_view key, ovdl::v2script::ast::Node const* value
 						) mutable -> bool {
 							GoodDefinition const* good = good_definition_manager.get_good_definition_by_identifier(key);
 							if (good != nullptr) {

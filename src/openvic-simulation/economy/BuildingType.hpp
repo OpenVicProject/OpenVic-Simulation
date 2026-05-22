@@ -129,7 +129,7 @@ namespace OpenVic {
 
 		bool load_buildings_file(
 			GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
-			ModifierManager& modifier_manager, ast::NodeCPtr root
+			ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* root
 		);
 	};
 }

@@ -1,5 +1,6 @@
 #include "Religion.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
@@ -51,11 +52,11 @@ bool ReligionManager::add_religion(
  * POP-286, POP-287, POP-288, POP-289, POP-290, POP-291, POP-292,
  * POP-293, POP-294, POP-295, POP-296, POP-297, POP-298, POP-299
  */
-bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
+bool ReligionManager::load_religion_file(ovdl::v2script::ast::Node const* root) {
 	size_t total_expected_religions = 0;
 	bool ret = expect_dictionary_reserve_length(
 		religion_groups,
-		[this, &total_expected_religions](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &total_expected_religions](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			bool ret = expect_length(add_variable_callback(total_expected_religions))(value);
 			ret &= add_religion_group(key);
 			return ret;
@@ -64,8 +65,8 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 	lock_religion_groups();
 	reserve_more_religions(total_expected_religions);
 	ret &= expect_religion_group_dictionary(
-		[this](ReligionGroup const& religion_group, ast::NodeCPtr religion_group_value) -> bool {
-			return expect_dictionary([this, &religion_group](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this](ReligionGroup const& religion_group, ovdl::v2script::ast::Node const* religion_group_value) -> bool {
+			return expect_dictionary([this, &religion_group](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 				colour_t colour = colour_t::null();
 				Religion::icon_t icon = 0;
 				bool pagan = false;

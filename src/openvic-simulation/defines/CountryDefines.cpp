@@ -1,5 +1,7 @@
 #include "CountryDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view CountryDefines::get_name() const {
 	return "country";
 }
 
-node_callback_t CountryDefines::expect_defines() {
+NodeTools::node_callback_t CountryDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"YEARS_OF_NATIONALISM", ONE_EXACTLY, expect_years(assign_variable_callback(nationalism_duration)),
 		"MONTHS_UNTIL_BROKEN", ZERO_OR_ONE, // NOT USED

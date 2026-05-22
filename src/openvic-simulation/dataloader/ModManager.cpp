@@ -77,7 +77,7 @@ vector_ordered_set<std::reference_wrapper<const Mod>> Mod::generate_dependency_l
 
 ModManager::ModManager() {}
 
-bool ModManager::load_mod_file(ast::NodeCPtr root) {
+bool ModManager::load_mod_file(ovdl::v2script::ast::Node const* root) {
 	std::string_view identifier;
 	std::string_view path;
 	std::optional<std::string_view> user_dir;
