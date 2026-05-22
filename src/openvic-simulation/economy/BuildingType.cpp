@@ -4,19 +4,15 @@
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
-#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
-using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
 	index_t new_index,
@@ -112,175 +108,4 @@ bool BuildingType::can_be_built_in(
 
 bool BuildingType::can_be_built_in(ProvinceDefinition const& location) const {
 	return !is_port || location.has_port();
-}
-
-BuildingTypeManager::BuildingTypeManager() : infrastructure_building_type { nullptr }, port_building_type { nullptr } {}
-
-bool BuildingTypeManager::add_building_type(
-	std::string_view identifier, BuildingType::building_type_args_t& building_type_args
-) {
-	if (identifier.empty()) {
-		spdlog::error_s("Invalid building identifier - empty!");
-		return false;
-	}
-	
-	std::optional<province_building_index_t> province_building_index = building_type_args.in_province
-		? std::make_optional<province_building_index_t>(province_building_types.size())
-		: std::nullopt;
-
-	const bool ret = building_types.emplace_item(
-		identifier,
-		BuildingType::index_t { get_building_type_count() }, province_building_index, identifier, building_type_args
-	);
-
-	if (ret) {
-		building_type_types.emplace(building_type_args.type);
-		if (province_building_index.has_value()) {
-			province_building_types.emplace_back(building_types.back());
-		}
-	}
-
-	return ret;
-}
-
-bool BuildingTypeManager::load_buildings_file(
-	GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
-	ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* root
-) {
-	bool ret = expect_dictionary_reserve_length(
-		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
-			std::string_view key, ovdl::v2script::ast::Node const* value
-		) -> bool {
-			BuildingType::building_type_args_t building_type_args {};
-
-			bool ret = NodeTools::expect_dictionary_keys_and_default(
-				modifier_manager.expect_base_province_modifier(building_type_args.modifier),
-				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
-				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
-				"completion_size", ZERO_OR_ONE,
-					expect_fixed_point(assign_variable_callback(building_type_args.completion_size)),
-				"max_level", ONE_EXACTLY, expect_strong_typedef<building_level_t>(assign_variable_callback(building_type_args.max_level)),
-				"goods_cost", ONE_EXACTLY, good_definition_manager.expect_good_definition_decimal_map(
-					move_variable_callback(building_type_args.goods_cost)
-				),
-				"cost", ZERO_OR_MORE, expect_fixed_point(assign_variable_callback(building_type_args.cost)),
-				"time", ONE_EXACTLY, expect_days(assign_variable_callback(building_type_args.build_time)),
-				"visibility", ONE_EXACTLY, expect_bool([key](bool visibility) -> bool {
-					if (!visibility) {
-						spdlog::warn_s(
-							"Visibility is \"no\" for building type \"{}\", the building will still be visible as this option has no effect!",
-							key
-						);
-					}
-					return true;
-				}),
-				"onmap", ONE_EXACTLY, expect_bool(assign_variable_callback(building_type_args.on_map)),
-				"default_enabled", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.default_enabled)),
-				"production_type", ZERO_OR_ONE, production_type_manager.expect_production_type_identifier(
-					assign_variable_callback_pointer(building_type_args.production_type)
-				),
-				"pop_build_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.pop_build_factory)),
-				"strategic_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.strategic_factory)),
-				"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.advanced_factory)),
-				"fort_level", ZERO_OR_ONE, expect_strong_typedef<building_level_t>(assign_variable_callback(building_type_args.fort_level)),
-				"naval_capacity", ZERO_OR_ONE, expect_uint(assign_variable_callback(building_type_args.naval_capacity)),
-				"colonial_points", ZERO_OR_ONE,
-					expect_list(expect_fixed_point(vector_callback(building_type_args.colonial_points))),
-				"province", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.in_province)),
-				"one_per_state", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.one_per_state)),
-				"colonial_range", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(building_type_args.colonial_range)),
-				"infrastructure", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(building_type_args.infrastructure)),
-				"spawn_railway_track", ZERO_OR_ONE,
-					expect_bool(assign_variable_callback(building_type_args.spawn_railway_track)),
-				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.sail)),
-				"steam", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.steam)),
-				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.capital)),
-				"port", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.port))
-			)(value);
-
-			ret &= add_building_type(key, building_type_args);
-
-			return ret;
-		}
-	)(root);
-	lock_building_types();
-
-	auto& building_type_effects = modifier_manager.modifier_effect_cache.building_type_effects;
-	building_type_effects = std::move(
-		decltype(ModifierEffectCache::building_type_effects) {
-			generate_values,
-			building_type_index_t(get_building_type_count())
-		}
-	);
-
-	for (BuildingType const& building_type : get_building_types()) {
-		using enum ModifierEffect::format_t;
-		using enum ModifierEffect::target_t;
-
-		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects[building_type.index];
-
-		static constexpr std::string_view max_prefix = "max_";
-		static constexpr std::string_view min_prefix = "min_build_";
-		ret &= modifier_manager.register_technology_modifier_effect(
-			this_building_type_effects.max_level, append_string_views(max_prefix, building_type.get_identifier()),
-			FORMAT_x1_0DP_POS, memory::fmt::format("${}$ $TECH_MAX_LEVEL$", building_type)
-		);
-		// TODO - add custom localisation for "min_build_$building_type$" modifiers
-		ret &= modifier_manager.register_terrain_modifier_effect(
-			this_building_type_effects.min_level, append_string_views(min_prefix, building_type.get_identifier()),
-			FORMAT_x1_0DP_NEG
-		);
-		if (building_type.is_in_province) {
-			if (building_type.is_port) {
-				if (port_building_type == nullptr) {
-					port_building_type = &building_type;
-				} else {
-					spdlog::error_s(
-						"Building type {} is marked as a port, but we are already using {} as the port building type!",
-						building_type, *port_building_type
-					);
-					ret = false;
-				}
-			} else if (building_type.type == "infrastructure") {
-				if (infrastructure_building_type == nullptr) {
-					infrastructure_building_type = &building_type;
-				} else {
-					spdlog::error_s(
-						"Building type {} is marked as a infrastructure, but we are already using {} as the infrastructure building type!",
-						building_type, *infrastructure_building_type
-					);
-					ret = false;
-				}
-			}
-		} else {
-			if (building_type.is_port) {
-				spdlog::error_s(
-					"Building type {} is marked as a port, but is not a province building!", building_type
-				);
-				ret = false;
-			}
-		}
-	}
-
-	if (infrastructure_building_type == nullptr) {
-		spdlog::error_s("No infrastructure building type found!");
-		ret = false;
-	}
-
-	if (port_building_type == nullptr) {
-		spdlog::error_s("No port building type found!");
-		ret = false;
-	}
-
-	if (province_building_types.empty()) {
-		spdlog::error_s("No province building types found!");
-		ret = false;
-	} else {
-		SPDLOG_INFO(
-			"Found {} province building types out of {} total building types",
-			province_building_types.size(), get_building_type_count()
-		);
-	}
-
-	return ret;
 }

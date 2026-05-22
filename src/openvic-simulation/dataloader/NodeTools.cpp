@@ -521,9 +521,9 @@ NodeTools::node_callback_t NodeTools::expect_dictionary(key_value_callback_t cal
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<name_list_t&&> callback) {
+NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback) {
 	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
-		name_list_t list;
+		memory::vector<memory::string> list;
 		bool ret = expect_list_reserve_length(
 			list, expect_identifier_or_string(vector_callback<std::string_view>(list))
 		)(node);
@@ -532,7 +532,7 @@ NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<n
 	};
 }
 
-std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_list) {
+std::ostream& OpenVic::operator<<(std::ostream& stream, memory::vector<memory::string> const& name_list) {
 	stream << '[';
 	if (!name_list.empty()) {
 		stream << name_list.front();

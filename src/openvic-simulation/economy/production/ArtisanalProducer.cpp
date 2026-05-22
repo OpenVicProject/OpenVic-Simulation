@@ -12,6 +12,7 @@
 #include "openvic-simulation/defines/EconomyDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/GoodInstanceManager.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"

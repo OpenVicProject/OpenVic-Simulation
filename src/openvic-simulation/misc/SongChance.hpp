@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 
 namespace OpenVic {
@@ -19,15 +18,6 @@ namespace OpenVic {
 	public:
 		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeightFactorMul&& new_chance);
 		SongChance(SongChance&&) = default;
-	};
-
-	struct SongChanceManager {
-	private:
-		IdentifierRegistry<SongChance> IDENTIFIER_REGISTRY(song_chance);
-		//Songs.txt
-	public:
-		bool load_songs_file(ovdl::v2script::ast::Node const* root);
-		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }
 

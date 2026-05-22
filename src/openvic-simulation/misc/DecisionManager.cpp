@@ -1,0 +1,83 @@
+#include "DecisionManager.hpp"
+
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
+using namespace OpenVic;
+using namespace OpenVic::NodeTools;
+
+bool DecisionManager::add_decision(
+	std::string_view identifier, bool alert, bool news, std::string_view news_title, std::string_view news_desc_long,
+	std::string_view news_desc_medium, std::string_view news_desc_short, std::string_view picture, ConditionScript&& potential,
+	ConditionScript&& allow, ConditionalWeightFactorMul&& ai_will_do, EffectScript&& effect
+) {
+	if (identifier.empty()) {
+		spdlog::error_s("Invalid decision identifier - empty!");
+		return false;
+	}
+
+	if (news) {
+		if (news_desc_long.empty() || news_desc_medium.empty() || news_desc_short.empty()) {
+			spdlog::warn_s(
+				"Decision with ID {} is a news decision but doesn't have long, medium and short descriptions!", identifier
+			);
+		}
+	} else {
+		if (!news_title.empty() || !news_desc_long.empty() || !news_desc_medium.empty() || !news_desc_short.empty()) {
+			spdlog::warn_s("Decision with ID {} is not a news decision but has news strings specified!", identifier);
+		}
+	}
+
+	return decisions.emplace_item(
+		identifier,
+		duplicate_warning_callback,
+		identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture, std::move(potential),
+		std::move(allow), std::move(ai_will_do), std::move(effect)
+	);
+}
+
+bool DecisionManager::load_decision_file(ovdl::v2script::ast::Node const* root) {
+	return expect_dictionary_keys(
+		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
+			decisions,
+			[this](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
+				using enum scope_type_t;
+
+				bool alert = true, news = false;
+				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
+				ConditionScript potential { COUNTRY, COUNTRY, NO_SCOPE };
+				ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
+				ConditionalWeightFactorMul ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
+				EffectScript effect;
+
+				bool ret = expect_dictionary_keys(
+					"alert", ZERO_OR_ONE, expect_bool(assign_variable_callback(alert)),
+					"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
+					"news_title", ZERO_OR_ONE, expect_string(assign_variable_callback(news_title)),
+					"news_desc_long", ZERO_OR_ONE, expect_string(assign_variable_callback(news_desc_long)),
+					"news_desc_medium", ZERO_OR_ONE, expect_string(assign_variable_callback(news_desc_medium)),
+					"news_desc_short", ZERO_OR_ONE, expect_string(assign_variable_callback(news_desc_short)),
+					"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture)),
+					"potential", ONE_EXACTLY, potential.expect_script(),
+					"allow", ONE_EXACTLY, allow.expect_script(),
+					"effect", ONE_EXACTLY, effect.expect_script(),
+					"ai_will_do", ZERO_OR_ONE, ai_will_do.expect_conditional_weight()
+				)(node);
+
+				ret &= add_decision(
+					identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture,
+					std::move(potential), std::move(allow), std::move(ai_will_do), std::move(effect)
+				);
+
+				return ret;
+			}
+		)
+	)(root);
+}
+
+bool DecisionManager::parse_scripts(DefinitionManager const& definition_manager) {
+	bool ret = true;
+	for (Decision& decision : decisions.get_items()) {
+		ret &= decision.parse_scripts(definition_manager);
+	}
+	return ret;
+}

@@ -40,6 +40,8 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 #endif
 }
 
+Dataloader::Dataloader() {}
+
 bool Dataloader::set_roots(path_span_t new_roots, path_span_t new_replace_paths, bool warn_on_override) {
 	if (!roots.empty()) {
 		if (warn_on_override) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/scripts/Condition.hpp"
+#include "openvic-simulation/scripts/ConditionManager.hpp"
 
 namespace OpenVic {
 	struct ScriptManager {

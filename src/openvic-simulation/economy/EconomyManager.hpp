@@ -1,10 +1,12 @@
 #pragma once
 
-#include <openvic-dataloader/v2script/Parser.hpp>
+#include "openvic-simulation/economy/BuildingTypeManager.hpp"
+#include "openvic-simulation/economy/GoodDefinitionManager.hpp"
+#include "openvic-simulation/economy/production/ProductionTypeManager.hpp"
 
-#include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/economy/production/ProductionType.hpp"
+namespace ovdl::v2script {
+	class Parser;
+}
 
 namespace OpenVic {
 	struct EconomyManager {

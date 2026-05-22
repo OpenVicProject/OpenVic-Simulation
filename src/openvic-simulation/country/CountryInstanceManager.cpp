@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"

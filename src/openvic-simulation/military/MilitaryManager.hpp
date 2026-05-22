@@ -1,9 +1,9 @@
 #pragma once
 
-#include "openvic-simulation/military/Deployment.hpp"
-#include "openvic-simulation/military/LeaderTrait.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/military/Wargoal.hpp"
+#include "openvic-simulation/military/DeploymentManager.hpp"
+#include "openvic-simulation/military/LeaderTraitManager.hpp"
+#include "openvic-simulation/military/UnitTypeManager.hpp"
+#include "openvic-simulation/military/WargoalManager.hpp"
 
 namespace OpenVic {
 	struct MilitaryManager {

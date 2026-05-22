@@ -2,7 +2,6 @@
 
 #include <concepts>
 #include <cstdint>
-#include <functional>
 #include <optional>
 #include <type_traits>
 
@@ -62,11 +61,7 @@ using namespace std::string_view_literals;
 #undef NODE_CASE
 	}
 
-	struct name_list_t : memory::vector<memory::string> {
-		using base_type = memory::vector<memory::string>;
-		using base_type::base_type;
-	};
-	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
+	std::ostream& operator<<(std::ostream& stream, memory::vector<memory::string> const& name_list);
 
 	constexpr void reserve_more(reservable auto& t, size_t size) {
 		t.reserve(t.size() + size);
@@ -542,7 +537,7 @@ using namespace std::string_view_literals;
 			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), FWD(args)...);
 		}
 
-		NodeTools::node_callback_t name_list_callback(NodeTools::callback_t<name_list_t&&> callback);
+		NodeTools::node_callback_t name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback);
 
 		template<typename T, string_map_case Case>
 		Callback<std::string_view> auto expect_mapped_string(
