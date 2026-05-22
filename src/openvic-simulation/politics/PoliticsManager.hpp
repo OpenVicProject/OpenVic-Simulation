@@ -1,11 +1,11 @@
 #pragma once
 
-#include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/GovernmentManager.hpp"
+#include "openvic-simulation/politics/IdeologyManager.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
-#include "openvic-simulation/politics/NationalFocus.hpp"
-#include "openvic-simulation/politics/NationalValue.hpp"
-#include "openvic-simulation/politics/Rebel.hpp"
+#include "openvic-simulation/politics/NationalFocusManager.hpp"
+#include "openvic-simulation/politics/NationalValueManager.hpp"
+#include "openvic-simulation/politics/RebelManager.hpp"
 
 namespace OpenVic {
 	struct PoliticsManager {

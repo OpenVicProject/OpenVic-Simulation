@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/history/Bookmark.hpp"
+#include "openvic-simulation/history/BookmarkManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/history/DiplomaticHistory.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"

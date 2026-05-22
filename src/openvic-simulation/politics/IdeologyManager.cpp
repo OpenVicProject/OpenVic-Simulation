@@ -1,0 +1,144 @@
+#include "IdeologyManager.hpp"
+
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/Colour.hpp"
+
+using namespace OpenVic;
+using namespace OpenVic::NodeTools;
+
+bool IdeologyManager::add_ideology_group(std::string_view identifier) {
+	spdlog::scope scope { fmt::format("ideology group {}", identifier) };
+	if (identifier.empty()) {
+		spdlog::error_s("Invalid ideology group identifier - empty!");
+		return false;
+	}
+
+	return ideology_groups.emplace_item(identifier, identifier);
+}
+
+bool IdeologyManager::add_ideology(
+	std::string_view identifier,
+	colour_t colour,
+	IdeologyGroup const* group,
+	bool uncivilised,
+	bool can_reduce_consciousness,
+	bool can_reduce_militancy,
+	std::optional<Date> spawn_date,
+	ConditionalWeightBase&& add_political_reform,
+	ConditionalWeightBase&& remove_political_reform,
+	ConditionalWeightBase&& add_social_reform,
+	ConditionalWeightBase&& remove_social_reform,
+	ConditionalWeightBase&& add_military_reform,
+	ConditionalWeightBase&& add_economic_reform
+) {
+	spdlog::scope scope { fmt::format("ideology {}", identifier) };
+	if (identifier.empty()) {
+		spdlog::error_s("Invalid ideology identifier - empty!");
+		return false;
+	}
+
+	if (group == nullptr) {
+		spdlog::error_s("Null ideology group for {}", identifier);
+		return false;
+	}
+
+	const Ideology::index_t new_index = Ideology::index_t { ideologies.size() };
+	return ideologies.emplace_item(
+		identifier,
+		identifier,
+		new_index,
+		colour,
+		*group,
+		uncivilised,
+		can_reduce_consciousness,
+		can_reduce_militancy,
+		spawn_date,
+		std::move(add_political_reform),
+		std::move(remove_political_reform),
+		std::move(add_social_reform),
+		std::move(remove_social_reform),
+		std::move(add_military_reform),
+		std::move(add_economic_reform)
+	);
+}
+
+/* REQUIREMENTS:
+ * POL-9, POL-10, POL-11, POL-12, POL-13, POL-14, POL-15
+ */
+bool IdeologyManager::load_ideology_file(ovdl::v2script::ast::Node const* root) {
+	spdlog::scope scope { "common/ideologies.txt" };
+	size_t expected_ideologies = 0;
+	bool ret = expect_dictionary_reserve_length(
+		ideology_groups,
+		[this, &expected_ideologies](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
+			bool ret = expect_length(add_variable_callback(expected_ideologies))(value);
+			ret &= add_ideology_group(key);
+			return ret;
+		}
+	)(root);
+	lock_ideology_groups();
+
+	reserve_more_ideologies(expected_ideologies);
+	ret &= expect_dictionary([this](std::string_view ideology_group_key, ovdl::v2script::ast::Node const* ideology_group_value) -> bool {
+		IdeologyGroup const* ideology_group = get_ideology_group_by_identifier(ideology_group_key);
+
+		return expect_dictionary([this, ideology_group](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
+			using enum scope_type_t;
+
+			colour_t colour = colour_t::null();
+			bool uncivilised = true, can_reduce_consciousness = false, can_reduce_militancy = false;
+			std::optional<Date> spawn_date;
+			ConditionalWeightBase add_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase remove_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase remove_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_military_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_economic_reform { COUNTRY, COUNTRY, NO_SCOPE };
+
+			bool ret = expect_dictionary_keys(
+				"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),
+				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+				"date", ZERO_OR_ONE, expect_date(assign_variable_callback_opt(spawn_date)),
+				"can_reduce_consciousness", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_consciousness)),
+				"can_reduce_militancy", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_militancy)),
+				"add_political_reform", ONE_EXACTLY, add_political_reform.expect_conditional_weight(),
+				"remove_political_reform", ONE_EXACTLY,
+					remove_political_reform.expect_conditional_weight(),
+				"add_social_reform", ONE_EXACTLY, add_social_reform.expect_conditional_weight(),
+				"remove_social_reform", ONE_EXACTLY, remove_social_reform.expect_conditional_weight(),
+				"add_military_reform", ZERO_OR_ONE, add_military_reform.expect_conditional_weight(),
+				"add_economic_reform", ZERO_OR_ONE, add_economic_reform.expect_conditional_weight()
+			)(value);
+
+			ret &= add_ideology(
+				key,
+				colour,
+				ideology_group,
+				uncivilised,
+				can_reduce_consciousness,
+				can_reduce_militancy,
+				spawn_date,
+				std::move(add_political_reform),
+				std::move(remove_political_reform),
+				std::move(add_social_reform),
+				std::move(remove_social_reform),
+				std::move(add_military_reform),
+				std::move(add_economic_reform)
+			);
+
+			return ret;
+		})(ideology_group_value);
+	})(root);
+
+	lock_ideologies();
+
+	return ret;
+}
+
+bool IdeologyManager::parse_scripts(DefinitionManager const& definition_manager) {
+	bool ret = true;
+	for (Ideology& ideology : ideologies.get_items()) {
+		ideology.parse_scripts(definition_manager);
+	}
+	return ret;
+}

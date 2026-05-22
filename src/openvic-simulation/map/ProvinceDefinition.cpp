@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/economy/BuildingTypeManager.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 

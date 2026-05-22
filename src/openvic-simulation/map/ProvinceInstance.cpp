@@ -8,7 +8,7 @@
 #include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
-#include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/economy/BuildingTypeManager.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"

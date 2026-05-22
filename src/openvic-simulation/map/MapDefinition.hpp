@@ -11,7 +11,7 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
-#include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/map/TerrainTypeManager.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"

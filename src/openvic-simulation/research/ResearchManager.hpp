@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/research/Invention.hpp"
-#include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/research/InventionManager.hpp"
+#include "openvic-simulation/research/TechnologyManager.hpp"
 
 namespace OpenVic {
 	struct ResearchManager {

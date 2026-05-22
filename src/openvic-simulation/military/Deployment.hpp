@@ -8,14 +8,10 @@
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	class Dataloader;
-	struct MapDefinition;
-	struct MilitaryManager;
 	struct ProvinceDefinition;
 
 	template<unit_branch_t>
@@ -67,10 +63,15 @@ namespace OpenVic {
 		std::optional<size_t> PROPERTY(leader_index);
 
 	public:
-		UnitDeploymentGroup(
-			std::string_view new_name, ProvinceDefinition const& new_location, memory::vector<_Unit>&& new_units,
+		constexpr UnitDeploymentGroup(
+			std::string_view new_name,
+			ProvinceDefinition const& new_location,
+			memory::vector<_Unit>&& new_units,
 			std::optional<size_t> new_leader_index
-		);
+		) : name { new_name },
+			location { new_location },
+			units { std::move(new_units) },
+			leader_index { new_leader_index } {}
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
 	};
 
@@ -93,30 +94,5 @@ namespace OpenVic {
 		Deployment(Deployment&&) = default;
 
 		OV_UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);
-	};
-
-	struct DeploymentManager {
-	private:
-		IdentifierRegistry<Deployment> IDENTIFIER_REGISTRY(deployment);
-		string_set_t missing_oob_files;
-
-	public:
-		bool add_deployment(
-			std::string_view path,
-			memory::vector<ArmyDeployment>&& armies,
-			memory::vector<NavyDeployment>&& navies,
-			memory::vector<LeaderBase>&& leaders
-		);
-
-		bool load_oob_file(
-			Dataloader const& dataloader,
-			MapDefinition const& map_definition,
-			MilitaryManager const& military_manager,
-			std::string_view history_path,
-			Deployment const*& deployment,
-			bool fail_on_missing
-		);
-
-		size_t get_missing_oob_file_count() const;
 	};
 }
