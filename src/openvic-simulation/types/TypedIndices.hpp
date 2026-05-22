@@ -6,6 +6,7 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include <type_safe/narrow_cast.hpp>
 #include <type_safe/strong_typedef.hpp>
 
 #define TYPED_INDEX_CUSTOM(name, base_type) \
@@ -15,6 +16,7 @@
 			type_safe::strong_typedef_op::relational_comparison<name>, \
 			type_safe::strong_typedef_op::integer_arithmetic<name> { \
 			using strong_typedef::strong_typedef; \
+			constexpr name(const std::size_t i) : name(type_safe::narrow_cast<base_type>(i)) {} \
 		}; \
 	} \
 	namespace std { \
@@ -27,7 +29,7 @@
 			return fmt::formatter<base_type>::format(type_safe::get(value), ctx); \
 		} \
 	};
-#define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::size_t)
+#define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::uint16_t)
 
 TYPED_INDEX(bookmark_index_t)
 TYPED_INDEX(building_type_index_t)
