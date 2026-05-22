@@ -120,6 +120,28 @@ void Pop::setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms)
 			item = fp::mul_div(item, new_total, old_total);
 		}
 	};
+	static auto rescale_spans = [](
+		std::span<fixed_point_t> span_a,
+		std::span<fixed_point_t> span_b,
+		const fixed_point_t new_total
+	) -> void {
+		fixed_point_t old_total = 0;
+		for (const fixed_point_t item : span_a) {
+			old_total += item;
+		}
+		for (const fixed_point_t item : span_b) {
+			old_total += item;
+		}
+
+		if (old_total == 0) { return; }
+
+		for (fixed_point_t& item : span_a) {
+			item = fp::mul_div(item, new_total, old_total);
+		}
+		for (fixed_point_t& item : span_b) {
+			item = fp::mul_div(item, new_total, old_total);
+		}
+	};
 	static auto test_weight_ordered = []<typename T, typename U>(ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
 		if constexpr (std::is_convertible_v<U const*, T const*> || std::is_convertible_v<U, T const*>) {
 			const int32_t value = rand() % (max + 1);
@@ -139,17 +161,19 @@ void Pop::setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms)
 	/* All entries equally weighted for testing. */
 	fill_span_with_test_weights(supporter_equivalents_by_ideology, 1, 5);
 	rescale_span(supporter_equivalents_by_ideology, type_safe::get(size));
-	
-	fill_span_with_test_weights(supporter_equivalents_by_party_policy, 3, 6);
-	rescale_span(supporter_equivalents_by_party_policy, type_safe::get(size));
-	
+
+	fill_span_with_test_weights(supporter_equivalents_by_party_policy, 3, 6);	
 	fill_span_with_test_weights(supporter_equivalents_by_reform, 3, 6);
 	for (Reform const& reform : reforms) {
 		if (reform.group.is_civilizing()) {
 			supporter_equivalents_by_reform[reform.index] = 0;
 		}
 	}
-	rescale_span(supporter_equivalents_by_reform, type_safe::get(size));
+	rescale_spans(
+		supporter_equivalents_by_party_policy,
+		supporter_equivalents_by_reform,
+		type_safe::get(size)
+	);
 
 	if (!vote_equivalents_by_party.empty()) {
 		for (auto& [party, value] : vote_equivalents_by_party) {
