@@ -75,14 +75,14 @@ bool CountryDefinitionManager::add_country(
 }
 
 bool CountryDefinitionManager::load_countries(
-	DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, Dataloader const& dataloader, ovdl::v2script::ast::Node const* root
 ) {
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
 	const bool ret = expect_dictionary_reserve_length(
 		country_definitions,
-		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
 					if (val == is_dynamic) {
@@ -120,13 +120,13 @@ bool CountryDefinitionManager::load_countries(
 	return ret;
 }
 
-bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root) {
+bool CountryDefinitionManager::load_country_colours(ovdl::v2script::ast::Node const* root) {
 	return country_definitions.expect_item_dictionary_and_default(
-		[](std::string_view key, ast::NodeCPtr value) -> bool {
+		[](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			spdlog::warn_s("country_colors.txt references country tag {} which is not defined!", key);
 			return true;
 		},
-		[](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
+		[](CountryDefinition& country, ovdl::v2script::ast::Node const* colour_node) -> bool {
 			return expect_dictionary_keys(
 				"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
 				"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
@@ -136,10 +136,10 @@ bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root) {
 	)(root);
 }
 
-node_callback_t CountryDefinitionManager::load_country_party(
+NodeTools::node_callback_t CountryDefinitionManager::load_country_party(
 	PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 ) const {
-	return [&politics_manager, &country_parties](ast::NodeCPtr value) -> bool {
+	return [&politics_manager, &country_parties](ovdl::v2script::ast::Node const* value) -> bool {
 		std::string_view party_name;
 		Date start_date, end_date;
 		Ideology const* ideology = nullptr;
@@ -149,7 +149,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		};
 
 		bool ret = expect_dictionary_keys_and_default(
-			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
+			[&politics_manager, &policies, &party_name](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 				return politics_manager.get_issue_manager().expect_party_policy_group_str(
 					[&politics_manager, &policies, value, &party_name](PartyPolicyGroup const& party_policy_group) -> bool {
 						PartyPolicy const*& policy = policies[party_policy_group.index];
@@ -204,7 +204,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 }
 
 bool CountryDefinitionManager::load_country_data_file(
-	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ovdl::v2script::ast::Node const* root
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;
@@ -212,7 +212,7 @@ bool CountryDefinitionManager::load_country_data_file(
 	CountryDefinition::unit_names_map_t unit_names;
 	CountryDefinition::government_colour_map_t alternative_colours;
 	bool ret = expect_dictionary_keys_and_default(
-		[&definition_manager, &alternative_colours](std::string_view key, ast::NodeCPtr value) -> bool {
+		[&definition_manager, &alternative_colours](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			return definition_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(
 				[&alternative_colours, value](GovernmentType const& government_type) -> bool {
 					return expect_colour(map_callback(alternative_colours, &government_type))(value);
@@ -228,7 +228,7 @@ bool CountryDefinitionManager::load_country_data_file(
 		"unit_names", ZERO_OR_ONE,
 			definition_manager.get_military_manager().get_unit_type_manager().expect_unit_type_dictionary_reserve_length(
 				unit_names,
-				[&unit_names](UnitType const& unit, ast::NodeCPtr value) -> bool {
+				[&unit_names](UnitType const& unit, ovdl::v2script::ast::Node const* value) -> bool {
 					return name_list_callback(map_callback(unit_names, &unit))(value);
 				}
 			)

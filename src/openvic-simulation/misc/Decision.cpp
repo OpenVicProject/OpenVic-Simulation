@@ -1,5 +1,7 @@
 #include "Decision.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -52,11 +54,11 @@ bool DecisionManager::add_decision(
 	);
 }
 
-bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
+bool DecisionManager::load_decision_file(ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_keys(
 		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
 			decisions,
-			[this](std::string_view identifier, ast::NodeCPtr node) -> bool {
+			[this](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
 				using enum scope_type_t;
 
 				bool alert = true, news = false;

@@ -27,7 +27,7 @@ namespace OpenVic {
 			);
 		}
 
-		inline bool load_buildings_file(ModifierManager& modifier_manager, ast::NodeCPtr root) {
+		inline bool load_buildings_file(ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* root) {
 			return building_type_manager.load_buildings_file(
 				good_definition_manager, production_type_manager, modifier_manager, root
 			);

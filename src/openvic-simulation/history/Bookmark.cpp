@@ -34,10 +34,10 @@ bool BookmarkManager::add_bookmark(
 	);
 }
 
-bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root) {
+bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ovdl::v2script::ast::Node const* root) {
 	const bool ret = expect_dictionary_reserve_length(
 		bookmarks,
-		[this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, map_height](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			if (key != "bookmark") {
 				spdlog::error_s("Invalid bookmark declaration {}", key);
 				return false;

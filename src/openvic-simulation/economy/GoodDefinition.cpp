@@ -1,8 +1,9 @@
 #include "GoodDefinition.hpp"
-
-#include "openvic-simulation/modifier/ModifierManager.hpp"
+"
 #include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -74,12 +75,12 @@ bool GoodDefinitionManager::add_good_definition(
 	}
 }
 
-bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
+bool GoodDefinitionManager::load_goods_file(ovdl::v2script::ast::Node const* root) {
 	size_t total_expected_goods = 0;
 
 	bool ret = expect_dictionary_reserve_length(
 		good_categories,
-		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &total_expected_goods](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			size_t expected_goods_in_category = 0;
 
 			bool ret = expect_length(assign_variable_callback(expected_goods_in_category))(value);
@@ -98,9 +99,9 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 	reserve_more_good_definitions(total_expected_goods);
 
 	ret &= good_categories.expect_item_dictionary(
-		[this](GoodCategory& good_category, ast::NodeCPtr good_category_value) -> bool {
+		[this](GoodCategory& good_category, ovdl::v2script::ast::Node const* good_category_value) -> bool {
 			return expect_dictionary(
-				[this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
+				[this, &good_category](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 					colour_t colour = colour_t::null();
 					fixed_point_t base_price;
 					bool is_available_from_start = true, is_tradeable = true;

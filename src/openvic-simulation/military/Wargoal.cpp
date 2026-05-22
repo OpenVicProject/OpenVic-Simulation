@@ -82,7 +82,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 
 	bool ret = expect_dictionary_reserve_length(
 		wargoal_types,
-		[this, &peace_order_symbol](std::string_view identifier, ast::NodeCPtr value) -> bool {
+		[this, &peace_order_symbol](std::string_view identifier, ovdl::v2script::ast::Node const* value) -> bool {
 			// If peace_order_symbol is false, we know there is no peace_order string in the parser
 			if (peace_order_symbol && identifier == peace_order_symbol.c_str()) {
 				return true;
@@ -106,7 +106,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 			ConditionScript allowed_countries { COUNTRY, COUNTRY, COUNTRY };
 			EffectScript on_add, on_po_accepted; //country as default scope for both
 
-			const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> node_callback_t {
+			const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> NodeTools::node_callback_t {
 				return expect_bool([&peace_options, peace_option](bool val) -> bool {
 					if (val) {
 						peace_options |= peace_option;
@@ -118,7 +118,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 			};
 
 			bool ret = expect_dictionary_keys_and_default(
-				[&modifiers, &identifier](std::string_view key, ast::NodeCPtr value) -> bool {
+				[&modifiers, &identifier](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 					using enum WargoalType::PEACE_MODIFIERS;
 					static const string_map_t<WargoalType::PEACE_MODIFIERS> peace_modifier_map {
 						{ "badboy_factor", BADBOY_FACTOR },

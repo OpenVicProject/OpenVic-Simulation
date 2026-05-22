@@ -90,7 +90,7 @@ namespace OpenVic {
 		memory::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
 			DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-			CountryHistoryEntry& entry, ast::NodeCPtr root
+			CountryHistoryEntry& entry, ovdl::v2script::ast::Node const* root
 		) override;
 	};
 
@@ -111,7 +111,7 @@ namespace OpenVic {
 		bool load_country_history_file(
 			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
 			decltype(CountryHistoryMap::ideology_keys) ideology_keys,
-			decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
+			decltype(CountryHistoryMap::government_type_keys) government_type_keys, ovdl::v2script::ast::Node const* root
 		);
 	};
 }

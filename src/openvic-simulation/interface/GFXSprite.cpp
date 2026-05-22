@@ -1,5 +1,7 @@
 #include "GFXSprite.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::GFX;
 using namespace OpenVic::NodeTools;
@@ -10,7 +12,7 @@ Font::Font(
 ) : HasIdentifierAndAlphaColour { new_identifier, new_colour, false }, fontname { new_fontname }, charset { new_charset },
 	height { new_height }, colour_codes { std::move(new_colour_codes) } {}
 
-node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callback_t<memory::unique_base_ptr<Sprite>&&> callback) {
+NodeTools::node_callback_t Sprite::expect_sprites(length_callback_t length_callback, NodeTools::callback_t<memory::unique_base_ptr<Sprite>&&> callback) {
 	return expect_dictionary_keys_and_length(
 		length_callback,
 		"spriteType", ZERO_OR_MORE, _expect_instance<Sprite, IconTextureSprite>(callback),

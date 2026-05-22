@@ -38,7 +38,7 @@ namespace OpenVic {
 		bool add_bookmark(
 			std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
 		);
-		bool load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root);
+		bool load_bookmark_file(fixed_point_t map_height, ovdl::v2script::ast::Node const* root);
 
 		Date get_last_bookmark_date() const;
 	};

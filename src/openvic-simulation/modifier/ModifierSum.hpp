@@ -5,8 +5,7 @@
 
 #include "openvic-simulation/core/BulkInsertWrapper.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -108,7 +107,7 @@ namespace OpenVic {
 	// but this has a non-negligible cost and we already calculate it as part of the "is_contributing" checks, so we pass
 	// the pre-calculated value along as a callback argument.
 	template<typename T>
-	concept ContributingModifierCallback = NodeTools::Functor<T, void, modifier_entry_t const&, fixed_point_t>;
+	concept ContributingModifierCallback = Functor<T, void, modifier_entry_t const&, fixed_point_t>;
 
 	struct ModifierSum {
 	private:

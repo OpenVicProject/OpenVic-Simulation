@@ -14,7 +14,7 @@ namespace OpenVic {
 
 		NamedBaseInstanceRegistry<GUI::Scene, UIManager const&> IDENTIFIER_REGISTRY(scene);
 		
-		bool _load_font(ast::NodeCPtr node);
+		bool _load_font(ovdl::v2script::ast::Node const* node);
 		NodeTools::NodeCallback auto _load_fonts(std::string_view font_key);
 
 	public:
@@ -29,7 +29,7 @@ namespace OpenVic {
 
 		void lock_gfx_registries();
 
-		bool load_gfx_file(ast::NodeCPtr root);
-		bool load_gui_file(std::string_view scene_name, ast::NodeCPtr root);
+		bool load_gfx_file(ovdl::v2script::ast::Node const* root);
+		bool load_gui_file(std::string_view scene_name, ovdl::v2script::ast::Node const* root);
 	};
 }

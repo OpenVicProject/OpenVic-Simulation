@@ -121,13 +121,13 @@ namespace OpenVic {
 
 		/* Both of these functions load data from "common/technology.txt", they are separated because the schools depend
 		 * on modifiers generated from the folder definitions and so loading must be staggered. */
-		bool load_technology_file_folders_and_areas(ast::NodeCPtr root);
-		bool load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_technology_file_folders_and_areas(ovdl::v2script::ast::Node const* root);
+		bool load_technology_file_schools(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 
 		/* Loaded from "technologies/.txt" files named after technology folders. */
 		bool load_technologies_file(
 			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+			BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root
 		);
 
 		bool generate_modifiers(ModifierManager& modifier_manager) const;

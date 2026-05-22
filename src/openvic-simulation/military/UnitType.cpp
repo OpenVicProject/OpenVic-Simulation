@@ -189,7 +189,7 @@ bool UnitTypeManager::load_unit_type_file(
 	}
 
 	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager, &type_symbol](
-		std::string_view key, ast::NodeCPtr value
+		std::string_view key, ovdl::v2script::ast::Node const* value
 	) -> bool {
 
 		unit_branch_t branch = INVALID_BRANCH;
@@ -241,7 +241,7 @@ bool UnitTypeManager::load_unit_type_file(
 		);
 
 		auto add_terrain_modifier_value = [&unit_args, &terrain_type_manager, &modifier_manager](
-			std::string_view default_key, ast::NodeCPtr default_value
+			std::string_view default_key, ovdl::v2script::ast::Node const* default_value
 		) -> bool {
 			TerrainType const* terrain_type = terrain_type_manager.get_terrain_type_by_identifier(default_key);
 

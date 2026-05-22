@@ -677,10 +677,10 @@ bool ModifierManager::add_event_modifier(
 	);
 }
 
-bool ModifierManager::load_event_modifiers(const ast::NodeCPtr root) {
+bool ModifierManager::load_event_modifiers(ovdl::v2script::ast::Node const* const root) {
 	const bool ret = expect_dictionary_reserve_length(
 		event_modifiers,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			ModifierValue modifier_value;
 			IconModifier::icon_t icon = 0;
 
@@ -698,7 +698,7 @@ bool ModifierManager::load_event_modifiers(const ast::NodeCPtr root) {
 	return ret;
 }
 
-bool ModifierManager::load_static_modifiers(const ast::NodeCPtr root) {
+bool ModifierManager::load_static_modifiers(ovdl::v2script::ast::Node const* const root) {
 	return static_modifier_cache.load_static_modifiers(*this, root);
 }
 
@@ -722,10 +722,10 @@ bool ModifierManager::add_triggered_modifier(
 	);
 }
 
-bool ModifierManager::load_triggered_modifiers(const ast::NodeCPtr root) {
+bool ModifierManager::load_triggered_modifiers(ovdl::v2script::ast::Node const* const root) {
 	const bool ret = expect_dictionary_reserve_length(
 		triggered_modifiers,
-		[this](const std::string_view key, const ast::NodeCPtr value) -> bool {
+		[this](const std::string_view key, ovdl::v2script::ast::Node const* const value) -> bool {
 			using enum scope_type_t;
 
 			ModifierValue modifier_value {};
@@ -763,7 +763,7 @@ bool ModifierManager::_add_flattened_modifier_cb(
 	ModifierValue& modifier_value,
 	const std::string_view prefix,
 	const std::string_view key,
-	const ast::NodeCPtr value
+	ovdl::v2script::ast::Node const* const value
 ) const {
 	const memory::string flat_identifier = get_flat_identifier(prefix, key);
 	ModifierEffect const* effect = technology_modifier_effects.get_item_by_identifier(flat_identifier);
@@ -778,7 +778,7 @@ bool ModifierManager::_add_flattened_modifier_cb(
 bool ModifierManager::_add_modifier_cb(
 	ModifierValue& modifier_value,
 	ModifierEffect const* const effect,
-	const ast::NodeCPtr value
+	ovdl::v2script::ast::Node const* const value
 ) const {
 	if (effect->has_no_effect) {
 		spdlog::warn_s("This modifier does nothing: {}", *effect);
@@ -798,10 +798,10 @@ key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
 	ModifierValue& modifier_value,
 	key_value_callback_t fallback
 ) const {
-	return [this, &registry, &modifier_value, fallback](const std::string_view key, const ast::NodeCPtr value) mutable -> bool {
-		if (dryad::node_has_kind<ast::ListValue>(value) && complex_modifiers.contains(key)) {
+	return [this, &registry, &modifier_value, fallback](const std::string_view key, ovdl::v2script::ast::Node const* const value) mutable -> bool {
+		if (dryad::node_has_kind<ovdl::v2script::ast::ListValue>(value) && complex_modifiers.contains(key)) {
 			return expect_dictionary([this, &modifier_value, key](
-				const std::string_view inner_key, const ast::NodeCPtr inner_value
+				const std::string_view inner_key, ovdl::v2script::ast::Node const* const inner_value
 			) -> bool {
 				return _add_flattened_modifier_cb(modifier_value, key, inner_key, inner_value);
 			})(value);
@@ -820,10 +820,10 @@ key_value_callback_t ModifierManager::expect_leader_modifier(ModifierValue& modi
 }
 
 key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& modifier_value) const {
-	return [this, &modifier_value](const std::string_view key, const ast::NodeCPtr value) {
+	return [this, &modifier_value](const std::string_view key, ovdl::v2script::ast::Node const* const value) {
 		if (ascii_equal_case_insensitive(key, "rebel_org_gain")) { // because of course there's a special one
 			std::string_view faction_identifier;
-			ast::NodeCPtr value_node = nullptr;
+			ovdl::v2script::ast::Node const* value_node = nullptr;
 
 			bool ret = expect_dictionary_keys(
 				"faction", ONE_EXACTLY, expect_identifier(assign_variable_callback(faction_identifier)),
@@ -846,7 +846,7 @@ key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 	ModifierValue& modifier_value,
 	const std::string_view terrain_type_identifier
 ) const {
-	return [this, &modifier_value, terrain_type_identifier](const std::string_view key, const ast::NodeCPtr value) -> bool {
+	return [this, &modifier_value, terrain_type_identifier](const std::string_view key, ovdl::v2script::ast::Node const* const value) -> bool {
 		const memory::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
 		ModifierEffect const* effect = unit_terrain_modifier_effects.get_item_by_identifier(flat_identifier);
 		if (effect == nullptr) {

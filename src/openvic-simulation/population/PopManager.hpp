@@ -27,7 +27,7 @@ namespace OpenVic {
 		 * necessary defines are loaded. The nodes will remain valid as PopType files' Parser objects are already cached to
 		 * preserve their condition script nodes until all other defines are loaded and the scripts can be parsed.
 		 * Entries contain: (rebel, equivalent, promote_to, issues) */
-		memory::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
+		memory::vector<std::tuple<ovdl::v2script::ast::Node const*, ovdl::v2script::ast::Node const*, ovdl::v2script::ast::Node const*, ovdl::v2script::ast::Node const*>> delayed_parse_nodes;
 
 		ConditionalWeightFactorAdd PROPERTY(promotion_chance);
 		ConditionalWeightFactorAdd PROPERTY(demotion_chance);
@@ -63,7 +63,7 @@ namespace OpenVic {
 			PopType::income_type_t life_needs_income_types,
 			PopType::income_type_t everyday_needs_income_types,
 			PopType::income_type_t luxury_needs_income_types,
-			ast::NodeCPtr rebel_units,
+			ovdl::v2script::ast::Node const* rebel_units,
 			pop_size_t max_size,
 			pop_size_t merge_max_size,
 			bool state_capital_only,
@@ -82,12 +82,12 @@ namespace OpenVic {
 			fixed_point_t leadership_points,
 			fixed_point_t research_leadership_optimum,
 			fixed_point_t state_administration_multiplier,
-			ast::NodeCPtr equivalent,
+			ovdl::v2script::ast::Node const* equivalent,
 			ConditionalWeightFactorMul&& country_migration_target,
 			ConditionalWeightFactorMul&& migration_target,
-			ast::NodeCPtr promote_to_node,
+			ovdl::v2script::ast::Node const* promote_to_node,
 			PopType::ideology_weight_map_t&& ideologies,
-			ast::NodeCPtr issues_node
+			ovdl::v2script::ast::Node const* issues_node
 		);
 
 		bool setup_stratas();
@@ -96,14 +96,14 @@ namespace OpenVic {
 
 		bool load_pop_type_file(
 			std::string_view filestem, GoodDefinitionManager const& good_definition_manager,
-			IdeologyManager const& ideology_manager, ast::NodeCPtr root
+			IdeologyManager const& ideology_manager, ovdl::v2script::ast::Node const* root
 		);
 		bool load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager);
 
-		bool load_pop_type_chances_file(ast::NodeCPtr root);
+		bool load_pop_type_chances_file(ovdl::v2script::ast::Node const* root);
 
 		bool load_pop_bases_into_vector(
-			RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
+			RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ovdl::v2script::ast::Node const* pop_node,
 			bool *non_integer_size
 		) const;
 

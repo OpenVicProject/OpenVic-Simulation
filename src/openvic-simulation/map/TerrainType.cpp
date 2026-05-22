@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/memory/FixedVector.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -153,10 +154,10 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 	return ret;
 }
 
-node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& modifier_manager) {
-	return [this, &modifier_manager](ast::NodeCPtr root) -> bool {
+NodeTools::node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& modifier_manager) {
+	return [this, &modifier_manager](ovdl::v2script::ast::Node const* root) -> bool {
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
-			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
+			[this, &modifier_manager](std::string_view type_key, ovdl::v2script::ast::Node const* type_node) -> bool {
 				ModifierValue values;
 				fixed_point_t movement_cost, defence_bonus, combat_width_percentage_change;
 				colour_t colour = colour_t::null();
@@ -185,7 +186,7 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 	};
 }
 
-bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ast::NodeCPtr mapping_value) {
+bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ovdl::v2script::ast::Node const* mapping_value) {
 	if (terrain_texture_limit <= 0) {
 		spdlog::error_s("Cannot define terrain type mapping before terrain texture limit: {}", mapping_key);
 		return false;
@@ -202,7 +203,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	bool has_texture = true;
 
 	bool ret = expect_dictionary_keys_and_default(
-		[mapping_key](std::string_view key, ast::NodeCPtr value) -> bool {
+		[mapping_key](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			spdlog::warn_s("Invalid key {} in terrain mapping {}", key, mapping_key);
 			return true;
 		},
@@ -244,10 +245,10 @@ TerrainTypeMapping::index_t TerrainTypeManager::get_terrain_texture_limit() cons
 	return terrain_texture_limit;
 }
 
-bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
 	const bool ret = expect_dictionary_keys_reserve_length_and_default(
 		terrain_type_mappings,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			return _load_terrain_type_mapping(key, value);
 		},
 		"terrain", ONE_EXACTLY, expect_uint(assign_variable_callback(terrain_texture_limit)),

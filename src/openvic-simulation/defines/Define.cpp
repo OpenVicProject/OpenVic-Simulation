@@ -7,7 +7,7 @@ using namespace OpenVic::NodeTools;
 
 DefineManager::DefineManager() {}
 
-bool DefineManager::load_defines_file(ast::NodeCPtr root) {
+bool DefineManager::load_defines_file(ovdl::v2script::ast::Node const* root) {
 	bool ret = expect_dictionary_keys(
 		"defines", ONE_EXACTLY, expect_dictionary_keys(
 			"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start_date)),

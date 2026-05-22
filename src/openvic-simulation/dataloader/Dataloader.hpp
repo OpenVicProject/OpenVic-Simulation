@@ -11,7 +11,8 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;

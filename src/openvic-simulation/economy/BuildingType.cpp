@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
@@ -144,11 +145,11 @@ bool BuildingTypeManager::add_building_type(
 
 bool BuildingTypeManager::load_buildings_file(
 	GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
-	ModifierManager& modifier_manager, ast::NodeCPtr root
+	ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* root
 ) {
 	bool ret = expect_dictionary_reserve_length(
 		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
-			std::string_view key, ast::NodeCPtr value
+			std::string_view key, ovdl::v2script::ast::Node const* value
 		) -> bool {
 			BuildingType::building_type_args_t building_type_args {};
 

@@ -1,6 +1,7 @@
 #include "Deployment.hpp"
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/Leader.hpp"
@@ -97,7 +98,7 @@ bool DeploymentManager::load_oob_file(
 
 	using enum unit_branch_t;
 
-	const auto leader_callback = [&map_definition, &military_manager, &general_count, &admiral_count](ast::NodeCPtr node) -> bool {
+	const auto leader_callback = [&map_definition, &military_manager, &general_count, &admiral_count](ovdl::v2script::ast::Node const* node) -> bool {
 		std::string_view leader_name {};
 		unit_branch_t leader_branch = INVALID_BRANCH;
 		Date leader_date {};
@@ -163,7 +164,7 @@ bool DeploymentManager::load_oob_file(
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
 		"leader", ZERO_OR_MORE, leader_callback,
-		"army", ZERO_OR_MORE, [&general_count, &map_definition, &military_manager, &leader_callback](ast::NodeCPtr node) -> bool {
+		"army", ZERO_OR_MORE, [&general_count, &map_definition, &military_manager, &leader_callback](ovdl::v2script::ast::Node const* node) -> bool {
 			std::string_view army_name {};
 			ProvinceDefinition const* army_location = nullptr;
 			memory::vector<RegimentDeployment> army_regiments {};
@@ -175,7 +176,7 @@ bool DeploymentManager::load_oob_file(
 				"location", ONE_EXACTLY, map_definition.expect_province_definition_identifier(
 					assign_variable_callback_pointer(army_location)
 				),
-				"regiment", ONE_OR_MORE, [&map_definition, &military_manager, &army_regiments](ast::NodeCPtr node) -> bool {
+				"regiment", ONE_OR_MORE, [&map_definition, &military_manager, &army_regiments](ovdl::v2script::ast::Node const* node) -> bool {
 					std::string_view regiment_name {};
 					RegimentType const* regiment_type = nullptr;
 					ProvinceDefinition const* regiment_home = nullptr;
@@ -217,7 +218,7 @@ bool DeploymentManager::load_oob_file(
 
 			return true;
 		},
-		"navy", ZERO_OR_MORE, [&admiral_count, &map_definition, &military_manager, &leader_callback](ast::NodeCPtr node) -> bool {
+		"navy", ZERO_OR_MORE, [&admiral_count, &map_definition, &military_manager, &leader_callback](ovdl::v2script::ast::Node const* node) -> bool {
 			std::string_view navy_name {};
 			ProvinceDefinition const* navy_location = nullptr;
 			memory::vector<ShipDeployment> navy_ships {};
@@ -229,7 +230,7 @@ bool DeploymentManager::load_oob_file(
 				"location", ONE_EXACTLY, map_definition.expect_province_definition_identifier(
 					assign_variable_callback_pointer(navy_location)
 				),
-				"ship", ONE_OR_MORE, [&military_manager, &navy_ships](ast::NodeCPtr node) -> bool {
+				"ship", ONE_OR_MORE, [&military_manager, &navy_ships](ovdl::v2script::ast::Node const* node) -> bool {
 					std::string_view ship_name {};
 					ShipType const* ship_type = nullptr;
 

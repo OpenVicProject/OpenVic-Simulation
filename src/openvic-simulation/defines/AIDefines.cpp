@@ -1,5 +1,7 @@
 #include "AIDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view AIDefines::get_name() const {
 	return "ai";
 }
 
-node_callback_t AIDefines::expect_defines() {
+NodeTools::node_callback_t AIDefines::expect_defines() {
 	return expect_dictionary_keys(
 		"COLONY_WEIGHT", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(colony_weight)),
 		"ADMINISTRATOR_WEIGHT", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(administrator_weight)),

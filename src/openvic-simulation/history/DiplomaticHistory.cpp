@@ -1,5 +1,6 @@
 #include "DiplomaticHistory.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/DiplomaticHistory.hpp"
 
@@ -38,7 +39,7 @@ memory::vector<std::reference_wrapper<const WarHistory>> DiplomaticHistoryManage
 }
 
 bool DiplomaticHistoryManager::load_diplomacy_history_file(
-	CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root
+	CountryDefinitionManager const& country_definition_manager, ovdl::v2script::ast::Node const* root
 ) {
 	// Default vanilla alliances is 2, 54 is the max I've seen in mods
 	// Eliminates reallocations at the cost of memory usage
@@ -51,7 +52,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 	reparations.reserve(1);
 
 	return expect_dictionary_keys(
-		"alliance", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+		"alliance", ZERO_OR_MORE, [this, &country_definition_manager](ovdl::v2script::ast::Node const* node) -> bool {
 			CountryDefinition const* first = nullptr;
 			CountryDefinition const* second = nullptr;
 			Date start {};
@@ -73,7 +74,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			}
 			return ret;
 		},
-		"vassal", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+		"vassal", ZERO_OR_MORE, [this, &country_definition_manager](ovdl::v2script::ast::Node const* node) -> bool {
 			CountryDefinition const* overlord = nullptr;
 			CountryDefinition const* subject = nullptr;
 			Date start {};
@@ -95,7 +96,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			}
 			return ret;
 		},
-		"union", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+		"union", ZERO_OR_MORE, [this, &country_definition_manager](ovdl::v2script::ast::Node const* node) -> bool {
 			CountryDefinition const* overlord = nullptr;
 			CountryDefinition const* subject = nullptr;
 			Date start {};
@@ -117,7 +118,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			}
 			return ret;
 		},
-		"substate", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+		"substate", ZERO_OR_MORE, [this, &country_definition_manager](ovdl::v2script::ast::Node const* node) -> bool {
 			CountryDefinition const* overlord = nullptr;
 			CountryDefinition const* subject = nullptr;
 			Date start {};
@@ -139,7 +140,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			}
 			return ret;
 		},
-		"reparations", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+		"reparations", ZERO_OR_MORE, [this, &country_definition_manager](ovdl::v2script::ast::Node const* node) -> bool {
 			CountryDefinition const* receiver = nullptr;
 			CountryDefinition const* sender = nullptr;
 			Date start {};
@@ -164,7 +165,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 	)(root);
 }
 
-bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& definition_manager, ovdl::v2script::ast::Node const* root) {
 	std::string_view name {};
 
 	// Ensures that if ever multithreaded, only one vector is used per thread
@@ -189,7 +190,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 
 	bool ret = expect_dictionary_keys_and_default(
 		[&definition_manager, &current_date, &name](
-			std::string_view key, ast::NodeCPtr node
+			std::string_view key, ovdl::v2script::ast::Node const* node
 		) -> bool {
 			bool ret = expect_date_str(assign_variable_callback(current_date))(key);
 
@@ -278,7 +279,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							return participant_to_remove->period.try_set_end(current_date);
 						}
 					),
-				"war_goal", ZERO_OR_MORE, [&definition_manager, &current_date](ast::NodeCPtr value) -> bool {
+				"war_goal", ZERO_OR_MORE, [&definition_manager, &current_date](ovdl::v2script::ast::Node const* value) -> bool {
 					CountryDefinition const* actor = nullptr;
 					CountryDefinition const* receiver = nullptr;
 					WargoalType const* type = nullptr;

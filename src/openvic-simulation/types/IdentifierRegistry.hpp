@@ -3,6 +3,7 @@
 #include <concepts>
 
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
@@ -208,7 +209,7 @@ namespace OpenVic {
 
 		constexpr bool emplace_via_move(
 			item_type&& item,
-			NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
+			Callback<std::string_view, std::string_view> auto duplicate_callback
 		) {
 			if (locked) {
 				spdlog::error_s("Cannot add item to the {} registry - locked!", name);
@@ -228,7 +229,7 @@ namespace OpenVic {
 		template<typename... Args>
 		constexpr bool emplace_item(
 			const std::string_view new_identifier,
-			NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback,
+			Callback<std::string_view, std::string_view> auto duplicate_callback,
 			Args&&... args
 		) {
 			if (locked) {
@@ -318,7 +319,7 @@ namespace OpenVic {
 		}
 
 		static constexpr NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
-			return [name](std::string_view key, ast::NodeCPtr) {
+			return [name](std::string_view key, ovdl::v2script::ast::Node const*) {
 				spdlog::error_s("Invalid {}: {}", name, key);
 				return false;
 			};
@@ -365,8 +366,8 @@ namespace OpenVic {
 		} \
 		return std::addressof(ValueInfo::get_external_value(ItemInfo::get_value(items[index]))); \
 	} \
-	constexpr NodeTools::Callback<std::string_view> auto expect_item_str( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
+	constexpr Callback<std::string_view> auto expect_item_str( \
+		Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return [this, callback, allow_empty, warn](std::string_view identifier) -> bool { \
 			if (identifier.empty()) { \
@@ -392,26 +393,26 @@ namespace OpenVic {
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn = false \
+		Callback<external_value_type CONST&> auto callback, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, false, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
+		Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier_or_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
+		Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_identifier_or_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return NodeTools::expect_assign( \
-			[this, default_callback, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
+			[this, default_callback, callback](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool { \
 				external_value_type CONST* item = get_item_by_identifier(key); \
 				if (item != nullptr) { \
 					return callback(*item, value); \
@@ -422,14 +423,14 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign( \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_assign_and_default(key_value_invalid_callback(name), callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_length_and_default( \
 		NodeTools::LengthCallback auto length_callback, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return NodeTools::expect_list_and_length( \
 			length_callback, expect_item_assign_and_default(default_callback, callback) \
@@ -437,7 +438,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_length( \
 		NodeTools::LengthCallback auto length_callback, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			length_callback, \
@@ -447,7 +448,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::default_length_callback, \
@@ -456,7 +457,7 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary( \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::default_length_callback, \
@@ -467,7 +468,7 @@ namespace OpenVic {
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length_and_default( \
 		reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::reserve_length_callback(reservable), \
@@ -477,7 +478,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length( \
 		reservable auto& reservable, \
-		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
+		Callback<external_value_type CONST&, ovdl::v2script::ast::Node const*> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::reserve_length_callback(reservable), \
@@ -519,16 +520,16 @@ namespace OpenVic {
 		/* Parses a dictionary with item keys and decimal number values (in the form of fixed point values),
 		 * with the resulting map move-returned via `callback`. The values can be transformed by providing
 		 * a fixed point to fixed point function fixed_point_functor, which will be applied to ever parsed value. */
-		template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity>
+		template<FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity>
 		constexpr NodeTools::NodeCallback auto expect_item_decimal_map(
-			NodeTools::Callback<fixed_point_map_t<external_value_type const*>&&> auto callback,
+			Callback<fixed_point_map_t<external_value_type const*>&&> auto callback,
 			FixedPointFunctor fixed_point_functor = {}
 		) const {
-			return [this, callback, fixed_point_functor](ast::NodeCPtr node) -> bool {
+			return [this, callback, fixed_point_functor](ovdl::v2script::ast::Node const* node) -> bool {
 				fixed_point_map_t<external_value_type const*> map;
 
 				bool ret = expect_item_dictionary(
-					[&map, fixed_point_functor](external_value_type const& key, ast::NodeCPtr value) -> bool {
+					[&map, fixed_point_functor](external_value_type const& key, ovdl::v2script::ast::Node const* value) -> bool {
 						return NodeTools::expect_fixed_point(
 							[&map, fixed_point_functor, &key](fixed_point_t val) -> bool {
 								map.emplace(&key, fixed_point_functor(val));
@@ -653,9 +654,9 @@ public: \
 	memory::vector<std::string_view> get_##singular##_identifiers() const { \
 		return registry.get_item_identifiers(); \
 	} \
-	template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity> \
+	template<FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity> \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
-		NodeTools::Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback, \
+		Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback, \
 		FixedPointFunctor fixed_point_functor = {} \
 	) const { \
 		return registry.expect_item_decimal_map(callback, fixed_point_functor); \
@@ -694,68 +695,68 @@ private:
 	constexpr decltype(registry)::storage_type const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \
 	} \
-	constexpr NodeTools::Callback<std::string_view> auto expect_##singular##_str( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
+	constexpr Callback<std::string_view> auto expect_##singular##_str( \
+		Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
 		bool warn = false \
 	) const_kw { \
 		return registry.expect_item_str(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
+		Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_string( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
+		Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
 		bool warn = false \
 	) const_kw { \
 		return registry.expect_item_string(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier_or_string( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
+		Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
 		bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier_or_string(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_assign_and_default(default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_assign(callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_and_length_and_default( \
 		NodeTools::LengthCallback auto length_callback, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_and_length_and_default(length_callback, default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_and_default(default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length_and_default( \
 		reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length_and_default(reservable, default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length( \
 		reservable auto& reservable, \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
+		Callback<decltype(registry)::external_value_type const_kw&, ovdl::v2script::ast::Node const*> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length(reservable, callback); \
 	}

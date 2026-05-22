@@ -8,6 +8,7 @@
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
@@ -277,7 +278,7 @@ namespace OpenVic {
 
 		bool expect_condition_script(
 			DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
-			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
+			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<ovdl::v2script::ast::Node const* const> nodes
 		) const;
 	};
 }

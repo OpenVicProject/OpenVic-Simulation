@@ -33,6 +33,6 @@ namespace OpenVic {
 			return date.in_range(start_date, end_date);
 		}
 
-		bool load_defines_file(ast::NodeCPtr root);
+		bool load_defines_file(ovdl::v2script::ast::Node const* root);
 	};
 }

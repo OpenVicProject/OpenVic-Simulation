@@ -48,7 +48,7 @@ namespace OpenVic {
 			EffectScript&& effect
 		);
 
-		bool load_decision_file(ast::NodeCPtr root);
+		bool load_decision_file(ovdl::v2script::ast::Node const* root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

@@ -6,7 +6,7 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -138,7 +138,7 @@ namespace OpenVic {
 
 		/* The positions' y coordinates need to be inverted. */
 		bool load_positions(
-			MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+			MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root
 		);
 
 		fvec2_t get_text_position() const;

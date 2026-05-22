@@ -1,5 +1,6 @@
 #include "Invention.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
@@ -64,9 +65,9 @@ bool InventionManager::add_invention(
 
 bool InventionManager::load_inventions_file(
 	TechnologyManager const& tech_manager, ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-	BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
+	BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ovdl::v2script::ast::Node const* root
 ) {
-	return expect_dictionary_reserve_length(inventions, [&](std::string_view identifier, ast::NodeCPtr value) -> bool {
+	return expect_dictionary_reserve_length(inventions, [&](std::string_view identifier, ovdl::v2script::ast::Node const* value) -> bool {
 		using enum scope_type_t;
 
 		// TODO - use the same variable for all modifiers rather than combining them at the end?
@@ -86,14 +87,14 @@ bool InventionManager::load_inventions_file(
 
 		memory::vector<memory::string> found_tech_ids;
 
-		auto parse_limit_and_find_techs = [&](ast::NodeCPtr node) -> bool {
+		auto parse_limit_and_find_techs = [&](ovdl::v2script::ast::Node const* node) -> bool {
 
 			  if (!limit.expect_script()(node)) {
 				  return false;
 			  }
 
 			  expect_dictionary(
-				  [&](std::string_view key, ast::NodeCPtr /*value*/) -> bool {
+				  [&](std::string_view key, ovdl::v2script::ast::Node const* /*value*/) -> bool {
 					  if (tech_manager.get_technology_by_identifier(key) != nullptr) {
 						  found_tech_ids.push_back(memory::string(key));
 					  }

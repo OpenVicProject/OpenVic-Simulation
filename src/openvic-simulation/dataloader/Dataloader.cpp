@@ -14,6 +14,7 @@
 
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"

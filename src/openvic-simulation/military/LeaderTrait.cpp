@@ -79,7 +79,7 @@ bool LeaderTraitManager::add_leader_trait(
 	return true;
 }
 
-bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
 	// Reserve space for the leader traits so we can safely store pointers in personality_traits and
 	// background_traits without the risk of them being invalidated by reallocations of leader_traits.
 	bool ret = expect_dictionary_keys(
@@ -101,7 +101,7 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 
 	const auto trait_callback = [this, &modifier_manager](LeaderTrait::trait_type_t type) -> NodeCallback auto {
 		return expect_dictionary(
-			[this, &modifier_manager, type](std::string_view trait_identifier, ast::NodeCPtr value) -> bool {
+			[this, &modifier_manager, type](std::string_view trait_identifier, ovdl::v2script::ast::Node const* value) -> bool {
 				ModifierValue modifiers;
 
 				bool ret = NodeTools::expect_dictionary(modifier_manager.expect_leader_modifier(modifiers))(value);

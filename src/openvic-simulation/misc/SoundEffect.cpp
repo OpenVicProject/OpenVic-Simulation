@@ -1,6 +1,7 @@
 #include "SoundEffect.hpp"
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -10,7 +11,7 @@ SoundEffect::SoundEffect( //
 )
 	: HasIdentifier { new_identifier }, file { std::move(new_file) }, volume { new_volume } {}
 
-bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::string_view sfx_identifier, ast::NodeCPtr root) {
+bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::string_view sfx_identifier, ovdl::v2script::ast::Node const* root) {
 	std::filesystem::path file {};
 	auto file_callback = [&dataloader, &file](std::string_view val) -> bool {
 		memory::string lookup = memory::fmt::format("sound/{}", val);
@@ -42,9 +43,9 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 	return ret;
 }
 
-bool SoundEffectManager::load_sound_defines_file(Dataloader const& dataloader, ast::NodeCPtr root) {
+bool SoundEffectManager::load_sound_defines_file(Dataloader const& dataloader, ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_reserve_length(sound_effects, //
-		[this, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &dataloader](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			return _load_sound_define(dataloader, key, value);
 		}
 	)(root);

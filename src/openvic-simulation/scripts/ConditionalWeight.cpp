@@ -1,5 +1,7 @@
 #include "ConditionalWeight.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -17,7 +19,7 @@ template<typename T>
 static NodeCallback auto expect_modifier(
 	memory::vector<T>& items, scope_type_t initial_scope, scope_type_t this_scope, scope_type_t from_scope
 ) {
-	return [&items, initial_scope, this_scope, from_scope](ast::NodeCPtr node) -> bool {
+	return [&items, initial_scope, this_scope, from_scope](ovdl::v2script::ast::Node const* node) -> bool {
 		fixed_point_t weight = 0;
 		bool successful = false;
 		bool ret = expect_key("factor", expect_fixed_point(assign_variable_callback(weight)), &successful)(node);
@@ -33,7 +35,7 @@ static NodeCallback auto expect_modifier(
 }
 
 template<conditional_weight_type_t TYPE>
-node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
+NodeTools::node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 	key_map_t key_map;
 	bool successfully_set_up_base_keys = true;
 
@@ -75,7 +77,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 	}
 
 	if (!successfully_set_up_base_keys) {
-		return [](ast::NodeCPtr node) -> bool {
+		return [](ovdl::v2script::ast::Node const* node) -> bool {
 			spdlog::error_s(
 				"Failed to set up base keys for ConditionalWeight with base value: {}", static_cast<uint32_t>(TYPE)
 			);
@@ -86,7 +88,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 	return expect_dictionary_key_map(
 		std::move(key_map),
 		"modifier", ZERO_OR_MORE, expect_modifier(condition_weight_items, initial_scope, this_scope, from_scope),
-		"group", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
+		"group", ZERO_OR_MORE, [this](ovdl::v2script::ast::Node const* node) -> bool {
 			condition_weight_group_t items;
 
 			const bool ret = expect_dictionary_keys(

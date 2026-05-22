@@ -12,7 +12,7 @@ using enum Modifier::modifier_type_t;
 
 StaticModifierCache::StaticModifierCache() {}
 
-bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manager, const ast::NodeCPtr root) {
+bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* const root) {
 	bool ret = true;
 	key_map_t key_map {};
 
@@ -30,7 +30,7 @@ bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manage
 	) -> void {
 		ret &= add_key_map_entry(
 			key_map, identifier, ONE_EXACTLY,
-			[&modifier_manager, identifier, icon](const ast::NodeCPtr value) -> bool {
+			[&modifier_manager, identifier, icon](ovdl::v2script::ast::Node const* const value) -> bool {
 				if (modifier_manager.get_event_modifier_by_identifier(identifier) != nullptr) {
 					return true; //an event modifier overrides a static modifier with the same identifier.
 				}
@@ -61,7 +61,7 @@ bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manage
 		key_map, base_modifier.get_identifier(), ONE_EXACTLY,
 		expect_dictionary_keys_and_default(
 			modifier_manager.expect_base_country_modifier(base_modifier),
-			"supply_limit", ZERO_OR_ONE, [this, &modifier_manager](const ast::NodeCPtr value) -> bool {
+			"supply_limit", ZERO_OR_ONE, [this, &modifier_manager](ovdl::v2script::ast::Node const* const value) -> bool {
 				return modifier_manager._add_modifier_cb(
 					base_modifier,
 					modifier_manager.get_modifier_effect_cache().get_supply_limit_global_base(),

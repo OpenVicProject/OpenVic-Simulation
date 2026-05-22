@@ -1,5 +1,6 @@
 #include "Ideology.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
@@ -106,12 +107,12 @@ bool IdeologyManager::add_ideology(
 /* REQUIREMENTS:
  * POL-9, POL-10, POL-11, POL-12, POL-13, POL-14, POL-15
  */
-bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
+bool IdeologyManager::load_ideology_file(ovdl::v2script::ast::Node const* root) {
 	spdlog::scope scope { "common/ideologies.txt" };
 	size_t expected_ideologies = 0;
 	bool ret = expect_dictionary_reserve_length(
 		ideology_groups,
-		[this, &expected_ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &expected_ideologies](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			bool ret = expect_length(add_variable_callback(expected_ideologies))(value);
 			ret &= add_ideology_group(key);
 			return ret;
@@ -120,10 +121,10 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 	lock_ideology_groups();
 
 	reserve_more_ideologies(expected_ideologies);
-	ret &= expect_dictionary([this](std::string_view ideology_group_key, ast::NodeCPtr ideology_group_value) -> bool {
+	ret &= expect_dictionary([this](std::string_view ideology_group_key, ovdl::v2script::ast::Node const* ideology_group_value) -> bool {
 		IdeologyGroup const* ideology_group = get_ideology_group_by_identifier(ideology_group_key);
 
-		return expect_dictionary([this, ideology_group](std::string_view key, ast::NodeCPtr value) -> bool {
+		return expect_dictionary([this, ideology_group](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			using enum scope_type_t;
 
 			colour_t colour = colour_t::null();

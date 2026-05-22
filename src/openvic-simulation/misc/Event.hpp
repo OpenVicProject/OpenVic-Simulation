@@ -105,8 +105,8 @@ namespace OpenVic {
 
 		bool add_on_action(std::string_view identifier, OnAction::weight_map_t&& new_weighted_events);
 
-		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root);
-		bool load_on_action_file(ast::NodeCPtr root);
+		bool load_event_file(IssueManager const& issue_manager, ovdl::v2script::ast::Node const* root);
+		bool load_on_action_file(ovdl::v2script::ast::Node const* root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

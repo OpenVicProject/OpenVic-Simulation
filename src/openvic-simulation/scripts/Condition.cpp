@@ -460,9 +460,9 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	return ret;
 }
 
-callback_t<std::string_view> ConditionManager::expect_parse_identifier(
+NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 	DefinitionManager const& definition_manager, identifier_type_t identifier_type,
-	callback_t<HasIdentifier const*> callback
+	NodeTools::callback_t<HasIdentifier const*> callback
 ) const {
 	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) mutable -> bool {
 		HasIdentifier const* identified = nullptr;
@@ -527,12 +527,12 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 	};
 }
 
-node_callback_t ConditionManager::expect_condition_node(
+NodeTools::node_callback_t ConditionManager::expect_condition_node(
 	DefinitionManager const& definition_manager, Condition const& condition, scope_type_t current_scope,
-	scope_type_t this_scope, scope_type_t from_scope, callback_t<ConditionNode&&> callback
+	scope_type_t this_scope, scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback
 ) const {
 	return [this, &definition_manager, &condition, callback, current_scope, this_scope, from_scope](
-		ast::NodeCPtr node
+		ovdl::v2script::ast::Node const* node
 	) mutable -> bool {
 		bool ret = false;
 		ConditionNode::value_t value;
@@ -710,7 +710,7 @@ node_callback_t ConditionManager::expect_condition_node(
 }
 
 /* Default callback for top condition scope. */
-static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
+static bool top_scope_fallback(std::string_view id, ovdl::v2script::ast::Node const* node) {
 	/* This is a non-condition key, and so not case-insensitive. */
 	if (id == "factor") {
 		return true;
@@ -720,37 +720,40 @@ static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
 	}
 };
 
-node_callback_t ConditionManager::expect_condition_node_list(
-	DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope, scope_type_t from_scope,
-	callback_t<ConditionNode&&> callback, bool top_scope
+NodeTools::node_callback_t ConditionManager::expect_condition_node_list(
+	DefinitionManager const& definition_manager,
+	scope_type_t current_scope,
+	scope_type_t this_scope,
+	scope_type_t from_scope,
+	NodeTools::callback_t<ConditionNode&&> callback, bool top_scope
 ) const {
-	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
+	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ovdl::v2script::ast::Node const* node) -> bool {
 		const auto expect_node = [this, &definition_manager, callback, current_scope, this_scope, from_scope]
-		(Condition const& condition, ast::NodeCPtr node) -> bool {
+		(Condition const& condition, ovdl::v2script::ast::Node const* node) -> bool {
 			return expect_condition_node(
 				definition_manager, condition, current_scope, this_scope, from_scope, callback
 			)(node);
 		};
-		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ast::NodeCPtr node) -> bool {
+		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ovdl::v2script::ast::Node const* node) -> bool {
 			if (top_scope && id == "factor") { return true; }
-			if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(node); node_name && node_name->value()) {
+			if (ovdl::v2script::ast::FlatValue const* node_name = dryad::node_try_cast<ovdl::v2script::ast::FlatValue>(node); node_name && node_name->value()) {
 				spdlog::warn_s(
 					"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
 					id, node_name->value().view()
 				); // TODO: make this error message more useful by pinning down node to an actual file or something
-			} else if (ast::ListValue const* list_values = dryad::node_try_cast<ast::ListValue>(node); list_values) {
-				for (ast::Statement const* statement : list_values->statements()) {
+			} else if (ovdl::v2script::ast::ListValue const* list_values = dryad::node_try_cast<ovdl::v2script::ast::ListValue>(node); list_values) {
+				for (ovdl::v2script::ast::Statement const* statement : list_values->statements()) {
 					dryad::visit_node(statement,
-						[&](ast::AssignStatement const* assign){
-							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(assign->left()); node_name && node_name->value()) {
+						[&](ovdl::v2script::ast::AssignStatement const* assign){
+							if (ovdl::v2script::ast::FlatValue const* node_name = dryad::node_try_cast<ovdl::v2script::ast::FlatValue>(assign->left()); node_name && node_name->value()) {
 								spdlog::warn_s(
 									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
 									id, node_name->value().view()
 								); // TODO: make this error message more useful by pinning down node to an actual file or something
 							}
 						},
-						[&](ast::ValueStatement const* value) {
-							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(value->value()); node_name && node_name->value()) {
+						[&](ovdl::v2script::ast::ValueStatement const* value) {
+							if (ovdl::v2script::ast::FlatValue const* node_name = dryad::node_try_cast<ovdl::v2script::ast::FlatValue>(value->value()); node_name && node_name->value()) {
 								spdlog::warn_s(
 									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
 									id, node_name->value().view()
@@ -772,11 +775,13 @@ node_callback_t ConditionManager::expect_condition_node_list(
 
 bool ConditionManager::expect_condition_script(
 	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
-	scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
+	scope_type_t from_scope,
+	NodeTools::callback_t<ConditionNode&&> callback,
+	std::span<ovdl::v2script::ast::Node const* const> nodes
 ) const {
 	ConditionNode::condition_list_t conds;
 	bool ret = true;
-	for (const ast::NodeCPtr node : nodes) {
+	for (ovdl::v2script::ast::Node const* const node : nodes) {
 		ret &= expect_condition_node_list(
 			definition_manager,
 			initial_scope,

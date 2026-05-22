@@ -135,12 +135,12 @@ namespace OpenVic {
 
 		bool load_province_definitions(std::span<const ovdl::csv::LineObject> lines);
 		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
-		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
-		static bool load_region_colours(ast::NodeCPtr root, memory::vector<colour_t>& colours);
-		bool load_region_file(ast::NodeCPtr root, std::span<const colour_t> colours);
+		bool load_province_positions(BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root);
+		static bool load_region_colours(ovdl::v2script::ast::Node const* root, memory::vector<colour_t>& colours);
+		bool load_region_file(ovdl::v2script::ast::Node const* root, std::span<const colour_t> colours);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::span<const ovdl::csv::LineObject> additional_adjacencies);
-		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
-		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_climate_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
+		bool load_continent_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 	};
 }
