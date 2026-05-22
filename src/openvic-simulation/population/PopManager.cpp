@@ -14,8 +14,9 @@
 #include "openvic-simulation/politics/RebelManager.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -401,19 +402,9 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		pop_type_ptr->promote_to = std::move(decltype(PopType::promote_to){get_pop_types()});
 
 		if (rebel_units != nullptr
-			&& !unit_type_manager.expect_regiment_type_decimal_map(
-				[pop_type_ptr](fixed_point_map_t<RegimentType const*> ptr_map)->bool {
-					auto& index_map = pop_type_ptr->rebel_units;
-					index_map.clear();
-					index_map.reserve(ptr_map.size());
-					for (const auto [ptr, weight] : ptr_map) {
-						index_map.emplace(
-							ptr->index,
-							weight
-						);
-					}
-					return true;
-				}
+			&& !expect_item_decimal_map(
+				unit_type_manager.get_regiment_types(),
+				move_variable_callback(pop_type_ptr->rebel_units)
 			)(rebel_units)
 		) {
 			spdlog::error_s("Errors parsing rebel unit distribution for pop type {}!", ovfmt::validate(pop_type_ptr));

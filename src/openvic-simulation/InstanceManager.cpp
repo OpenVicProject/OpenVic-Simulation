@@ -4,6 +4,7 @@
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadDeps.hpp"
 
@@ -67,8 +68,12 @@ InstanceManager::InstanceManager(
 		},
 		new_definition_manager.get_pop_manager().get_pop_types(),
 		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
-		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
-		new_definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
+		get_values(
+			new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types()
+		),
+		get_values(
+			new_definition_manager.get_military_manager().get_unit_type_manager().get_ship_types()
+		),
 		new_definition_manager.get_pop_manager().get_stratas(),
 		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		new_definition_manager.get_military_manager().get_unit_type_manager()
@@ -115,7 +120,9 @@ InstanceManager::InstanceManager(
 		good_instance_manager,
 		new_definition_manager.get_define_manager().get_pops_defines(),
 		new_definition_manager.get_pop_manager().get_pop_types(),
-		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+		get_values(
+			new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types()
+		),
 		thread_pool
 	},
 	unit_instance_manager {
@@ -244,7 +251,7 @@ bool InstanceManager::setup() {
 			definition_manager.get_define_manager().get_pops_defines(),
 			definition_manager.get_economy_manager().get_production_type_manager(),
 			definition_manager.get_modifier_manager().get_static_modifier_cache(),
-			country_index_t(definition_manager.get_country_definition_manager().get_country_definition_count()),
+			country_index_t(definition_manager.get_country_definition_manager().get_country_definitions().size()),
 			good_index_t(definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_count()),
 			strata_index_t(definition_manager.get_pop_manager().get_strata_count())
 		},

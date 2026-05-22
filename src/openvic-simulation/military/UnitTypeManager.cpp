@@ -9,6 +9,8 @@
 #include "openvic-simulation/map/TerrainTypeManager.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Modify.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
@@ -19,13 +21,13 @@ using enum unit_branch_t;
 using enum UnitType::unit_category_t;
 
 void UnitTypeManager::reserve_all_unit_types(size_t size) {
-	reserve_more_regiment_types(size);
-	reserve_more_ship_types(size);
+	regiment_types.clear_and_reserve(regiment_type_index_t(size));
+	ship_types.clear_and_reserve(ship_type_index_t(size));
 }
 
 void UnitTypeManager::lock_all_unit_types() {
-	regiment_types.lock();
-	ship_types.lock();
+	lock_registry(regiment_types);
+	lock_registry(ship_types);
 }
 
 static bool _check_shared_parameters(std::string_view identifier, UnitType::unit_type_args_t const& unit_args) {
@@ -61,14 +63,15 @@ bool UnitTypeManager::add_regiment_type(
 
 	// TODO check that sprite_override, sprite_mount, and sprite_mount_attach_node exist
 
-	if (ship_types.has_identifier(identifier)) {
+	if (has_identifier(ship_types, identifier)) {
 		spdlog::error_s("Land unit {} already exists as a naval unit!", identifier);
 		return false;
 	}
 
-	return regiment_types.emplace_item(
+	return try_emplace_item(
+		regiment_types,
 		identifier,
-		RegimentType::index_t { get_regiment_type_count() }, identifier,
+		regiment_types.size(), identifier,
 		unit_args, std::move(regiment_type_args)
 	);
 }
@@ -89,14 +92,15 @@ bool UnitTypeManager::add_ship_type(
 		spdlog::warn_s("Supply consumption score for {} is not positive!", identifier);
 	}
 
-	if (regiment_types.has_identifier(identifier)) {
+	if (has_identifier(regiment_types, identifier)) {
 		spdlog::error_s("Naval unit {} already exists as a land unit!", identifier);
 		return false;
 	}
 
-	return ship_types.emplace_item(
+	return try_emplace_item(
+		ship_types,
 		identifier,
-		ShipType::index_t { get_ship_type_count() }, identifier,
+		ship_types.size(), identifier,
 		unit_args, ship_type_args
 	);
 }
@@ -313,7 +317,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	regiment_type_effects = std::move(
 		decltype(ModifierEffectCache::regiment_type_effects) {
 			generate_values,
-			regiment_type_index_t(get_regiment_type_count())
+			regiment_types.size()
 		}
 	);
 
@@ -329,7 +333,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	ship_type_effects = std::move(
 		decltype(ModifierEffectCache::ship_type_effects) {
 			generate_values,
-			ship_type_index_t(get_ship_type_count())
+			ship_types.size()
 		}
 	);
 

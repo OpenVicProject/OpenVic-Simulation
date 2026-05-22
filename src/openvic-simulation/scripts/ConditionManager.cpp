@@ -5,6 +5,7 @@
 #include "openvic-simulation/core/template/RangeConcepts.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -343,7 +344,9 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 
 	/* Scopes from other registries */
 	import_identifiers(
-		definition_manager.get_country_definition_manager().get_country_definition_identifiers(),
+		get_identifiers(
+			definition_manager.get_country_definition_manager().get_country_definitions()
+		),
 		GROUP,
 		COUNTRY,
 		COUNTRY,
@@ -466,6 +469,19 @@ NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifie
 					} \
 				}) \
 			}
+		#define EXPECT_CALL_OWNINGRESITRY(type, registry, ...) \
+			if (share_identifier_type(identifier_type, type)) { \
+				const auto it = find(registry, identifier); \
+				if (it != registry.end()) { \
+					return callback(&*it); \
+				} __VA_OPT__(else { \
+					/* TODO: the set is just a placeholder for actual logic */ \
+					static const case_insensitive_string_set_t chances { __VA_ARGS__ }; \
+					if (chances.contains(identifier)) { \
+						return true; \
+					} \
+				}) \
+			}
 
 		//TODO: placeholder for not implemented stuff
 		#define EXPECT_CALL_PLACEHOLDER(type) \
@@ -475,8 +491,9 @@ NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifie
 		EXPECT_CALL_PLACEHOLDER(GLOBAL_FLAG);
 		EXPECT_CALL_PLACEHOLDER(COUNTRY_FLAG);
 		EXPECT_CALL_PLACEHOLDER(PROVINCE_FLAG);
-		EXPECT_CALL_IDENTIFIERGRESITRY(
-			COUNTRY_TAG, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "OWNER"
+		EXPECT_CALL_OWNINGRESITRY(
+			COUNTRY_TAG, definition_manager.get_country_definition_manager().get_country_definitions(),
+			"THIS", "FROM", "OWNER"
 		);
 		EXPECT_CALL_IDENTIFIERGRESITRY(PROVINCE_ID, province_definition, definition_manager.get_map_definition(), "THIS", "FROM");
 		EXPECT_CALL_IDENTIFIERGRESITRY(REGION, region, definition_manager.get_map_definition());
@@ -499,14 +516,16 @@ NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifie
 		EXPECT_CALL_IDENTIFIERGRESITRY(COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL_IDENTIFIERGRESITRY(COUNTRY_EVENT_MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL_IDENTIFIERGRESITRY(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
-		EXPECT_CALL_IDENTIFIERGRESITRY(
-			CULTURE_UNION, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "THIS_UNION"
+		EXPECT_CALL_OWNINGRESITRY(
+			CULTURE_UNION, definition_manager.get_country_definition_manager().get_country_definitions(),
+			"THIS", "FROM", "THIS_UNION"
 		);
 		EXPECT_CALL_IDENTIFIERGRESITRY(CONTINENT, continent, definition_manager.get_map_definition());
 		EXPECT_CALL_IDENTIFIERGRESITRY(CRIME, crime_modifier, definition_manager.get_crime_manager());
 		EXPECT_CALL_IDENTIFIERGRESITRY(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());
 
 		#undef EXPECT_CALL_IDENTIFIERGRESITRY
+		#undef EXPECT_CALL_OWNINGRESITRY
 		#undef EXPECT_CALL_PLACEHOLDER
 
 		return false;

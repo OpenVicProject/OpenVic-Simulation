@@ -4,7 +4,9 @@
 
 #include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/ConstructorTags.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace ovdl::v2script {
@@ -18,11 +20,13 @@ namespace OpenVic {
 
 	struct UnitTypeManager {
 	private:
-		IdentifierRegistry<RegimentType> IDENTIFIER_REGISTRY(regiment_type);
-		IdentifierRegistry<ShipType> IDENTIFIER_REGISTRY(ship_type);
+		OwningRegistry<RegimentType, regiment_type_index_t> PROPERTY(regiment_types);
+		OwningRegistry<ShipType, ship_type_index_t> PROPERTY(ship_types);
 
 	public:
-		constexpr UnitTypeManager() {}
+		constexpr UnitTypeManager() :
+			regiment_types(create_empty),
+			ship_types(create_empty) {}
 
 		void reserve_all_unit_types(size_t size);
 		void lock_all_unit_types();

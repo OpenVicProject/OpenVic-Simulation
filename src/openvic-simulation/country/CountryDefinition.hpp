@@ -11,8 +11,8 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
@@ -23,7 +23,6 @@ namespace OpenVic {
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition, country_index_t> {
 		friend struct CountryDefinitionManager;
-		IdentifierRegistry<CountryParty> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(party, parties);
 
 	private:
 		memory::FixedVector< // for each ship type
@@ -41,6 +40,7 @@ namespace OpenVic {
 
 	public:
 		const bool is_dynamic_tag;
+		const OwningRegistry<CountryParty, std::size_t> parties;
 		GraphicalCultureType const& graphical_culture;
 
 		OV_ALWAYS_INLINE bool is_rebel_country() const {

@@ -22,6 +22,7 @@
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 
 using namespace OpenVic;
 using namespace std::string_view_literals;
@@ -222,15 +223,14 @@ CountryInstance* ConsoleInstance::validate_country_tag(std::string_view value_st
 		return nullptr;
 	}
 
-	CountryDefinition const* const country_definition_ptr = instance_manager
-		.definition_manager.get_country_definition_manager()
-		.get_country_definition_by_identifier(value_string);
+	auto const& country_definitions = instance_manager.definition_manager.get_country_definition_manager().get_country_definitions();
+	const auto it = find(country_definitions, value_string);
 
-	if (country_definition_ptr == nullptr) {
+	if (it == country_definitions.end()) {
 		write_error("Unknown country");
 		return nullptr;
 	}
-	return &instance_manager.get_country_instance_manager().get_country_instance_by_index(country_definition_ptr->index);
+	return &instance_manager.get_country_instance_manager().get_country_instance_by_index((*it).index);
 }
 
 Event const* ConsoleInstance::validate_event_id(std::string_view value_string) {

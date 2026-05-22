@@ -21,6 +21,7 @@
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -605,11 +606,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
 				const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
-				CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
-				CountryDefinition const* country = country_definition_manager.get_country_definition_by_identifier(
-					country_id
-				);
-				if (country == nullptr) {
+				auto const& country_definitions = definition_manager.get_country_definition_manager().get_country_definitions();
+				const auto it = find(country_definitions, country_id);
+				if (it == country_definitions.end()) {
 					if (unused_history_file_warnings) {
 						spdlog::warn_s("Found history file for non-existent country: {}", country_id);
 					}
@@ -617,7 +616,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				}
 
 				return country_history_manager.load_country_history_file(
-					definition_manager, *this, *country,
+					definition_manager, *this, *it,
 					definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 					definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
 					parse_defines(file).get_file_node()

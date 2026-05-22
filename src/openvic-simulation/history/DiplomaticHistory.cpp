@@ -3,6 +3,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/DiplomaticHistory.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -59,10 +60,12 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"first", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(first)
 				),
-				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"second", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(second)
 				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
@@ -81,10 +84,12 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"first", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(overlord)
 				),
-				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"second", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(subject)
 				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
@@ -103,10 +108,12 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"first", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(overlord)
 				),
-				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"second", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(subject)
 				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
@@ -125,10 +132,12 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"first", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(overlord)
 				),
-				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"second", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(subject)
 				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
@@ -147,10 +156,12 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"first", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(receiver)
 				),
-				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+				"second", ONE_EXACTLY, expect_item(
+					country_definition_manager.get_country_definitions(),
 					assign_variable_callback_pointer(sender)
 				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
@@ -196,7 +207,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 
 			ret &= expect_dictionary_keys(
 				"add_attacker", ZERO_OR_MORE,
-					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+					expect_item<IdentifierSyntax::Identifier>(
+						definition_manager.get_country_definition_manager().get_country_definitions(),
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (WarHistory::war_participant_t const& attacker : attackers) {
 								CountryDefinition const& attacker_country = attacker.country;
@@ -214,7 +226,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 						}
 					),
 				"add_defender", ZERO_OR_MORE,
-					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+					expect_item<IdentifierSyntax::Identifier>(
+						definition_manager.get_country_definition_manager().get_country_definitions(),
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (WarHistory::war_participant_t const& defender : defenders) {
 								CountryDefinition const& defender_country = defender.country;
@@ -232,7 +245,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 						}
 					),
 				"rem_attacker", ZERO_OR_MORE,
-					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+					expect_item<IdentifierSyntax::Identifier>(
+						definition_manager.get_country_definition_manager().get_country_definitions(),
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
@@ -256,7 +270,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 						}
 					),
 				"rem_defender", ZERO_OR_MORE,
-					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+					expect_item<IdentifierSyntax::Identifier>(
+						definition_manager.get_country_definition_manager().get_country_definitions(),
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
@@ -283,23 +298,26 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					CountryDefinition const* actor = nullptr;
 					CountryDefinition const* receiver = nullptr;
 					WargoalType const* type = nullptr;
-					std::optional<CountryDefinition const*> third_party {};
+					std::optional<country_index_t> third_party {};
 					std::optional<ProvinceDefinition const*> target {};
 
 					bool ret = expect_dictionary_keys(
 						"actor", ONE_EXACTLY,
-							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+							expect_item<IdentifierSyntax::Identifier>(
+								definition_manager.get_country_definition_manager().get_country_definitions(),
 								assign_variable_callback_pointer(actor)
 							),
 						"receiver", ONE_EXACTLY,
-							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+							expect_item<IdentifierSyntax::Identifier>(
+								definition_manager.get_country_definition_manager().get_country_definitions(),
 								assign_variable_callback_pointer(receiver)
 							),
 						"casus_belli", ONE_EXACTLY, definition_manager.get_military_manager().get_wargoal_type_manager()
 							.expect_wargoal_type_identifier(assign_variable_callback_pointer(type)),
 						"country", ZERO_OR_ONE,
-							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
-								assign_variable_callback_pointer_opt(third_party)
+							expect_index<IdentifierSyntax::Identifier>(
+								definition_manager.get_country_definition_manager().get_country_definitions(),
+								assign_variable_callback_opt(third_party)
 							),
 						"state_province_id", ZERO_OR_ONE,
 							definition_manager.get_map_definition().expect_province_definition_identifier(
@@ -308,12 +326,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					)(value);
 
 					if (ret) {
-						wargoals.emplace_back(current_date, *actor, *receiver, *type,
-							third_party.has_value()
-								? std::optional<country_index_t>{ third_party.value()->index }
-								: std::nullopt,
-							target
-						);
+						wargoals.emplace_back(current_date, *actor, *receiver, *type, third_party, target);
 					}
 					return ret;
 				}

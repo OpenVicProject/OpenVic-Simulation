@@ -6,6 +6,7 @@
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -161,8 +162,10 @@ bool DeploymentManager::load_oob_file(
 
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
-						"type", ONE_EXACTLY, military_manager.get_unit_type_manager()
-							.expect_regiment_type_identifier(assign_variable_callback_pointer(regiment_type)),
+						"type", ONE_EXACTLY, expect_item<IdentifierSyntax::Identifier>(
+							military_manager.get_unit_type_manager().get_regiment_types(),
+							assign_variable_callback_pointer(regiment_type)
+						),
 						"home", ZERO_OR_ONE, map_definition
 							.expect_province_definition_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
@@ -214,8 +217,10 @@ bool DeploymentManager::load_oob_file(
 
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(ship_name)),
-						"type", ONE_EXACTLY, military_manager.get_unit_type_manager()
-							.expect_ship_type_identifier(assign_variable_callback_pointer(ship_type))
+						"type", ONE_EXACTLY, expect_item<IdentifierSyntax::Identifier>(
+							military_manager.get_unit_type_manager().get_ship_types(),
+							assign_variable_callback_pointer(ship_type)
+						)
 					)(node);
 
 					if (ship_type == nullptr) {

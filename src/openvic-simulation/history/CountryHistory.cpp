@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
@@ -158,7 +159,12 @@ bool CountryHistoryMap::_load_history_entry(
 		"civilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.civilised)),
 		"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.prestige)),
 		"ruling_party", ZERO_OR_ONE, [this, &entry](ovdl::v2script::ast::Node const* value) -> bool {
-			country.expect_party_identifier(assign_variable_callback_pointer_opt(entry.ruling_party), true)(value);
+			expect_item<IdentifierSyntax::Identifier>(
+				country.parties,
+				assign_variable_callback_pointer_opt(entry.ruling_party),
+				{ .warn_on_invalid=true }
+			)(value);
+
 			if (!entry.ruling_party.has_value()) {
 				std::string_view def {};
 				bool is_valid = true;
@@ -166,7 +172,7 @@ bool CountryHistoryMap::_load_history_entry(
 				expect_identifier(assign_variable_callback(def))(value);
 
 				// if the party specified is invalid, replace with the first valid party
-				for (const auto& party : country.get_parties()) {
+				for (const auto& party : country.parties) {
 					if (party.start_date <= entry.date && entry.date < party.end_date) {
 						entry.ruling_party.emplace(&party);
 						break;
@@ -176,7 +182,7 @@ bool CountryHistoryMap::_load_history_entry(
 				// if there's somehow no valid party, we use the first defined party even though it isn't valid for the entry
 				if (!entry.ruling_party.has_value()) {
 					is_valid = false;
-					entry.ruling_party.emplace(&country.get_front_party());
+					entry.ruling_party.emplace(&country.parties.front());
 				}
 				
 				spdlog::log_s(
@@ -217,21 +223,10 @@ bool CountryHistoryMap::_load_history_entry(
 		"schools", ZERO_OR_ONE, technology_manager.expect_technology_school_identifier(
 			assign_variable_callback_pointer_opt(entry.tech_school)
 		),
-		"foreign_investment", ZERO_OR_ONE,
-			country_definition_manager.expect_country_definition_decimal_map(
-				[&entry](fixed_point_map_t<CountryDefinition const*> ptr_map)->bool {
-					auto& index_map = entry.foreign_investment;
-					index_map.clear();
-					index_map.reserve(ptr_map.size());
-					for (const auto [ptr, weight] : ptr_map) {
-						index_map.emplace(
-							ptr->index,
-							weight
-						);
-					}
-					return true;
-				}
-			),
+		"foreign_investment", ZERO_OR_ONE, expect_item_decimal_map(
+			country_definition_manager.get_country_definitions(),
+			move_variable_callback(entry.foreign_investment)
+		),
 		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
 		"non_state_culture_literacy", ZERO_OR_ONE,
 			expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),

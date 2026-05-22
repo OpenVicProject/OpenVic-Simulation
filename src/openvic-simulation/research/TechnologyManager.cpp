@@ -6,6 +6,7 @@
 #include "openvic-simulation/military/UnitTypeManager.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -183,11 +184,13 @@ bool TechnologyManager::load_technologies_file(
 		bool unciv_military = false;
 		std::optional<unit_variant_t> unit_variant;
 
+		auto const& regiment_types = unit_type_manager.get_regiment_types();
 		std::remove_const_t<decltype(Technology::activated_regiment_types)> activated_regiment_types;
-		assert(unit_type_manager.regiment_types_are_locked());
+		assert_is_locked(regiment_types);
 
+		auto const& ship_types = unit_type_manager.get_ship_types();
 		std::remove_const_t<decltype(Technology::activated_ship_types)> activated_ship_types;
-		assert(unit_type_manager.ship_types_are_locked());
+		assert_is_locked(ship_types);
 
 		Technology::building_set_t activated_buildings;
 		ConditionalWeightFactorMul ai_chance { COUNTRY, COUNTRY, NO_SCOPE };
@@ -202,17 +205,13 @@ bool TechnologyManager::load_technologies_file(
 			"activate_unit", ZERO_OR_MORE,NodeTools::expect_identifier(
 				[
 					&activated_regiment_types, &activated_ship_types,
-					&unit_type_manager
+					&regiment_types, &ship_types
 				](std::string_view identifier) -> bool {
-					if (RegimentType const* const regiment_type_ptr = unit_type_manager.get_regiment_type_by_identifier(identifier);
-						regiment_type_ptr != nullptr
-					) {
-						return (activated_regiment_types.emplace(regiment_type_ptr)).second;
+					if (const auto regiment_it = find(regiment_types, identifier); regiment_it != regiment_types.end()) {
+						return (activated_regiment_types.emplace(&*regiment_it)).second;
 					}
-					if (ShipType const* const ship_type_ptr = unit_type_manager.get_ship_type_by_identifier(identifier);
-						ship_type_ptr != nullptr
-					) {
-						return (activated_ship_types.emplace(ship_type_ptr)).second;
+					if (const auto ship_it = find(ship_types, identifier); ship_it != ship_types.end()) {
+						return (activated_ship_types.emplace(&*ship_it)).second;
 					}
 					spdlog::error_s("Invalid regiment type or ship type identifier: {}", identifier);
 					return false;
