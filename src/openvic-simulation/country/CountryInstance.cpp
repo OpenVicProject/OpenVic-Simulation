@@ -1541,9 +1541,9 @@ void CountryInstance::_update_technology(const Date today) {
 	}
 
 	daily_research_points += get_modifier_effect_value(*modifier_effect_cache.get_research_points());
-	daily_research_points *= fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_research_points_modifier()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_increase_research());
+	daily_research_points *= fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_research_points_modifier())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_increase_research());
 
 	if (daily_research_points.get_untracked() < 0) {
 		daily_research_points.set(0);
@@ -1692,8 +1692,8 @@ void CountryInstance::_update_military() {
 
 	// Mobilisation calculations
 	mobilisation_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilization_impact());
-	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_tech()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_country());
+	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_tech())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_country());
 
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
@@ -1712,9 +1712,9 @@ void CountryInstance::_update_military() {
 		get_modifier_effect_value(*modifier_effect_cache.get_max_war_exhaustion()), fixed_point_t::_0
 	);
 
-	organisation_regain = fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_org_regain()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_morale_global());
+	organisation_regain = fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_org_regain())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_morale_global());
 
 	land_organisation = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_land_organisation());
 	naval_organisation = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_naval_organisation());
@@ -1730,8 +1730,8 @@ void CountryInstance::_update_military() {
 		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
 	);
 	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap()).floor<int32_t>();
-	military_tactics = military_defines.get_base_military_tactics() +
-		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
+	military_tactics = military_defines.get_base_military_tactics()
+		+ get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
 	if (leadership_point_stockpile < 0) {
 		leadership_point_stockpile = 0;
@@ -1739,8 +1739,8 @@ void CountryInstance::_update_military() {
 	create_leader_count = (leadership_point_stockpile / military_defines.get_leader_recruit_cost()).floor<int32_t>();
 
 	monthly_leadership_points += get_modifier_effect_value(*modifier_effect_cache.get_leadership());
-	monthly_leadership_points *= fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_leadership_modifier());
+	monthly_leadership_points *= fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_leadership_modifier());
 
 	if (monthly_leadership_points < 0) {
 		monthly_leadership_points = 0;
@@ -1782,7 +1782,7 @@ static constexpr Modifier const& get_country_status_static_effect(
 	}
 }
 
-void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
+void CountryInstance::update_modifier_sum_before_map(Date today, StaticModifierCache const& static_modifier_cache) {
 	// Update sum of national modifiers
 	modifier_sum.clear();
 
@@ -1856,15 +1856,23 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	// TODO - calculate stats for each unit type (locked and unlocked)
 }
 
-void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
-	modifier_sum.add_modifier_sum(province_modifier_sum);
+void CountryInstance::update_modifier_sum_after_map(Date today) {
+	for (ProvinceInstance const* const province_ptr : controlled_provinces) {
+		if (OV_likely(province_ptr != nullptr)) {
+			modifier_sum.add_modifier_sum(province_ptr->get_modifier_sum());
+		}
+	}
+}
+
+void CountryInstance::make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum) {
+	modifier_sum.make_room_for(province_modifier_sum);
 }
 
 fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
 	return modifier_sum.get_modifier_effect_value(effect);
 }
 
-void CountryInstance::update_gamestate(const Date today, MapInstance& map_instance) {
+void CountryInstance::update_gamestate_after_map(const Date today) {
 	if (is_civilised()) {
 		civilisation_progress = 0;
 	} else {
@@ -1928,14 +1936,14 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 		province->set_connected_to_capital(false);
 		province->set_is_overseas(province_definition.get_continent() != capital_continent);
 
-		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
-			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
-			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
-			CountryInstance* neighbour = map_instance.get_province_instance_by_definition(adjacency.get_to()).get_owner();
-			if (neighbour != nullptr && neighbour != this) {
-				neighbouring_countries.insert(neighbour);
-			}
-		}
+		// for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		// 	// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
+		// 	// and water provinces don't have an owner so they'll get caught by the later checks anyway.
+		// 	CountryInstance* neighbour = map_instance.get_province_instance_by_definition(adjacency.get_to()).get_owner();
+		// 	if (neighbour != nullptr && neighbour != this) {
+		// 		neighbouring_countries.insert(neighbour);
+		// 	}
+		// }
 	}
 
 	if (occupied_provinces_proportion != 0) {
@@ -1945,21 +1953,21 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 
 	if (capital != nullptr) {
 		capital->set_connected_to_capital(true);
-		memory::vector<std::reference_wrapper<const ProvinceInstance>> province_checklist { *capital };
+		// memory::vector<std::reference_wrapper<const ProvinceInstance>> province_checklist { *capital };
 
-		for (size_t index = 0; index < province_checklist.size(); ++index) {
-			ProvinceInstance const& province = province_checklist[index];
+		// for (size_t index = 0; index < province_checklist.size(); ++index) {
+		// 	ProvinceInstance const& province = province_checklist[index];
 
-			for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
-				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(adjacency.get_to());
+		// 	for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
+		// 		ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(adjacency.get_to());
 
-				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
-					adjacent_province.set_connected_to_capital(true);
-					adjacent_province.set_is_overseas(false);
-					province_checklist.emplace_back(adjacent_province);
-				}
-			}
-		}
+		// 		if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
+		// 			adjacent_province.set_connected_to_capital(true);
+		// 			adjacent_province.set_is_overseas(false);
+		// 			province_checklist.emplace_back(adjacent_province);
+		// 		}
+		// 	}
+		// }
 	}
 
 	// Order of updates might need to be changed/functions split up to account for dependencies
@@ -1977,8 +1985,8 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 	_update_politics();
 	_update_diplomacy();
 
-	const CountryDefinition::government_colour_map_t::const_iterator it =
-		country_definition.get_alternative_colours().find(government_type.get_untracked());
+	using const_it_t = typename CountryDefinition::government_colour_map_t::const_iterator;
+	const const_it_t it = country_definition.get_alternative_colours().find(government_type.get_untracked());
 
 	if (it != country_definition.get_alternative_colours().end()) {
 		colour = it.value();

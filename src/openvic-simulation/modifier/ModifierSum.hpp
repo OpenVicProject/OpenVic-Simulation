@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstddef>
 #include <variant>
 
+#include "openvic-simulation/core/BulkInsertWrapper.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
@@ -31,23 +34,40 @@ namespace OpenVic {
 			);
 		}
 
-		Modifier const& modifier;
+		Modifier const* modifier;
 		fixed_point_t multiplier;
 		modifier_source_t source;
 		ModifierEffect::target_t excluded_targets;
 
+		//invalid but required fore resizing to work
+		constexpr modifier_entry_t()
+			: modifier {nullptr},
+			multiplier {fixed_point_t::_0},
+		 	source {static_cast<std::variant_alternative_t<0, modifier_source_t>>(nullptr)},
+			excluded_targets {} {}
+
+		//
 		constexpr modifier_entry_t(
 			Modifier const& new_modifier,
 			fixed_point_t new_multiplier,
 			modifier_source_t const& new_source,
 			ModifierEffect::target_t new_excluded_targets
-		) : modifier { new_modifier },
+		) : modifier { &new_modifier },
 			multiplier { new_multiplier },
 			source { new_source },
 			excluded_targets { new_excluded_targets } {}
 
+		constexpr bool is_valid() const {
+			return multiplier != fixed_point_t::_0
+				&& modifier != nullptr
+				&& (
+					get_source_country() != nullptr
+					|| get_source_province() != nullptr
+				);
+		}
+
 		constexpr bool operator==(modifier_entry_t const& other) const {
-			return &modifier == &other.modifier
+			return modifier == other.modifier
 				&& multiplier == other.multiplier
 				&& source == other.source
 				&& excluded_targets == other.excluded_targets;
@@ -67,14 +87,18 @@ namespace OpenVic {
 		constexpr fixed_point_t get_modifier_effect_value(
 			ModifierEffect const& effect, bool* effect_found = nullptr
 		) const {
+			if (!is_valid()) {
+				return fixed_point_t::_0;
+			}
+
 			if (ModifierEffect::excludes_targets(effect.targets, excluded_targets)) {
-				return modifier.get_effect(effect, effect_found) * multiplier;
+				return modifier->get_effect(effect, effect_found) * multiplier;
 			}
 
 			if (effect_found != nullptr) {
 				*effect_found = false;
 			}
-			return 0;
+			return fixed_point_t::_0;
 		}
 	};
 
@@ -94,18 +118,22 @@ namespace OpenVic {
 		// Targets to be excluded from all modifiers added to the sum, combined with any explicit exclusions.
 		ModifierEffect::target_t PROPERTY_RW(this_excluded_targets, ModifierEffect::target_t::NO_TARGETS);
 
-		memory::vector<modifier_entry_t> SPAN_PROPERTY(modifiers);
+		bulk_insert_wrapper<
+			memory::vector<modifier_entry_t>
+		> SPAN_PROPERTY(modifiers);
 		ModifierValue PROPERTY(value_sum);
 
 	public:
 		ModifierSum() {};
-		ModifierSum(ModifierSum const&) = default;
 		ModifierSum(ModifierSum&&) = default;
-		ModifierSum& operator=(ModifierSum const&) = default;
-		ModifierSum& operator=(ModifierSum&&) = default;
 
+		constexpr std::size_t size() const {
+			return modifiers.size();
+		}
+		constexpr bool empty() const {
+			return modifiers.empty();
+		}
 		void clear();
-		bool empty();
 
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect, bool* effect_found = nullptr) const;
 		bool has_modifier_effect(ModifierEffect const& effect) const;
@@ -116,17 +144,34 @@ namespace OpenVic {
 			modifier_entry_t::modifier_source_t const& source = {},
 			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::NO_TARGETS
 		);
-		// Reserves space for the number of modifier entries in the given sum and adds each of them using add_modifier
+
+		constexpr void make_room_for(ModifierSum const& modifier_sum) {
+			modifiers.make_room_for(modifier_sum.size());
+		}
+
+		// Inserts modifiers directly via std::ranges::copy. Requires resizing beforehand!
 		// with the modifier entries' attributes as arguments. This means non-null sources are preserved (null ones are
 		// replaced with this_source, but in practice the other sum should've set them itself already) and exclusion targets
 		// are combined with this_excluded_targets.
-		void add_modifier_sum(ModifierSum const& modifier_sum);
+		constexpr void add_modifier_sum(ModifierSum const& modifier_sum) {
+			// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
+			// called with an explcit/hardcoded value and so won't ever exclude everything.
+			modifiers.append_range(modifier_sum.modifiers);
+
+			for (modifier_entry_t const& m : modifier_sum.get_modifiers()) {
+				value_sum.multiply_add_exclude_targets(
+					*m.modifier,
+					m.multiplier,
+					m.excluded_targets
+				);
+			}
+		}
 
 		// TODO - help calculate value_sum[effect]? Early return if lookup in value_sum fails?
 		constexpr void for_each_contributing_modifier(
 			ModifierEffect const& effect, ContributingModifierCallback auto callback
 		) const {
-			for (modifier_entry_t const& modifier_entry : modifiers) {
+			for (modifier_entry_t const& modifier_entry : get_modifiers()) {
 				const fixed_point_t contribution = modifier_entry.get_modifier_effect_value(effect);
 
 				if (contribution != 0) {

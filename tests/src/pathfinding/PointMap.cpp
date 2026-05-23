@@ -74,8 +74,9 @@ TEST_CASE("PointMap Add/Remove", "[point-map][point-map-add-remove]") {
 	// Tests for get_closest_position_in_segment.
 	a.connect_points(2, 3);
 	CHECK(
-		a.get_closest_position_in_segment(fvec2_t { fixed_point_t::_0_50, fixed_point_t::_0_50 }) ==
-		fvec2_t { fixed_point_t::_0_50, 1 }
+		a.get_closest_position_in_segment(
+			fvec2_t { fixed_point_t::_0_50, fixed_point_t::_0_50 }
+		) == fvec2_t { fixed_point_t::_0_50, 1 }
 	);
 
 	a.connect_points(3, 4);

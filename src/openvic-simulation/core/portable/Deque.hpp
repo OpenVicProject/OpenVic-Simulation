@@ -1022,8 +1022,10 @@ namespace OpenVic::utility::_detail::deque {
 			// (_Myoff() + _Mysize() - 1) is for the last element, i.e. the back() of the deque.
 			// Divide by _Block_size to get the unmasked index of the last used block.
 			// Add 1 to get the unmasked index of the first unused block.
-			const auto _Unmasked_first_unused_block_idx =
-				static_cast<size_type>(((_Myoff() + _Mysize() - 1) / _Block_size) + 1);
+			const auto _Unmasked_first_unused_block_idx = static_cast<size_type>(
+				((_Myoff() + _Mysize() - 1) / _Block_size)
+				+ 1
+			);
 
 			const auto _First_unused_block_idx = static_cast<size_type>(_Unmasked_first_unused_block_idx & _Mask);
 
@@ -1037,8 +1039,10 @@ namespace OpenVic::utility::_detail::deque {
 				}
 			}
 
-			const auto _Used_block_count =
-				static_cast<size_type>(_Unmasked_first_unused_block_idx - _Unmasked_first_used_block_idx);
+			const auto _Used_block_count = static_cast<size_type>(
+				_Unmasked_first_unused_block_idx
+				- _Unmasked_first_used_block_idx
+			);
 
 			size_type _New_block_count = _Minimum_map_size; // should be power of 2
 
@@ -1818,8 +1822,12 @@ namespace OpenVic::utility::_detail::deque {
 
 	_EXPORT_STD template<class _Ty, class _Alloc>
 	_NODISCARD bool operator==(const deque<_Ty, _Alloc>& _Left, const deque<_Ty, _Alloc>& _Right) {
-		return _Left.size() == _Right.size() &&
-			_STD equal(_Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin());
+		return _Left.size() == _Right.size()
+			&& _STD equal(
+				_Left._Unchecked_begin(),
+				_Left._Unchecked_end(),
+				_Right._Unchecked_begin()
+			);
 	}
 
 #if _HAS_CXX20

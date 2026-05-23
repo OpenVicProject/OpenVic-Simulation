@@ -685,8 +685,9 @@ namespace OpenVic {
 		bool update_rule_set();
 
 	public:
-		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
-		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
+		void update_modifier_sum_before_map(Date today, StaticModifierCache const& static_modifier_cache);
+		void update_modifier_sum_after_map(Date today);
+		void make_room_for_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		constexpr void for_each_contributing_modifier(
 			ModifierEffect const& effect, ContributingModifierCallback auto callback
@@ -694,7 +695,7 @@ namespace OpenVic {
 			return modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
 		}
 
-		void update_gamestate(const Date today, MapInstance& map_instance);
+		void update_gamestate_after_map(const Date today);
 		void country_tick_before_map(
 			TypedSpan<good_index_t, char> reusable_goods_mask,
 			forwardable_span<

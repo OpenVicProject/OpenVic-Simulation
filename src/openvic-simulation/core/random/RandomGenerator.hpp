@@ -15,10 +15,16 @@ namespace OpenVic {
 	struct RandomGenerator {
 		using generator_type = T;
 
-		using state_type =
-			std::conditional_t<requires { typename generator_type::state_type; }, typename generator_type::state_type, void>;
-		using result_type =
-			std::conditional_t<requires { typename generator_type::result_type; }, typename generator_type::result_type, void>;
+		using state_type = std::conditional_t<
+			requires { typename generator_type::state_type; },
+			typename generator_type::state_type,
+			void
+		>;
+		using result_type = std::conditional_t<
+			requires { typename generator_type::result_type; },
+			typename generator_type::result_type,
+			void
+		>;
 
 		[[nodiscard]] OV_ALWAYS_INLINE explicit constexpr RandomGenerator()
 		requires requires {
