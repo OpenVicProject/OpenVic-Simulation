@@ -190,6 +190,7 @@ namespace OpenVic {
 		size_t get_pop_count() const;
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void update_country_modifier_sum();
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 
 		void for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
