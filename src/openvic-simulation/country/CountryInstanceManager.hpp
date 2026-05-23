@@ -18,10 +18,8 @@ namespace OpenVic {
 	struct CountryHistoryManager;
 	struct GoodInstanceManager;
 	struct InstanceManager;
-	struct MapInstance;
 	struct PopsDefines;
 	struct PopType;
-	struct StaticModifierCache;
 	struct ThreadPool;
 
 	struct CountryInstanceManager {
@@ -71,8 +69,9 @@ namespace OpenVic {
 
 		bool apply_history_to_countries(InstanceManager& instance_manager);
 
-		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(const Date today, MapInstance& map_instance);
+		void update_modifier_sums_before_map();
+		void update_modifier_sums_after_map();
+		void update_gamestate_after_map(const Date today);
 		void country_manager_tick_before_map();
 		void country_manager_tick_after_map();
 	};
