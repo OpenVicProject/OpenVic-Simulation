@@ -3,8 +3,8 @@
 #include <concepts>
 #include <iterator>
 
-#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/Compare.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	template<typename Pointer, typename ContainerTag>

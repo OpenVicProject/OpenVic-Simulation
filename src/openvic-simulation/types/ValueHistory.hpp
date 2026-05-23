@@ -2,13 +2,13 @@
 
 #include <ostream>
 
-#include "openvic-simulation/types/RingBuffer.hpp"
+#include "openvic-simulation/core/stl/containers/RingBuffer.hpp"
 
 namespace OpenVic {
 
 	template<typename T, typename Allocator = std::allocator<T>>
-	struct ValueHistory : private RingBuffer<T, Allocator> {
-		using base_type = RingBuffer<T, Allocator>;
+	struct ValueHistory : private ::OpenVic::stl::RingBuffer<T, Allocator> {
+		using base_type = ::OpenVic::stl::RingBuffer<T, Allocator>;
 
 		using typename base_type::allocator_type;
 		using typename base_type::size_type;

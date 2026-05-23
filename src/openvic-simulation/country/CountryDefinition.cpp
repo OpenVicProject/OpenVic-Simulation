@@ -4,6 +4,7 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -12,7 +13,6 @@
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"

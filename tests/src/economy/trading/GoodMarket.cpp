@@ -1,11 +1,13 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
+
 #include <optional>
+
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

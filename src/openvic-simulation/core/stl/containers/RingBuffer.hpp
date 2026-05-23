@@ -20,8 +20,7 @@
 #include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
-namespace OpenVic {
-
+namespace OpenVic::stl {
 	/// RingBuffer datatype
 	/// Generally most of the interface should be a drop-in replacement for std::vector
 	template<typename T, typename Allocator = std::allocator<T>>
@@ -799,6 +798,6 @@ namespace OpenVic {
 
 		// The allocator is used to allocate memory, and to construct and destroy
 		// elements.
-		[[no_unique_address]] allocator_type _allocator {};
+		OV_NO_UNIQUE_ADDRESS allocator_type _allocator {};
 	};
 }

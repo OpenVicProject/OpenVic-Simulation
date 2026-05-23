@@ -3,11 +3,11 @@
 #include <functional>
 #include <string_view>
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

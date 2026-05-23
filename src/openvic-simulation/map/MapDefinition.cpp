@@ -18,6 +18,7 @@
 
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/io/BMP.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"

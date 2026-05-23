@@ -9,15 +9,16 @@
 #include <memory>
 #include <span>
 #include <type_traits>
+#include <vector>
 
 #include "openvic-simulation/core/Assert.hpp"
-#include "openvic-simulation/types/BasicIterator.hpp"
-#include "openvic-simulation/utility/Allocator.hpp"
 #include "openvic-simulation/core/Compare.hpp"
+#include "openvic-simulation/core/stl/BasicIterator.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/utility/Allocator.hpp"
 
-namespace OpenVic {
+namespace OpenVic::stl {
 	/**
 	 * A Copy-On-Write vector (replicating std::vector)
 	 *
@@ -97,8 +98,7 @@ namespace OpenVic {
 					swap(other, *this);
 				} else if (!other.empty()) {
 					_data = _allocate_payload(other.size());
-					_data->array_end =
-						uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
+					_data->array_end = uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
 					destroy(_data->array, _data->array_end, alloc);
 					_data->array_end = _data->array;
 				}
@@ -449,8 +449,7 @@ namespace OpenVic {
 					if constexpr (move_insertable_allocator<allocator_type>) {
 						_relocate(_data->array, _data->array_end, new_data->array, alloc);
 					} else {
-						new_data->array_end =
-							uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
+						new_data->array_end = uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
 						destroy(_data->array, _data->array_end, alloc);
 					}
 					_deallocate_payload(_data);
@@ -1115,37 +1114,36 @@ namespace OpenVic {
 		return std::lexicographical_compare_three_way(x.begin(), x.end(), y.begin(), y.end(), three_way_compare);
 	}
 
-	namespace cow {
-		template<specialization_of<cow_vector> T>
-		T const& read(T& v) {
-			return v;
-		}
-
-		template<specialization_of<cow_vector> T>
-		typename T::writer& write(T& v) {
-			return v.write();
-		}
-	}
-
 	static_assert(
 		sizeof(cow_vector<int>) == sizeof(cow_vector<int>::writer), "cow_vector must always be the same size as it's writer"
 	);
 }
 
+namespace OpenVic::cow {
+	template<specialization_of<::OpenVic::stl::cow_vector> T>
+	T const& read(T& v) {
+		return v;
+	}
+
+	template<specialization_of<::OpenVic::stl::cow_vector> T>
+	typename T::writer& write(T& v) {
+		return v.write();
+	}
+}
+
 namespace std {
 	template<typename T, typename Allocator>
 	inline void swap( //
-		typename OpenVic::cow_vector<T, Allocator>::writer& x, typename OpenVic::cow_vector<T, Allocator>::writer& y
+		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& x, typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& y
 	) {
 		x.swap(y);
 	}
 
 	template<typename T, typename Allocator, typename Predicate>
-	inline typename OpenVic::cow_vector<T, Allocator>::size_type erase_if( //
-		typename OpenVic::cow_vector<T, Allocator>::writer& cont, Predicate pred
+	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase_if( //
+		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, Predicate pred
 	) {
-		using namespace OpenVic;
-		typename cow_vector<T, Allocator>::writer& ucont = cont;
+		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& ucont = cont;
 		const auto orig_size = cont.size();
 		const auto end = ucont.end();
 		decltype(end) removed = std::remove_if(ucont.begin(), end, std::ref(pred));
@@ -1158,11 +1156,10 @@ namespace std {
 	}
 
 	template<typename T, typename Allocator, typename U>
-	inline typename OpenVic::cow_vector<T, Allocator>::size_type erase( //
-		typename OpenVic::cow_vector<T, Allocator>::writer& cont, U const& value
+	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase( //
+		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, U const& value
 	) {
-		using namespace OpenVic;
-		typename cow_vector<T, Allocator>::writer& ucont = cont;
+		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& ucont = cont;
 		const auto orig_size = cont.size();
 		const auto end = ucont.end();
 		decltype(end) removed = std::remove_if(ucont.begin(), end, [&value](auto it) {

@@ -1,11 +1,11 @@
-#include "openvic-simulation/types/RingBuffer.hpp"
+#include "openvic-simulation/core/stl/containers/RingBuffer.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_misc.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
 
-using namespace OpenVic;
+using namespace OpenVic::stl;
 using namespace std::string_view_literals;
 
 TEST_CASE("RingBuffer", "[RingBuffer]") {

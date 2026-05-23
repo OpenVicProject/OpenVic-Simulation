@@ -1,4 +1,4 @@
-#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/core/stl/containers/FixedVector.hpp"
 
 #include <string>
 #include <tuple>
@@ -7,7 +7,7 @@
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic;
-using namespace OpenVic::_detail;
+using namespace OpenVic::stl;
 
 // A simple test type to demonstrate a more complex object.
 // It has a multi-argument constructor to test emplace_back.
@@ -210,7 +210,7 @@ TEST_CASE("FixedVector Destruction, Clear, and Refill","[FixedVector]") {
 		vec.clear();
 		CHECK(vec.size() == 0);
 		CHECK(DestructionCounter::destructor_count == 2); // All elements should be destructed
-		
+
 		// Test refilling after a clear
 		vec.emplace_back();
 		CHECK(vec.size() == 1);

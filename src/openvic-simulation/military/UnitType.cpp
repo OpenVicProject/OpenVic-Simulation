@@ -1,11 +1,11 @@
 #include "UnitType.hpp"
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 

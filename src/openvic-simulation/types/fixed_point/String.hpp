@@ -3,9 +3,9 @@
 #include <charconv>
 
 #include "openvic-simulation/core/Math.hpp"
+#include "openvic-simulation/core/stl/containers/StackString.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic::fp {

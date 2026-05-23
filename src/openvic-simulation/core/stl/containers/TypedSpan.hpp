@@ -4,6 +4,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 
@@ -29,7 +30,7 @@ namespace OpenVic {
 		}
 
 		[[nodiscard]] constexpr forwardable_span<ValueType, _Extent>::reference operator[](const IndexType index) const {
-			assert(index < size());
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return forwardable_span<ValueType, _Extent>::operator[](static_cast<std::size_t>(type_safe::get(index)));
 		}
 

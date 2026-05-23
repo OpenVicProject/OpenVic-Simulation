@@ -12,9 +12,9 @@
 #include <type_traits>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/stl/containers/CowVector.hpp"
 #include "openvic-simulation/core/thread/NullMutex.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/CowVector.hpp"
 
 // For OpenVic::_detail::signal::make_shared
 #ifdef DEBUG_ENABLED
@@ -803,12 +803,12 @@ namespace OpenVic::_detail::signal {
 
 		template<typename L>
 		using cow_type = std::conditional_t<
-			is_thread_safe<L>::value, cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+			is_thread_safe<L>::value, ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
 			list_type>;
 
 		template<typename L>
 		using cow_copy_type = std::conditional_t<
-			is_thread_safe<L>::value, cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+			is_thread_safe<L>::value, ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
 			list_type const&>;
 
 	public:

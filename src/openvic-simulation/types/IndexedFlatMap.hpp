@@ -9,13 +9,11 @@
 
 #include <function2/function2.hpp>
 
-#include <type_safe/strong_typedef.hpp>
-
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
-#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/utility/Getters.hpp" // IWYU pragma: keep for _get_property
 #include "openvic-simulation/utility/Logger.hpp"
 
