@@ -35,11 +35,11 @@ namespace OpenVic {
 			Date new_date
 		);
 	private:
-		std::optional<CountryDefinition const*> PROPERTY(owner);
-		std::optional<CountryDefinition const*> PROPERTY(controller);
+		std::optional<country_index_t> PROPERTY(owner);
+		std::optional<country_index_t> PROPERTY(controller);
 		std::optional<colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
-		ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
+		ordered_map<country_index_t, bool> PROPERTY(cores);
 		std::optional<ProductionType const*> PROPERTY(rgo_production_type_nullable);
 		std::optional<life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);

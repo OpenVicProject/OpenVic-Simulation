@@ -6,6 +6,7 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/history/Period.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -24,7 +25,7 @@ namespace OpenVic {
 			WargoalType const& wargoal;
 
 			// TODO - could these just be nullptr when unset rather than using optionals?
-			const std::optional<CountryDefinition const*> third_party;
+			const std::optional<country_index_t> third_party;
 			const std::optional<ProvinceDefinition const*> target;
 			
 			constexpr added_wargoal_t(
@@ -32,7 +33,7 @@ namespace OpenVic {
 				CountryDefinition const& new_actor,
 				CountryDefinition const& new_receiver,
 				WargoalType const& new_wargoal,
-				std::optional<CountryDefinition const*> new_third_party,
+				std::optional<country_index_t> new_third_party,
 				std::optional<ProvinceDefinition const*> new_target
 			) : date_added { new_date_added },
 				actor { new_actor },

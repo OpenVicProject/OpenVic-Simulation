@@ -15,6 +15,7 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -167,7 +168,7 @@ bool PopManager::add_pop_type(
 		life_needs_income_types,
 		everyday_needs_income_types,
 		luxury_needs_income_types,
-		PopType::rebel_units_t{},
+		fixed_point_map_t<regiment_type_index_t>{},
 		max_size,
 		merge_max_size,
 		state_capital_only,
@@ -395,55 +396,68 @@ bool PopManager::load_delayed_parse_pop_type_data(
 	bool ret = true;
 	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
-		PopType* pop_type = pop_types.get_item_by_index(pop_type_index_t(index));
+		PopType* pop_type_ptr = pop_types.get_item_by_index(pop_type_index_t(index));
 
-		pop_type->promote_to = std::move(decltype(PopType::promote_to){get_pop_types()});
+		pop_type_ptr->promote_to = std::move(decltype(PopType::promote_to){get_pop_types()});
 
-		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
-			move_variable_callback(pop_type->rebel_units)
-		)(rebel_units)) {
-			spdlog::error_s("Errors parsing rebel unit distribution for pop type {}!", ovfmt::validate(pop_type));
+		if (rebel_units != nullptr
+			&& !unit_type_manager.expect_regiment_type_decimal_map(
+				[pop_type_ptr](fixed_point_map_t<RegimentType const*> ptr_map)->bool {
+					auto& index_map = pop_type_ptr->rebel_units;
+					index_map.clear();
+					index_map.reserve(ptr_map.size());
+					for (const auto [ptr, weight] : ptr_map) {
+						index_map.emplace(
+							ptr->index,
+							weight
+						);
+					}
+					return true;
+				}
+			)(rebel_units)
+		) {
+			spdlog::error_s("Errors parsing rebel unit distribution for pop type {}!", ovfmt::validate(pop_type_ptr));
 			ret = false;
 		}
 
 		if (equivalent != nullptr && !expect_pop_type_identifier(
-			assign_variable_callback_pointer(pop_type->equivalent)
+			assign_variable_callback_pointer(pop_type_ptr->equivalent)
 		)(equivalent)) {
-			spdlog::error_s("Errors parsing equivalent pop type for pop type {}!", ovfmt::validate(pop_type));
+			spdlog::error_s("Errors parsing equivalent pop type for pop type {}!", ovfmt::validate(pop_type_ptr));
 			ret = false;
 		}
 
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
-			[pop_type](PopType const& type, ovdl::v2script::ast::Node const* node) -> bool {
-				if (pop_type && type == *pop_type) {
+			[pop_type_ptr](PopType const& type, ovdl::v2script::ast::Node const* node) -> bool {
+				if (pop_type_ptr && type == *pop_type_ptr) {
 					spdlog::error_s("Pop type {} cannot have promotion weight to itself!", type);
 					return false;
 				}
 				ConditionalWeightFactorAdd weight { POP, POP, NO_SCOPE };
 				bool ret = weight.expect_conditional_weight()(node);
-				ret &= map_callback(pop_type->promote_to, &type)(std::move(weight));
+				ret &= map_callback(pop_type_ptr->promote_to, &type)(std::move(weight));
 				return ret;
 			}
 		)(promote_to_node)) {
-			spdlog::error_s("Errors parsing promotion weights for pop type {}!", ovfmt::validate(pop_type));
+			spdlog::error_s("Errors parsing promotion weights for pop type {}!", ovfmt::validate(pop_type_ptr));
 			ret = false;
 		}
 
 		if (issues_node != nullptr && !expect_dictionary_reserve_length(
-			pop_type->issues,
-			[pop_type, &issue_manager](std::string_view key, ovdl::v2script::ast::Node const* node) -> bool {
+			pop_type_ptr->issues,
+			[pop_type_ptr, &issue_manager](std::string_view key, ovdl::v2script::ast::Node const* node) -> bool {
 				BaseIssue const* issue = issue_manager.get_base_issue_by_identifier(key);
 				if (issue == nullptr) {
-					spdlog::error_s("Invalid issue in pop type {} issue weights: {}", ovfmt::validate(pop_type), key);
+					spdlog::error_s("Invalid issue in pop type {} issue weights: {}", ovfmt::validate(pop_type_ptr), key);
 					return false;
 				}
 				ConditionalWeightFactorMul weight { POP, POP, NO_SCOPE };
 				bool ret = weight.expect_conditional_weight()(node);
-				ret &= map_callback(pop_type->issues, issue)(std::move(weight));
+				ret &= map_callback(pop_type_ptr->issues, issue)(std::move(weight));
 				return ret;
 			}
 		)(issues_node)) {
-			spdlog::error_s("Errors parsing issue weights for pop type {}!", ovfmt::validate(pop_type));
+			spdlog::error_s("Errors parsing issue weights for pop type {}!", ovfmt::validate(pop_type_ptr));
 			ret = false;
 		}
 	}

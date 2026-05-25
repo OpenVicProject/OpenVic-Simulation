@@ -1,5 +1,7 @@
 #include "InventionManager.hpp"
 
+#include <string_view>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingTypeManager.hpp"
 #include "openvic-simulation/map/CrimeManager.hpp"
@@ -11,7 +13,9 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 bool InventionManager::add_invention(
-	std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
+	std::string_view identifier, ModifierValue&& values, bool news,
+	std::remove_const_t<decltype(Invention::activated_regiment_types)>&& activated_regiment_types,
+	std::remove_const_t<decltype(Invention::activated_ship_types)>&& activated_ship_types,
 	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
 	bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance,
 	memory::vector<memory::string>&& raw_associated_tech_identifiers
@@ -23,7 +27,8 @@ bool InventionManager::add_invention(
 
 	return inventions.emplace_item(
 		identifier, Invention::index_t { get_invention_count() }, identifier, std::move(values), news,
-		std::move(activated_units), std::move(activated_buildings), std::move(enabled_crimes), unlock_gas_attack,
+		std::move(activated_regiment_types), std::move(activated_ship_types),
+		std::move(activated_buildings), std::move(enabled_crimes), unlock_gas_attack,
 		unlock_gas_defence, std::move(limit), std::move(chance),
 		std::move(raw_associated_tech_identifiers)
 	);
@@ -40,7 +45,12 @@ bool InventionManager::load_inventions_file(
 		ModifierValue loose_modifiers;
 		ModifierValue modifiers;
 
-		Invention::unit_set_t activated_units;
+		std::remove_const_t<decltype(Technology::activated_regiment_types)> activated_regiment_types;
+		assert(unit_type_manager.regiment_types_are_locked());
+
+		std::remove_const_t<decltype(Technology::activated_ship_types)> activated_ship_types;
+		assert(unit_type_manager.ship_types_are_locked());
+
 		Invention::building_set_t activated_buildings;
 		Invention::crime_set_t enabled_crimes;
 
@@ -80,8 +90,25 @@ bool InventionManager::load_inventions_file(
 					modifier_manager.expect_technology_modifier(modifiers),
 					"gas_attack", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_attack)),
 					"gas_defence", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_defence)),
-					"activate_unit", ZERO_OR_MORE,
-						unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
+					"activate_unit", ZERO_OR_MORE, NodeTools::expect_identifier(
+						[
+							&activated_regiment_types, &activated_ship_types,
+							&unit_type_manager
+						](std::string_view identifier) -> bool {
+							if (RegimentType const* const regiment_type_ptr = unit_type_manager.get_regiment_type_by_identifier(identifier);
+								regiment_type_ptr != nullptr
+							) {
+								return (activated_regiment_types.emplace(regiment_type_ptr)).second;
+							}
+							if (ShipType const* const ship_type_ptr = unit_type_manager.get_ship_type_by_identifier(identifier);
+								ship_type_ptr != nullptr
+							) {
+								return (activated_ship_types.emplace(ship_type_ptr)).second;
+							}
+							spdlog::error_s("Invalid regiment type or ship type identifier: {}", identifier);
+							return false;
+						}
+					),
 					"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 						set_callback_pointer(activated_buildings)
 					),
@@ -94,7 +121,9 @@ bool InventionManager::load_inventions_file(
 		modifiers += loose_modifiers;
 
 		ret &= add_invention(
-			identifier, std::move(modifiers), news, std::move(activated_units), std::move(activated_buildings),
+			identifier, std::move(modifiers), news,
+			std::move(activated_regiment_types), std::move(activated_ship_types),
+			std::move(activated_buildings),
 			std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance),
 			std::move(found_tech_ids)
 		);

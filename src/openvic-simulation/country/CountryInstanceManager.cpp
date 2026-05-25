@@ -13,6 +13,10 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
+#if defined(__APPLE__)
+#include "openvic-simulation/military/UnitType.hpp"
+#endif
+
 using namespace OpenVic;
 
 CountryInstanceManager::CountryInstanceManager(
@@ -22,7 +26,7 @@ CountryInstanceManager::CountryInstanceManager(
 	GoodInstanceManager const& new_good_instance_manager,
 	PopsDefines const& new_pop_defines,
 	forwardable_span<const PopType> pop_type_keys,
-	memory::vector<RegimentType> const& regiment_types,
+	TypedSpan<regiment_type_index_t, const RegimentType> regiment_types,
 	ThreadPool& new_thread_pool
 ) : thread_pool { new_thread_pool },
   	country_definition_manager { new_country_definition_manager },
@@ -178,11 +182,18 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	}
 }
 
+CountryDefinition const* find_country_definition_by_identifier(
+	CountryDefinitionManager const& country_definition_manager,
+	std::string_view identifier
+) {
+	return country_definition_manager.get_country_definition_by_identifier(identifier);
+}
+
 CountryInstance* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) {
 	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
 	return country_definition == nullptr
 		? nullptr
-		: &get_country_instance_by_definition(*country_definition);
+		: &(country_instances[country_definition->index]);
 }
 CountryInstance const* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) const {
 	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);

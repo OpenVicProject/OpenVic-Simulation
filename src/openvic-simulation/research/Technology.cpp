@@ -17,7 +17,8 @@ Technology::Technology(
 	area_index_t new_index_in_area,
 	bool new_unciv_military,
 	std::optional<unit_variant_t>&& new_unit_variant,
-	unit_set_t&& new_activated_units,
+	std::remove_const_t<decltype(activated_regiment_types)>&& new_activated_regiment_types,
+	std::remove_const_t<decltype(activated_ship_types)>&& new_activated_ship_types,
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
 	ConditionalWeightFactorMul&& new_ai_chance
@@ -29,7 +30,8 @@ Technology::Technology(
 	index_in_area { new_index_in_area },
 	unciv_military { new_unciv_military },
 	unit_variant { std::move(new_unit_variant) },
-	activated_units { std::move(new_activated_units) },
+	activated_regiment_types { std::move(new_activated_regiment_types) },
+	activated_ship_types { std::move(new_activated_ship_types) },
 	activated_buildings { std::move(new_activated_buildings) },
 	ai_chance { std::move(new_ai_chance) } {}
 

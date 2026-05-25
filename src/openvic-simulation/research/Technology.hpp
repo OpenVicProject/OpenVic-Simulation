@@ -10,6 +10,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 
 namespace OpenVic {
@@ -48,7 +49,6 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 		using area_index_t = uint8_t;
-		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
 
 	private:
@@ -64,7 +64,8 @@ namespace OpenVic {
 		const fixed_point_t cost;
 		const area_index_t index_in_area;
 		const bool unciv_military;
-		const unit_set_t activated_units;
+		const ordered_set<RegimentType const*> activated_regiment_types;
+		const ordered_set<ShipType const*> activated_ship_types;
 		const building_set_t activated_buildings;
 
 		Technology(
@@ -76,7 +77,8 @@ namespace OpenVic {
 			area_index_t new_index_in_area,
 			bool new_unciv_military,
 			std::optional<unit_variant_t>&& new_unit_variant,
-			unit_set_t&& new_activated_units,
+			std::remove_const_t<decltype(activated_regiment_types)>&& new_activated_regiment_types,
+			std::remove_const_t<decltype(activated_ship_types)>&& new_activated_ship_types,
 			building_set_t&& new_activated_buildings,
 			ModifierValue&& new_values,
 			ConditionalWeightFactorMul&& new_ai_chance

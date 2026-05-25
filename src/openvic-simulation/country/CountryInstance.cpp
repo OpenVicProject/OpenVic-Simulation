@@ -43,7 +43,6 @@
 #include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/PopType.hpp"
@@ -300,13 +299,13 @@ CountryInstance::CountryInstance(
 
 	for (RegimentType const& regiment_type : country_instance_deps.regiment_types) {
 		if (regiment_type.starts_unlocked) {
-			unlock_unit_type(regiment_type);
+			unlock_unit_type(regiment_type.index);
 		}
 	}
 
 	for (ShipType const& ship_type : country_instance_deps.ship_types) {
 		if (ship_type.starts_unlocked) {
-			unlock_unit_type(ship_type);
+			unlock_unit_type(ship_type.index);
 		}
 	}
 }
@@ -852,7 +851,7 @@ bool CountryInstance::modify_unit_type_unlock(const regiment_type_index_t regime
 			//recalculate entirely
 			allowed_regiment_cultures = regiment_allowed_cultures_t::NO_CULTURES;
 			for (RegimentType const& regiment_type : regiment_types) {
-				if (!is_unit_type_unlocked(regiment_type)) {
+				if (!is_unit_type_unlocked(regiment_type.index)) {
 					continue;
 				}
 
@@ -879,42 +878,12 @@ bool CountryInstance::modify_unit_type_unlock(const ship_type_index_t ship_type_
 	return true;
 }
 
-bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change) {
-	using enum unit_branch_t;
-
-	switch (unit_type.branch) {
-	case LAND:
-		return modify_unit_type_unlock(static_cast<UnitTypeBranched<LAND> const&>(unit_type).index, unlock_level_change);
-	case NAVAL:
-		return modify_unit_type_unlock(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type).index, unlock_level_change);
-	default:
-		spdlog::error_s(
-			"Attempted to change unlock level for unit type \"{}\" with invalid branch {} for country {}",
-			unit_type, static_cast<uint32_t>(unit_type.branch), *this
-		);
-		return false;
-	}
+bool CountryInstance::unlock_unit_type(const regiment_type_index_t regiment_type_index) {
+	return modify_unit_type_unlock(regiment_type_index, technology_unlock_level_t { 1 });
 }
 
-bool CountryInstance::unlock_unit_type(UnitType const& unit_type) {
-	return modify_unit_type_unlock(unit_type, technology_unlock_level_t { 1 });
-}
-
-bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
-	using enum unit_branch_t;
-
-	switch (unit_type.branch) {
-	case LAND:
-		return is_unit_type_unlocked(static_cast<UnitTypeBranched<LAND> const&>(unit_type).index);
-	case NAVAL:
-		return is_unit_type_unlocked(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type).index);
-	default:
-		spdlog::error_s(
-			"Attempted to check if unit type \"{}\" with invalid branch {} is unlocked for country {}",
-			unit_type, static_cast<uint32_t>(unit_type.branch), *this
-		);
-		return false;
-	}
+bool CountryInstance::unlock_unit_type(const ship_type_index_t ship_type_index) {
+	return modify_unit_type_unlock(ship_type_index, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::modify_building_type_unlock(
@@ -1093,8 +1062,11 @@ bool CountryInstance::modify_technology_unlock(
 	if (technology.get_unit_variant().has_value()) {
 		ret &= modify_unit_variant_unlock(*technology.get_unit_variant(), unlock_level_change);
 	}
-	for (UnitType const* unit : technology.activated_units) {
-		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
+	for (RegimentType const* unit : technology.activated_regiment_types) {
+		ret &= modify_unit_type_unlock(unit->index, unlock_level_change);
+	}
+	for (ShipType const* unit : technology.activated_ship_types) {
+		ret &= modify_unit_type_unlock(unit->index, unlock_level_change);
 	}
 	for (BuildingType const* building : technology.activated_buildings) {
 		ret &= modify_building_type_unlock(*building, unlock_level_change);
@@ -1147,8 +1119,11 @@ bool CountryInstance::modify_invention_unlock(
 
 	// TODO - handle invention.is_news()
 
-	for (UnitType const* unit : invention.activated_units) {
-		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
+	for (RegimentType const* unit : invention.activated_regiment_types) {
+		ret &= modify_unit_type_unlock(unit->index, unlock_level_change);
+	}
+	for (ShipType const* unit : invention.activated_ship_types) {
+		ret &= modify_unit_type_unlock(unit->index, unlock_level_change);
 	}
 	for (BuildingType const* building : invention.activated_buildings) {
 		ret &= modify_building_type_unlock(*building, unlock_level_change);
@@ -1232,10 +1207,10 @@ void CountryInstance::start_research(Technology const& technology, const Date to
 }
 
 void CountryInstance::apply_foreign_investments(
-	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
+	fixed_point_map_t<country_index_t> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
-	for (auto const& [country, money_invested] : investments) {
-		foreign_investments[country_instance_manager.get_country_instance_by_definition(*country)] = money_invested;
+	for (auto const& [country_index, money_invested] : investments) {
+		foreign_investments[country_instance_manager.get_country_instance_by_index(country_index)] = money_invested;
 	}
 }
 
@@ -1661,7 +1636,11 @@ void CountryInstance::_update_military() {
 		supply_consumption * fp::mul_div(
 			sum_of_regiment_type_stats,
 			fixed_point_t::parse_raw(regular_army_size),
-			fixed_point_t::parse_raw(7 * (1 + unit_type_manager.get_regiment_type_count()))
+			fixed_point_t::parse_raw(
+				7 * (
+					1 + unit_type_manager.get_regiment_type_count()
+				)
+			)
 		)
 	);
 
@@ -1989,9 +1968,7 @@ void CountryInstance::update_gamestate_after_map(const Date today) {
 	_update_politics();
 	_update_diplomacy();
 
-	using const_it_t = typename CountryDefinition::government_colour_map_t::const_iterator;
-	const const_it_t it = country_definition.get_alternative_colours().find(government_type.get_untracked());
-
+	const auto it = country_definition.get_alternative_colours().find(government_type.get_untracked());
 	if (it != country_definition.get_alternative_colours().end()) {
 		colour = it.value();
 	} else {

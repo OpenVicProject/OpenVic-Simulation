@@ -31,7 +31,9 @@ namespace OpenVic {
 
 		bool add_technology(
 			std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-			std::optional<unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
+			std::optional<unit_variant_t>&& unit_variant,
+			std::remove_const_t<decltype(Technology::activated_regiment_types)>&& activated_regiment_types,
+			std::remove_const_t<decltype(Technology::activated_ship_types)>&& activated_ship_types,
 			Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 		);
 

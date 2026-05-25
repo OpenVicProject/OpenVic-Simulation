@@ -218,7 +218,20 @@ bool CountryHistoryMap::_load_history_entry(
 			assign_variable_callback_pointer_opt(entry.tech_school)
 		),
 		"foreign_investment", ZERO_OR_ONE,
-			country_definition_manager.expect_country_definition_decimal_map(move_variable_callback(entry.foreign_investment)),
+			country_definition_manager.expect_country_definition_decimal_map(
+				[&entry](fixed_point_map_t<CountryDefinition const*> ptr_map)->bool {
+					auto& index_map = entry.foreign_investment;
+					index_map.clear();
+					index_map.reserve(ptr_map.size());
+					for (const auto [ptr, weight] : ptr_map) {
+						index_map.emplace(
+							ptr->index,
+							weight
+						);
+					}
+					return true;
+				}
+			),
 		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
 		"non_state_culture_literacy", ZERO_OR_ONE,
 			expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),

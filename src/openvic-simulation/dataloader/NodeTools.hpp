@@ -17,6 +17,7 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/stl/MutableIterator.hpp"
@@ -537,6 +538,7 @@ using namespace std::string_view_literals;
 			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), FWD(args)...);
 		}
 
+		NodeTools::node_callback_t name_list_callback(NodeTools::callback_t<memory::FixedVector<memory::string>&&> callback);
 		NodeTools::node_callback_t name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback);
 
 		template<typename T, string_map_case Case>

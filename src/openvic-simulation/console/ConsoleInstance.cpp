@@ -16,7 +16,6 @@
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/military/Wargoal.hpp"
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/research/Invention.hpp"
@@ -223,12 +222,15 @@ CountryInstance* ConsoleInstance::validate_country_tag(std::string_view value_st
 		return nullptr;
 	}
 
-	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_identifier(value_string);
+	CountryDefinition const* const country_definition_ptr = instance_manager
+		.definition_manager.get_country_definition_manager()
+		.get_country_definition_by_identifier(value_string);
 
-	if (country == nullptr) {
+	if (country_definition_ptr == nullptr) {
 		write_error("Unknown country");
+		return nullptr;
 	}
-	return country;
+	return &instance_manager.get_country_instance_manager().get_country_instance_by_index(country_definition_ptr->index);
 }
 
 Event const* ConsoleInstance::validate_event_id(std::string_view value_string) {
@@ -247,26 +249,6 @@ Event const* ConsoleInstance::validate_event_id(std::string_view value_string) {
 		write_error("Unknown event with ID #{}", *result);
 	}
 	return event;
-}
-
-UnitType const* ConsoleInstance::validate_unit(std::string_view value_string) {
-	if (value_string.empty()) {
-		write_error("Please specify unit type");
-		return nullptr;
-	}
-
-	UnitType const* unit_type = //
-		instance_manager
-			.definition_manager //
-			.get_military_manager()
-			.get_unit_type_manager()
-			.get_unit_type_by_identifier(value_string);
-
-	if (unit_type == nullptr) {
-		write_error("Unknown unit type");
-	}
-
-	return unit_type;
 }
 
 std::string_view ConsoleInstance::validate_filename(std::string_view value_string) {

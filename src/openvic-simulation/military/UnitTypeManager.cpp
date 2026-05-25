@@ -19,13 +19,11 @@ using enum unit_branch_t;
 using enum UnitType::unit_category_t;
 
 void UnitTypeManager::reserve_all_unit_types(size_t size) {
-	reserve_more_unit_types(size);
 	reserve_more_regiment_types(size);
 	reserve_more_ship_types(size);
 }
 
 void UnitTypeManager::lock_all_unit_types() {
-	unit_types.lock();
 	regiment_types.lock();
 	ship_types.lock();
 }
@@ -68,16 +66,11 @@ bool UnitTypeManager::add_regiment_type(
 		return false;
 	}
 
-	bool ret = regiment_types.emplace_item(
+	return regiment_types.emplace_item(
 		identifier,
 		RegimentType::index_t { get_regiment_type_count() }, identifier,
 		unit_args, std::move(regiment_type_args)
 	);
-	if (ret) {
-		// Cannot use get_back_regiment_type() as we need non-const but don't want to generate all non-const functions.
-		ret &= unit_types.emplace_via_copy(&regiment_types.back());
-	}
-	return ret;
 }
 
 bool UnitTypeManager::add_ship_type(
@@ -101,16 +94,11 @@ bool UnitTypeManager::add_ship_type(
 		return false;
 	}
 
-	bool ret = ship_types.emplace_item(
+	return ship_types.emplace_item(
 		identifier,
 		ShipType::index_t { get_ship_type_count() }, identifier,
 		unit_args, ship_type_args
 	);
-	if (ret) {
-		// Cannot use get_back_ship_type() as we need non-const but don't want to generate all non-const functions.
-		ret &= unit_types.emplace_via_copy(&ship_types.back());
-	}
-	return ret;
 }
 
 bool UnitTypeManager::load_unit_type_file(

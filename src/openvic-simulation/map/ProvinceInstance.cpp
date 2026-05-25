@@ -476,19 +476,19 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 		}
 	};
 
-	if (entry.get_owner()) {
-		ret &= set_owner(&country_manager.get_country_instance_by_definition(**entry.get_owner()));
+	if (const auto owner = entry.get_owner(); owner.has_value()) {
+		ret &= set_owner(&country_manager.get_country_instance_by_index(owner.value()));
 	}
-	if (entry.get_controller()) {
-		ret &= set_controller(&country_manager.get_country_instance_by_definition(**entry.get_controller()));
+	if (const auto controller = entry.get_controller(); controller.has_value()) {
+		ret &= set_controller(&country_manager.get_country_instance_by_index(controller.value()));
 	}
 	set_optional(colony_status, entry.get_colonial());
 	set_optional(slave, entry.get_slave());
-	for (auto const& [country, add] : entry.get_cores()) {
+	for (auto const& [country_index, add] : entry.get_cores()) {
 		if (add) {
-			ret &= add_core(country_manager.get_country_instance_by_definition(*country), true);
+			ret &= add_core(country_manager.get_country_instance_by_index(country_index), true);
 		} else {
-			ret &= remove_core(country_manager.get_country_instance_by_definition(*country), true);
+			ret &= remove_core(country_manager.get_country_instance_by_index(country_index), true);
 		}
 	}
 
