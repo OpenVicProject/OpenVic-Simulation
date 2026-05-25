@@ -51,18 +51,19 @@ bool ProvinceHistoryMap::_load_history_entry(
 	};
 
 	const auto set_core_instruction = [&entry](bool add) {
-		return [&entry, add](CountryDefinition const& country) -> bool {
-			const auto it = entry.cores.find(&country);
+		return [&entry, add](CountryDefinition const& country_definition) -> bool {
+			const country_index_t country_index = country_definition.index;
+			const auto it = entry.cores.find(country_index);
 			if (it == entry.cores.end()) {
 				// No current core instruction
-				entry.cores.emplace(&country, add);
+				entry.cores.emplace(country_index, add);
 				return true;
 			} else if (it->second == add) {
 				// Desired core instruction already exists
 				spdlog::warn_s(
 					"Duplicate attempt to {} core of country {} {} province history of {}",
 					add ? "add" : "remove",
-					country,
+					country_index,
 					add ? "to" : "from",
 					entry.province
 				);
@@ -73,7 +74,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				spdlog::warn_s(
 					"Attempted to {} core of country {} {} province history of {} after previously {} it",
 					add ? "add" : "remove",
-					country,
+					country_index,
 					add ? "to" : "from",
 					entry.province,
 					add ? "removing" : "adding"
@@ -133,10 +134,16 @@ bool ProvinceHistoryMap::_load_history_entry(
 			return _load_history_sub_entry_callback(definition_manager, entry.date, value, key_map, key, value);
 		},
 		"owner", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
-			assign_variable_callback_pointer_opt(entry.owner, true)
+			[&entry](CountryDefinition const& c) -> bool {
+				entry.owner = c.index;
+				return true;
+			}
 		),
 		"controller", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
-			assign_variable_callback_pointer_opt(entry.controller, true)
+			[&entry](CountryDefinition const& c) -> bool {
+				entry.controller = c.index;
+				return true;
+			}
 		),
 		"add_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
 			set_core_instruction(true)

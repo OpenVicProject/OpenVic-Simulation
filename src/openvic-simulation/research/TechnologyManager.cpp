@@ -36,7 +36,9 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 
 bool TechnologyManager::add_technology(
 	std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-	std::optional<unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
+	std::optional<unit_variant_t>&& unit_variant,
+	std::remove_const_t<decltype(Technology::activated_regiment_types)>&& activated_regiment_types,
+	std::remove_const_t<decltype(Technology::activated_ship_types)>&& activated_ship_types,
 	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 ) {
 	if (identifier.empty()) {
@@ -71,7 +73,8 @@ bool TechnologyManager::add_technology(
 		static_cast<Technology::area_index_t>(index_in_area),
 		unciv_military,
 		std::move(unit_variant),
-		std::move(activated_units),
+		std::move(activated_regiment_types),
+		std::move(activated_ship_types),
 		std::move(activated_buildings),
 		std::move(values),
 		std::move(ai_chance)
@@ -179,7 +182,13 @@ bool TechnologyManager::load_technologies_file(
 		fixed_point_t cost = 0;
 		bool unciv_military = false;
 		std::optional<unit_variant_t> unit_variant;
-		Technology::unit_set_t activated_units;
+
+		std::remove_const_t<decltype(Technology::activated_regiment_types)> activated_regiment_types;
+		assert(unit_type_manager.regiment_types_are_locked());
+
+		std::remove_const_t<decltype(Technology::activated_ship_types)> activated_ship_types;
+		assert(unit_type_manager.ship_types_are_locked());
+
 		Technology::building_set_t activated_buildings;
 		ConditionalWeightFactorMul ai_chance { COUNTRY, COUNTRY, NO_SCOPE };
 
@@ -190,8 +199,25 @@ bool TechnologyManager::load_technologies_file(
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
 			"unciv_military", ZERO_OR_ONE, expect_bool(assign_variable_callback(unciv_military)),
 			"unit", ZERO_OR_ONE, expect_uint<decltype(unit_variant)::value_type>(assign_variable_callback_opt(unit_variant)),
-			"activate_unit", ZERO_OR_MORE,
-				unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
+			"activate_unit", ZERO_OR_MORE,NodeTools::expect_identifier(
+				[
+					&activated_regiment_types, &activated_ship_types,
+					&unit_type_manager
+				](std::string_view identifier) -> bool {
+					if (RegimentType const* const regiment_type_ptr = unit_type_manager.get_regiment_type_by_identifier(identifier);
+						regiment_type_ptr != nullptr
+					) {
+						return (activated_regiment_types.emplace(regiment_type_ptr)).second;
+					}
+					if (ShipType const* const ship_type_ptr = unit_type_manager.get_ship_type_by_identifier(identifier);
+						ship_type_ptr != nullptr
+					) {
+						return (activated_ship_types.emplace(ship_type_ptr)).second;
+					}
+					spdlog::error_s("Invalid regiment type or ship type identifier: {}", identifier);
+					return false;
+				}
+			),
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
 			),
@@ -199,7 +225,8 @@ bool TechnologyManager::load_technologies_file(
 		)(tech_value);
 
 		ret &= add_technology(
-			tech_key, area, year, cost, unciv_military, std::move(unit_variant), std::move(activated_units),
+			tech_key, area, year, cost, unciv_military, std::move(unit_variant),
+			std::move(activated_regiment_types), std::move(activated_ship_types),
 			std::move(activated_buildings), std::move(modifiers), std::move(ai_chance)
 		);
 		return ret;

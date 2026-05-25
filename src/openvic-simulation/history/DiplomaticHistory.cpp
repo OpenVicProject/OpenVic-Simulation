@@ -308,7 +308,12 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					)(value);
 
 					if (ret) {
-						wargoals.emplace_back(current_date, *actor, *receiver, *type, third_party, target);
+						wargoals.emplace_back(current_date, *actor, *receiver, *type,
+							third_party.has_value()
+								? std::optional<country_index_t>{ third_party.value()->index }
+								: std::nullopt,
+							target
+						);
 					}
 					return ret;
 				}

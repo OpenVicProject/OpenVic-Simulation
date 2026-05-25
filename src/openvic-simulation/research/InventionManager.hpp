@@ -16,7 +16,9 @@ namespace OpenVic {
 
 	public:
 		bool add_invention(
-			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
+			std::string_view identifier, ModifierValue&& values, bool news,
+			std::remove_const_t<decltype(Invention::activated_regiment_types)>&& activated_regiment_types,
+			std::remove_const_t<decltype(Invention::activated_ship_types)>&& activated_ship_types,
 			Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
 			bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance,
 			memory::vector<memory::string>&& raw_associated_tech_identifiers

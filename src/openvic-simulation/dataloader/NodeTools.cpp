@@ -15,6 +15,7 @@
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Colour.hpp"
@@ -519,6 +520,24 @@ NodeTools::node_callback_t NodeTools::expect_dictionary_and_length(length_callba
 
 NodeTools::node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
+}
+
+NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<memory::FixedVector<memory::string>&&> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
+		memory::FixedVector<memory::string> fixed_size_vector { create_empty };
+		bool ret = expect_list_and_length(
+			[&fixed_size_vector](const std::size_t size) -> std::size_t {
+				fixed_size_vector = std::move(decltype(fixed_size_vector) { create_empty, size });
+				return fixed_size_vector.capacity();
+			},
+			expect_identifier_or_string([&fixed_size_vector](std::string_view val) -> bool {
+				fixed_size_vector.emplace_back(std::move(val));
+				return true;
+			})
+		)(node);
+		ret &= callback(std::move(fixed_size_vector));
+		return ret;
+	};
 }
 
 NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback) {

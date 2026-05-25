@@ -1,13 +1,16 @@
 #include "CultureManager.hpp"
 
+#include <optional>
 #include <string_view>
 
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryDefinitionManager.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -27,7 +30,7 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 
 bool CultureManager::add_culture_group(
 	std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas,
-	CountryDefinition const* union_country
+	std::optional<country_index_t> union_country
 ) {
 	if (!graphical_culture_types.is_locked()) {
 		spdlog::error_s("Cannot register culture groups until graphical culture types are locked!");
@@ -68,7 +71,7 @@ bool CultureManager::add_culture_group(
 
 bool CultureManager::add_culture(
 	std::string_view identifier, colour_t colour, CultureGroup const& group, memory::vector<memory::string>&& first_names,
-	memory::vector<memory::string>&& last_names, fixed_point_t radicalism, CountryDefinition const* primary_country
+	memory::vector<memory::string>&& last_names, fixed_point_t radicalism, std::optional<country_index_t> primary_country
 ) {
 	if (!culture_groups.is_locked()) {
 		spdlog::error_s("Cannot register cultures until culture groups are locked!");
@@ -90,7 +93,7 @@ bool CultureManager::add_culture(
 bool CultureManager::load_graphical_culture_type_file(ovdl::v2script::ast::Node const* root) {
 	const bool ret = expect_list_reserve_length(
 		graphical_culture_types,
-		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
+		NodeTools::expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
 	)(root);
 
 	lock_graphical_culture_types();
@@ -113,7 +116,7 @@ bool CultureManager::_load_culture_group(
 	std::string_view leader {};
 	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
 	bool is_overseas = true;
-	CountryDefinition const* union_country = nullptr;
+	CountryDefinition const* union_country_ptr = nullptr;
 
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
@@ -121,10 +124,14 @@ bool CultureManager::_load_culture_group(
 		"unit", ZERO_OR_ONE,
 			expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
 		"union", ZERO_OR_ONE,
-			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(union_country)),
+			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(union_country_ptr)),
 		"is_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_overseas))
 	)(culture_group_node);
-	ret &= add_culture_group(culture_group_key, leader, unit_graphical_culture_type, is_overseas, union_country);
+	ret &= add_culture_group(culture_group_key, leader, unit_graphical_culture_type, is_overseas,
+		union_country_ptr == nullptr
+			? std::optional<country_index_t>{}
+			: std::optional<country_index_t>{union_country_ptr->index}
+	);
 	return ret;
 }
 
@@ -135,18 +142,23 @@ bool CultureManager::_load_culture(
 	colour_t colour = colour_t::null();
 	memory::vector<memory::string> first_names {}, last_names {};
 	fixed_point_t radicalism = 0;
-	CountryDefinition const* primary_country = nullptr;
+	CountryDefinition const* primary_country_ptr = nullptr;
 
 	bool ret = expect_dictionary_keys(
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"first_names", ONE_EXACTLY, name_list_callback(move_variable_callback(first_names)),
 		"last_names", ONE_EXACTLY, name_list_callback(move_variable_callback(last_names)),
 		"radicalism", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(radicalism)),
-		"primary", ZERO_OR_ONE,
-			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(primary_country))
+		"primary", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
+			assign_variable_callback_pointer(primary_country_ptr),
+			false
+		)
 	)(culture_node);
 	ret &= add_culture(
-		culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism, primary_country
+		culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism,
+		primary_country_ptr == nullptr
+			? std::nullopt
+			: std::optional<country_index_t>{primary_country_ptr->index}
 	);
 	return ret;
 }

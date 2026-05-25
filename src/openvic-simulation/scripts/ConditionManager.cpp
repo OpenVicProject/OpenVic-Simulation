@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/template/RangeConcepts.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 
@@ -324,14 +325,14 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("strata", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_STRATA);
 	ret &= add_condition("type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
 
-	const auto import_identifiers = [this, &ret](
-		memory::vector<std::string_view> const& identifiers,
+	const auto import_identifiers = [this, &ret]<typename R>(
+		R const& identifiers,
 		value_type_t value_type,
 		scope_type_t scope,
 		scope_type_t scope_change = NO_SCOPE,
 		identifier_type_t key_identifier_type = NO_IDENTIFIER,
 		identifier_type_t value_identifier_type = NO_IDENTIFIER
-	) -> void {
+	) -> void requires RangeOfType<std::string_view, R> {
 		for (std::string_view const& identifier : identifiers) {
 			ret &= add_condition(
 				identifier, value_type, scope, scope_change,
@@ -452,7 +453,7 @@ NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifie
 	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) mutable -> bool {
 		HasIdentifier const* identified = nullptr;
 
-		#define EXPECT_CALL(type, name, manager, ...) \
+		#define EXPECT_CALL_IDENTIFIERGRESITRY(type, name, manager, ...) \
 			if (share_identifier_type(identifier_type, type)) { \
 				identified = manager.get_##name##_by_identifier(identifier); \
 				if (identified != nullptr) { \
@@ -474,38 +475,38 @@ NodeTools::callback_t<std::string_view> ConditionManager::expect_parse_identifie
 		EXPECT_CALL_PLACEHOLDER(GLOBAL_FLAG);
 		EXPECT_CALL_PLACEHOLDER(COUNTRY_FLAG);
 		EXPECT_CALL_PLACEHOLDER(PROVINCE_FLAG);
-		EXPECT_CALL(
+		EXPECT_CALL_IDENTIFIERGRESITRY(
 			COUNTRY_TAG, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "OWNER"
 		);
-		EXPECT_CALL(PROVINCE_ID, province_definition, definition_manager.get_map_definition(), "THIS", "FROM");
-		EXPECT_CALL(REGION, region, definition_manager.get_map_definition());
-		EXPECT_CALL(IDEOLOGY, ideology, definition_manager.get_politics_manager().get_ideology_manager());
-		EXPECT_CALL(REFORM_GROUP, reform_group, definition_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(REFORM, reform, definition_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(PARTY_POLICY, party_policy, definition_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(POP_TYPE, pop_type, definition_manager.get_pop_manager());
-		EXPECT_CALL(POP_STRATA, strata, definition_manager.get_pop_manager());
-		EXPECT_CALL(TECHNOLOGY, technology, definition_manager.get_research_manager().get_technology_manager());
-		EXPECT_CALL(INVENTION, invention, definition_manager.get_research_manager().get_invention_manager());
-		EXPECT_CALL(TECH_SCHOOL, technology_school, definition_manager.get_research_manager().get_technology_manager());
-		EXPECT_CALL(CULTURE, culture, definition_manager.get_pop_manager().get_culture_manager(), "THIS", "FROM");
-		EXPECT_CALL(CULTURE_GROUP, culture_group, definition_manager.get_pop_manager().get_culture_manager());
-		EXPECT_CALL(RELIGION, religion, definition_manager.get_pop_manager().get_religion_manager(), "THIS", "FROM");
-		EXPECT_CALL(TRADE_GOOD, good_definition, definition_manager.get_economy_manager().get_good_definition_manager());
-		EXPECT_CALL(BUILDING, building_type, definition_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
-		EXPECT_CALL(CASUS_BELLI, wargoal_type, definition_manager.get_military_manager().get_wargoal_type_manager());
-		EXPECT_CALL(GOVERNMENT_TYPE, government_type, definition_manager.get_politics_manager().get_government_type_manager());
-		EXPECT_CALL(COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager());
-		EXPECT_CALL(COUNTRY_EVENT_MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
-		EXPECT_CALL(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
-		EXPECT_CALL(
+		EXPECT_CALL_IDENTIFIERGRESITRY(PROVINCE_ID, province_definition, definition_manager.get_map_definition(), "THIS", "FROM");
+		EXPECT_CALL_IDENTIFIERGRESITRY(REGION, region, definition_manager.get_map_definition());
+		EXPECT_CALL_IDENTIFIERGRESITRY(IDEOLOGY, ideology, definition_manager.get_politics_manager().get_ideology_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(REFORM_GROUP, reform_group, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(REFORM, reform, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(PARTY_POLICY, party_policy, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(POP_TYPE, pop_type, definition_manager.get_pop_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(POP_STRATA, strata, definition_manager.get_pop_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(TECHNOLOGY, technology, definition_manager.get_research_manager().get_technology_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(INVENTION, invention, definition_manager.get_research_manager().get_invention_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(TECH_SCHOOL, technology_school, definition_manager.get_research_manager().get_technology_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(CULTURE, culture, definition_manager.get_pop_manager().get_culture_manager(), "THIS", "FROM");
+		EXPECT_CALL_IDENTIFIERGRESITRY(CULTURE_GROUP, culture_group, definition_manager.get_pop_manager().get_culture_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(RELIGION, religion, definition_manager.get_pop_manager().get_religion_manager(), "THIS", "FROM");
+		EXPECT_CALL_IDENTIFIERGRESITRY(TRADE_GOOD, good_definition, definition_manager.get_economy_manager().get_good_definition_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(BUILDING, building_type, definition_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
+		EXPECT_CALL_IDENTIFIERGRESITRY(CASUS_BELLI, wargoal_type, definition_manager.get_military_manager().get_wargoal_type_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(GOVERNMENT_TYPE, government_type, definition_manager.get_politics_manager().get_government_type_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(COUNTRY_EVENT_MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(
 			CULTURE_UNION, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "THIS_UNION"
 		);
-		EXPECT_CALL(CONTINENT, continent, definition_manager.get_map_definition());
-		EXPECT_CALL(CRIME, crime_modifier, definition_manager.get_crime_manager());
-		EXPECT_CALL(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(CONTINENT, continent, definition_manager.get_map_definition());
+		EXPECT_CALL_IDENTIFIERGRESITRY(CRIME, crime_modifier, definition_manager.get_crime_manager());
+		EXPECT_CALL_IDENTIFIERGRESITRY(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());
 
-		#undef EXPECT_CALL
+		#undef EXPECT_CALL_IDENTIFIERGRESITRY
 		#undef EXPECT_CALL_PLACEHOLDER
 
 		return false;

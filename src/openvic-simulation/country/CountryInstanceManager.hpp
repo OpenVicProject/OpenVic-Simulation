@@ -5,6 +5,7 @@
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -49,7 +50,7 @@ namespace OpenVic {
 			GoodInstanceManager const& new_good_instance_manager,
 			PopsDefines const& new_pop_defines,
 			forwardable_span<const PopType> pop_type_keys,
-			memory::vector<RegimentType> const& regiment_types,
+			TypedSpan<regiment_type_index_t, const RegimentType> regiment_types,
 			ThreadPool& new_thread_pool
 		);
 

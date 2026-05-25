@@ -14,7 +14,7 @@ SharedCountryValues::SharedCountryValues(
 	PopsDefines const& new_pop_defines,
 	GoodInstanceManager const& new_good_instance_manager,
 	decltype(shared_pop_type_values)::keys_span_type pop_type_keys,
-	memory::vector<RegimentType> const& new_regiment_types
+	TypedSpan<regiment_type_index_t, const RegimentType> new_regiment_types
 ) : pop_defines { new_pop_defines },
 	good_instance_manager { new_good_instance_manager },
 	shared_pop_type_values { pop_type_keys },

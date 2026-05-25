@@ -40,12 +40,12 @@ namespace OpenVic {
 
 		bool add_culture_group(
 			std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type,
-			bool is_overseas, CountryDefinition const* union_country
+			bool is_overseas, std::optional<country_index_t> union_country
 		);
 
 		bool add_culture(
 			std::string_view identifier, colour_t colour, CultureGroup const& group, memory::vector<memory::string>&& first_names,
-			memory::vector<memory::string>&& last_names, fixed_point_t radicalism, CountryDefinition const* primary_country
+			memory::vector<memory::string>&& last_names, fixed_point_t radicalism, std::optional<country_index_t> primary_country
 		);
 
 		bool load_graphical_culture_type_file(ovdl::v2script::ast::Node const* root);

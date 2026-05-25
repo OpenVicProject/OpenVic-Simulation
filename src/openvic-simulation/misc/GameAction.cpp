@@ -293,15 +293,17 @@ bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t cons
 
 bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_argument_t const& argument) const {
 	const auto [regiment_type_index, province_index, pop_id_in_province] = argument;
-
-	RegimentType const* const regiment_type = instance_manager.definition_manager
+	auto const& unit_type_manager = instance_manager.definition_manager
 		.get_military_manager()
-		.get_unit_type_manager()
-		.get_regiment_type_by_index(regiment_type_index);
-	if (OV_unlikely(regiment_type == nullptr)) {
+		.get_unit_type_manager();
+	if (OV_unlikely(regiment_type_index < regiment_type_index_t{}
+		|| regiment_type_index >= regiment_type_index_t(unit_type_manager.get_regiment_type_count()))
+	) {
 		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid regiment type index: {}", regiment_type_index);
 		return false;
 	}
+
+	RegimentType const& regiment_type = *unit_type_manager.get_regiment_type_by_index(regiment_type_index);
 
 	ProvinceInstance* province = instance_manager
 		.get_map_instance()

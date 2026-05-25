@@ -2,8 +2,6 @@
 
 #include <string_view>
 
-#include "openvic-simulation/core/stl/MutableIterator.hpp"
-#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 
 using namespace OpenVic;
@@ -23,7 +21,7 @@ PopType::PopType(
 	income_type_t new_life_needs_income_types,
 	income_type_t new_everyday_needs_income_types,
 	income_type_t new_luxury_needs_income_types,
-	rebel_units_t&& new_rebel_units,
+	fixed_point_map_t<regiment_type_index_t>&& new_rebel_units,
 	pop_size_t new_max_size,
 	pop_size_t new_merge_max_size,
 	bool new_state_capital_only,

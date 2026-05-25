@@ -1,6 +1,7 @@
 #include "CountryDefinitionManager.hpp"
 
 #include <string_view>
+#include <type_traits>
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
@@ -10,6 +11,7 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/population/Culture.hpp"
+#include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
@@ -20,8 +22,10 @@ using namespace OpenVic::NodeTools;
 
 bool CountryDefinitionManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-	IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
-	CountryDefinition::government_colour_map_t&& alternative_colours
+	std::remove_const_t<decltype(CountryDefinition::parties)>&& parties,
+	decltype(CountryDefinition::ship_names)&& ship_names,
+	bool is_dynamic_tag,
+	decltype(CountryDefinition::alternative_colours)&& alternative_colours
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid country identifier - empty!");
@@ -41,22 +45,27 @@ bool CountryDefinitionManager::add_country(
 	static constexpr colour_t default_colour = colour_t::fill_as(colour_t::max_value);
 
 	return country_definitions.emplace_item(
-		identifier, //
-		identifier, colour, CountryDefinition::index_t { get_country_definition_count() }, *graphical_culture,
-		std::move(parties), std::move(unit_names), dynamic_tag, std::move(alternative_colours),
+		identifier,
+		identifier, colour, country_index_t(country_definitions.size()), *graphical_culture,
+		std::move(parties), std::move(ship_names), is_dynamic_tag, std::move(alternative_colours),
 		/* Default to country colour for the chest and grey for the others. Update later if necessary. */
 		colour, default_colour, default_colour
 	);
 }
 
 bool CountryDefinitionManager::load_countries(
-	DefinitionManager const& definition_manager, Dataloader const& dataloader, ovdl::v2script::ast::Node const* root
+	DefinitionManager const& definition_manager,
+	Dataloader const& dataloader,
+	ovdl::v2script::ast::Node const* root
 ) {
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
-	const bool ret = expect_dictionary_reserve_length(
-		country_definitions,
+	const bool ret = expect_dictionary_and_length(
+		[this](const std::size_t country_count) -> std::size_t {
+			reserve_country_definitions(country_count);
+			return get_country_definitions_capacity();
+		},
 		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
@@ -96,24 +105,42 @@ bool CountryDefinitionManager::load_countries(
 }
 
 bool CountryDefinitionManager::load_country_colours(ovdl::v2script::ast::Node const* root) {
-	return country_definitions.expect_item_dictionary_and_default(
-		[](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
-			spdlog::warn_s("country_colors.txt references country tag {} which is not defined!", key);
-			return true;
-		},
-		[](CountryDefinition& country, ovdl::v2script::ast::Node const* colour_node) -> bool {
-			return expect_dictionary_keys(
-				"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
-				"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
-				"color3", ONE_EXACTLY, expect_colour(assign_variable_callback(country.tertiary_unit_colour))
-			)(colour_node);
-		}
+	return NodeTools::expect_list_and_length(
+		NodeTools::default_length_callback,
+		NodeTools::expect_assign(
+			[this](std::string_view identifier, ovdl::v2script::ast::Node const* node) -> bool {
+				//temporary fix till OwningRegistry replaces this entirely
+				CountryDefinition* country_definition_ptr = const_cast<CountryDefinition*>(
+					get_country_definition_by_identifier(identifier)
+				);
+				if (country_definition_ptr == nullptr) {
+					spdlog::warn_s("country_colors.txt references country tag {} which is not defined!", identifier);
+					return true;
+				}
+				
+				CountryDefinition& country = *country_definition_ptr;
+				return expect_dictionary_keys(
+					"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
+					"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
+					"color3", ONE_EXACTLY, expect_colour(assign_variable_callback(country.tertiary_unit_colour))
+				)(node);
+			}
+		)
 	)(root);
 }
 
-NodeTools::node_callback_t CountryDefinitionManager::load_country_party(
-	PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
-) const {
+struct CountryPartyDto { // data transfer object
+	std::string_view identifier;
+	Date start_date;
+	Date end_date;
+	Ideology const* ideology;
+	memory::FixedVector<PartyPolicy const*, party_policy_group_index_t> policies;
+};
+
+static NodeTools::node_callback_t load_country_party(
+	PoliticsManager const& politics_manager,
+	memory::vector<CountryPartyDto>& country_parties
+) {
 	return [&politics_manager, &country_parties](ovdl::v2script::ast::Node const* value) -> bool {
 		std::string_view party_name;
 		Date start_date, end_date;
@@ -168,24 +195,35 @@ NodeTools::node_callback_t CountryDefinitionManager::load_country_party(
 			spdlog::warn_s("Country party {} has no ideology, defaulting to nullptr / no ideology", party_name);
 		}
 
-		ret &= country_parties.emplace_item(
-			party_name,
-			duplicate_warning_callback,
-			party_name, start_date, end_date, ideology, std::move(policies)
-		);
+		if (ret) {
+			country_parties.emplace_back(
+				party_name,
+				start_date,
+				end_date,
+				ideology,
+				std::move(policies)
+			);
+		}
 
 		return ret;
 	};
 }
 
 bool CountryDefinitionManager::load_country_data_file(
-	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ovdl::v2script::ast::Node const* root
+	DefinitionManager const& definition_manager,
+	std::string_view name,
+	bool is_dynamic_tag,
+	ovdl::v2script::ast::Node const* root
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;
-	IdentifierRegistry<CountryParty> parties { "country parties" };
-	CountryDefinition::unit_names_map_t unit_names;
-	CountryDefinition::government_colour_map_t alternative_colours;
+	auto const& unit_type_manager = definition_manager.get_military_manager().get_unit_type_manager();
+	decltype(CountryDefinition::ship_names) ship_names {
+		ship_type_index_t(unit_type_manager.get_ship_type_count()),
+		[](const ship_type_index_t) { return create_empty; }
+	};
+	decltype(CountryDefinition::alternative_colours) alternative_colours;
+	memory::vector<CountryPartyDto> party_dtos;
 	bool ret = expect_dictionary_keys_and_default(
 		[&definition_manager, &alternative_colours](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 			return definition_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(
@@ -199,18 +237,35 @@ bool CountryDefinitionManager::load_country_data_file(
 			definition_manager.get_pop_manager().get_culture_manager().expect_graphical_culture_type_identifier(
 				assign_variable_callback_pointer(graphical_culture)
 			),
-		"party", ZERO_OR_MORE, load_country_party(definition_manager.get_politics_manager(), parties),
-		"unit_names", ZERO_OR_ONE,
-			definition_manager.get_military_manager().get_unit_type_manager().expect_unit_type_dictionary_reserve_length(
-				unit_names,
-				[&unit_names](UnitType const& unit, ovdl::v2script::ast::Node const* value) -> bool {
-					return name_list_callback(map_callback(unit_names, &unit))(value);
+		"party", ZERO_OR_MORE, load_country_party(definition_manager.get_politics_manager(), party_dtos),
+		"unit_names", ZERO_OR_ONE, unit_type_manager.expect_ship_type_dictionary(
+				[&ship_names](ShipType const& ship_type, ovdl::v2script::ast::Node const* value) -> bool {
+					return name_list_callback(
+						[&ship_names, ship_type_index = ship_type.index](memory::FixedVector<memory::string>&& names) -> bool {
+							ship_names[ship_type_index] = std::move(names);
+							return true;
+						}
+					)(value);
 				}
 			)
 	)(root);
 
+	IdentifierRegistry<CountryParty> parties { "country parties" };
+	parties.reserve(party_dtos.size());
+
+	for (CountryPartyDto& dto : party_dtos) {
+		ret &= parties.emplace_item(
+			dto.identifier,
+			duplicate_warning_callback,
+			dto.identifier, dto.start_date, dto.end_date, dto.ideology, std::move(dto.policies)
+		);
+	}
+	parties.lock();
+
 	ret &= add_country(
-		name, colour, graphical_culture, std::move(parties), std::move(unit_names), is_dynamic, std::move(alternative_colours)
+		name, colour, graphical_culture,
+		std::move(parties), std::move(ship_names),
+		is_dynamic_tag, std::move(alternative_colours)
 	);
 	return ret;
 }

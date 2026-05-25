@@ -46,7 +46,6 @@ namespace OpenVic {
 			MILITARY        = 1 << 2
 		};
 
-		using rebel_units_t = fixed_point_map_t<UnitType const*>;
 		using poptype_weight_map_t = IndexedFlatMap<PopType, ConditionalWeightFactorAdd>;
 		using ideology_weight_map_t = IndexedFlatMap<Ideology, ConditionalWeightFactorMul>;
 		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
@@ -58,7 +57,7 @@ namespace OpenVic {
 		income_type_t PROPERTY(life_needs_income_types);
 		income_type_t PROPERTY(everyday_needs_income_types);
 		income_type_t PROPERTY(luxury_needs_income_types);
-		rebel_units_t PROPERTY(rebel_units);
+		fixed_point_map_t<regiment_type_index_t> PROPERTY(rebel_units);
 		PopType const* PROPERTY(equivalent);
 
 		ConditionalWeightFactorMul PROPERTY(country_migration_target); /* Scope - country, THIS - pop */
@@ -103,7 +102,7 @@ namespace OpenVic {
 			income_type_t new_life_needs_income_types,
 			income_type_t new_everyday_needs_income_types,
 			income_type_t new_luxury_needs_income_types,
-			rebel_units_t&& new_rebel_units,
+			fixed_point_map_t<regiment_type_index_t>&& new_rebel_units,
 			pop_size_t new_max_size,
 			pop_size_t new_merge_max_size,
 			bool new_state_capital_only,

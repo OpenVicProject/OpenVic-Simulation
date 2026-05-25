@@ -1,10 +1,15 @@
 #pragma once
 
-#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
+
+#if defined(__APPLE__)
+#include "openvic-simulation/military/UnitType.hpp"
+#endif
 
 namespace OpenVic {
 	struct BuildingType;
@@ -48,8 +53,8 @@ namespace OpenVic {
 		PopsAggregateDeps pops_aggregate_deps;
 		forwardable_span<const PopType> pop_types;
 		forwardable_span<const ReformGroup> reform_groups;
-		memory::vector<RegimentType> const& regiment_types; //can't use forwardable_span due to macos
-		memory::vector<ShipType> const& ship_types;
+		TypedSpan<regiment_type_index_t, const RegimentType> regiment_types;
+		TypedSpan<ship_type_index_t, const ShipType> ship_types;
 		forwardable_span<const Strata> stratas;
 		forwardable_span<const Technology> technologies;
 		UnitTypeManager const& unit_type_manager;

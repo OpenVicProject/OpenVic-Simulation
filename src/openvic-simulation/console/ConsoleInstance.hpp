@@ -89,7 +89,6 @@ namespace OpenVic {
 		ProvinceInstance* validate_province_number(std::string_view value_string);
 		CountryInstance* validate_country_tag(std::string_view value_string);
 		Event const* validate_event_id(std::string_view value_string);
-		UnitType const* validate_unit(std::string_view value_string);
 		std::string_view validate_filename(std::string_view value_string);
 		std::string_view validate_shader_effect(std::string_view value_string);
 		std::string_view validate_texture_name(std::string_view value_string);

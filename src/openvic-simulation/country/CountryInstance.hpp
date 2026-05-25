@@ -33,6 +33,10 @@
 #include "openvic-simulation/utility/reactive/DerivedState.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
+#if defined(__APPLE__)
+#include "openvic-simulation/military/UnitType.hpp"
+#endif
+
 namespace OpenVic {
 	struct BaseIssue;
 	struct BuildingType;
@@ -558,12 +562,11 @@ namespace OpenVic {
 		[[nodiscard]] constexpr bool is_unit_type_unlocked(const ship_type_index_t ship_type_index) const {
 			return is_unlocked(ship_type_unlock_levels[ship_type_index]);
 		}
-		[[nodiscard]] bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
-		bool modify_unit_type_unlock(UnitType const&, technology_unlock_level_t unlock_level_change);
 		bool modify_unit_type_unlock(const regiment_type_index_t regiment_type_index, technology_unlock_level_t unlock_level_change);
 		bool modify_unit_type_unlock(const ship_type_index_t ship_type_index, technology_unlock_level_t unlock_level_change);
-		bool unlock_unit_type(UnitType const& unit_type);
+		bool unlock_unit_type(const regiment_type_index_t regiment_type_index);
+		bool unlock_unit_type(const ship_type_index_t ship_type_index);
 
 		bool modify_building_type_unlock(
 			BuildingType const& building_type, technology_unlock_level_t unlock_level_change
@@ -616,7 +619,7 @@ namespace OpenVic {
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
-			fixed_point_map_t<CountryDefinition const*> const& investments,
+			fixed_point_map_t<country_index_t> const& investments,
 			CountryInstanceManager const& country_instance_manager
 		);
 

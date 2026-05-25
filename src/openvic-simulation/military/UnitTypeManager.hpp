@@ -18,11 +18,12 @@ namespace OpenVic {
 
 	struct UnitTypeManager {
 	private:
-		IdentifierPointerRegistry<UnitType> IDENTIFIER_REGISTRY(unit_type);
 		IdentifierRegistry<RegimentType> IDENTIFIER_REGISTRY(regiment_type);
 		IdentifierRegistry<ShipType> IDENTIFIER_REGISTRY(ship_type);
 
 	public:
+		constexpr UnitTypeManager() {}
+
 		void reserve_all_unit_types(size_t size);
 		void lock_all_unit_types();
 
