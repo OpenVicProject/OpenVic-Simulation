@@ -15,6 +15,7 @@
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/fixed_point/String.hpp"
@@ -29,7 +30,7 @@ using namespace OpenVic::NodeTools;
 
 template<typename T>
 static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
+	return [callback = FWD(callback)](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		if (node != nullptr) {
 			T const* cast_node = dryad::node_try_cast<T>(node);
 			if (cast_node != nullptr) {
@@ -46,33 +47,33 @@ static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
 	};
 }
 
-using _NodeIterator = typename decltype(std::declval<ast::NodeCPtr>()->children())::iterator;
-using _NodeStatementRange = dryad::node_range<_NodeIterator, ast::Statement>;
+using _NodeIterator = typename decltype(std::declval<ovdl::v2script::ast::Node const*>()->children())::iterator;
+using _NodeStatementRange = dryad::node_range<_NodeIterator, ovdl::v2script::ast::Statement>;
 
 static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStatementRange> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
+	return [callback = FWD(callback)](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		if (node != nullptr) {
-			if (auto const* file_tree = dryad::node_try_cast<ast::FileTree>(node)) {
+			if (auto const* file_tree = dryad::node_try_cast<ovdl::v2script::ast::FileTree>(node)) {
 				return callback(file_tree->statements());
 			}
-			if (auto const* list_value = dryad::node_try_cast<ast::ListValue>(node)) {
+			if (auto const* list_value = dryad::node_try_cast<ovdl::v2script::ast::ListValue>(node)) {
 				return callback(list_value->statements());
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), type_name<ast::FileTree>(), type_name<ast::ListValue>()
+				ast::get_type_name(node->kind()), type_name<ovdl::v2script::ast::FileTree>(), type_name<ovdl::v2script::ast::ListValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				type_name<ast::FileTree>(), type_name<ast::ListValue>()
+				type_name<ovdl::v2script::ast::FileTree>(), type_name<ovdl::v2script::ast::ListValue>()
 			);
 		}
 		return false;
 	};
 }
 
-template<std::derived_from<ast::FlatValue> T>
+template<std::derived_from<ovdl::v2script::ast::FlatValue> T>
 static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::symbol<char>> auto&& callback, bool allow_empty) {
 	return [callback = FWD(callback), allow_empty](T const* node) mutable -> bool {
 		if (allow_empty) {
@@ -88,7 +89,7 @@ static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::sym
 	};
 }
 
-template<std::derived_from<ast::FlatValue> T>
+template<std::derived_from<ovdl::v2script::ast::FlatValue> T>
 static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto&& callback, bool allow_empty) {
 	return _abstract_symbol_node_callback<T>(
 		[callback = FWD(callback)](ovdl::symbol<char> symbol) mutable -> bool {
@@ -98,49 +99,49 @@ static Callback<T const*> auto _abstract_string_node_callback(Callback<std::stri
 	);
 }
 
-node_callback_t NodeTools::expect_identifier(callback_t<std::string_view> callback) {
-	return _expect_type<ast::IdentifierValue>(_abstract_string_node_callback<ast::IdentifierValue>(callback, false));
+NodeTools::node_callback_t NodeTools::expect_identifier(NodeTools::callback_t<std::string_view> callback) {
+	return _expect_type<ovdl::v2script::ast::IdentifierValue>(_abstract_string_node_callback<ovdl::v2script::ast::IdentifierValue>(callback, false));
 }
 
 static NodeCallback auto _expect_identifier(Callback<ovdl::symbol<char>> auto&& callback) {
-	return _expect_type<ast::IdentifierValue>(_abstract_symbol_node_callback<ast::IdentifierValue>(FWD(callback), false));
+	return _expect_type<ovdl::v2script::ast::IdentifierValue>(_abstract_symbol_node_callback<ovdl::v2script::ast::IdentifierValue>(FWD(callback), false));
 }
 
-node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback, bool allow_empty) {
-	return _expect_type<ast::StringValue>(_abstract_string_node_callback<ast::StringValue>(callback, allow_empty));
+NodeTools::node_callback_t NodeTools::expect_string(NodeTools::callback_t<std::string_view> callback, bool allow_empty) {
+	return _expect_type<ovdl::v2script::ast::StringValue>(_abstract_string_node_callback<ovdl::v2script::ast::StringValue>(callback, allow_empty));
 }
 
 static NodeCallback auto _expect_string(Callback<ovdl::symbol<char>> auto&& callback, bool allow_empty) {
-	return _expect_type<ast::StringValue>(_abstract_symbol_node_callback<ast::StringValue>(FWD(callback), allow_empty));
+	return _expect_type<ovdl::v2script::ast::StringValue>(_abstract_symbol_node_callback<ovdl::v2script::ast::StringValue>(FWD(callback), allow_empty));
 }
 
-node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
-	return [callback, allow_empty](ast::NodeCPtr node) -> bool {
+NodeTools::node_callback_t NodeTools::expect_identifier_or_string(NodeTools::callback_t<std::string_view> callback, bool allow_empty) {
+	return [callback, allow_empty](ovdl::v2script::ast::Node const* node) -> bool {
 		if (node != nullptr) {
-			auto const* cast_node = dryad::node_try_cast<ast::FlatValue>(node);
+			auto const* cast_node = dryad::node_try_cast<ovdl::v2script::ast::FlatValue>(node);
 			if (cast_node != nullptr) {
-				return _abstract_string_node_callback<ast::FlatValue>(FWD(callback), allow_empty)(cast_node);
+				return _abstract_string_node_callback<ovdl::v2script::ast::FlatValue>(FWD(callback), allow_empty)(cast_node);
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
+				ast::get_type_name(node->kind()), type_name<ovdl::v2script::ast::IdentifierValue>(), type_name<ovdl::v2script::ast::StringValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
+				type_name<ovdl::v2script::ast::IdentifierValue>(), type_name<ovdl::v2script::ast::StringValue>()
 			);
 		}
 		return false;
 	};
 }
 
-node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
+NodeTools::node_callback_t NodeTools::expect_bool(NodeTools::callback_t<bool> callback) {
 	static const case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
-node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
+NodeTools::node_callback_t NodeTools::expect_int_bool(NodeTools::callback_t<bool> callback) {
 	return expect_uint64([callback](uint64_t num) mutable -> bool {
 		if (num > 1) {
 			spdlog::warn_s("Found int bool with value >1: {}", num);
@@ -149,7 +150,7 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 	});
 }
 
-node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
+NodeTools::node_callback_t NodeTools::expect_int64(NodeTools::callback_t<int64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		int64_t val;
 		std::from_chars_result result = string_to_int64(identifier, val, base);
@@ -161,7 +162,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 	});
 }
 
-node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
+NodeTools::node_callback_t NodeTools::expect_uint64(NodeTools::callback_t<uint64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		uint64_t val;
 		std::from_chars_result result = string_to_uint64(identifier, val, base);
@@ -173,7 +174,7 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base
 	});
 }
 
-callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_point_t> callback) {
+NodeTools::callback_t<std::string_view> NodeTools::expect_fixed_point_str(NodeTools::callback_t<fixed_point_t> callback) {
 	return [callback](std::string_view identifier) mutable -> bool {
 		bool successful = false;
 		fixed_point_t val;
@@ -186,12 +187,12 @@ callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_
 	};
 }
 
-node_callback_t NodeTools::expect_fixed_point(callback_t<fixed_point_t> callback) {
+NodeTools::node_callback_t NodeTools::expect_fixed_point(NodeTools::callback_t<fixed_point_t> callback) {
 	return expect_identifier(expect_fixed_point_str(callback));
 }
 
-node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
-	return [callback](ast::NodeCPtr node) mutable -> bool {
+NodeTools::node_callback_t NodeTools::expect_colour(NodeTools::callback_t<colour_t> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		colour_t col = colour_t::null();
 		int32_t components = 0;
 		bool ret = expect_list_of_length(3, expect_fixed_point(
@@ -220,13 +221,13 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_colour_hex(callback_t<colour_argb_t> callback) {
+NodeTools::node_callback_t NodeTools::expect_colour_hex(NodeTools::callback_t<colour_argb_t> callback) {
 	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) mutable -> bool {
 		return callback(colour_argb_t::from_argb(val));
 	}, 16);
 }
 
-callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
+NodeTools::callback_t<std::string_view> NodeTools::expect_date_str(NodeTools::callback_t<Date> callback) {
 	return [callback](std::string_view identifier) mutable -> bool {
 		Date::from_chars_result result;
 		const Date date = Date::from_string_log(identifier, &result);
@@ -238,39 +239,39 @@ callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callbac
 	};
 }
 
-node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
+NodeTools::node_callback_t NodeTools::expect_date(NodeTools::callback_t<Date> callback) {
 	return expect_identifier(expect_date_str(callback));
 }
 
-node_callback_t NodeTools::expect_date_string(callback_t<Date> callback) {
+NodeTools::node_callback_t NodeTools::expect_date_string(NodeTools::callback_t<Date> callback) {
 	return expect_string(expect_date_str(callback));
 }
 
-node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> callback) {
+NodeTools::node_callback_t NodeTools::expect_date_identifier_or_string(NodeTools::callback_t<Date> callback) {
 	return expect_identifier_or_string(expect_date_str(callback));
 }
 
-node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {
+NodeTools::node_callback_t NodeTools::expect_years(NodeTools::callback_t<Timespan> callback) {
 	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_years(val));
 	});
 }
 
-node_callback_t NodeTools::expect_months(callback_t<Timespan> callback) {
+NodeTools::node_callback_t NodeTools::expect_months(NodeTools::callback_t<Timespan> callback) {
 	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_months(val));
 	});
 }
 
-node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
+NodeTools::node_callback_t NodeTools::expect_days(NodeTools::callback_t<Timespan> callback) {
 	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_days(val));
 	});
 }
 
-template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
+template<typename T, NodeTools::node_callback_t (*expect_func)(NodeTools::callback_t<T>)>
 NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
+	return [callback = FWD(callback)](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		vec2_t<T> vec;
 		bool ret = expect_dictionary_keys(
 			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
@@ -283,7 +284,7 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback) {
+NodeTools::node_callback_t NodeTools::expect_text_format(NodeTools::callback_t<text_format_t> callback) {
 	using enum text_format_t;
 
 	static const string_map_t<text_format_t> format_map = {
@@ -297,22 +298,22 @@ node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback
 	return expect_identifier(expect_mapped_string(format_map, callback));
 }
 
-static node_callback_t _expect_int(callback_t<ivec2_t::type> callback) {
+static NodeTools::node_callback_t _expect_int(NodeTools::callback_t<ivec2_t::type> callback) {
 	return expect_int(callback);
 }
 
-node_callback_t NodeTools::expect_ivec2(callback_t<ivec2_t> callback) {
+NodeTools::node_callback_t NodeTools::expect_ivec2(NodeTools::callback_t<ivec2_t> callback) {
 	return _expect_vec2<ivec2_t::type, _expect_int>(callback);
 }
 
-node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
+NodeTools::node_callback_t NodeTools::expect_fvec2(NodeTools::callback_t<fvec2_t> callback) {
 	return _expect_vec2<fixed_point_t, expect_fixed_point>(callback);
 }
 
 // seen in some gfx files, these vectors don't have x,y,z,w labels, so are loaded similarly to colours.
 
-node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
-	return [callback](ast::NodeCPtr node) mutable -> bool {
+NodeTools::node_callback_t NodeTools::expect_fvec3(NodeTools::callback_t<fvec3_t> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		fvec3_t vec;
 		int32_t components = 0;
 		bool ret = expect_list_of_length(3, expect_fixed_point(
@@ -328,8 +329,8 @@ node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
-	return [callback](ast::NodeCPtr node) mutable -> bool {
+NodeTools::node_callback_t NodeTools::expect_fvec4(NodeTools::callback_t<fvec4_t> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		fvec4_t vec;
 		int32_t components = 0;
 		bool ret = expect_list_of_length(4, expect_fixed_point(
@@ -345,8 +346,8 @@ node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
-	return _expect_type<ast::AssignStatement>([callback](ast::AssignStatement const* assign_node) mutable -> bool {
+NodeTools::node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
+	return _expect_type<ovdl::v2script::ast::AssignStatement>([callback](ovdl::v2script::ast::AssignStatement const* assign_node) mutable -> bool {
 		std::string_view left;
 		bool ret = expect_identifier(assign_variable_callback(left))(assign_node->left());
 		if (ret) {
@@ -361,7 +362,7 @@ node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 	});
 }
 
-node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
+NodeTools::node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, NodeTools::node_callback_t callback) {
 	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		size_t dist = ranges::distance(list);
@@ -379,7 +380,7 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 			if (index >= size) {
 				return ret;
 			}
-			if (auto const* value = dryad::node_try_cast<ast::ValueStatement>(sub_node)) {
+			if (auto const* value = dryad::node_try_cast<ovdl::v2script::ast::ValueStatement>(sub_node)) {
 				ret &= callback(value->value());
 				continue;
 			}
@@ -389,8 +390,8 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 	});
 }
 
-node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t callback) {
-	return [length, callback](ast::NodeCPtr node) -> bool {
+NodeTools::node_callback_t NodeTools::expect_list_of_length(size_t length, NodeTools::node_callback_t callback) {
+	return [length, callback](ovdl::v2script::ast::Node const* node) -> bool {
 		bool size_ret = true;
 		bool ret = expect_list_and_length(
 			[length, &size_ret](size_t size) -> size_t {
@@ -412,12 +413,12 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 	};
 }
 
-node_callback_t NodeTools::expect_list(node_callback_t callback) {
+NodeTools::node_callback_t NodeTools::expect_list(NodeTools::node_callback_t callback) {
 	return expect_list_and_length(default_length_callback, callback);
 }
 
-node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
-	return [callback](ast::NodeCPtr node) mutable -> bool {
+NodeTools::node_callback_t NodeTools::expect_length(NodeTools::callback_t<size_t> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
 		bool size_ret = true;
 		bool ret = expect_list_and_length(
 			[callback, &size_ret](size_t size) mutable -> size_t {
@@ -431,13 +432,13 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 }
 
 template<typename Key>
-static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* key_found, bool allow_duplicates) {
+static NodeTools::node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* key_found, bool allow_duplicates) {
 	if constexpr (std::same_as<Key, ovdl::symbol<char>>) {
 		if (!key) {
 			if (key_found != nullptr) {
 				*key_found = false;
 			}
-			return [](ast::NodeCPtr) -> bool {
+			return [](ovdl::v2script::ast::Node const*) -> bool {
 				spdlog::error_s("Failed to find expected interned key.");
 				return false;
 			};
@@ -455,8 +456,8 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 	return _abstract_statement_node_callback([key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		size_t keys_found = 0;
-		for (ast::Statement const* sub_node : list) {
-			auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
+		for (ovdl::v2script::ast::Statement const* sub_node : list) {
+			auto const* assign_node = dryad::node_try_cast<ovdl::v2script::ast::AssignStatement>(sub_node);
 			if (assign_node == nullptr) {
 				continue;
 			}
@@ -503,26 +504,26 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 	});
 }
 
-node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
+NodeTools::node_callback_t NodeTools::expect_key(std::string_view key, NodeTools::node_callback_t callback, bool* key_found, bool allow_duplicates) {
 	return _expect_key(key, callback, key_found, allow_duplicates);
 }
 
-node_callback_t
-NodeTools::expect_key(ovdl::symbol<char> key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
+NodeTools::node_callback_t
+NodeTools::expect_key(ovdl::symbol<char> key, NodeTools::node_callback_t callback, bool* key_found, bool allow_duplicates) {
 	return _expect_key(key, callback, key_found, allow_duplicates);
 }
 
-node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
+NodeTools::node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
 	return expect_list_and_length(length_callback, expect_assign(callback));
 }
 
-node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
+NodeTools::node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback) {
-	return [callback](ast::NodeCPtr node) mutable -> bool {
-		name_list_t list;
+NodeTools::node_callback_t NodeTools::name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback) {
+	return [callback](ovdl::v2script::ast::Node const* node) mutable -> bool {
+		memory::vector<memory::string> list;
 		bool ret = expect_list_reserve_length(
 			list, expect_identifier_or_string(vector_callback<std::string_view>(list))
 		)(node);
@@ -531,7 +532,7 @@ node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback
 	};
 }
 
-std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_list) {
+std::ostream& OpenVic::operator<<(std::ostream& stream, memory::vector<memory::string> const& name_list) {
 	stream << '[';
 	if (!name_list.empty()) {
 		stream << name_list.front();
@@ -542,11 +543,11 @@ std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_
 	return stream << ']';
 }
 
-callback_t<std::string_view> NodeTools::assign_variable_callback_string(memory::string& var) {
+NodeTools::callback_t<std::string_view> NodeTools::assign_variable_callback_string(memory::string& var) {
 	return assign_variable_callback_cast<std::string_view>(var);
 }
 
-callback_t<std::string_view> NodeTools::vector_callback_string(memory::vector<memory::string>& vec) {
+NodeTools::callback_t<std::string_view> NodeTools::vector_callback_string(memory::vector<memory::string>& vec) {
 	return [&vec](std::string_view val) -> bool {
 		vec.emplace_back(memory::string(val));
 		return true;

@@ -45,7 +45,7 @@ static constexpr auto _flag_callback(string_map_t<bool>& flags, bool value) {
 
 bool CountryHistoryMap::_load_history_entry(
 	DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-	CountryHistoryEntry& entry, ast::NodeCPtr root
+	CountryHistoryEntry& entry, ovdl::v2script::ast::Node const* root
 ) {
 	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
@@ -94,7 +94,7 @@ bool CountryHistoryMap::_load_history_entry(
 		](
 			template_key_map_t<StringMapCaseSensitive> const& key_map,
 			std::string_view key,
-			ast::NodeCPtr value
+			ovdl::v2script::ast::Node const* value
 		) -> bool {
 			ReformGroup const* reform_group_ptr = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group_ptr != nullptr) {
@@ -157,7 +157,7 @@ bool CountryHistoryMap::_load_history_entry(
 		),
 		"civilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.civilised)),
 		"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.prestige)),
-		"ruling_party", ZERO_OR_ONE, [this, &entry](ast::NodeCPtr value) -> bool {
+		"ruling_party", ZERO_OR_ONE, [this, &entry](ovdl::v2script::ast::Node const* value) -> bool {
 			country.expect_party_identifier(assign_variable_callback_pointer_opt(entry.ruling_party), true)(value);
 			if (!entry.ruling_party.has_value()) {
 				std::string_view def {};
@@ -193,7 +193,7 @@ bool CountryHistoryMap::_load_history_entry(
 		},
 		"last_election", ZERO_OR_ONE, expect_date(assign_variable_callback(entry.last_election)),
 		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary(
-			[&entry](Ideology const& ideology, ast::NodeCPtr value) -> bool {
+			[&entry](Ideology const& ideology, ovdl::v2script::ast::Node const* value) -> bool {
 				return expect_fixed_point(map_callback(entry.upper_house_proportion_by_ideology, &ideology))(value);
 			}
 		),
@@ -226,13 +226,13 @@ bool CountryHistoryMap::_load_history_entry(
 		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
 		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
 		"decision", ZERO_OR_MORE, decision_manager.expect_decision_identifier(set_callback_pointer(entry.decisions), true), // if a mod lists an invalid decision here (as some hpm-derived mods that remove hpm decisions do) vic2 just ignores it.
-		"govt_flag", ZERO_OR_MORE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
+		"govt_flag", ZERO_OR_MORE, [&entry, &politics_manager](ovdl::v2script::ast::Node const* value) -> bool {
 			GovernmentTypeManager const& government_type_manager = politics_manager.get_government_type_manager();
 			GovernmentType const* government_type = nullptr;
 			bool flag_expected = false;
 			bool ret = expect_dictionary(
 				[&entry, &government_type_manager, &government_type, &flag_expected](std::string_view id,
-					ast::NodeCPtr node) -> bool {
+					ovdl::v2script::ast::Node const* node) -> bool {
 					if (id == "government") {
 						bool ret = true;
 						if (flag_expected) {
@@ -330,7 +330,7 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefin
 bool CountryHistoryManager::load_country_history_file(
 	DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
 	decltype(CountryHistoryMap::ideology_keys) ideology_keys,
-	decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
+	decltype(CountryHistoryMap::government_type_keys) government_type_keys, ovdl::v2script::ast::Node const* root
 ) {
 	if (locked) {
 		spdlog::error_s("Attempted to load country history file for {} after country history registry was locked!", country);

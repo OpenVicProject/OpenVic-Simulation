@@ -1,16 +1,18 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic {
 	// TODO - is template needed if context is always DefinitionManager const&?
 	template<typename... _Context>
 	struct Script {
 	private:
-		memory::vector<ast::NodeCPtr> _root_nodes;
+		memory::vector<ovdl::v2script::ast::Node const*> _root_nodes;
 
 	protected:
-		virtual bool _parse_script(std::span<const ast::NodeCPtr> nodes, _Context... context) = 0;
+		virtual bool _parse_script(std::span<ovdl::v2script::ast::Node const* const> nodes, _Context... context) = 0;
 
 	public:
 		constexpr Script() {};

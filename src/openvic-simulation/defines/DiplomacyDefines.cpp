@@ -1,5 +1,7 @@
 #include "DiplomacyDefines.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,7 +11,7 @@ std::string_view DiplomacyDefines::get_name() const {
 	return "diplomacy";
 }
 
-node_callback_t DiplomacyDefines::expect_defines() {
+NodeTools::node_callback_t DiplomacyDefines::expect_defines() {
 	// The key map entries are added in two separate function calls, half each time, as adding them all at once causes a
 	// runtime crash, presumably due to a limit on the number of loose lambda functions that can exist at the same time.
 

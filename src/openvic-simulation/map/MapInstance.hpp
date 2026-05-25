@@ -3,7 +3,7 @@
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/map/State.hpp"
+#include "openvic-simulation/map/StateManager.hpp"
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/GoodInstanceManager.hpp"
 #include "openvic-simulation/military/UnitType.hpp" // IWYU pragma: keep for RegimentType size
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/population/PopType.hpp"

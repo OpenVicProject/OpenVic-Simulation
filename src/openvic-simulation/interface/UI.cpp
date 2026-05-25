@@ -48,7 +48,7 @@ bool UIManager::add_font(
 	return ret;
 }
 
-bool UIManager::_load_font(ast::NodeCPtr node) {
+bool UIManager::_load_font(ovdl::v2script::ast::Node const* node) {
 	std::string_view identifier, fontname, charset;
 	colour_argb_t colour = colour_argb_t::fill_as(255);
 	uint32_t height = 0;
@@ -61,7 +61,7 @@ bool UIManager::_load_font(ast::NodeCPtr node) {
 		"charset", ZERO_OR_ONE, expect_string(assign_variable_callback(charset)),
 		"height", ZERO_OR_ONE, expect_uint(assign_variable_callback(height)),
 		"colorcodes", ZERO_OR_ONE, expect_dictionary(
-			[&colour_codes](std::string_view key, ast::NodeCPtr value) -> bool {
+			[&colour_codes](std::string_view key, ovdl::v2script::ast::Node const* value) -> bool {
 				if (key.size() != 1) {
 					spdlog::error_s("Invalid colour code key: \"{}\" (expected single character)", key);
 					return false;
@@ -80,7 +80,7 @@ bool UIManager::_load_font(ast::NodeCPtr node) {
 NodeCallback auto UIManager::_load_fonts(std::string_view font_key) {
 	return expect_dictionary_reserve_length(
 		fonts,
-		[this, font_key](std::string_view key, ast::NodeCPtr node) -> bool {
+		[this, font_key](std::string_view key, ovdl::v2script::ast::Node const* node) -> bool {
 			if (key != font_key) {
 				spdlog::error_s(
 					"Invalid key: \"{}\" (expected {})",
@@ -99,7 +99,7 @@ void UIManager::lock_gfx_registries() {
 	lock_objects();
 }
 
-bool UIManager::load_gfx_file(ast::NodeCPtr root) {
+bool UIManager::load_gfx_file(ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_keys(
 		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
 			NodeTools::reserve_length_callback(sprites),
@@ -146,7 +146,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 	)(root);
 }
 
-bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root) {
+bool UIManager::load_gui_file(std::string_view scene_name, ovdl::v2script::ast::Node const* root) {
 	if (!sprites_are_locked()) {
 		spdlog::error_s("Cannot load GUI files until GFX files (i.e. Sprites) are locked!");
 		return false;

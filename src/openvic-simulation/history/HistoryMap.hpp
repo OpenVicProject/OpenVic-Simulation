@@ -34,7 +34,7 @@ namespace OpenVic {
 		ordered_map<Date, memory::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(
-			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, Args... args, Date date, ovdl::v2script::ast::Node const* root
 		) {
 			entry_type *const entry = _get_or_make_entry(definition_manager, date);
 			if (entry != nullptr) {
@@ -50,10 +50,10 @@ namespace OpenVic {
 		virtual memory::unique_ptr<entry_type> _make_entry(Date date) const = 0;
 
 		virtual bool _load_history_entry(
-			DefinitionManager const& definition_manager, Args... args, entry_type& entry, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, Args... args, entry_type& entry, ovdl::v2script::ast::Node const* root
 		) = 0;
 
-		bool _load_history_file(DefinitionManager const& definition_manager, Args... args, ast::NodeCPtr root) {
+		bool _load_history_file(DefinitionManager const& definition_manager, Args... args, ovdl::v2script::ast::Node const* root) {
 			return _try_load_history_entry(
 				definition_manager, args..., _HistoryMapHelperFuncs::_get_start_date(definition_manager), root
 			);
@@ -63,10 +63,10 @@ namespace OpenVic {
 			DefinitionManager const& definition_manager,
 			Args... args,
 			Date date,
-			ast::NodeCPtr root,
+			ovdl::v2script::ast::Node const* root,
 			NodeTools::template_key_map_t<StringMapCaseSensitive> const& key_map,
 			std::string_view key,
-			ast::NodeCPtr value
+			ovdl::v2script::ast::Node const* value
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
 			Date::from_chars_result result;

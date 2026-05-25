@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -16,7 +17,7 @@ namespace OpenVic {
 		LoadBase(LoadBase&&) = default;
 		virtual ~LoadBase() = default;
 
-		bool load(ast::NodeCPtr node, Context... context) {
+		bool load(ovdl::v2script::ast::Node const* node, Context... context) {
 			NodeTools::case_insensitive_key_map_t key_map;
 			bool ret = _fill_key_map(key_map, context...);
 			ret &= NodeTools::expect_dictionary_key_map(std::move(key_map))(node);
@@ -27,7 +28,7 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_value(
 			NodeTools::callback_t<T&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) mutable -> bool {
+			return [callback, &context...](ovdl::v2script::ast::Node const* node) mutable -> bool {
 				T value {};
 				bool ret = value.load(node, context...);
 				ret &= callback(std::move(value));
@@ -39,7 +40,7 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_instance(
 			NodeTools::callback_t<memory::unique_base_ptr<T>&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) mutable -> bool {
+			return [callback, &context...](ovdl::v2script::ast::Node const* node) mutable -> bool {
 				memory::unique_base_ptr<T> instance { memory::make_unique<U>() };
 				bool ret = instance->load(node, context...);
 				ret &= callback(std::move(instance));

@@ -1,10 +1,12 @@
 #pragma once
 
-#include <openvic-dataloader/v2script/Parser.hpp>
+#include "openvic-simulation/economy/BuildingTypeManager.hpp"
+#include "openvic-simulation/economy/GoodDefinitionManager.hpp"
+#include "openvic-simulation/economy/production/ProductionTypeManager.hpp"
 
-#include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/economy/production/ProductionType.hpp"
+namespace ovdl::v2script {
+	class Parser;
+}
 
 namespace OpenVic {
 	struct EconomyManager {
@@ -27,7 +29,7 @@ namespace OpenVic {
 			);
 		}
 
-		inline bool load_buildings_file(ModifierManager& modifier_manager, ast::NodeCPtr root) {
+		inline bool load_buildings_file(ModifierManager& modifier_manager, ovdl::v2script::ast::Node const* root) {
 			return building_type_manager.load_buildings_file(
 				good_definition_manager, production_type_manager, modifier_manager, root
 			);

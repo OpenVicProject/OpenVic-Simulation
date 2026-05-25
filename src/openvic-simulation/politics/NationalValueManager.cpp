@@ -1,0 +1,41 @@
+#include "NationalValueManager.hpp"
+
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
+
+using namespace OpenVic;
+using namespace OpenVic::NodeTools;
+
+bool NationalValueManager::add_national_value(std::string_view identifier, ModifierValue&& modifiers) {
+	if (identifier.empty()) {
+		spdlog::error_s("Invalid national value identifier - empty!");
+		return false;
+	}
+
+	return national_values.emplace_item(
+		identifier,
+		identifier, std::move(modifiers)
+	);
+}
+
+bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root) {
+	spdlog::scope scope { "common/nationalvalues.txt" };
+	bool ret = expect_dictionary_reserve_length(
+		national_values,
+		[this, &modifier_manager](std::string_view national_value_identifier, ovdl::v2script::ast::Node const* value) -> bool {
+			spdlog::scope scope { fmt::format("national value {}", national_value_identifier) };
+			ModifierValue modifiers;
+			bool ret = NodeTools::expect_dictionary(
+				modifier_manager.expect_base_country_modifier(modifiers)
+			)(value);
+
+			ret &= add_national_value(national_value_identifier, std::move(modifiers));
+
+			return ret;
+		}
+	)(root);
+
+	lock_national_values();
+
+	return ret;
+}

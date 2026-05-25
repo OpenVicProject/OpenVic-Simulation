@@ -2,8 +2,6 @@
 
 #include <string_view>
 
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
-
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -14,18 +12,15 @@
 
 namespace OpenVic {
 	struct CountryDefinitionManager;
-	class Dataloader;
-	struct DefinitionManager;
 	struct GraphicalCultureType;
 	struct GovernmentType;
-	struct PoliticsManager;
 	struct UnitType;
 
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition, country_index_t> {
 		friend struct CountryDefinitionManager;
 		
-		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
+		using unit_names_map_t = ordered_map<UnitType const*, memory::vector<memory::string>>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:
@@ -57,29 +52,6 @@ namespace OpenVic {
 		CountryDefinition(CountryDefinition&&) = default;
 
 		// TODO - get_colour including alternative colours
-	};
-
-	struct CountryDefinitionManager {
-	private:
-		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
-
-		NodeTools::node_callback_t load_country_party(
-			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
-		) const;
-
-	public:
-		bool add_country(
-			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-			IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
-			CountryDefinition::government_colour_map_t&& alternative_colours
-		);
-
-		bool load_country_colours(ast::NodeCPtr root);
-
-		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
-		bool load_country_data_file(
-			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
-		);
 	};
 }
 

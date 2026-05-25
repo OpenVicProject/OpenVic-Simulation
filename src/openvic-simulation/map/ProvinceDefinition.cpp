@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/economy/BuildingTypeManager.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 
@@ -22,7 +23,7 @@ memory::string ProvinceDefinition::to_string() const {
 }
 
 bool ProvinceDefinition::load_positions(
-	MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+	MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ovdl::v2script::ast::Node const* root
 ) {
 	const fixed_point_t map_height = map_definition.get_height();
 
@@ -44,7 +45,7 @@ bool ProvinceDefinition::load_positions(
 
 		"building_position", ZERO_OR_ONE, building_type_manager.expect_building_type_dictionary_reserve_length(
 			positions.building_position,
-			[this, map_height](BuildingType const& type, ast::NodeCPtr value) -> bool {
+			[this, map_height](BuildingType const& type, ovdl::v2script::ast::Node const* value) -> bool {
 				return expect_fvec2(flip_y_callback(map_callback(positions.building_position, &type), map_height))(value);
 			}
 		),

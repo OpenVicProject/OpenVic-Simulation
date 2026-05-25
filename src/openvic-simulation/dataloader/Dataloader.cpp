@@ -14,6 +14,7 @@
 
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
@@ -38,6 +39,8 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 	return path;
 #endif
 }
+
+Dataloader::Dataloader() {}
 
 bool Dataloader::set_roots(path_span_t new_roots, path_span_t new_replace_paths, bool warn_on_override) {
 	if (!roots.empty()) {

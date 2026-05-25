@@ -5,12 +5,13 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/FormatValidate.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/economy/GoodDefinitionManager.hpp"
+#include "openvic-simulation/military/UnitTypeManager.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/IdeologyManager.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
-#include "openvic-simulation/politics/Rebel.hpp"
+#include "openvic-simulation/politics/RebelManager.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -81,7 +82,7 @@ bool PopManager::add_pop_type(
 	PopType::income_type_t life_needs_income_types,
 	PopType::income_type_t everyday_needs_income_types,
 	PopType::income_type_t luxury_needs_income_types,
-	ast::NodeCPtr rebel_units,
+	ovdl::v2script::ast::Node const* rebel_units,
 	pop_size_t max_size,
 	pop_size_t merge_max_size,
 	bool state_capital_only,
@@ -100,12 +101,12 @@ bool PopManager::add_pop_type(
 	fixed_point_t leadership_points,
 	fixed_point_t research_leadership_optimum,
 	fixed_point_t state_administration_multiplier,
-	ast::NodeCPtr equivalent,
+	ovdl::v2script::ast::Node const* equivalent,
 	ConditionalWeightFactorMul&& country_migration_target,
 	ConditionalWeightFactorMul&& migration_target,
-	ast::NodeCPtr promote_to_node,
+	ovdl::v2script::ast::Node const* promote_to_node,
 	PopType::ideology_weight_map_t&& ideologies,
-	ast::NodeCPtr issues_node
+	ovdl::v2script::ast::Node const* issues_node
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid pop type identifier - empty!");
@@ -252,7 +253,7 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
  */
 bool PopManager::load_pop_type_file(
 	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
-	ast::NodeCPtr root
+	ovdl::v2script::ast::Node const* root
 ) {
 	spdlog::scope scope { fmt::format("poptypes/{}.txt", filestem) };
 	using enum scope_type_t;
@@ -264,19 +265,19 @@ bool PopManager::load_pop_type_file(
 	fixed_point_map_t<GoodDefinition const*> life_needs, everyday_needs, luxury_needs;
 	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
 		luxury_needs_income_types = NO_INCOME_TYPE;
-	ast::NodeCPtr rebel_units = nullptr;
+	ovdl::v2script::ast::Node const* rebel_units = nullptr;
 	pop_size_t max_size = Pop::MAX_SIZE, merge_max_size = Pop::MAX_SIZE;
 	bool state_capital_only = false, demote_migrant = false, is_artisan = false, allowed_to_vote = true, is_slave = false,
 		can_be_recruited = false, can_reduce_consciousness = false, administrative_efficiency = false, can_invest = false,
 		factory = false, can_work_factory = false, unemployment = false;
 	fixed_point_t research_points = 0, leadership_points = 0, research_leadership_optimum = 0,
 		state_administration_multiplier = 0;
-	ast::NodeCPtr equivalent = nullptr;
+	ovdl::v2script::ast::Node const* equivalent = nullptr;
 	ConditionalWeightFactorMul country_migration_target { COUNTRY, POP, NO_SCOPE };
 	ConditionalWeightFactorMul migration_target { PROVINCE, POP, NO_SCOPE };
-	ast::NodeCPtr promote_to_node = nullptr;
+	ovdl::v2script::ast::Node const* promote_to_node = nullptr;
 	PopType::ideology_weight_map_t ideologies { ideology_manager.get_ideologies() };
-	ast::NodeCPtr issues_node = nullptr;
+	ovdl::v2script::ast::Node const* issues_node = nullptr;
 
 	bool ret = expect_dictionary_keys(
 		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback(sprite)),
@@ -308,7 +309,7 @@ bool PopManager::load_pop_type_file(
 		"migration_target", ZERO_OR_ONE, migration_target.expect_conditional_weight(),
 		"promote_to", ZERO_OR_ONE, assign_variable_callback(promote_to_node),
 		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary(
-			[&filestem, &ideologies](Ideology const& ideology, ast::NodeCPtr node) -> bool {
+			[&filestem, &ideologies](Ideology const& ideology, ovdl::v2script::ast::Node const* node) -> bool {
 				ConditionalWeightFactorMul weight { POP, POP, NO_SCOPE };
 
 				bool ret = weight.expect_conditional_weight()(node);
@@ -413,7 +414,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		}
 
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
-			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
+			[pop_type](PopType const& type, ovdl::v2script::ast::Node const* node) -> bool {
 				if (pop_type && type == *pop_type) {
 					spdlog::error_s("Pop type {} cannot have promotion weight to itself!", type);
 					return false;
@@ -430,7 +431,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 
 		if (issues_node != nullptr && !expect_dictionary_reserve_length(
 			pop_type->issues,
-			[pop_type, &issue_manager](std::string_view key, ast::NodeCPtr node) -> bool {
+			[pop_type, &issue_manager](std::string_view key, ovdl::v2script::ast::Node const* node) -> bool {
 				BaseIssue const* issue = issue_manager.get_base_issue_by_identifier(key);
 				if (issue == nullptr) {
 					spdlog::error_s("Invalid issue in pop type {} issue weights: {}", ovfmt::validate(pop_type), key);
@@ -450,7 +451,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 	return ret;
 }
 
-bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
+bool PopManager::load_pop_type_chances_file(ovdl::v2script::ast::Node const* root) {
 	return expect_dictionary_keys(
 		"promotion_chance", ONE_EXACTLY, promotion_chance.expect_conditional_weight(),
 		"demotion_chance", ONE_EXACTLY, demotion_chance.expect_conditional_weight(),
@@ -463,7 +464,7 @@ bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
 }
 
 bool PopManager::load_pop_bases_into_vector(
-	RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
+	RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ovdl::v2script::ast::Node const* pop_node,
 	bool *non_integer_size
 ) const {
 	Culture const* culture = nullptr;

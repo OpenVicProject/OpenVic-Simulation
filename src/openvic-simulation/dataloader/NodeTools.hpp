@@ -2,7 +2,6 @@
 
 #include <concepts>
 #include <cstdint>
-#include <functional>
 #include <optional>
 #include <type_traits>
 
@@ -23,7 +22,9 @@
 #include "openvic-simulation/core/stl/MutableIterator.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
@@ -35,20 +36,17 @@
 
 namespace OpenVic {
 	namespace ast {
-		using namespace ovdl::v2script::ast;
-		using NodeCPtr = Node const*;
-
-		static constexpr std::string_view get_type_name(NodeKind kind) {
+		static constexpr std::string_view get_type_name(ovdl::v2script::ast::NodeKind kind) {
 #ifdef _MSC_VER // type_name starts with "struct "
 using namespace std::string_view_literals;
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::type_name<ast::Node>().substr("struct "sv.size());
+	case Node: return OpenVic::type_name<ovdl::v2script::ast::Node>().substr("struct "sv.size());
 #else
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::type_name<ast::Node>();
+	case Node: return OpenVic::type_name<ovdl::v2script::ast::Node>();
 #endif
 			switch (kind) {
-				using enum NodeKind;
+				using enum ovdl::v2script::ast::NodeKind;
 				NODE_CASE(FileTree);
 				NODE_CASE(IdentifierValue);
 				NODE_CASE(StringValue);
@@ -63,45 +61,19 @@ using namespace std::string_view_literals;
 #undef NODE_CASE
 	}
 
-	struct name_list_t : memory::vector<memory::string> {
-		using base_type = memory::vector<memory::string>;
-		using base_type::base_type;
-	};
-	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
+	std::ostream& operator<<(std::ostream& stream, memory::vector<memory::string> const& name_list);
 
 	constexpr void reserve_more(reservable auto& t, size_t size) {
 		t.reserve(t.size() + size);
 	}
 
 	namespace NodeTools {
-		template<typename Fn, typename Return = void, typename... Args>
-		concept Functor = requires(Fn&& fn, Args&&... args) {
-			{ std::invoke(FWD(fn), FWD(args)...) } -> std::same_as<Return>;
-		};
-
-		template<typename Fn, typename Return = void, typename... Args>
-		concept FunctorConvertible = requires(Fn&& fn, Args&&... args) {
-			{ std::invoke(FWD(fn), FWD(args)...) } -> std::convertible_to<Return>;
-		};
-
-		template<typename Fn, typename... Args>
-		concept Callback = Functor<Fn, bool, Args...>;
-
-		template<typename Fn>
-		concept NodeCallback = Callback<Fn, ast::NodeCPtr>;
-
-		template<typename Fn>
-		concept KeyValueCallback = Callback<Fn, std::string_view, ast::NodeCPtr>;
-
-		template<typename Fn, typename Map>
-		concept MapKeyValueCallback = Callback<Fn, Map const&, std::string_view, ast::NodeCPtr>;
-
 		template<typename Map>
 		constexpr static MapKeyValueCallback<Map> auto ignore_map(KeyValueCallback auto&& callback) {
 			return [default_callback = MOV(callback)](
 				Map const& key_map,
 				std::string_view key,
-				ast::NodeCPtr value
+				ovdl::v2script::ast::Node const* value
 			) mutable -> bool {
 				return default_callback(key, value);
 			};
@@ -110,29 +82,25 @@ using namespace std::string_view_literals;
 		template<typename Fn>
 		concept LengthCallback = Functor<Fn, std::size_t, std::size_t>;
 
-		template<typename... Args>
-		using callback_t = fu2::function_base<true, true, fu2::capacity_default, false, false, bool(Args...)>;
-
-		using node_callback_t = callback_t<ast::NodeCPtr>;
-		constexpr bool success_callback(ast::NodeCPtr) {
+		constexpr bool success_callback(ovdl::v2script::ast::Node const*) {
 			return true;
 		}
 
-		using key_value_callback_t = callback_t<std::string_view, ast::NodeCPtr>;
-		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) {
+		using key_value_callback_t = NodeTools::callback_t<std::string_view, ovdl::v2script::ast::Node const*>;
+		constexpr bool key_value_success_callback(std::string_view, ovdl::v2script::ast::Node const*) {
 			return true;
 		}
-		inline bool key_value_warn_callback(std::string_view key, ast::NodeCPtr) {
+		inline bool key_value_warn_callback(std::string_view key, ovdl::v2script::ast::Node const*) {
 			spdlog::warn_s("Invalid dictionary key: {}", key);
 			return true;
 		}
-		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
+		inline bool key_value_invalid_callback(std::string_view key, ovdl::v2script::ast::Node const*) {
 			spdlog::error_s("Invalid dictionary key: {}", key);
 			return false;
 		}
 
 		template<derived_ordered_map Map>
-		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
+		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ovdl::v2script::ast::Node const*) {
 			spdlog::error_s(
 				"Invalid dictionary key \"{}\". Valid values are [{}]",
 				key, string_join(key_map)
@@ -141,7 +109,7 @@ using namespace std::string_view_literals;
 		}
 
 		template<derived_ordered_map Map>
-		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
+		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ovdl::v2script::ast::Node const*) {
 			spdlog::warn_s(
 				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
 				key, string_join(key_map)
@@ -149,18 +117,18 @@ using namespace std::string_view_literals;
 			return true;
 		}
 
-		node_callback_t expect_identifier(callback_t<std::string_view> callback);
-		node_callback_t expect_string(callback_t<std::string_view> callback, bool allow_empty = false);
-		node_callback_t expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty = false);
+		NodeTools::node_callback_t expect_identifier(NodeTools::callback_t<std::string_view> callback);
+		NodeTools::node_callback_t expect_string(NodeTools::callback_t<std::string_view> callback, bool allow_empty = false);
+		NodeTools::node_callback_t expect_identifier_or_string(NodeTools::callback_t<std::string_view> callback, bool allow_empty = false);
 
-		node_callback_t expect_bool(callback_t<bool> callback);
-		node_callback_t expect_int_bool(callback_t<bool> callback);
+		NodeTools::node_callback_t expect_bool(NodeTools::callback_t<bool> callback);
+		NodeTools::node_callback_t expect_int_bool(NodeTools::callback_t<bool> callback);
 
-		node_callback_t expect_int64(callback_t<int64_t> callback, int base = 10);
-		node_callback_t expect_uint64(callback_t<uint64_t> callback, int base = 10);
+		NodeTools::node_callback_t expect_int64(NodeTools::callback_t<int64_t> callback, int base = 10);
+		NodeTools::node_callback_t expect_uint64(NodeTools::callback_t<uint64_t> callback, int base = 10);
 
 		template<std::signed_integral T>
-		NodeCallback auto expect_int(callback_t<T>& callback, int base = 10) {
+		NodeCallback auto expect_int(NodeTools::callback_t<T>& callback, int base = 10) {
 			return expect_int64([callback](int64_t val) mutable -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val
 					&& val <= static_cast<int64_t>(std::numeric_limits<T>::max())
@@ -177,12 +145,12 @@ using namespace std::string_view_literals;
 			}, base);
 		}
 		template<std::signed_integral T>
-		NodeCallback auto expect_int(callback_t<T>&& callback, int base = 10) {
+		NodeCallback auto expect_int(NodeTools::callback_t<T>&& callback, int base = 10) {
 			return expect_int(callback, base);
 		}
 
 		template<std::integral T>
-		NodeCallback auto expect_uint(callback_t<T>& callback, int base = 10) {
+		NodeCallback auto expect_uint(NodeTools::callback_t<T>& callback, int base = 10) {
 			return expect_uint64([callback](uint64_t val) mutable -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
@@ -195,12 +163,12 @@ using namespace std::string_view_literals;
 			}, base);
 		}
 		template<std::integral T>
-		NodeCallback auto expect_uint(callback_t<T>&& callback, int base = 10) {
+		NodeCallback auto expect_uint(NodeTools::callback_t<T>&& callback, int base = 10) {
 			return expect_uint(callback, base);
 		}
 
 		template<derived_from_specialization_of<type_safe::strong_typedef> T, typename AsT = type_safe::underlying_type<T>>
-		NodeCallback auto expect_strong_typedef(callback_t<T>& callback, int base = 10) {
+		NodeCallback auto expect_strong_typedef(NodeTools::callback_t<T>& callback, int base = 10) {
 			if constexpr (std::unsigned_integral<AsT>) {
 				return expect_uint64(
 					[callback](uint64_t val) mutable -> bool {
@@ -234,64 +202,64 @@ using namespace std::string_view_literals;
 			}
 		}
 		template<derived_from_specialization_of<type_safe::strong_typedef> T, typename AsT = type_safe::underlying_type<T>>
-		NodeCallback auto expect_strong_typedef(callback_t<T>&& callback, int base = 10) {
+		NodeCallback auto expect_strong_typedef(NodeTools::callback_t<T>&& callback, int base = 10) {
 			return expect_strong_typedef<T, AsT>(callback, base);
 		}
 
 		template<derived_from_specialization_of<type_safe::strong_typedef> T>
 		requires std::unsigned_integral<type_safe::underlying_type<T>>
-		NodeCallback auto expect_index(callback_t<T>& callback, int base = 10) {
+		NodeCallback auto expect_index(NodeTools::callback_t<T>& callback, int base = 10) {
 			return expect_strong_typedef<T>(callback, base);
 		}
 		template<derived_from_specialization_of<type_safe::strong_typedef> T>
 		requires std::unsigned_integral<type_safe::underlying_type<T>>
-		NodeCallback auto expect_index(callback_t<T>&& callback, int base = 10) {
+		NodeCallback auto expect_index(NodeTools::callback_t<T>&& callback, int base = 10) {
 			return expect_index(callback, base);
 		}
 
-		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
-		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
+		NodeTools::callback_t<std::string_view> expect_fixed_point_str(NodeTools::callback_t<fixed_point_t> callback);
+		NodeTools::node_callback_t expect_fixed_point(NodeTools::callback_t<fixed_point_t> callback);
 		/* Expect a list of 3 base 10 values, each either in the range [0, 1] or (1, 255], representing RGB components. */
-		node_callback_t expect_colour(callback_t<colour_t> callback);
+		NodeTools::node_callback_t expect_colour(NodeTools::callback_t<colour_t> callback);
 		/* Expect a hexadecimal value representing a colour in ARGB format. */
-		node_callback_t expect_colour_hex(callback_t<colour_argb_t> callback);
+		NodeTools::node_callback_t expect_colour_hex(NodeTools::callback_t<colour_argb_t> callback);
 
-		node_callback_t expect_text_format(callback_t<text_format_t> callback);
+		NodeTools::node_callback_t expect_text_format(NodeTools::callback_t<text_format_t> callback);
 
-		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
-		node_callback_t expect_date(callback_t<Date> callback);
-		node_callback_t expect_date_string(callback_t<Date> callback);
-		node_callback_t expect_date_identifier_or_string(callback_t<Date> callback);
-		node_callback_t expect_years(callback_t<Timespan> callback);
-		node_callback_t expect_months(callback_t<Timespan> callback);
-		node_callback_t expect_days(callback_t<Timespan> callback);
+		NodeTools::callback_t<std::string_view> expect_date_str(NodeTools::callback_t<Date> callback);
+		NodeTools::node_callback_t expect_date(NodeTools::callback_t<Date> callback);
+		NodeTools::node_callback_t expect_date_string(NodeTools::callback_t<Date> callback);
+		NodeTools::node_callback_t expect_date_identifier_or_string(NodeTools::callback_t<Date> callback);
+		NodeTools::node_callback_t expect_years(NodeTools::callback_t<Timespan> callback);
+		NodeTools::node_callback_t expect_months(NodeTools::callback_t<Timespan> callback);
+		NodeTools::node_callback_t expect_days(NodeTools::callback_t<Timespan> callback);
 
-		node_callback_t expect_ivec2(callback_t<ivec2_t> callback);
-		node_callback_t expect_fvec2(callback_t<fvec2_t> callback);
-		node_callback_t expect_fvec3(callback_t<fvec3_t> callback);
-		node_callback_t expect_fvec4(callback_t<fvec4_t> callback);
-		node_callback_t expect_assign(key_value_callback_t callback);
+		NodeTools::node_callback_t expect_ivec2(NodeTools::callback_t<ivec2_t> callback);
+		NodeTools::node_callback_t expect_fvec2(NodeTools::callback_t<fvec2_t> callback);
+		NodeTools::node_callback_t expect_fvec3(NodeTools::callback_t<fvec3_t> callback);
+		NodeTools::node_callback_t expect_fvec4(NodeTools::callback_t<fvec4_t> callback);
+		NodeTools::node_callback_t expect_assign(key_value_callback_t callback);
 
 		using length_callback_t = fu2::function<size_t(size_t)>;
 		constexpr size_t default_length_callback(size_t size) {
 			return size;
 		};
 
-		node_callback_t expect_list_and_length(length_callback_t length_callback, node_callback_t callback);
-		node_callback_t expect_list_of_length(size_t length, node_callback_t callback);
-		node_callback_t expect_list(node_callback_t callback);
-		node_callback_t expect_length(callback_t<size_t> callback);
+		NodeTools::node_callback_t expect_list_and_length(length_callback_t length_callback, NodeTools::node_callback_t callback);
+		NodeTools::node_callback_t expect_list_of_length(size_t length, NodeTools::node_callback_t callback);
+		NodeTools::node_callback_t expect_list(NodeTools::node_callback_t callback);
+		NodeTools::node_callback_t expect_length(NodeTools::callback_t<size_t> callback);
 
-		node_callback_t expect_key(
-			ovdl::symbol<char> key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
+		NodeTools::node_callback_t expect_key(
+			ovdl::symbol<char> key, NodeTools::node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
 		);
 
-		node_callback_t expect_key(
-			std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
+		NodeTools::node_callback_t expect_key(
+			std::string_view key, NodeTools::node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
 		);
 
-		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
-		node_callback_t expect_dictionary(key_value_callback_t callback);
+		NodeTools::node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
+		NodeTools::node_callback_t expect_dictionary(key_value_callback_t callback);
 
 		struct dictionary_entry_t {
 			enum class expected_count_t : uint8_t {
@@ -303,10 +271,10 @@ using namespace std::string_view_literals;
 				ZERO_OR_MORE = _CAN_REPEAT,
 				ONE_OR_MORE = _MUST_APPEAR | _CAN_REPEAT
 			} expected_count;
-			node_callback_t callback;
+			NodeTools::node_callback_t callback;
 			size_t count = 0;
 
-			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t&& new_callback)
+			dictionary_entry_t(expected_count_t new_expected_count, NodeTools::node_callback_t&& new_callback)
 				: expected_count { new_expected_count }, callback { MOV(new_callback) } {}
 
 			constexpr bool must_appear() const {
@@ -350,7 +318,7 @@ using namespace std::string_view_literals;
 		KeyValueCallback auto dictionary_keys_callback(
 			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback
 		) {
-			return [&key_map, default_callback = FWD(default_callback)](std::string_view key, ast::NodeCPtr value) mutable -> bool {
+			return [&key_map, default_callback = FWD(default_callback)](std::string_view key, ovdl::v2script::ast::Node const* value) mutable -> bool {
 				typename std::remove_reference_t<Map>::iterator it = key_map.find(key);
 				if (it == key_map.end()) {
 					return default_callback(key_map, key, value);
@@ -403,7 +371,7 @@ using namespace std::string_view_literals;
 			Map&& key_map, LengthCallback auto&& length_callback, MapKeyValueCallback<Map> auto&& default_callback
 		) {
 			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback), key_map = MOV(key_map)](
-				ast::NodeCPtr node
+				ovdl::v2script::ast::Node const* node
 			) mutable -> bool {
 				bool ret = expect_dictionary_and_length(
 					FWD(length_callback), dictionary_keys_callback(key_map, FWD(default_callback))
@@ -569,7 +537,7 @@ using namespace std::string_view_literals;
 			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), FWD(args)...);
 		}
 
-		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);
+		NodeTools::node_callback_t name_list_callback(NodeTools::callback_t<memory::vector<memory::string>&&> callback);
 
 		template<typename T, string_map_case Case>
 		Callback<std::string_view> auto expect_mapped_string(
@@ -599,7 +567,7 @@ using namespace std::string_view_literals;
 
 		template<typename T>
 		requires std::is_integral_v<T> || std::is_enum_v<T>
-		callback_t<T> assign_variable_callback_cast(auto& var) {
+		NodeTools::callback_t<T> assign_variable_callback_cast(auto& var) {
 			return [&var](T val) -> bool {
 				var = val;
 				return true;
@@ -643,7 +611,7 @@ using namespace std::string_view_literals;
 			};
 		}
 
-		callback_t<std::string_view> assign_variable_callback_string(memory::string& var);
+		NodeTools::callback_t<std::string_view> assign_variable_callback_string(memory::string& var);
 
 		template<typename T>
 		Callback<T&&> auto move_variable_callback(T& var) {
@@ -665,7 +633,7 @@ using namespace std::string_view_literals;
 		template<typename T>
 		requires requires(T& t) { t++; }
 		KeyValueCallback auto increment_callback(T& var) {
-			return [&var](std::string_view, ast::NodeCPtr) -> bool {
+			return [&var](std::string_view, ovdl::v2script::ast::Node const*) -> bool {
 				var++;
 				return true;
 			};
@@ -732,7 +700,7 @@ using namespace std::string_view_literals;
 			};
 		}
 
-		callback_t<std::string_view> vector_callback_string(memory::vector<memory::string>& vec);
+		NodeTools::callback_t<std::string_view> vector_callback_string(memory::vector<memory::string>& vec);
 
 		template<typename T, typename U, typename... SetArgs>
 		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {

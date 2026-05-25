@@ -11,7 +11,7 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/NodeCallbacks.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -70,7 +70,7 @@ namespace OpenVic {
 		void free_cache();
 
 	public:
-		constexpr Dataloader() {};
+		Dataloader();
 
 		/// @brief Searches for the Victoria 2 install directory
 		///

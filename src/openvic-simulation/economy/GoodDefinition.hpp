@@ -3,9 +3,9 @@
 #include <functional>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
@@ -50,24 +50,5 @@ namespace OpenVic {
 			bool new_counters_overseas_penalty
 		);
 		GoodDefinition(GoodDefinition&&) = default;
-	};
-
-	struct ModifierManager;
-
-	struct GoodDefinitionManager {
-	private:
-		IdentifierRegistry<GoodCategory> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(good_category, good_categories);
-		IdentifierRegistry<GoodDefinition> IDENTIFIER_REGISTRY(good_definition);
-
-	public:
-		bool add_good_category(std::string_view identifier, size_t expected_goods_in_category);
-
-		bool add_good_definition(
-			std::string_view identifier, colour_t colour, GoodCategory& category, fixed_point_t base_price,
-			bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
-		);
-
-		bool load_goods_file(ast::NodeCPtr root);
-		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

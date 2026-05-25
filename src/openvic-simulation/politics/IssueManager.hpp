@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/core/template/FunctionalConcepts.hpp"
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/politics/IssueGroup.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
@@ -19,17 +20,17 @@ namespace OpenVic {
 		IdentifierRegistry<ReformGroup> IDENTIFIER_REGISTRY(reform_group);
 		IdentifierRegistry<Reform> IDENTIFIER_REGISTRY(reform);
 
-		bool _load_party_policy_group(size_t& expected_party_policies, std::string_view identifier, ast::NodeCPtr node);
+		bool _load_party_policy_group(size_t& expected_party_policies, std::string_view identifier, ovdl::v2script::ast::Node const* node);
 		bool _load_party_policy(
 			ModifierManager const& modifier_manager, std::string_view identifier,
-			PartyPolicyGroup& party_policy_group, ast::NodeCPtr node
+			PartyPolicyGroup& party_policy_group, ovdl::v2script::ast::Node const* node
 		);
 		bool _load_reform_group(
-			size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
+			size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ovdl::v2script::ast::Node const* node
 		);
 		bool _load_reform(
 			ModifierManager const& modifier_manager, size_t ordinal,
-			std::string_view identifier, ReformGroup& reform_group, ast::NodeCPtr node
+			std::string_view identifier, ReformGroup& reform_group, ovdl::v2script::ast::Node const* node
 		);
 
 	public:
@@ -54,7 +55,7 @@ namespace OpenVic {
 			return {};
 		}
 		constexpr NodeTools::NodeCallback auto expect_base_issue_group_identifier(
-			NodeTools::Callback<issue_group_t> auto callback, bool warn = false
+			Callback<issue_group_t> auto callback, bool warn = false
 		) const {
 			return NodeTools::expect_identifier(
 				[this, callback, warn](std::string_view identifier) -> bool {
@@ -91,7 +92,7 @@ namespace OpenVic {
 			size_t ordinal, fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
 			ConditionScript&& allow, ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 		);
-		bool load_issues_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_issues_file(ModifierManager const& modifier_manager, ovdl::v2script::ast::Node const* root);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

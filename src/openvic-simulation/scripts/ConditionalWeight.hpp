@@ -3,7 +3,7 @@
 #include <variant>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
