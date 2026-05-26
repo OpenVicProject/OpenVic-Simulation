@@ -11,6 +11,7 @@
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_Search.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
 #if defined(__APPLE__)
@@ -38,21 +39,21 @@ CountryInstanceManager::CountryInstanceManager(
 		regiment_types
 	},
 	country_instances {
-		country_index_t(new_country_definition_manager.get_country_definition_count()),
+		new_country_definition_manager.get_country_definitions().size(),
 		[
 			this,
 			&new_country_definition_manager,
 			&country_instance_deps
 		](const country_index_t country_index)->auto{
 			return std::make_tuple(
-				std::ref(*new_country_definition_manager.get_country_definition_by_index(country_index)),
+				std::ref(new_country_definition_manager.get_country_definitions()[country_index]),
 				std::ref(shared_country_values),
 				std::ref(country_instance_deps)
 			);
 		}
 	}
 {
-	assert(new_country_definition_manager.country_definitions_are_locked());
+	assert(new_country_definition_manager.get_country_definitions().is_locked());
 	great_powers.reserve(new_country_defines.get_great_power_rank());
 	secondary_powers.reserve(new_country_defines.get_max_secondary_power_count());
 }
@@ -186,17 +187,20 @@ CountryDefinition const* find_country_definition_by_identifier(
 	CountryDefinitionManager const& country_definition_manager,
 	std::string_view identifier
 ) {
-	return country_definition_manager.get_country_definition_by_identifier(identifier);
+	const auto it = find(country_definition_manager.get_country_definitions(), identifier);
+	return it == country_definition_manager.get_country_definitions().end()
+		? nullptr
+		: &*it;
 }
 
 CountryInstance* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) {
-	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
+	CountryDefinition const* country_definition = find_country_definition_by_identifier(country_definition_manager, identifier);
 	return country_definition == nullptr
 		? nullptr
 		: &(country_instances[country_definition->index]);
 }
 CountryInstance const* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) const {
-	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
+	CountryDefinition const* country_definition = find_country_definition_by_identifier(country_definition_manager, identifier);
 	return country_definition == nullptr
 		? nullptr
 		: &(country_instances[country_definition->index]);

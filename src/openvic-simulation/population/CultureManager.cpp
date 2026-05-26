@@ -10,7 +10,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -116,21 +116,23 @@ bool CultureManager::_load_culture_group(
 	std::string_view leader {};
 	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
 	bool is_overseas = true;
-	CountryDefinition const* union_country_ptr = nullptr;
+	std::optional<country_index_t> union_country;
 
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
 		"leader", ZERO_OR_ONE, expect_identifier(assign_variable_callback(leader)), // acts like ONE_EXACTLY, but vic2 doesn't complain and loads anyway if not present, for now I just commuted the error to a warning in the add function and fudged a default leader from the first defined culture group if it exists - brickpi
 		"unit", ZERO_OR_ONE,
 			expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
-		"union", ZERO_OR_ONE,
-			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(union_country_ptr)),
+		"union", ZERO_OR_ONE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
+			assign_variable_callback_opt(union_country)
+		),
 		"is_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_overseas))
 	)(culture_group_node);
-	ret &= add_culture_group(culture_group_key, leader, unit_graphical_culture_type, is_overseas,
-		union_country_ptr == nullptr
-			? std::optional<country_index_t>{}
-			: std::optional<country_index_t>{union_country_ptr->index}
+	ret &= add_culture_group(
+		culture_group_key, leader,
+		unit_graphical_culture_type, is_overseas,
+		union_country
 	);
 	return ret;
 }
@@ -142,23 +144,22 @@ bool CultureManager::_load_culture(
 	colour_t colour = colour_t::null();
 	memory::vector<memory::string> first_names {}, last_names {};
 	fixed_point_t radicalism = 0;
-	CountryDefinition const* primary_country_ptr = nullptr;
+	std::optional<country_index_t> primary_country;
 
 	bool ret = expect_dictionary_keys(
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"first_names", ONE_EXACTLY, name_list_callback(move_variable_callback(first_names)),
 		"last_names", ONE_EXACTLY, name_list_callback(move_variable_callback(last_names)),
 		"radicalism", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(radicalism)),
-		"primary", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
-			assign_variable_callback_pointer(primary_country_ptr),
-			false
+		"primary", ZERO_OR_ONE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
+			assign_variable_callback_opt(primary_country)
 		)
 	)(culture_node);
 	ret &= add_culture(
-		culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism,
-		primary_country_ptr == nullptr
-			? std::nullopt
-			: std::optional<country_index_t>{primary_country_ptr->index}
+		culture_key, colour, culture_group,
+		std::move(first_names), std::move(last_names),
+		radicalism, primary_country
 	);
 	return ret;
 }

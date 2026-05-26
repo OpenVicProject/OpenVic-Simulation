@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/Node_forwarded.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -15,10 +16,10 @@ namespace OpenVic {
 
 	struct CountryDefinitionManager {
 	private:
-		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
+		OwningRegistry<CountryDefinition, country_index_t> PROPERTY(country_definitions);
 
 	public:
-		constexpr CountryDefinitionManager() {}
+		constexpr CountryDefinitionManager() : country_definitions(create_empty) {}
 
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,

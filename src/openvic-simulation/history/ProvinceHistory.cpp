@@ -8,6 +8,7 @@
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/types/registries/OwningRegistry_NodeTools.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -51,8 +52,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	};
 
 	const auto set_core_instruction = [&entry](bool add) {
-		return [&entry, add](CountryDefinition const& country_definition) -> bool {
-			const country_index_t country_index = country_definition.index;
+		return [&entry, add](const country_index_t country_index) -> bool {
 			const auto it = entry.cores.find(country_index);
 			if (it == entry.cores.end()) {
 				// No current core instruction
@@ -133,22 +133,20 @@ bool ProvinceHistoryMap::_load_history_entry(
 
 			return _load_history_sub_entry_callback(definition_manager, entry.date, value, key_map, key, value);
 		},
-		"owner", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
-			[&entry](CountryDefinition const& c) -> bool {
-				entry.owner = c.index;
-				return true;
-			}
+		"owner", ZERO_OR_ONE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
+			assign_variable_callback_opt(entry.owner, true)
 		),
-		"controller", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
-			[&entry](CountryDefinition const& c) -> bool {
-				entry.controller = c.index;
-				return true;
-			}
+		"controller", ZERO_OR_ONE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
+			assign_variable_callback_opt(entry.controller, true)
 		),
-		"add_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
+		"add_core", ZERO_OR_MORE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
 			set_core_instruction(true)
 		),
-		"remove_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
+		"remove_core", ZERO_OR_MORE, expect_index<IdentifierSyntax::Identifier>(
+			country_definition_manager.get_country_definitions(),
 			set_core_instruction(false)
 		),
 		"colonial", ZERO_OR_ONE,

@@ -1638,7 +1638,9 @@ void CountryInstance::_update_military() {
 			fixed_point_t::parse_raw(regular_army_size),
 			fixed_point_t::parse_raw(
 				7 * (
-					1 + unit_type_manager.get_regiment_type_count()
+					1 + type_safe::get(
+						unit_type_manager.get_regiment_types().size()
+					)
 				)
 			)
 		)
