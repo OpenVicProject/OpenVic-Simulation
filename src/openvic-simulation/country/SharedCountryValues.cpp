@@ -1,32 +1,38 @@
 #include "SharedCountryValues.hpp"
 
 #include "openvic-simulation/defines/PopsDefines.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp" // IWYU pragma: keep for BuildingType size
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/GoodInstanceManager.hpp"
 #include "openvic-simulation/military/UnitType.hpp" // IWYU pragma: keep for RegimentType size
+#include "openvic-simulation/politics/Reform.hpp" // IWYU pragma: keep for Reform size
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/population/PopType.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/research/Invention.hpp" // IWYU pragma: keep for Invention size
+#include "openvic-simulation/research/Technology.hpp" // IWYU pragma: keep for Technology size
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 
-SharedCountryValues::SharedCountryValues(
-	PopsDefines const& new_pop_defines,
-	GoodInstanceManager const& new_good_instance_manager,
-	decltype(shared_pop_type_values)::keys_span_type pop_type_keys,
-	TypedSpan<regiment_type_index_t, const RegimentType> new_regiment_types
-) : pop_defines { new_pop_defines },
-	good_instance_manager { new_good_instance_manager },
-	shared_pop_type_values { pop_type_keys },
-	regiment_types { new_regiment_types }
-	{}
-
-SharedPopTypeValues& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) {
-	return shared_pop_type_values.at(pop_type);
-}
+SharedCountryValues::SharedCountryValues(SharedCountryValuesDeps const& deps)
+  : _shared_pop_type_values {
+		deps.pop_types.size(),
+		[pop_types = deps.pop_types](pop_type_index_t pop_type_index)->PopType const& {
+			return pop_types[pop_type_index];
+		}
+	},
+	good_instance_manager { deps.good_instance_manager },
+	pop_defines { deps.pop_defines },
+	building_types { deps.building_types },
+	inventions { deps.inventions },
+	pop_types { deps.pop_types },
+	reforms { deps.reforms },
+	regiment_types { deps.regiment_types },
+	technologies { deps.technologies },
+	shared_pop_type_values { _shared_pop_type_values } {}
 
 void SharedCountryValues::update_costs() {
-	for (SharedPopTypeValues& value : shared_pop_type_values.get_values()) {
+	for (SharedPopTypeValues& value : shared_pop_type_values) {
 		value.update_costs(pop_defines, good_instance_manager);
 	}
 }

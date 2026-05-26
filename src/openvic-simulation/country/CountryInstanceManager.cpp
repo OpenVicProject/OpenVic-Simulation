@@ -13,30 +13,18 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
-#if defined(__APPLE__)
-#include "openvic-simulation/military/UnitType.hpp"
-#endif
-
 using namespace OpenVic;
 
 CountryInstanceManager::CountryInstanceManager(
 	CountryDefines const& new_country_defines,
 	CountryDefinitionManager const& new_country_definition_manager,
 	CountryInstanceDeps const& country_instance_deps,
-	GoodInstanceManager const& new_good_instance_manager,
-	PopsDefines const& new_pop_defines,
-	forwardable_span<const PopType> pop_type_keys,
-	TypedSpan<regiment_type_index_t, const RegimentType> regiment_types,
+	SharedCountryValuesDeps const& shared_country_deps,
 	ThreadPool& new_thread_pool
 ) : thread_pool { new_thread_pool },
   	country_definition_manager { new_country_definition_manager },
 	country_defines { new_country_defines },
-	shared_country_values {
-		new_pop_defines,
-		new_good_instance_manager,
-		pop_type_keys,
-		regiment_types
-	},
+	shared_country_values { shared_country_deps },
 	country_instances {
 		country_index_t(new_country_definition_manager.get_country_definition_count()),
 		[

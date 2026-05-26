@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopType.hpp" // IWYU pragma: keep for .index
 
 using namespace OpenVic;
 
@@ -11,6 +12,6 @@ Employee::Employee(Pop& new_pop, const pop_size_t new_size)
 	{}
 
 fixed_point_t Employee::update_minimum_wage(CountryInstance& country_to_report_economy) {
-	const fixed_point_t minimum_wage_base = country_to_report_economy.calculate_minimum_wage_base(pop.get_type());
+	const fixed_point_t minimum_wage_base = country_to_report_economy.calculate_minimum_wage_base(pop.get_type().index);
 	return minimum_wage_cached = minimum_wage_base * size / Pop::size_denominator;
 }

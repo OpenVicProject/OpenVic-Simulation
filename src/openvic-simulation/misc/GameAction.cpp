@@ -1,11 +1,41 @@
 #include "GameAction.hpp"
 
+#include <string_view>
+
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
+
+#define VALIDATE_INDEX(index_t, count) \
+	bool validate(InstanceManager const& instance_manager, index_t index, std::string_view action_name) { \
+		if (OV_unlikely(index < index_t{} || index >= index_t(count))) { \
+			spdlog::error_s("{} called with invalid {}: {}", action_name, OpenVic::type_name<index_t>(), index); \
+			return false; \
+		} \
+		return true; \
+	}
+
+VALIDATE_INDEX(country_index_t, instance_manager.get_country_instance_manager().get_country_instances().size())
+VALIDATE_INDEX(good_index_t, instance_manager.get_good_instance_manager().get_good_instances().size())
+VALIDATE_INDEX(province_index_t, instance_manager.get_map_instance().get_province_instances().size())
+VALIDATE_INDEX(regiment_type_index_t, instance_manager.definition_manager.get_military_manager().get_unit_type_manager().get_regiment_type_count())
+VALIDATE_INDEX(strata_index_t, instance_manager.definition_manager.get_pop_manager().get_strata_count())
+VALIDATE_INDEX(technology_index_t, instance_manager.definition_manager.get_research_manager().get_technology_manager().get_technology_count())
+	
+#undef VALIDATE_INDEX
+
+#define VALIDATE_OR_FAIL(x) \
+	if (OV_unlikely(!validate(instance_manager, x, OpenVic::type_name<decltype(argument)>()))) { \
+		return false; \
+	}
+
+#define GET_COUNTRY_INSTANCE_OR_FAIL(country_index) \
+	VALIDATE_OR_FAIL(country_index) \
+	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 bool GameActionManager::VariantVisitor::operator() (none_argument_t const& argument) const {
 	return false;
@@ -31,7 +61,7 @@ bool GameActionManager::VariantVisitor::operator() (set_speed_argument_t const& 
 
 bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& argument) const {
 	const auto [country_index, new_is_ai] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	const bool old_ai = country.is_ai();
 	country.set_ai(new_is_ai);
@@ -41,16 +71,11 @@ bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& arg
 // Production
 bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
 	const auto [country_index, province_index, province_building_index] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
+	VALIDATE_OR_FAIL(province_index);
 	
-	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
-
-	if (OV_unlikely(province == nullptr)) {
-		spdlog::error_s("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid province index: {}", province_index);
-		return false;
-	}
-
-	return province->expand_building(
+	ProvinceInstance& province = *instance_manager.get_map_instance().get_province_instance_by_index(province_index);
+	return province.expand_building(
 		instance_manager.definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		province_building_index,
 		country
@@ -60,22 +85,16 @@ bool GameActionManager::VariantVisitor::operator() (expand_province_building_arg
 // Budget
 bool GameActionManager::VariantVisitor::operator() (set_strata_tax_argument_t const& argument) const {
 	const auto [country_index, strata_index, tax_rate] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
+	VALIDATE_OR_FAIL(strata_index);
 
-	Strata const* strata = instance_manager.definition_manager.get_pop_manager().get_strata_by_index(strata_index);
-
-	if (OV_unlikely(strata == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid strata index: {}", strata_index);
-		return false;
-	}
-
-	country.set_strata_tax_rate_slider_value(*strata, tax_rate);
+	country.set_strata_tax_rate_slider_value(strata_index, tax_rate);
 	return false;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_army_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_army_spending_slider_value(spending);
 	return false;
@@ -83,7 +102,7 @@ bool GameActionManager::VariantVisitor::operator() (set_army_spending_argument_t
 
 bool GameActionManager::VariantVisitor::operator() (set_navy_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_navy_spending_slider_value(spending);
 	return false;
@@ -91,7 +110,7 @@ bool GameActionManager::VariantVisitor::operator() (set_navy_spending_argument_t
 
 bool GameActionManager::VariantVisitor::operator() (set_construction_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_construction_spending_slider_value(spending);
 	return false;
@@ -99,7 +118,7 @@ bool GameActionManager::VariantVisitor::operator() (set_construction_spending_ar
 
 bool GameActionManager::VariantVisitor::operator() (set_education_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_education_spending_slider_value(spending);
 	return false;
@@ -107,7 +126,7 @@ bool GameActionManager::VariantVisitor::operator() (set_education_spending_argum
 
 bool GameActionManager::VariantVisitor::operator() (set_administration_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_administration_spending_slider_value(spending);
 	return false;
@@ -115,7 +134,7 @@ bool GameActionManager::VariantVisitor::operator() (set_administration_spending_
 
 bool GameActionManager::VariantVisitor::operator() (set_social_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_social_spending_slider_value(spending);
 	return false;
@@ -123,7 +142,7 @@ bool GameActionManager::VariantVisitor::operator() (set_social_spending_argument
 
 bool GameActionManager::VariantVisitor::operator() (set_military_spending_argument_t const& argument) const {
 	const auto [country_index, spending] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_military_spending_slider_value(spending);
 	return false;
@@ -131,7 +150,7 @@ bool GameActionManager::VariantVisitor::operator() (set_military_spending_argume
 
 bool GameActionManager::VariantVisitor::operator() (set_tariff_rate_argument_t const& argument) const {
 	const auto [country_index, tariff_rate] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	country.set_tariff_rate_slider_value(tariff_rate);
 	return false;
@@ -140,22 +159,11 @@ bool GameActionManager::VariantVisitor::operator() (set_tariff_rate_argument_t c
 // Technology
 bool GameActionManager::VariantVisitor::operator() (start_research_argument_t const& argument) const {
 	const auto [country_index, technology_index] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
+	VALIDATE_OR_FAIL(technology_index);
 
-	Technology const* technology = instance_manager.definition_manager
-		.get_research_manager()
-		.get_technology_manager()
-		.get_technology_by_index(technology_index);
-
-	if (OV_unlikely(technology == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid technology index: {}", technology_index);
-		return false;
-	}
-
-	Technology const* old_research = country.get_current_research_untracked();
-
-	country.start_research(*technology, instance_manager.get_today());
-
+	std::optional<technology_index_t> old_research = country.get_current_research_untracked();
+	country.start_research(technology_index, instance_manager.get_today());
 	return old_research != country.get_current_research_untracked();
 }
 
@@ -166,41 +174,26 @@ bool GameActionManager::VariantVisitor::operator() (start_research_argument_t co
 // Trade
 bool GameActionManager::VariantVisitor::operator() (set_good_automated_argument_t const& argument) const {
 	const auto [country_index, good_index, new_is_automated] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
+	VALIDATE_OR_FAIL(good_index);
 
-	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
-
-	if (OV_unlikely(good == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_GOOD_AUTOMATED called with invalid good index: {}", good_index);
-		return false;
-	}
-
-	CountryInstance::good_data_t& good_data = country.get_good_data(*good);
-
+	CountryInstance::good_data_t& good_data = country.get_goods_data()[good_index];
 	const bool old_automated = good_data.is_automated;
-
 	good_data.is_automated = new_is_automated;
-
 	return old_automated != good_data.is_automated;
 }
 
 bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argument_t const& argument) const {
 	const auto [country_index, good_index, new_is_selling, new_cutoff] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
+	VALIDATE_OR_FAIL(good_index);
 
-	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
-
-	if (OV_unlikely(good == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid good index: {}", good_index);
-		return false;
-	}
-
-	CountryInstance::good_data_t& good_data = country.get_good_data(*good);
+	CountryInstance::good_data_t& good_data = country.get_goods_data()[good_index];
 
 	if (OV_unlikely(good_data.is_automated)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_GOOD_TRADE_ORDER called for automated good! Country: {}, good: {}",
-			country, *good
+			country, good_index
 		);
 		return false;
 	}
@@ -215,7 +208,7 @@ bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argumen
 		spdlog::error_s(
 			"GAME_ACTION_SET_GOOD_TRADE_ORDER called with negative stockpile cutoff {} for {} good \"{}\" in country \"{}\". Setting to 0.",
 			good_data.stockpile_cutoff,
-			*good,
+			good_index,
 			good_data.is_selling ? "selling" : "buying",
 			country
 		);
@@ -230,7 +223,7 @@ bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argumen
 // Military
 bool GameActionManager::VariantVisitor::operator() (create_leader_argument_t const& argument) const {
 	const auto [country_index, unit_branch] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	if (country.get_create_leader_count() < 1) {
 		spdlog::error_s(
@@ -266,7 +259,7 @@ bool GameActionManager::VariantVisitor::operator() (set_use_leader_argument_t co
 
 bool GameActionManager::VariantVisitor::operator() (set_auto_create_leaders_argument_t const& argument) const {
 	const auto [country_index, new_should_auto_create] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	const bool old_auto_create = country.get_auto_create_leaders();
 	country.set_auto_create_leaders(new_should_auto_create);
@@ -275,7 +268,7 @@ bool GameActionManager::VariantVisitor::operator() (set_auto_create_leaders_argu
 
 bool GameActionManager::VariantVisitor::operator() (set_auto_assign_leaders_argument_t const& argument) const {
 	const auto [country_index, new_should_auto_assign] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	const bool old_auto_assign = country.get_auto_assign_leaders();
 	country.set_auto_assign_leaders(new_should_auto_assign);
@@ -284,7 +277,7 @@ bool GameActionManager::VariantVisitor::operator() (set_auto_assign_leaders_argu
 
 bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t const& argument) const {
 	const auto [country_index, new_is_mobilised] = argument;
-	CountryInstance& country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+	GET_COUNTRY_INSTANCE_OR_FAIL(country_index);
 
 	const bool old_mobilise = country.is_mobilised();
 	country.set_mobilised(new_is_mobilised);
@@ -293,27 +286,14 @@ bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t cons
 
 bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_argument_t const& argument) const {
 	const auto [regiment_type_index, province_index, pop_id_in_province] = argument;
-	auto const& unit_type_manager = instance_manager.definition_manager
-		.get_military_manager()
-		.get_unit_type_manager();
-	if (OV_unlikely(regiment_type_index < regiment_type_index_t{}
-		|| regiment_type_index >= regiment_type_index_t(unit_type_manager.get_regiment_type_count()))
-	) {
-		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid regiment type index: {}", regiment_type_index);
-		return false;
-	}
+	VALIDATE_OR_FAIL(regiment_type_index);
+	VALIDATE_OR_FAIL(province_index);
 
-	RegimentType const& regiment_type = *unit_type_manager.get_regiment_type_by_index(regiment_type_index);
-
-	ProvinceInstance* province = instance_manager
+	ProvinceInstance& province = *instance_manager
 		.get_map_instance()
 		.get_province_instance_by_index(province_index);
-	if (OV_unlikely(province == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid province index: {}", province_index);
-		return false;
-	}
 
-	Pop* pop = province->find_pop_by_id(pop_id_in_province);
+	Pop* pop = province.find_pop_by_id(pop_id_in_province);
 	if (OV_unlikely(pop == nullptr)) {
 		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid pop_id_in_province: {}", pop_id_in_province);
 		return false;
@@ -325,3 +305,6 @@ bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_
 	//TODO actually instantiate a regiment in recruitment state
 	return false;
 }
+
+#undef VALIDATE_OR_FAIL
+#undef GET_COUNTRY_INSTANCE_OR_FAIL

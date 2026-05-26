@@ -5,7 +5,6 @@
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -17,10 +16,8 @@ namespace OpenVic {
 	struct CountryDefinitionManager;
 	struct CountryInstanceDeps;
 	struct CountryHistoryManager;
-	struct GoodInstanceManager;
 	struct InstanceManager;
-	struct PopsDefines;
-	struct PopType;
+	struct SharedCountryValuesDeps;
 	struct ThreadPool;
 
 	struct CountryInstanceManager {
@@ -47,10 +44,7 @@ namespace OpenVic {
 			CountryDefines const& new_country_defines,
 			CountryDefinitionManager const& new_country_definition_manager,
 			CountryInstanceDeps const& country_instance_deps,
-			GoodInstanceManager const& new_good_instance_manager,
-			PopsDefines const& new_pop_defines,
-			forwardable_span<const PopType> pop_type_keys,
-			TypedSpan<regiment_type_index_t, const RegimentType> regiment_types,
+			SharedCountryValuesDeps const& shared_country_deps,
 			ThreadPool& new_thread_pool
 		);
 
