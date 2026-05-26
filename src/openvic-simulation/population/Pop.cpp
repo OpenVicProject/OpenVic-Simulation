@@ -318,9 +318,9 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(get_type().strata).get_untracked();
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata()[get_type().strata.index].get_untracked();
 	const fixed_point_t tax = effective_tax_rate * income;
-	tax_collector_nullable->report_pop_income_tax(type, income, tax);
+	tax_collector_nullable->report_pop_income_tax(type.get().index, income, tax);
 	income -= tax;
 }
 
@@ -569,6 +569,7 @@ void Pop::pop_tick_without_cleanup(
 	yesterdays_import_value = 0;
 
 	PopType const& pop_type = type;
+	pop_type_index_t pop_type_index = pop_type.index;
 	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata()[pop_type.strata.index];
 	PopsDefines const& defines = shared_values.defines;
 	const fixed_point_t base_needs_scalar = (
@@ -590,7 +591,7 @@ void Pop::pop_tick_without_cleanup(
 					continue; \
 				} \
 				if (country_to_report_economy_nullable != nullptr) { \
-					country_to_report_economy_nullable->report_pop_need_demand(pop_type, good_index, max_quantity_to_buy); \
+					country_to_report_economy_nullable->report_pop_need_demand(pop_type_index, good_index, max_quantity_to_buy); \
 				} \
 				need_category##_needs_desired_quantity += max_quantity_to_buy; \
 				auto goods_to_sell_iterator = goods_to_sell.find(good_index); \
@@ -600,7 +601,7 @@ void Pop::pop_tick_without_cleanup(
 					max_quantity_to_buy -= own_produce_consumed; \
 					need_category##_needs_acquired_quantity += own_produce_consumed; \
 					if (country_to_report_economy_nullable != nullptr) { \
-						country_to_report_economy_nullable->report_pop_need_consumption(pop_type, good_index, own_produce_consumed); \
+						country_to_report_economy_nullable->report_pop_need_consumption(pop_type_index, good_index, own_produce_consumed); \
 					} \
 				} \
 				if (OV_likely(max_quantity_to_buy > 0)) { \
@@ -734,7 +735,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 			pop.need_category##_needs_acquired_quantity += consumed_quantity; \
 			quantity_left_to_consume -= consumed_quantity; \
 			if (get_country_to_report_economy_nullable != nullptr) { \
-				get_country_to_report_economy_nullable->report_pop_need_consumption(pop.type, good_index, consumed_quantity); \
+				get_country_to_report_economy_nullable->report_pop_need_consumption(pop.type.get().index, good_index, consumed_quantity); \
 			} \
 			const fixed_point_t expense = fp::mul_div( \
 				money_spent, \

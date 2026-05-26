@@ -99,7 +99,7 @@ bool BuildingType::can_be_built_in(
 		}
 	}
 
-	building_level_t const& unlocked_max_level = actor.get_building_type_unlock_levels(*this);
+	building_level_t const& unlocked_max_level = actor.get_building_type_unlock_levels()[index];
 	ModifierEffectCache::building_type_effects_t const& effects = modifier_effect_cache.get_building_type_effects(*this);
 	const fixed_point_t min_level_modifier = location.get_modifier_effect_value(*effects.get_min_level());
 	return fixed_point_t { type_safe::get(unlocked_max_level) }

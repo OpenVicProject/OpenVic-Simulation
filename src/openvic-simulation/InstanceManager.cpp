@@ -1,8 +1,10 @@
 #include "InstanceManager.hpp"
 
+#include "country/SharedCountryValuesDeps.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
+#include "openvic-simulation/country/SharedCountryValuesDeps.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadDeps.hpp"
@@ -32,7 +34,6 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache()
 	},
 	country_instance_deps {
-		new_definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		new_definition_manager.get_define_manager().get_country_defines(),
 		country_relation_manager,
 		new_definition_manager.get_crime_manager().get_crime_modifiers(),
@@ -65,12 +66,9 @@ InstanceManager::InstanceManager(
 				new_definition_manager.get_pop_manager().get_strata_count()
 			)
 		},
-		new_definition_manager.get_pop_manager().get_pop_types(),
 		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
-		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		new_definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
 		new_definition_manager.get_pop_manager().get_stratas(),
-		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		new_definition_manager.get_military_manager().get_unit_type_manager()
 	},
 	pops_aggregate_deps {
@@ -112,10 +110,16 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_country_defines(),
 		new_definition_manager.get_country_definition_manager(),
 		country_instance_deps,
-		good_instance_manager,
-		new_definition_manager.get_define_manager().get_pops_defines(),
-		new_definition_manager.get_pop_manager().get_pop_types(),
-		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+		SharedCountryValuesDeps {
+			good_instance_manager,
+			new_definition_manager.get_define_manager().get_pops_defines(),
+			new_definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
+			new_definition_manager.get_research_manager().get_invention_manager().get_inventions(),
+			new_definition_manager.get_pop_manager().get_pop_types(),
+			new_definition_manager.get_politics_manager().get_issue_manager().get_reforms(),
+			new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+			new_definition_manager.get_research_manager().get_technology_manager().get_technologies()
+		},
 		thread_pool
 	},
 	unit_instance_manager {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -30,33 +29,28 @@ namespace OpenVic {
 	struct PopType;
 	struct ReformGroup;
 	struct Strata;
-	struct Technology;
 	struct UnitTypeManager;
 
 	struct CountryInstanceDeps {
-		forwardable_span<const BuildingType> building_types;
 		CountryDefines const& country_defines;
 		CountryRelationManager& country_relations_manager;
-		forwardable_span<const Crime> crimes;
+		TypedSpan<crime_index_t, const Crime> crimes;
 		Date fallback_date_for_never_completing_research;
 		DiplomacyDefines const& diplomacy_defines;
 		EconomyDefines const& economy_defines;
-		forwardable_span<const Ideology> ideologies;
-		forwardable_span<const Invention> inventions;
+		TypedSpan<ideology_index_t, const Ideology> ideologies;
+		TypedSpan<invention_index_t, const Invention> inventions;
 		GameRulesManager const& game_rules_manager;
-		forwardable_span<const GoodInstance> good_instances;
+		TypedSpan<good_index_t, const GoodInstance> good_instances;
 		GoodInstanceManager& good_instance_manager;
-		forwardable_span<const GovernmentType> government_types;
+		TypedSpan<government_type_index_t, const GovernmentType> government_types;
 		MarketInstance& market_instance;
 		MilitaryDefines const& military_defines;
 		ModifierEffectCache const& modifier_effect_cache;
 		PopsAggregateDeps pops_aggregate_deps;
-		forwardable_span<const PopType> pop_types;
-		forwardable_span<const ReformGroup> reform_groups;
-		TypedSpan<regiment_type_index_t, const RegimentType> regiment_types;
+		TypedSpan<reform_group_index_t, const ReformGroup> reform_groups;
 		TypedSpan<ship_type_index_t, const ShipType> ship_types;
-		forwardable_span<const Strata> stratas;
-		forwardable_span<const Technology> technologies;
+		TypedSpan<strata_index_t, const Strata> stratas;
 		UnitTypeManager const& unit_type_manager;
 	};
 }

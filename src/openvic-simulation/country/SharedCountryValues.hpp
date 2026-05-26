@@ -1,22 +1,17 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
+#include "openvic-simulation/country/SharedCountryValuesDeps.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
-#if defined(__APPLE__)
-#include "openvic-simulation/military/UnitType.hpp"
-#endif
-
 namespace OpenVic {
-	struct CountryInstanceManager;
 	struct GoodInstanceManager;
 	struct PopsDefines;
-	struct PopType;
 	struct SharedCountryValues;
 
 	struct SharedPopTypeValues {
@@ -41,26 +36,28 @@ namespace OpenVic {
 		constexpr SharedPopTypeValues(PopType const& new_pop_type) : pop_type { new_pop_type } {};
 	};
 
+	struct CountryInstanceManager;
 	struct SharedCountryValues {
 		friend CountryInstanceManager;
 	private:
-		PopsDefines const& pop_defines;
 		GoodInstanceManager const& good_instance_manager;
-		OV_IFLATMAP_PROPERTY(PopType, SharedPopTypeValues, shared_pop_type_values);
+		PopsDefines const& pop_defines;
+		memory::FixedVector<SharedPopTypeValues, pop_type_index_t> _shared_pop_type_values;
 
 		void update_costs();
 
 	public:
+		TypedSpan<building_type_index_t, const BuildingType> building_types;
+		TypedSpan<invention_index_t, const Invention> inventions;
+		TypedSpan<pop_type_index_t, const PopType> pop_types;
+		TypedSpan<reform_index_t, const Reform> reforms;
 		TypedSpan<regiment_type_index_t, const RegimentType> regiment_types;
+		TypedSpan<technology_index_t, const Technology> technologies;
 
-		SharedPopTypeValues& get_shared_pop_type_values(PopType const& pop_type);
+		// mutable SharedPopTypeValues required
+		TypedSpan<pop_type_index_t, SharedPopTypeValues> shared_pop_type_values;
 
-		SharedCountryValues(
-			PopsDefines const& new_pop_defines,
-			GoodInstanceManager const& new_good_instance_manager,
-			decltype(shared_pop_type_values)::keys_span_type pop_type_keys,
-			TypedSpan<regiment_type_index_t, const RegimentType> new_regiment_types
-		);
+		SharedCountryValues(SharedCountryValuesDeps const& deps);
 		SharedCountryValues(SharedCountryValues&&) = delete;
 		SharedCountryValues(SharedCountryValues const&) = delete;
 		SharedCountryValues& operator=(SharedCountryValues&&) = delete;

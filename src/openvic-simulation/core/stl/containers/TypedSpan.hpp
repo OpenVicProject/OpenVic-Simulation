@@ -18,6 +18,8 @@ namespace OpenVic {
 	public:
 		using forwardable_span<ValueType, _Extent>::forwardable_span;
 
+		constexpr TypedSpan() {}
+
 		template<typename OtherT>
 		constexpr TypedSpan(OtherT& other)
 			: forwardable_span<ValueType, _Extent>(
