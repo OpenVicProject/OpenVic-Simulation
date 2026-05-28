@@ -5,12 +5,14 @@
 #include <cstdint>
 #include <memory>
 #include <new>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "openvic-simulation/ecs/Archetype.hpp"
+#include "openvic-simulation/ecs/ArchetypeAlias.hpp"
 #include "openvic-simulation/ecs/Chunk.hpp"
 #include "openvic-simulation/ecs/ChunkPool.hpp"
 #include "openvic-simulation/ecs/ChunkView.hpp"
@@ -88,6 +90,9 @@ namespace OpenVic::ecs {
 		template<typename... Cs>
 		EntityID create_entity(Cs&&... values);
 
+		template<typename A, typename... Cs>
+		EntityID create_entity_archetype(Cs&&... values);
+
 		void destroy_entity(EntityID id);
 		bool is_alive(EntityID id) const;
 
@@ -130,10 +135,16 @@ namespace OpenVic::ecs {
 		template<typename... Cs, typename Fn>
 		void for_each(Fn&& fn);
 
+		template<typename A, archetype_function<A> Fn>
+		void for_each_archetype(Fn&& fn);
+
 		// Same, but the function also receives the EntityID. Useful for collecting IDs to
 		// destroy later (you can't destroy during iteration without invalidating columns).
 		template<typename... Cs, typename Fn>
 		void for_each_with_entity(Fn&& fn);
+
+		template<typename A, archetype_args_function<A, EntityID> Fn>
+		void for_each_archetype_with_entity(Fn&& fn);
 
 		// Query overloads — match archetypes against Query::require_ids and reject any that
 		// overlap Query::exclude_ids. The lambda must accept C&... matching the call site's
@@ -152,6 +163,9 @@ namespace OpenVic::ecs {
 		// (SIMD-friendly because slabs are contiguous and aligned).
 		template<typename... Cs, typename Fn>
 		void for_each_chunk(Fn&& fn);
+
+		template<typename A, archetype_contained_function<A, ChunkView> Fn>
+		void for_each_archetype_chunk(Fn&& fn);
 
 		template<typename... Cs, typename Fn>
 		void for_each_chunk(Query const& query, Fn&& fn);
@@ -469,6 +483,13 @@ namespace OpenVic::ecs {
 		return eid;
 	}
 
+	template<typename A, typename... Cs>
+	EntityID World::create_entity_archetype(Cs&&... values) {
+		// TODO: should probably assign the archetype for later checks, but that's runtime behavior
+		static_assert(std::is_same_v<std::tuple<std::remove_cvref_t<Cs>...>, typename A::component_tuple>, "create_entity_archetype requires the archetype's components to match");
+		return create_entity(std::forward<Cs>(values)...);
+	}
+
 	template<typename C>
 	C* World::get_component(EntityID id) {
 		if (!is_alive(id)) {
@@ -762,6 +783,14 @@ namespace OpenVic::ecs {
 		for_each<Cs...>(q, std::forward<Fn>(fn));
 	}
 
+	template<typename A, archetype_function<A> Fn>
+	void World::for_each_archetype(Fn&& fn) {
+		// TODO: should probably validate the archetype, deceptively applies to other archetypes otherwise, but that's a runtime check
+		[this, fn]<typename... Cs>(archetype_component_list<Cs...>) {
+			for_each<Cs...>(fn);
+		}(typename archetype_component_list_extract<typename A::component_tuple>::type {});
+	}
+
 	template<typename... Cs, typename Fn>
 	void World::for_each_with_entity(Fn&& fn) {
 		static_assert(sizeof...(Cs) > 0, "for_each_with_entity requires at least one component");
@@ -769,6 +798,14 @@ namespace OpenVic::ecs {
 		Query q;
 		q.template with<Cs...>().build();
 		for_each_with_entity<Cs...>(q, std::forward<Fn>(fn));
+	}
+
+	template<typename A, archetype_args_function<A, EntityID> Fn>
+	void World::for_each_archetype_with_entity(Fn&& fn) {
+		// TODO: should probably validate the archetype, deceptively applies to other archetypes otherwise, but that's a runtime check
+		[this, fn]<typename... Cs>(archetype_component_list<Cs...>) {
+			for_each_with_entity<Cs...>(fn);
+		}(typename archetype_component_list_extract<typename A::component_tuple>::type {});
 	}
 
 	template<typename... Cs, typename Fn>
@@ -826,6 +863,14 @@ namespace OpenVic::ecs {
 		Query q;
 		q.template with<Cs...>().build();
 		for_each_chunk<Cs...>(q, std::forward<Fn>(fn));
+	}
+
+	template<typename A, archetype_contained_function<A, ChunkView> Fn>
+	void World::for_each_archetype_chunk(Fn&& fn) {
+		// TODO: should probably validate the archetype, deceptively applies to other archetypes otherwise, but that's a runtime check
+		[this, fn]<typename... Cs>(archetype_component_list<Cs...>) {
+			for_each_chunk<Cs...>(fn);
+		}(typename archetype_component_list_extract<typename A::component_tuple>::type {});
 	}
 
 	template<typename... Cs, typename Fn>
