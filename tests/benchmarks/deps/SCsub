@@ -10,15 +10,21 @@ def build_nanobench(env):
 
     include_path = "nanobench/src/include"
     source_path = "nanobench/src/test/app"
+    # Out-of-source build: variant tree holds object files and the static library,
+    # so the nanobench submodule working tree stays clean.
+    nanobench_variant = env["build_dir"] + "/tests/benchmarks/deps/nanobench"
+    variant_source_path = nanobench_variant + "/src/test/app"
+    nanobench_env.VariantDir(nanobench_variant, "nanobench", duplicate=False)
+
     nanobench_env.Append(CPPPATH=[nanobench_env.Dir(include_path)])
-    sources = nanobench_env.GlobRecursive("nanobench.cpp", [source_path])
+    sources = nanobench_env.GlobRecursiveVariant("nanobench.cpp", source_path, variant_source_path)
 
     library_name = "libnanobench" + env["LIBSUFFIX"]
-    library = nanobench_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    library = nanobench_env.StaticLibrary(target=os.path.join(nanobench_variant, library_name), source=sources)
     Default(library)
 
     env.Append(CPPPATH=[nanobench_env.Dir(include_path)])
-    env.Append(LIBPATH=[nanobench_env.Dir(source_path)])
+    env.Append(LIBPATH=[nanobench_env.Dir(nanobench_variant)])
     env.Prepend(LIBS=[library_name])
 
 
