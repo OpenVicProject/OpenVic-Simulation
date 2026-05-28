@@ -7,7 +7,7 @@ from SCons.Script.SConscript import SConsEnvironment
 
 def UnitTestPostAction(target=None, source=None, env=None):
     print()
-    return subprocess.run([target[0].path]).returncode
+    return subprocess.run([source[0].path]).returncode
 
 
 def BuildUnitTest(env, **kwargs):
@@ -17,9 +17,12 @@ def BuildUnitTest(env, **kwargs):
 
 
 def RunUnitTest(env):
-    unit_test_action = env.Action(UnitTestPostAction, None)
-    test_post_action = env.AddPostAction(env.unit_test, unit_test_action)
-    env.AlwaysBuild(test_post_action)
+    # Alias-based runner: AlwaysBuild on the alias makes the run-action fire on
+    # every invocation, but the unit-test Program target underneath is only
+    # re-linked when its sources/lib deps actually changed.
+    run_alias = env.Alias("run_tests", env.unit_test, env.Action(UnitTestPostAction, None))
+    env.AlwaysBuild(run_alias)
+    Default(run_alias)
 
 
 SConsEnvironment.BuildUnitTest = BuildUnitTest
