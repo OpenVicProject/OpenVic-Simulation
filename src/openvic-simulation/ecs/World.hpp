@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <new>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -751,6 +752,24 @@ namespace OpenVic::ecs {
 				return static_cast<C*>(arch.column_array(chunk_idx, col_idx));
 			}
 		}
+
+		// Returns C& at `row` from a previously-hoisted column-base pointer. For tag types
+		// returns a reference to a static dummy (the hoisted pointer is nullptr and unused).
+		// OV_RESTRICT on the parameter tells the compiler that, inside this call, `arr` does
+		// not alias any other restrict-qualified pointer in scope — the assertion that the
+		// per-row driver loops in for_each / for_each_with_entity / iterate_one_chunk_for_*
+		// rely on to keep column bases in registers across the inner loop.
+		template<typename C>
+		C& row_ref_from_array(C* OV_RESTRICT arr, std::size_t row) {
+			if constexpr (std::is_empty_v<C>) {
+				static C instance {};
+				(void) arr;
+				(void) row;
+				return instance;
+			} else {
+				return arr[row];
+			}
+		}
 	}
 
 	template<typename... Cs, typename Fn>
@@ -787,8 +806,15 @@ namespace OpenVic::ecs {
 			for (std::size_t chunk_idx = 0; chunk_idx < arch.chunks.size(); ++chunk_idx) {
 				std::size_t const row_count = arch.chunks[chunk_idx].count;
 				[&]<std::size_t... Is>(std::index_sequence<Is...>) {
+					// Hoist typed column-base pointers — computed once per chunk. The row
+					// loop indexes these directly; per-row pointer rederivation through
+					// row_in_column is eliminated. row_ref_from_array's OV_RESTRICT param
+					// carries the non-aliasing promise into the inlined body.
+					auto arrs = std::tuple { detail::chunk_array_for<Cs>(
+						arch, cols[Is], chunk_idx)... };
 					for (std::size_t row = 0; row < row_count; ++row) {
-						fn(detail::deref_chunk_row<Cs>(arch, cols[Is], chunk_idx, row)...);
+						fn(detail::row_ref_from_array<Cs>(
+							std::get<Is>(arrs), row)...);
 					}
 				}(std::index_sequence_for<Cs...> {});
 			}
@@ -810,10 +836,13 @@ namespace OpenVic::ecs {
 
 			for (std::size_t chunk_idx = 0; chunk_idx < arch.chunks.size(); ++chunk_idx) {
 				std::size_t const row_count = arch.chunks[chunk_idx].count;
-				EntityID const* eids = arch.entity_array(chunk_idx);
+				EntityID const* OV_RESTRICT eids = arch.entity_array(chunk_idx);
 				[&]<std::size_t... Is>(std::index_sequence<Is...>) {
+					auto arrs = std::tuple { detail::chunk_array_for<Cs>(
+						arch, cols[Is], chunk_idx)... };
 					for (std::size_t row = 0; row < row_count; ++row) {
-						fn(eids[row], detail::deref_chunk_row<Cs>(arch, cols[Is], chunk_idx, row)...);
+						fn(eids[row], detail::row_ref_from_array<Cs>(
+							std::get<Is>(arrs), row)...);
 					}
 				}(std::index_sequence_for<Cs...> {});
 			}
@@ -1018,8 +1047,11 @@ namespace OpenVic::ecs {
 		((cols[i++] = arch.column_index_for(component_type_id_of<Cs>())), ...);
 		std::size_t const row_count = arch.chunks[chunk_idx].count;
 		[&]<std::size_t... Is>(std::index_sequence<Is...>) {
+			auto arrs = std::tuple { detail::chunk_array_for<Cs>(
+				arch, cols[Is], chunk_idx)... };
 			for (std::size_t row = 0; row < row_count; ++row) {
-				body(detail::deref_chunk_row<Cs>(arch, cols[Is], chunk_idx, row)...);
+				body(detail::row_ref_from_array<Cs>(
+					std::get<Is>(arrs), row)...);
 			}
 		}(std::index_sequence_for<Cs...> {});
 	}
@@ -1031,10 +1063,13 @@ namespace OpenVic::ecs {
 		std::size_t i = 0;
 		((cols[i++] = arch.column_index_for(component_type_id_of<Cs>())), ...);
 		std::size_t const row_count = arch.chunks[chunk_idx].count;
-		EntityID const* eids = arch.entity_array(chunk_idx);
+		EntityID const* OV_RESTRICT eids = arch.entity_array(chunk_idx);
 		[&]<std::size_t... Is>(std::index_sequence<Is...>) {
+			auto arrs = std::tuple { detail::chunk_array_for<Cs>(
+				arch, cols[Is], chunk_idx)... };
 			for (std::size_t row = 0; row < row_count; ++row) {
-				body(eids[row], detail::deref_chunk_row<Cs>(arch, cols[Is], chunk_idx, row)...);
+				body(eids[row], detail::row_ref_from_array<Cs>(
+					std::get<Is>(arrs), row)...);
 			}
 		}(std::index_sequence_for<Cs...> {});
 	}

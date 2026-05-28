@@ -16,6 +16,22 @@ namespace OpenVic::ecs {
 	// reasonable component (cache-line aligned for iteration efficiency).
 	constexpr std::size_t CHUNK_BLOCK_ALIGN = 64;
 
+	// `restrict` for typed pointers that loop bodies read/write. Tells the compiler the
+	// pointee is not reached by any other pointer in the enclosing scope — without this
+	// promise, writes through one column's pointer are assumed to potentially alias reads
+	// through another column's pointer (because both pointers trace back to the same
+	// `unsigned char*` chunk block), which blocks register-promotion and reordering in
+	// the hot inner loops of the system drivers. Honored most reliably when applied to a
+	// local declaration; weaker on function returns. Not standard C++ — each target
+	// compiler spells it differently.
+#if defined(_MSC_VER)
+#	define OV_RESTRICT __restrict
+#elif defined(__GNUC__) || defined(__clang__)
+#	define OV_RESTRICT __restrict__
+#else
+#	define OV_RESTRICT
+#endif
+
 	// Passive holder for one chunk's 16 KB block. Lifecycle is managed explicitly at every
 	// callsite that owns a chunk:
 	//   - Archetype::allocate_chunk calls ChunkPool::acquire and stores the result in `data`.

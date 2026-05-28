@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 
+#include "openvic-simulation/ecs/Chunk.hpp"
 #include "openvic-simulation/ecs/EntityID.hpp"
 
 namespace OpenVic::ecs {
@@ -15,6 +16,13 @@ namespace OpenVic::ecs {
 	//
 	// The view is valid only inside the `for_each_chunk` callback — the underlying chunk
 	// data may be relocated by any subsequent structural mutation of the World.
+	//
+	// `entities()` and `array<C>()` return OV_RESTRICT pointers — the compiler is told they
+	// do not alias one another within this view's chunk. For the strongest effect, also bind
+	// each typed slab into an OV_RESTRICT local at the top of `tick_chunk` (return-type
+	// qualifiers are honored less reliably than locals):
+	//   auto* OV_RESTRICT pos = view.array<Pos>();
+	//   auto* OV_RESTRICT vel = view.array<Vel>();
 	template<typename... Cs>
 	struct ChunkView {
 		std::size_t row_count = 0;
@@ -26,24 +34,24 @@ namespace OpenVic::ecs {
 			return row_count;
 		}
 
-		EntityID* entities() {
+		EntityID* OV_RESTRICT entities() {
 			return eids;
 		}
-		EntityID const* entities() const {
+		EntityID const* OV_RESTRICT entities() const {
 			return eids;
 		}
 
 		// Returns the component slab for type C — must match exactly one of Cs...
 		// For tag types this returns nullptr (no per-row data is stored).
 		template<typename C>
-		C* array() {
+		C* OV_RESTRICT array() {
 			constexpr std::size_t idx = index_of<C>();
 			static_assert(idx < sizeof...(Cs), "ChunkView::array<C>: C is not in this view's component list");
 			return static_cast<C*>(raw_arrays[idx]);
 		}
 
 		template<typename C>
-		C const* array() const {
+		C const* OV_RESTRICT array() const {
 			constexpr std::size_t idx = index_of<C>();
 			static_assert(idx < sizeof...(Cs), "ChunkView::array<C>: C is not in this view's component list");
 			return static_cast<C const*>(raw_arrays[idx]);
