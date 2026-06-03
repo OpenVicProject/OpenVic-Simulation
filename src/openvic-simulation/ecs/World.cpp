@@ -28,6 +28,18 @@ bool World::in_tick_or_log_(char const* fn_name) {
 	return false;
 }
 
+bool World::immutable_or_log_(EntityID id, char const* fn_name) const {
+	// Caller has already passed is_alive(id), so id.index is in range and the slot is finalised.
+	if (entity_slots[id.index].immutable) {
+		// Loud-but-no-crash, mirroring in_tick_or_log_: the structural op is refused and the
+		// caller early-returns. This is the runtime backstop for plain EntityIDs that surface for
+		// an immutable entity (for_each_with_entity, or a laundered unsafe_mutable_id()).
+		(void) fn_name;
+		return true;
+	}
+	return false;
+}
+
 World::~World() {
 	// Destroy each system instance via its type-erased deleter.
 	for (SystemRegistration& reg : system_registry_) {
@@ -58,6 +70,9 @@ EntityID World::allocate_entity_slot() {
 		slot.archetype_index = 0;
 		slot.chunk_index = 0;
 		slot.row = 0;
+		// Single authoritative reset: a reused slot must never inherit a prior occupant's
+		// immutability. create_immutable_entity re-stamps this true after the slot is filled.
+		slot.immutable = false;
 		// Generation incremented on each reuse so old EntityIDs become invalid. Skip both
 		// 0 (the INVALID sentinel) and any value with DEFERRED_GENERATION_BIT set — the
 		// high bit is reserved for CommandBuffer placeholder EntityIDs, so real generations

@@ -97,12 +97,25 @@ namespace OpenVic::ecs {
 		struct strip_context_and_entity<std::tuple<TickContext const&, EntityID, Cs...>> {
 			using components = std::tuple<Cs...>;
 			static constexpr bool takes_entity = true;
+			static constexpr bool takes_immutable_entity = false;
+		};
+
+		// A tick may instead take an ImmutableEntityID as its per-row handle: the system iterates
+		// the same rows, but the handle it receives cannot be passed to add_component /
+		// remove_component (compile-time guarantee inside the tick body). Uses the same with-entity
+		// iteration path; the driver wraps the yielded EntityID (see SystemImpl.hpp).
+		template<typename... Cs>
+		struct strip_context_and_entity<std::tuple<TickContext const&, ImmutableEntityID, Cs...>> {
+			using components = std::tuple<Cs...>;
+			static constexpr bool takes_entity = true;
+			static constexpr bool takes_immutable_entity = true;
 		};
 
 		template<typename... Cs>
 		struct strip_context_and_entity<std::tuple<TickContext const&, Cs...>> {
 			using components = std::tuple<Cs...>;
 			static constexpr bool takes_entity = false;
+			static constexpr bool takes_immutable_entity = false;
 		};
 
 		template<typename Derived>
@@ -116,6 +129,13 @@ namespace OpenVic::ecs {
 		template<typename Derived>
 		constexpr bool tick_takes_entity_v =
 			strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_entity;
+
+		// True when Derived::tick takes an ImmutableEntityID (rather than EntityID) as its per-row
+		// handle. The iteration path is the same with-entity path; only the handle type the driver
+		// hands to tick() differs — see the dispatch lambdas in SystemImpl.hpp.
+		template<typename Derived>
+		constexpr bool tick_takes_immutable_entity_v =
+			strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_immutable_entity;
 
 		// Build a static AccessSet array from a component pack tuple.
 		template<typename Tuple>
@@ -168,6 +188,22 @@ namespace OpenVic::ecs {
 			EcsThreadPool& pool, std::vector<CommandBuffer>& per_chunk_cmds,
 			CommandBuffer& pending_cmd
 		);
+	}
+
+	// Invokes Derived::tick for one row that the with-entity iteration path produced. The handle
+	// type is chosen at compile time from the tick signature: if the tick declared an
+	// ImmutableEntityID parameter, the yielded EntityID is wrapped into one (so add_component /
+	// remove_component on it won't compile inside the tick body); otherwise the EntityID is passed
+	// straight through. Lives in OpenVic::ecs (not detail) so both the detail dispatch impls and
+	// the OpenVic::ecs tick_one_chunk can call it unqualified. Zero cost — the wrap is an 8-byte
+	// copy the optimiser folds away, and the non-immutable branch is identical to a direct call.
+	template<typename Derived, typename... Cs>
+	inline void invoke_tick_with_entity(Derived& self, TickContext const& ctx, EntityID eid, Cs&... cs) {
+		if constexpr (detail::tick_takes_immutable_entity_v<Derived>) {
+			self.tick(ctx, ImmutableEntityID { eid.index, eid.generation }, cs...);
+		} else {
+			self.tick(ctx, eid, cs...);
+		}
 	}
 
 	// === System base — CRTP, non-virtual tick. ===

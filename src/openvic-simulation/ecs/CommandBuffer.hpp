@@ -89,6 +89,13 @@ namespace OpenVic::ecs {
 		template<typename... Cs>
 		EntityID create_entity(World& world, Cs&&... values);
 
+		// Deferred analogue of World::create_immutable_entity. Records a CreateEntity op flagged
+		// immutable; at apply() time the finalised entity's slot is stamped immutable. Returns an
+		// ImmutableEntityID (a deferred placeholder in parallel mode, a real reserved handle in
+		// serial mode), so it cannot be passed to add_component / remove_component on this buffer.
+		template<typename... Cs>
+		ImmutableEntityID create_immutable_entity(World& world, Cs&&... values);
+
 		inline void destroy_entity(EntityID id) {
 			Op op;
 			op.kind = OpKind::DestroyEntity;
@@ -150,6 +157,11 @@ namespace OpenVic::ecs {
 		}
 
 	private:
+		// Shared body of create_entity / create_immutable_entity — records a CreateEntity op,
+		// stamping CreatePayload::immutable. Returns the (real or deferred) raw EntityID.
+		template<typename... Cs>
+		EntityID record_create_entity(bool immutable, World& world, Cs&&... values);
+
 		enum class OpKind {
 			CreateEntity, // payload: full archetype signature + per-component slots
 			DestroyEntity, // no payload
@@ -161,6 +173,9 @@ namespace OpenVic::ecs {
 			std::vector<component_type_id_t> sorted_sig;
 			std::vector<ColumnVTable const*> sorted_vtables;
 			std::vector<PayloadSlot> sorted_values; // length == sorted_sig.size()
+			// When true, apply() stamps the finalised entity's slot immutable. Default false keeps
+			// every plain create_entity recording mutable.
+			bool immutable = false;
 		};
 
 		struct AddPayload {
@@ -190,7 +205,7 @@ namespace OpenVic::ecs {
 	// === template definitions ===
 
 	template<typename... Cs>
-	EntityID CommandBuffer::create_entity(World& world, Cs&&... values) {
+	EntityID CommandBuffer::record_create_entity(bool immutable, World& world, Cs&&... values) {
 		static_assert(sizeof...(Cs) > 0, "CommandBuffer::create_entity requires at least one component");
 
 		// Build the same sorted signature as World::create_entity does, recording the
@@ -226,6 +241,7 @@ namespace OpenVic::ecs {
 		Op op;
 		op.kind = OpKind::CreateEntity;
 		op.eid = eid;
+		op.create.immutable = immutable;
 		op.create.sorted_sig.assign(sorted_ids, sorted_ids + N);
 		op.create.sorted_vtables.assign(sorted_vtables, sorted_vtables + N);
 		op.create.sorted_values.resize(N);
@@ -256,6 +272,17 @@ namespace OpenVic::ecs {
 
 		ops.push_back(std::move(op));
 		return eid;
+	}
+
+	template<typename... Cs>
+	EntityID CommandBuffer::create_entity(World& world, Cs&&... values) {
+		return record_create_entity<Cs...>(false, world, std::forward<Cs>(values)...);
+	}
+
+	template<typename... Cs>
+	ImmutableEntityID CommandBuffer::create_immutable_entity(World& world, Cs&&... values) {
+		EntityID const eid = record_create_entity<Cs...>(true, world, std::forward<Cs>(values)...);
+		return ImmutableEntityID { eid.index, eid.generation };
 	}
 
 	template<typename C>

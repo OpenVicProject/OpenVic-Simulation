@@ -55,6 +55,12 @@ void CommandBuffer::apply(World& world) {
 				world.finalize_reserved_entity(
 					real_eid, op.create.sorted_sig, op.create.sorted_vtables, raw_slots
 				);
+				// Stamp immutability onto the freshly-finalised slot (covers both the deferred
+				// and serial create_immutable_entity paths in one place). CommandBuffer is a
+				// friend of World, so entity_slots is reachable here.
+				if (op.create.immutable && real_eid.index < world.entity_slots.size()) {
+					world.entity_slots[real_eid.index].immutable = true;
+				}
 				// Free the moved-from payload allocations. We don't call destroy() on them —
 				// the move-construct already destructively transferred the value. Capture
 				// `align` into a local BEFORE `release_data()` — `release_data()` clears the
@@ -107,7 +113,13 @@ void CommandBuffer::apply(World& world) {
 					// CreateEntity op has been applied is undefined-by-policy. Ignore.
 					break;
 				}
-				ColumnVTable const* new_vt = op.add.value.vtable;
+				if (slot.immutable) {
+						break;
+					}
+					// Immutability backstop (deferred path): apply() migrates type-erased here,
+					// NOT through World::add_component, so the refusal is repeated. The intact
+					// op.add.value payload is freed by its PayloadSlot destructor at ops.clear().
+					ColumnVTable const* new_vt = op.add.value.vtable;
 				component_type_id_t const new_id = op.add.id;
 				uint32_t const src_idx = slot.archetype_index;
 				uint32_t const src_chunk = slot.chunk_index;
@@ -229,7 +241,13 @@ void CommandBuffer::apply(World& world) {
 				uint32_t const src_chunk = slot.chunk_index;
 				uint32_t const src_row = slot.row;
 
-				std::size_t drop_col_idx = NO_COLUMN_INDEX;
+				if (slot.immutable) {
+						break;
+					}
+					// Immutability backstop (deferred remove path): same rationale as the
+					// AddComponent branch — apply() migrates type-erased, bypassing
+					// World::remove_component. No payload to free here.
+					std::size_t drop_col_idx = NO_COLUMN_INDEX;
 				{
 					Archetype const& src = world.archetypes[src_idx];
 					drop_col_idx = src.column_index_for(op.remove_id);

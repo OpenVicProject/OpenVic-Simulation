@@ -43,7 +43,7 @@ namespace OpenVic::ecs::detail {
 		static void run(Derived& self, World& world, TickContext const& ctx) {
 			world.template for_each_with_entity<std::remove_cvref_t<Cs>...>(
 				[&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-					self.tick(ctx, eid, cs...);
+					invoke_tick_with_entity(self, ctx, eid, cs...);
 				});
 		}
 	};
@@ -165,7 +165,7 @@ namespace OpenVic::ecs::detail {
 					std::remove_cvref_t<Cs>...>(
 					loc.archetype_idx, loc.chunk_idx,
 					[&self, &per_chunk](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-						self.tick(per_chunk, eid, cs...);
+						invoke_tick_with_entity(self, per_chunk, eid, cs...);
 					});
 			});
 
@@ -242,7 +242,7 @@ namespace OpenVic::ecs {
 					std::remove_cvref_t<Cs>...>(
 					archetype_idx, chunk_idx,
 					[&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-						self.tick(ctx, eid, cs...);
+						invoke_tick_with_entity(self, ctx, eid, cs...);
 					}
 				);
 			} else {

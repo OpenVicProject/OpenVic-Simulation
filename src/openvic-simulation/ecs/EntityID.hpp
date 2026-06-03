@@ -50,4 +50,58 @@ namespace OpenVic::ecs {
 	};
 
 	inline constexpr EntityID INVALID_ENTITY_ID = {};
+
+	// Strong handle for an "immutable entity" — one created via World::create_immutable_entity
+	// (or CommandBuffer::create_immutable_entity) that can never change archetype after creation.
+	// Same layout as EntityID (index + generation) but a DISTINCT type with NO implicit conversion
+	// to EntityID, so it cannot bind to the structural-mutation APIs (World/CommandBuffer
+	// add_component / remove_component), all of which take EntityID by value. Passing an
+	// ImmutableEntityID to those is a compile error — that is the compile-time immutability
+	// guarantee. Read and data-mutation ops (get_component returns a mutable C*), is_alive, and
+	// destroy_entity are reachable via explicit ImmutableEntityID overloads. The only bridge to a
+	// mutable EntityID is unsafe_mutable_id(), named so every structural bypass is grep-able.
+	struct ImmutableEntityID {
+		uint32_t index = 0;
+		uint32_t generation = 0;
+
+		constexpr bool operator==(ImmutableEntityID const& rhs) const {
+			return index == rhs.index && generation == rhs.generation;
+		}
+
+		constexpr bool operator!=(ImmutableEntityID const& rhs) const {
+			return !(*this == rhs);
+		}
+
+		// Generation 0 is the invalid sentinel — valid handles always have generation >= 1.
+		constexpr bool is_valid() const {
+			return generation != 0;
+		}
+
+		// True for a deferred-create placeholder returned by CommandBuffer::create_immutable_entity
+		// in parallel mode, before CommandBuffer::apply resolves it to a real handle. Mirrors
+		// EntityID::is_deferred.
+		constexpr bool is_deferred() const {
+			return (generation & DEFERRED_GENERATION_BIT) != 0;
+		}
+
+		constexpr uint64_t to_uint64() const {
+			return (static_cast<uint64_t>(generation) << 32) | static_cast<uint64_t>(index);
+		}
+
+		static constexpr ImmutableEntityID from_uint64(uint64_t value) {
+			ImmutableEntityID id;
+			id.index = static_cast<uint32_t>(value & 0xFFFFFFFFULL);
+			id.generation = static_cast<uint32_t>(value >> 32);
+			return id;
+		}
+
+		// The ONLY bridge to a mutable EntityID. Intentionally verbose so that every structural
+		// bypass of the immutability guarantee is auditable by grepping "unsafe_mutable_id". There
+		// is deliberately NO implicit conversion operator to EntityID.
+		constexpr EntityID unsafe_mutable_id() const {
+			return EntityID { index, generation };
+		}
+	};
+
+	inline constexpr ImmutableEntityID INVALID_IMMUTABLE_ENTITY_ID = {};
 }

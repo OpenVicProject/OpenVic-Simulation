@@ -46,6 +46,12 @@ namespace OpenVic::ecs {
 		uint32_t generation = 0;
 		uint32_t next_free = 0;
 		bool alive = false;
+		// Set by create_immutable_entity / CommandBuffer::create_immutable_entity. While true,
+		// World::add_component / remove_component (and the type-erased equivalents in
+		// CommandBuffer::apply) refuse to migrate this entity — the runtime backstop behind the
+		// ImmutableEntityID compile-time guarantee. Reset to false on slot reuse in
+		// allocate_entity_slot. Lands in the bool's existing padding — no EntitySlot growth.
+		bool immutable = false;
 	};
 
 	// Hash for a sorted std::vector<component_type_id_t> used as an archetype-signature key.
@@ -89,6 +95,13 @@ namespace OpenVic::ecs {
 		template<typename... Cs>
 		EntityID create_entity(Cs&&... values);
 
+		// Construct an IMMUTABLE entity: identical to create_entity but the returned handle is an
+		// ImmutableEntityID that cannot be passed to add_component / remove_component (compile-time
+		// guarantee), and the entity's slot is flagged so the type-erased structural paths refuse
+		// to migrate it (runtime backstop). Component DATA stays mutable via get_component.
+		template<typename... Cs>
+		ImmutableEntityID create_immutable_entity(Cs&&... values);
+
 		void destroy_entity(EntityID id);
 		bool is_alive(EntityID id) const;
 
@@ -100,6 +113,35 @@ namespace OpenVic::ecs {
 
 		template<typename C>
 		bool has_component(EntityID id) const;
+
+		// === ImmutableEntityID read / data / destroy overloads ===
+		// Reads return a mutable C* (data mutation on an immutable entity is allowed); destroy is
+		// allowed (destroying a live entity is not an archetype mutation of it). These build an
+		// EntityID inline from the handle's fields — NOT via unsafe_mutable_id(), so that name
+		// stays exclusive to genuine structural-bypass sites. There is deliberately NO
+		// add_component / remove_component overload for ImmutableEntityID.
+		template<typename C>
+		C* get_component(ImmutableEntityID id) {
+			return get_component<C>(EntityID { id.index, id.generation });
+		}
+
+		template<typename C>
+		C const* get_component(ImmutableEntityID id) const {
+			return get_component<C>(EntityID { id.index, id.generation });
+		}
+
+		template<typename C>
+		bool has_component(ImmutableEntityID id) const {
+			return has_component<C>(EntityID { id.index, id.generation });
+		}
+
+		bool is_alive(ImmutableEntityID id) const {
+			return is_alive(EntityID { id.index, id.generation });
+		}
+
+		void destroy_entity(ImmutableEntityID id) {
+			destroy_entity(EntityID { id.index, id.generation });
+		}
 
 		// Add a component to a living entity. Migrates the entity to the archetype that
 		// extends its current one with C. If the entity already carries C, replaces the
@@ -126,6 +168,11 @@ namespace OpenVic::ecs {
 		// so a stable version implies cached pointers into the column are still valid.
 		template<typename C>
 		uint64_t component_version_in(EntityID id) const;
+
+		template<typename C>
+		uint64_t component_version_in(ImmutableEntityID id) const {
+			return component_version_in<C>(EntityID { id.index, id.generation });
+		}
 
 		// Visit every entity whose archetype contains all of Cs..., calling fn(C&...) per row.
 		template<typename... Cs, typename Fn>
@@ -365,6 +412,17 @@ namespace OpenVic::ecs {
 		// log + early-return); false otherwise.
 		bool in_tick_or_log_(char const* fn_name);
 
+		// Immutability backstop helper. Returns true (and logs, mirroring in_tick_or_log_'s
+		// loud-but-no-crash posture) if `id`'s slot is flagged immutable, so the structural
+		// mutators can early-return. Callers must only invoke after is_alive(id) has proven the
+		// index in-range, alive and finalised. Const: reads the slot only.
+		bool immutable_or_log_(EntityID id, char const* fn_name) const;
+
+		// Shared body of create_entity / create_immutable_entity. `immutable` is stamped onto the
+		// new entity's slot. Reused by both wrappers so the sort + placement-new fold lives once.
+		template<typename... Cs>
+		EntityID create_entity_impl(bool immutable, Cs&&... values);
+
 		// Singletons. Type-erased deleter calls `delete static_cast<C*>(p)` so the World
 		// destructor sweeps them automatically.
 		using SingletonPtr = std::unique_ptr<void, void (*)(void*)>;
@@ -412,7 +470,7 @@ namespace OpenVic::ecs {
 	// === template definitions ===
 
 	template<typename... Cs>
-	EntityID World::create_entity(Cs&&... values) {
+	EntityID World::create_entity_impl(bool immutable, Cs&&... values) {
 		static_assert(sizeof...(Cs) > 0, "create_entity requires at least one component");
 
 		if (in_tick_or_log_("World::create_entity")) {
@@ -467,7 +525,19 @@ namespace OpenVic::ecs {
 		entity_slots[eid.index].archetype_index = archetype_idx;
 		entity_slots[eid.index].chunk_index = static_cast<uint32_t>(loc.chunk_index);
 		entity_slots[eid.index].row = static_cast<uint32_t>(loc.row);
+		entity_slots[eid.index].immutable = immutable;
 		return eid;
+	}
+
+	template<typename... Cs>
+	EntityID World::create_entity(Cs&&... values) {
+		return create_entity_impl<Cs...>(false, std::forward<Cs>(values)...);
+	}
+
+	template<typename... Cs>
+	ImmutableEntityID World::create_immutable_entity(Cs&&... values) {
+		EntityID const eid = create_entity_impl<Cs...>(true, std::forward<Cs>(values)...);
+		return ImmutableEntityID { eid.index, eid.generation };
 	}
 
 	template<typename C>
@@ -538,6 +608,9 @@ namespace OpenVic::ecs {
 			return nullptr;
 		}
 		if (!is_alive(id)) {
+			return nullptr;
+		}
+		if (immutable_or_log_(id, "World::add_component")) {
 			return nullptr;
 		}
 
@@ -646,6 +719,9 @@ namespace OpenVic::ecs {
 			return false;
 		}
 		if (!is_alive(id)) {
+			return false;
+		}
+		if (immutable_or_log_(id, "World::remove_component")) {
 			return false;
 		}
 
