@@ -1,0 +1,106 @@
+name: Build OpenVic-Simulation
+description: Setup and Build OpenVic-Simulation with the provided options
+
+inputs:
+  identifier:
+    description: Identifier of this build
+    type: string
+  target:
+    description: Target type to build for
+    type: choice
+    options: [template_release, template_debug, editor]
+  platform:
+    description: Platform to build for
+    type: choice
+    options: [windows, linux, macos]
+  arch:
+    description: Architecture to build for
+    type: choice
+    options: [x86_64, universal]
+  scons-flags:
+    description: Additional flags to send to SCons
+    required: false
+    default: 'build_ovsim_benchmarks=yes'
+    type: string
+  build-library:
+    description: Whether to build the library file
+    default: true
+    type: boolean
+  cache-base-branch:
+    description: |
+      Branch to base the cache upon
+    required: false
+    default: 'master'
+    type: string
+  disable-cache:
+    description: Whether to disable the build cache
+    default: false
+    type: boolean
+
+runs:
+  using: composite
+  steps:
+    - name: Setup build cache
+      uses: OpenVicProject/openvic-cache@master
+      if: ${{ !inputs.disable-cache }}
+      with:
+        cache-name: ${{ inputs.identifier }}
+        base-branch: ${{ inputs.cache-base-branch }}
+      continue-on-error: true
+
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: "3.x"
+
+    - name: Set up SCons
+      shell: bash
+      run: |
+        python -c "import sys; print(sys.version)"
+        python -m pip install scons
+        scons --version
+
+    - name: Install APT dependencies
+      if: ${{ inputs.platform == 'linux' }}
+      uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+      with:
+        packages: build-essential pkg-config libtbb-dev
+
+    - name: Install and Set g++ to version 13
+      if: ${{ inputs.platform == 'linux' }}
+      shell: sh
+      run: |
+        g++ --version
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt update -y
+        sudo apt install g++-13
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 13
+        sudo update-alternatives --set g++ /usr/bin/g++-13
+        g++ --version
+
+    - name: Compile with SCons
+      uses: OpenVicProject/openvic-build@master
+      with:
+        platform: ${{ inputs.platform }}
+        target: ${{ inputs.target }}
+        sconsflags: arch=${{ inputs.arch }} ${{ inputs.build-library && 'build_ovsim_library=yes' }} ${{ inputs.scons-flags }}
+
+    - name: Delete compilation files
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: |
+        Remove-Item bin/* -Include *.exp,*.pdb -Force
+
+    - name: Upload library artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ github.event.repository.name }}-${{ inputs.identifier }}-library
+        path: |
+          ${{ github.workspace }}/bin/libopenvic-simulation.*
+
+    - name: Upload executable artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ github.event.repository.name }}-${{ inputs.identifier }}-executable
+        path: |
+          ${{ github.workspace }}/bin/openvic-simulation.headless.*
