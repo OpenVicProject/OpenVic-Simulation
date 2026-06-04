@@ -7,6 +7,7 @@
 #include "openvic-simulation/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/ecs/EntityID.hpp"
 #include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic::ecs;
 
@@ -114,12 +115,17 @@ void CommandBuffer::apply(World& world) {
 					break;
 				}
 				if (slot.immutable) {
-						break;
-					}
-					// Immutability backstop (deferred path): apply() migrates type-erased here,
-					// NOT through World::add_component, so the refusal is repeated. The intact
-					// op.add.value payload is freed by its PayloadSlot destructor at ops.clear().
-					ColumnVTable const* new_vt = op.add.value.vtable;
+					spdlog::error_s(
+						"CommandBuffer::apply refused add_component: entity {}:{} is immutable "
+						"(component id {:#x})",
+						eid.index, eid.generation, op.add.id
+					);
+					break;
+				}
+				// Immutability backstop (deferred path): apply() migrates type-erased below,
+				// NOT through World::add_component, so the refusal is repeated. The intact
+				// op.add.value payload is freed by its PayloadSlot destructor at ops.clear().
+				ColumnVTable const* new_vt = op.add.value.vtable;
 				component_type_id_t const new_id = op.add.id;
 				uint32_t const src_idx = slot.archetype_index;
 				uint32_t const src_chunk = slot.chunk_index;
@@ -242,12 +248,17 @@ void CommandBuffer::apply(World& world) {
 				uint32_t const src_row = slot.row;
 
 				if (slot.immutable) {
-						break;
-					}
-					// Immutability backstop (deferred remove path): same rationale as the
-					// AddComponent branch — apply() migrates type-erased, bypassing
-					// World::remove_component. No payload to free here.
-					std::size_t drop_col_idx = NO_COLUMN_INDEX;
+					spdlog::error_s(
+						"CommandBuffer::apply refused remove_component: entity {}:{} is immutable "
+						"(component id {:#x})",
+						eid.index, eid.generation, op.remove_id
+					);
+					break;
+				}
+				// Immutability backstop (deferred remove path): same rationale as the
+				// AddComponent branch — apply() migrates type-erased, bypassing
+				// World::remove_component. No payload to free here.
+				std::size_t drop_col_idx = NO_COLUMN_INDEX;
 				{
 					Archetype const& src = world.archetypes[src_idx];
 					drop_col_idx = src.column_index_for(op.remove_id);

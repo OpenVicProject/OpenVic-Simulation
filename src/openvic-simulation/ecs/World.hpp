@@ -105,6 +105,14 @@ namespace OpenVic::ecs {
 		void destroy_entity(EntityID id);
 		bool is_alive(EntityID id) const;
 
+		// Returns true if and only if `id` refers to a LIVE entity that was created immutable (via
+		// create_immutable_entity / CommandBuffer::create_immutable_entity). False for dead,
+		// stale, or mutable entities. Useful when a system holds a plain EntityID (e.g. from
+		// for_each_with_entity, where the compile-time guarantee no longer applies) and wants to
+		// branch before queueing a structural op:
+		//   if (!ctx.world.is_immutable(eid)) { ctx.cmd.add_component<C>(eid, ...); }
+		bool is_immutable(EntityID id) const;
+
 		template<typename C>
 		C* get_component(EntityID id);
 
@@ -141,6 +149,10 @@ namespace OpenVic::ecs {
 
 		void destroy_entity(ImmutableEntityID id) {
 			destroy_entity(EntityID { id.index, id.generation });
+		}
+
+		bool is_immutable(ImmutableEntityID id) const {
+			return is_immutable(EntityID { id.index, id.generation });
 		}
 
 		// Add a component to a living entity. Migrates the entity to the archetype that
@@ -412,11 +424,11 @@ namespace OpenVic::ecs {
 		// log + early-return); false otherwise.
 		bool in_tick_or_log_(char const* fn_name);
 
-		// Immutability backstop helper. Returns true (and logs, mirroring in_tick_or_log_'s
-		// loud-but-no-crash posture) if `id`'s slot is flagged immutable, so the structural
-		// mutators can early-return. Callers must only invoke after is_alive(id) has proven the
-		// index in-range, alive and finalised. Const: reads the slot only.
-		bool immutable_or_log_(EntityID id, char const* fn_name) const;
+		// Immutability backstop helper. Returns true (and logs an error naming the operation,
+		// entity and component) if `id`'s slot is flagged immutable, so the structural mutators
+		// can early-return without migrating. Callers must only invoke after is_alive(id) has
+		// proven the index in-range, alive and finalised. Const: reads the slot only.
+		bool immutable_or_log_(EntityID id, char const* fn_name, std::string_view component_name) const;
 
 		// Shared body of create_entity / create_immutable_entity. `immutable` is stamped onto the
 		// new entity's slot. Reused by both wrappers so the sort + placement-new fold lives once.
@@ -610,7 +622,7 @@ namespace OpenVic::ecs {
 		if (!is_alive(id)) {
 			return nullptr;
 		}
-		if (immutable_or_log_(id, "World::add_component")) {
+		if (immutable_or_log_(id, "World::add_component", ComponentName<TC>::value)) {
 			return nullptr;
 		}
 
@@ -721,7 +733,7 @@ namespace OpenVic::ecs {
 		if (!is_alive(id)) {
 			return false;
 		}
-		if (immutable_or_log_(id, "World::remove_component")) {
+		if (immutable_or_log_(id, "World::remove_component", ComponentName<TC>::value)) {
 			return false;
 		}
 

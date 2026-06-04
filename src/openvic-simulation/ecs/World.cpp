@@ -3,12 +3,14 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 #include <thread>
 #include <utility>
 
 #include "openvic-simulation/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/ecs/EcsThreadPool.hpp"
 #include "openvic-simulation/ecs/SystemScheduler.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic::ecs;
 
@@ -28,16 +30,26 @@ bool World::in_tick_or_log_(char const* fn_name) {
 	return false;
 }
 
-bool World::immutable_or_log_(EntityID id, char const* fn_name) const {
+bool World::immutable_or_log_(EntityID id, char const* fn_name, std::string_view component_name) const {
 	// Caller has already passed is_alive(id), so id.index is in range and the slot is finalised.
 	if (entity_slots[id.index].immutable) {
-		// Loud-but-no-crash, mirroring in_tick_or_log_: the structural op is refused and the
-		// caller early-returns. This is the runtime backstop for plain EntityIDs that surface for
-		// an immutable entity (for_each_with_entity, or a laundered unsafe_mutable_id()).
-		(void) fn_name;
+		// Loud-but-no-crash: the structural op is refused (the caller early-returns) and we log
+		// an error. This is the runtime backstop for plain EntityIDs that surface for an immutable
+		// entity (for_each_with_entity, or a laundered unsafe_mutable_id()).
+		spdlog::error_s(
+			"{} refused: entity {}:{} is immutable — its archetype cannot change (component '{}')",
+			fn_name, id.index, id.generation, component_name
+		);
 		return true;
 	}
 	return false;
+}
+
+bool World::is_immutable(EntityID id) const {
+	if (!is_alive(id)) {
+		return false;
+	}
+	return entity_slots[id.index].immutable;
 }
 
 World::~World() {

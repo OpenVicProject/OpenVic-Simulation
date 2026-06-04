@@ -134,6 +134,39 @@ TEST_CASE("unsafe_mutable_id addresses the same entity", "[ecs][World][immutable
 	CHECK(world.get_component<ImmA>(m) == world.get_component<ImmA>(e));
 }
 
+TEST_CASE("is_immutable reports per-entity immutability", "[ecs][World][immutable]") {
+	World world;
+	ImmutableEntityID const imm = world.create_immutable_entity(ImmA { 1 });
+	EntityID const mut = world.create_entity(ImmA { 2 });
+
+	CHECK(world.is_immutable(imm)); // immutable handle
+	CHECK(world.is_immutable(imm.unsafe_mutable_id())); // same entity via a plain EntityID
+	CHECK_FALSE(world.is_immutable(mut)); // a normal entity is mutable
+
+	// Dead / stale / invalid ids are not immutable.
+	EntityID const laundered = imm.unsafe_mutable_id();
+	world.destroy_entity(imm);
+	CHECK_FALSE(world.is_immutable(laundered));
+	CHECK_FALSE(world.is_immutable(imm));
+	CHECK_FALSE(world.is_immutable(INVALID_ENTITY_ID));
+
+	// A slot reused by a later (mutable) create comes back mutable.
+	EntityID const reused = world.create_entity(ImmA { 3 });
+	REQUIRE(reused.index == laundered.index); // free-list reuse of the destroyed immutable slot
+	CHECK_FALSE(world.is_immutable(reused));
+}
+
+TEST_CASE("is_immutable: a deferred immutable create is not immutable until apply",
+		  "[ecs][World][immutable][cmd]") {
+	World world;
+	CommandBuffer cb;
+	ImmutableEntityID const e = cb.create_immutable_entity(world, ImmA { 7 });
+
+	CHECK_FALSE(world.is_immutable(e)); // reserved-but-unfinalised ⇒ not alive ⇒ not immutable
+	cb.apply(world);
+	CHECK(world.is_immutable(e)); // finalised + flagged
+}
+
 TEST_CASE("add_component on a laundered immutable id is refused (no migration)", "[ecs][World][immutable][backstop]") {
 	World world;
 	ImmutableEntityID const e = world.create_immutable_entity(ImmA { 5 });
@@ -364,10 +397,11 @@ namespace {
 			r.from_in_order.push_back(s.from);
 			spawned_ids.push_back(e);
 		});
-		// Every spawned entity must be immutable: a laundered add is refused (returns nullptr) and
-		// the entity does not migrate.
+		// Every spawned entity must be flagged immutable. Checked via is_immutable (rather than by
+		// attempting a refused add_component) so the determinism sweep doesn't emit a flood of
+		// backstop error logs — the refusal+log path itself is covered by the backstop tests.
 		for (EntityID e : spawned_ids) {
-			if (world.add_component<ImmA>(e, ImmA { 1 }) == nullptr && !world.has_component<ImmA>(e)) {
+			if (world.is_immutable(e)) {
 				r.immutable_count += 1;
 			}
 		}
