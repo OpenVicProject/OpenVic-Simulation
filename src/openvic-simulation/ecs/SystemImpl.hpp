@@ -22,6 +22,22 @@
 
 namespace OpenVic::ecs::detail {
 
+	// Builds the archetype-matching Query for Derived's tick: required ids from the tick parameter
+	// pack (System<>) / template list (ChunkSystem<>), exclude ids from the optional `Filters`
+	// alias. CRITICAL: this is the single source of the (require, exclude) pair. register_system
+	// stores the same two id-lists (from the same compute_tick_query_* statics), and the scheduler
+	// prewarms query_cache with them before a multi-system parallel stage. Every dispatch path MUST
+	// build its query here so the prewarmed key matches the key it later looks up — otherwise a
+	// worker thread mutates the World's mutable query_cache concurrently.
+	template<typename Derived>
+	Query build_tick_query() {
+		Query q;
+		q.require_ids = Derived::compute_tick_query_require_ids();
+		q.exclude_ids = Derived::compute_tick_query_exclude_ids();
+		q.build();
+		return q;
+	}
+
 	// Tuple-unpacking helper for serial dispatch.
 	template<typename Derived, bool WithEntity, typename Tuple>
 	struct dispatch_serial_impl;
@@ -31,7 +47,7 @@ namespace OpenVic::ecs::detail {
 		static void run(Derived& self, World& world, TickContext const& ctx) {
 			static_assert(sizeof...(Cs) > 0,
 				"System::tick must have at least one component parameter after TickContext");
-			world.template for_each<std::remove_cvref_t<Cs>...>(
+			world.template for_each<std::remove_cvref_t<Cs>...>(build_tick_query<Derived>(),
 				[&self, &ctx](std::remove_cvref_t<Cs>&... cs) {
 					self.tick(ctx, cs...);
 				});
@@ -41,7 +57,7 @@ namespace OpenVic::ecs::detail {
 	template<typename Derived, typename... Cs>
 	struct dispatch_serial_impl<Derived, /*WithEntity=*/true, std::tuple<Cs...>> {
 		static void run(Derived& self, World& world, TickContext const& ctx) {
-			world.template for_each_with_entity<std::remove_cvref_t<Cs>...>(
+			world.template for_each_with_entity<std::remove_cvref_t<Cs>...>(build_tick_query<Derived>(),
 				[&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
 					invoke_tick_with_entity(self, ctx, eid, cs...);
 				});
@@ -71,13 +87,12 @@ namespace OpenVic::ecs::detail {
 	// `ChunkLocation` lives at namespace scope in System.hpp (so SystemRegistration's
 	// function-pointer signatures can name it) — this file just uses it.
 
-	// Collect all chunks matching the query of components Cs.... Sorted by
-	// (archetype_idx ascending, chunk_idx ascending) — deterministic.
-	template<typename... Cs>
-	std::vector<ChunkLocation> collect_matching_chunks(World& world) {
-		Query q;
-		q.template with<std::remove_cvref_t<Cs>...>().build();
-		QueryCacheKey key { q.require_ids, q.exclude_ids };
+	// Collect all chunks matching `query`. Sorted by (archetype_idx ascending, chunk_idx ascending)
+	// — deterministic. The caller builds `query` via build_tick_query<Derived> so its cache key is
+	// the one the scheduler prewarmed; this both reuses that prewarmed entry and keeps the require +
+	// exclude sets identical between the main-thread collect and any worker-side dispatch.
+	inline std::vector<ChunkLocation> collect_matching_chunks(World& world, Query const& query) {
+		QueryCacheKey key { query.require_ids, query.exclude_ids };
 		std::vector<uint32_t> const& matched
 			= world.resolve_query_cache_for_threaded(key).archetype_indices;
 
@@ -101,7 +116,7 @@ namespace OpenVic::ecs::detail {
 			CommandBuffer& pending_cmd
 		) {
 			std::vector<ChunkLocation> const chunks
-				= collect_matching_chunks<std::remove_cvref_t<Cs>...>(world);
+				= collect_matching_chunks(world, build_tick_query<Derived>());
 			std::size_t const N = chunks.size();
 			if (N == 0) {
 				return;
@@ -143,7 +158,7 @@ namespace OpenVic::ecs::detail {
 			CommandBuffer& pending_cmd
 		) {
 			std::vector<ChunkLocation> const chunks
-				= collect_matching_chunks<std::remove_cvref_t<Cs>...>(world);
+				= collect_matching_chunks(world, build_tick_query<Derived>());
 			std::size_t const N = chunks.size();
 			if (N == 0) {
 				return;
@@ -223,9 +238,7 @@ namespace OpenVic::ecs {
 
 	template<typename Derived>
 	std::vector<ChunkLocation> SystemThreaded<Derived>::collect_chunks(World& world) {
-		return [&]<typename... Cs>(std::tuple<Cs...>*) {
-			return detail::collect_matching_chunks<std::remove_cvref_t<Cs>...>(world);
-		}(static_cast<detail::component_pack_t<Derived>*>(nullptr));
+		return detail::collect_matching_chunks(world, detail::build_tick_query<Derived>());
 	}
 
 	template<typename Derived>

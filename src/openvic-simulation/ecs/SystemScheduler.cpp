@@ -381,7 +381,7 @@ void SystemScheduler::run(
 					continue;
 				}
 				if (!reg.tick_query_require_ids.empty()) {
-					QueryCacheKey key { reg.tick_query_require_ids, {} };
+					QueryCacheKey key { reg.tick_query_require_ids, reg.tick_query_exclude_ids };
 					(void) world.resolve_query_cache_for_threaded(key);
 				}
 			}

@@ -11,6 +11,7 @@
 
 #include "openvic-simulation/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/ecs/EntityID.hpp"
+#include "openvic-simulation/ecs/QueryFilter.hpp"
 #include "openvic-simulation/ecs/SystemAccess.hpp"
 #include "openvic-simulation/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -243,6 +244,14 @@ namespace OpenVic::ecs {
 			return detail::require_ids_from_tuple<detail::component_pack_t<Derived>>::compute();
 		}
 
+		// Sorted-unique component ids the iteration query EXCLUDES — archetypes carrying any of
+		// these are skipped. Derived from the optional `Filters` alias (empty when absent). Stored
+		// on the SystemRegistration and consumed both by the scheduler's query-cache prewarm and by
+		// detail::build_tick_query, so the prewarmed key and the dispatched key stay byte-identical.
+		static std::vector<component_type_id_t> compute_tick_query_exclude_ids() {
+			return system_filters_t<Derived>::exclude_ids();
+		}
+
 		// Drives serial iteration. Called once per tick by the scheduler. Defined inline
 		// because dispatch_serial is a template — instantiated at the point a derived
 		// system's tick_all_fn is taken (which requires SystemImpl.hpp visible).
@@ -324,6 +333,13 @@ namespace OpenVic::ecs {
 		// dispatching workers, eliminating the latent query_cache race that plain System<>s
 		// previously had in the run_concurrent path.
 		std::vector<component_type_id_t> tick_query_require_ids;
+
+		// Sorted-unique component ids the iteration query EXCLUDES (from the system's `Filters`
+		// alias; empty for unfiltered systems). Paired with tick_query_require_ids to form the
+		// QueryCacheKey the scheduler prewarms before a multi-system parallel stage — it must match
+		// the key every dispatch path builds via detail::build_tick_query, or a worker thread would
+		// mutate the World's mutable query_cache concurrently.
+		std::vector<component_type_id_t> tick_query_exclude_ids;
 
 		// Pending command buffer for this system this tick. Drained by the scheduler at
 		// the stage barrier in registration_index ascending order across the stage.

@@ -1090,6 +1090,10 @@ namespace OpenVic::ecs {
 		// for the same reason — their `for_each` inside dispatch_serial would otherwise
 		// race on query_cache mutation when running concurrently with another System<>.
 		reg.tick_query_require_ids = S::compute_tick_query_require_ids();
+		// Exclude ids from the system's optional `Filters` alias (empty for unfiltered systems).
+		// Stored alongside require so the scheduler prewarms the exact key every dispatch path
+		// later looks up — see detail::build_tick_query.
+		reg.tick_query_exclude_ids = S::compute_tick_query_exclude_ids();
 
 		// Multi-system-stage entry points — set only for SystemThreaded. Plain System<>
 		// stays with null pointers; the scheduler distinguishes via reg.is_threaded.

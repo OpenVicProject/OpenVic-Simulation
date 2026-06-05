@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "openvic-simulation/ecs/ChunkView.hpp"
+#include "openvic-simulation/ecs/QueryFilter.hpp"
 #include "openvic-simulation/ecs/SystemImpl.hpp"
 
 namespace OpenVic::ecs {
@@ -49,9 +50,17 @@ namespace OpenVic::ecs {
 			return ids;
 		}
 
+		// Sorted-unique exclude ids from the optional `Filters` alias (empty when absent). Mirrors
+		// System<>::compute_tick_query_exclude_ids so detail::build_tick_query works uniformly for
+		// both bases and the scheduler prewarm sees the same (require, exclude) pair this dispatches.
+		static std::vector<component_type_id_t> compute_tick_query_exclude_ids() {
+			return system_filters_t<Derived>::exclude_ids();
+		}
+
 		void tick_all(World& world, TickContext const& ctx) {
 			Derived& self = static_cast<Derived&>(*this);
-			world.template for_each_chunk<std::remove_cvref_t<Cs>...>(
+			Query const q = detail::build_tick_query<Derived>();
+			world.template for_each_chunk<std::remove_cvref_t<Cs>...>(q,
 				[&](ChunkView<std::remove_cvref_t<Cs>...> view) {
 					self.tick_chunk(view, ctx);
 				});
