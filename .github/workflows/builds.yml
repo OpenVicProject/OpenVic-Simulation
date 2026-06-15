@@ -3,39 +3,7 @@ name: 🖥️ Builds
 on:
   push:
     branches: ['master']
-    paths:
-      - '.github/workflows/builds.yml'
-      - '.github/actions/openvic-sim-build/action.yml'
-      - '**/{SConstruct,SCsub,*.py}'
-      - '**/*.{hpp,cpp,inc}'
-      - 'scripts'
-      - 'deps/**'
-      - 'tests/**'
-      - 'AUTHORS.md'
-      - 'COPYRIGHT'
-      - 'LICENSE.md'
-      - '.pre-commit-config.yaml'
-      - 'pyproject.toml'
-      - '.clang-format'
-      - '.clang-tidy'
-      - '.gitmodules'
   pull_request:
-    paths:
-      - '.github/workflows/builds.yml'
-      - '.github/actions/openvic-sim-build/action.yml'
-      - '**/{SConstruct,SCsub,*.py}'
-      - '**/*.{hpp,cpp,inc}'
-      - 'scripts'
-      - 'deps/**'
-      - 'tests/**'
-      - 'AUTHORS.md'
-      - 'COPYRIGHT'
-      - 'LICENSE.md'
-      - '.pre-commit-config.yaml'
-      - 'pyproject.toml'
-      - '.clang-format'
-      - '.clang-tidy'
-      - '.gitmodules'
   merge_group:
   workflow_dispatch:
 
@@ -47,7 +15,7 @@ permissions: {}
 
 jobs:
   static-checks-builds:
-    name: Code style, file formatting, and docs
+    name: 📊 Code style, file formatting, and docs
     runs-on: ubuntu-latest
     if: github.run_attempt > 1 || github.event_name == 'workflow_dispatch' || !vars.DISABLE_BUILDS
     outputs:
@@ -83,78 +51,12 @@ jobs:
           extra-args: --files ${{ env.CHANGED_FILES }}
 
   build-master:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    name: 🛠️ Build
     needs: static-checks-builds
     if: needs.static-checks-builds.outputs.sources-changed == 'true' || github.event_name != 'pull_request'
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - identifier: windows-debug
-            os: windows-latest
-            name: 🏁 Windows Debug
-            target: template_debug
-            platform: windows
-            arch: x86_64
-            test-bin-suffix: .md.exe
-
-          - identifier: windows-release
-            os: windows-latest
-            name: 🏁 Windows Release
-            target: template_release
-            platform: windows
-            arch: x86_64
-            test-bin-suffix: .md.exe
-
-          - identifier: macos-debug
-            os: macos-latest
-            name: 🍎 macOS (universal) Debug
-            target: template_debug
-            platform: macos
-            arch: universal
-
-          - identifier: macos-release
-            os: macos-latest
-            name: 🍎 macOS (universal) Release
-            target: template_release
-            platform: macos
-            arch: universal
-
-          - identifier: linux-debug
-            os: ubuntu-22.04
-            name: 🐧 Linux Debug
-            target: template_debug
-            platform: linux
-            arch: x86_64
-
-          - identifier: linux-release
-            os: ubuntu-22.04
-            name: 🐧 Linux Release
-            target: template_release
-            platform: linux
-            arch: x86_64
-
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: recursive
-          persist-credentials: false
-
-      - name: Build
-        uses: ./.github/actions/openvic-sim-build
-        with:
-          identifier: ${{ matrix.identifier }}
-          target: ${{ matrix.target }}
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-
-      - name: Run tests
-        run: |
-          ./tests/bin/openvic-simulation.tests.${{ matrix.platform }}.${{ matrix.target }}.${{ matrix.arch }}${{ matrix.test-bin-suffix || '' }}
+    uses: ./.github/workflows/build-matrix.yml
 
   merge-library-files:
     name: 📚 Merge Library Files
@@ -167,3 +69,15 @@ jobs:
           delete-merged: true
           name: ${{ github.event.repository.name }}-library
           pattern: ${{ github.event.repository.name }}-*-library
+
+  validate-master:
+    name: ✅ Validate Success
+    if: always()
+    needs: [static-checks-builds, build-master, merge-library-files]
+    runs-on: Ubuntu-latest
+    steps:
+      - name: Check
+        uses: re-actors/alls-green@a638d6464689bbb24c325bb3fe9404d63a913030
+        with:
+          allowed-skips: static-checks-builds, build-master, merge-library-files
+          jobs: ${{ toJson(needs) }}
