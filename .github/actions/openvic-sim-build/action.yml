@@ -4,38 +4,28 @@ description: Setup and Build OpenVic-Simulation with the provided options
 inputs:
   identifier:
     description: Identifier of this build
-    type: string
+    required: true
   target:
-    description: Target type to build for
-    type: choice
-    options: [template_release, template_debug, editor]
+    description: Target type to build for (template_release, template_debug, editor)
+    required: true
   platform:
-    description: Platform to build for
-    type: choice
-    options: [windows, linux, macos]
+    description: Platform to build for (windows, linux, macos)
+    required: true
   arch:
-    description: Architecture to build for
-    type: choice
-    options: [x86_64, universal]
+    description: Architecture to build for (x86_32, x86_64, universal)
+    required: true
   scons-flags:
     description: Additional flags to send to SCons
-    required: false
     default: 'build_ovsim_benchmarks=yes'
-    type: string
   build-library:
     description: Whether to build the library file
-    default: true
-    type: boolean
+    default: 'true'
   cache-base-branch:
-    description: |
-      Branch to base the cache upon
-    required: false
+    description: Branch to base the cache upon
     default: 'master'
-    type: string
   disable-cache:
     description: Whether to disable the build cache
-    default: false
-    type: boolean
+    default: 'false'
 
 runs:
   using: composite
