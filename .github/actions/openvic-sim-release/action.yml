@@ -5,45 +5,35 @@ inputs:
   tag-name:
     description: 'Name to assign to the tag (default: github.ref)'
     default: ${{ github.ref }}
-    type: string
   target-repo:
     description: Repository to publish this release to
     default: 'OpenVic-Simulation'
-    type: string
   to-ref:
     description: 'Tag/Commit to publish this release to (default: github.ref)'
     default: ${{ github.ref }}
-    type: string
   from-ref:
     description: Tag/Commit to source the release notes from
-    type: string
     required: true
   from-tag:
     description: 'Tag name being sourced from (default: from-ref)'
     default: ''
-    type: string
   nightly-release:
     description: Whether the release is a nightly build
-    type: boolean
-    default: false
+    default: 'false'
   snapshot-release:
     description: Whether the release is a snapshot release
-    type: boolean
-    default: false
+    default: 'false'
   latest:
     description: Latest
-    type: boolean
-    default: false
+    default: 'false'
   prerelease:
     description: Pre-release
-    type: boolean
     required: true
   src-token:
     description: Github token for source repository
     required: true
   target-token:
     description: Github token for target repository
-    required: false
     default: ''
 
 runs:
