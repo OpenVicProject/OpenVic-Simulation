@@ -32,7 +32,7 @@ runs:
   steps:
     - name: Setup build cache
       uses: OpenVicProject/openvic-cache@master
-      if: ${{ !inputs.disable-cache }}
+      if: ${{ inputs.disable-cache != 'true' }}
       with:
         cache-name: ${{ inputs.identifier }}
         base-branch: ${{ inputs.cache-base-branch }}
