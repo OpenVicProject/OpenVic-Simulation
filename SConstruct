@@ -71,13 +71,13 @@ gen_commit_info = env.CommandNoCache(
 )
 gen_license_info = env.CommandNoCache(
     sim_variant + "/gen/license_info.gen.hpp",
-    ["#COPYRIGHT", "#LICENSE.md"],
+    ["COPYRIGHT", "LICENSE.md"],
     env.Run(env.license_builder),
     name_prefix="sim",
 )
 gen_author_info = env.CommandNoCache(
     sim_variant + "/gen/author_info.gen.hpp",
-    "#AUTHORS.md",
+    "AUTHORS.md",
     env.Run(env.author_builder),
     name_prefix="sim",
     sections={
