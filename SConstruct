@@ -65,7 +65,7 @@ env.Append(CPPPATH=[[env.Dir(p) for p in [sim_variant, sim_variant_parent, sourc
 
 gen_commit_info = env.CommandNoCache(
     sim_variant + "/gen/commit_info.gen.hpp",
-    env.Value(env.get_git_info()),
+    env.Value(env.get_git_info("sim")),
     env.Run(env.git_builder),
     name_prefix="sim",
 )
