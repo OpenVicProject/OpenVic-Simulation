@@ -93,3 +93,9 @@ src/openvic-simulation/testing/test_results/results.txt
 
 # Generated source files
 src/openvic-simulation/gen/*
+
+# SCons
+.sconf_temp
+.sconsign*.dblite
+.scons_env.json
+.scons_node_count

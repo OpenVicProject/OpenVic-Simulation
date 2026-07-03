@@ -1,38 +1,9 @@
 #!/usr/bin/env python
 import os
-import subprocess
-
-from SCons.Script.SConscript import SConsEnvironment
-
-
-def UnitTestPostAction(target=None, source=None, env=None):
-    print()
-    return subprocess.run([source[0].path]).returncode
-
-
-def BuildUnitTest(env, **kwargs):
-    test = env.Program(**kwargs)
-    env.NoCache(test)
-    return test
-
-
-def RunUnitTest(env):
-    # Alias-based runner: AlwaysBuild on the alias makes the run-action fire on
-    # every invocation, but the unit-test Program target underneath is only
-    # re-linked when its sources/lib deps actually changed.
-    run_alias = env.Alias("run_tests", env.unit_test, env.Action(UnitTestPostAction, None))
-    env.AlwaysBuild(run_alias)
-    Default(run_alias)
-
-
-SConsEnvironment.BuildUnitTest = BuildUnitTest
-SConsEnvironment.RunUnitTest = RunUnitTest
 
 Import("env")
 
 BINDIR = "bin"
-
-env.openvic_simulation_tests = {}
 
 # For the reference:
 # - CCFLAGS are compilation flags shared between C and C++
@@ -41,24 +12,12 @@ env.openvic_simulation_tests = {}
 # - CPPFLAGS are for pre-processor flags
 # - CPPDEFINES are for pre-processor defines
 # - LINKFLAGS are for linking flags
-
-# tweak this if you want to use different folders, or more folders, to store your source code in.
-source_path = "src"  # relative to this SCsub (i.e. tests/src under the sim root)
-
-tests_name = "openvic-simulation"
 tests_env = env.Clone()
-# Out-of-source build: variant tree holds object files only.
-tests_variant = env["build_dir"] + "/tests/" + source_path
-tests_env.VariantDir(tests_variant, source_path, duplicate=False)
-tests_env.Append(CPPDEFINES=["OPENVIC_SIMULATION_TESTS"])
-tests_env.Append(CPPPATH=[tests_env.Dir(tests_variant), tests_env.Dir(source_path)])
-tests_env.tests_sources = env.GlobRecursiveVariant("*.cpp", source_path, tests_variant)
 
 SConscript("deps/SCsub", {"env": tests_env})
 
 tests_env.unit_test = tests_env.BuildUnitTest(
-    source=tests_env.tests_sources, target=os.path.join(BINDIR, tests_name), PROGSUFFIX=".tests" + env["PROGSUFFIX"]
+    target=os.path.join(BINDIR, "openvic-simulation"), src_dir="src", defines_prefix="openvic_simulation"
 )
-Default(tests_env.unit_test)
 
 Return("tests_env")

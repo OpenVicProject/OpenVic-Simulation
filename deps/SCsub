@@ -4,64 +4,43 @@ Import("env")
 
 
 def build_openvic_dataloader(env):
-    ovdl_env = SConscript("openvic-dataloader/SConstruct")
+    ovdl_env = SConscript(
+        "openvic-dataloader/SConstruct", exports={"build_dir": env["build_dir"] + "/openvic-dataloader"}
+    )
     env.AppendUnique(CPPDEFINES=ovdl_env["CPPDEFINES"])
-    env.Append(LIBPATH=ovdl_env.openvic_dataloader["LIBPATH"])
-    env.Prepend(LIBS=ovdl_env.openvic_dataloader["LIBS"])
-    env.Append(CPPPATH=ovdl_env.openvic_dataloader["INCPATH"])
-    env.openvic_dataloader = ovdl_env.openvic_dataloader
-    env.exposed_includes += env.openvic_dataloader["INCPATH"]
+    env.AddLibraryIncludes(ovdl_env.exposed_includes)
+    env.Append(LIBPATH=ovdl_env["LIBPATH"])
+    env.Prepend(LIBS=ovdl_env["LIBS"])
 
 
 def build_lexy_vdf(env):
-    lvdf_env = SConscript("lexy-vdf/SConstruct")
+    lvdf_env = SConscript("lexy-vdf/SConstruct", exports={"build_dir": env["build_dir"] + "/lexy-vdf"})
     env.AppendUnique(CPPDEFINES=lvdf_env["CPPDEFINES"])
-    env.Append(LIBPATH=lvdf_env.lexy_vdf["LIBPATH"])
-    env.Prepend(LIBS=lvdf_env.lexy_vdf["LIBS"])
-    env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
-    env.lexy_vdf = lvdf_env.lexy_vdf
+    env.AddLibraryIncludes(lvdf_env.exposed_includes)
+    env.Append(LIBPATH=lvdf_env["LIBPATH"])
+    env.Prepend(LIBS=lvdf_env["LIBS"])
 
 
 def build_ordered_map(env):
-    include_path = "ordered-map/include"
-    env.ordered_map = {}
-    env.ordered_map["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.ordered_map["INCPATH"])
-    env.exposed_includes += env.ordered_map["INCPATH"]
+    env.AddLibraryIncludes("ordered-map/include")
 
 
 def build_colony(env):
-    include_path = "plf_colony"
-    env.colony = {}
-    env.colony["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.colony["INCPATH"])
-    env.exposed_includes += env.colony["INCPATH"]
+    env.AddLibraryIncludes("plf_colony")
 
 
 def build_function2(env):
-    include_path = "function2/include"
-    env.function2 = {}
-    env.function2["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.function2["INCPATH"])
-    env.exposed_includes += env.function2["INCPATH"]
+    env.AddLibraryIncludes("function2/include")
 
 
 def build_std_function(env):
-    include_path = "std_function"
-    env.std_function = {}
-    env.std_function["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.std_function["INCPATH"])
-    env.exposed_includes += env.std_function["INCPATH"]
+    env.AddLibraryIncludes("std_function")
 
 
 def build_memory(env):
-    from pathlib import Path
+    import os
 
     import methods
-
-    include_path = "memory/include"
-    inner_include_path = include_path + "/foonathan/memory"
-    source_path = "memory/src"
 
     env.Append(
         CPPDEFINES=[
@@ -72,17 +51,7 @@ def build_memory(env):
         ]
     )
 
-    memory_env = env.Clone()
-    memory_env.Append(
-        BUILDERS={
-            "GenerateMemoryConfig": memory_env.Builder(action=methods.generate_memory_config_header),
-            "GenerateMemoryContainerNodeSizes": memory_env.Builder(
-                action=methods.generate_memory_container_size_header
-            ),
-        }
-    )
-
-    memory_env.config_data = {
+    config_data = {
         "FOONATHAN_MEMORY_CHECK_ALLOCATION_SIZE": 1,
         "FOONATHAN_MEMORY_IMPL_DEFAULT_ALLOCATOR": "heap_allocator",
         "FOONATHAN_MEMORY_DEBUG_ASSERT": 0,
@@ -95,10 +64,33 @@ def build_memory(env):
         "FOONATHAN_MEMORY_TEMPORARY_STACK_MODE": 2,
     }
 
-    config = memory_env.GenerateMemoryConfig(memory_env.File(Path(inner_include_path) / "config_impl.hpp"), "SCsub")
-    node_size_impl = memory_env.GenerateMemoryContainerNodeSizes(
-        memory_env.File(Path(inner_include_path) / "detail" / "container_node_sizes_impl.hpp"), "SCsub"
+    memory_env, library = env.BuildDependencyLibrary(
+        target="libmemory", src_dir="memory/src", include_dir="memory/include"
     )
+
+    memory_env.Append(
+        BUILDERS={
+            "GenerateMemoryConfig": memory_env.Builder(
+                action=methods.generate_memory_config_header, emitter=methods.memory_config_header_emitter
+            ),
+            "GenerateMemoryContainerNodeSizes": memory_env.Builder(
+                action=methods.generate_memory_container_size_header, emitter=methods.memory_config_header_emitter
+            ),
+        }
+    )
+
+    inner_include_dir = "memory/include/foonathan/memory"
+
+    memory_env.Append(CPPPATH=[env.Dir(inner_include_dir)])
+    config = memory_env.GenerateMemoryConfig(
+        os.path.join(inner_include_dir, "config_impl.hpp"),
+        env.Value(config_data),
+    )
+    node_size_impl = memory_env.GenerateMemoryContainerNodeSizes(
+        os.path.join(inner_include_dir, "detail/container_node_sizes_impl.hpp"),
+        "SCsub",
+    )
+    Depends(library, [config, node_size_impl])
 
     if memory_env.get("is_msvc", False):
         if memory_env.get("use_clang_cl"):
@@ -111,26 +103,6 @@ def build_memory(env):
         memory_env.Append(
             CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion"]
         )
-    memory_env.Append(CPPPATH=[[memory_env.Dir(p) for p in [source_path, Path(inner_include_path)]]])
-    # Mirror memory's source tree into the per-config build dir
-    build_root = (env.get("build_dir") or env.Dir("#").abspath).replace("\\", "/")
-    out_dir = build_root + "/memory/" + source_path
-    memory_env.VariantDir(out_dir, source_path, duplicate=True)
-    sources = env.GlobRecursive("*.cpp", [out_dir])
-    env.memory_sources = sources
-
-    library_name = "libmemory" + env.get("suffix", "") + env["LIBSUFFIX"]
-    library = memory_env.StaticLibrary(target=out_dir + "/" + library_name, source=sources)
-    Default([config, node_size_impl, library])
-
-    env.memory = {}
-    env.memory["INCPATH"] = [memory_env.Dir(include_path)]
-
-    env.Append(CPPPATH=env.memory["INCPATH"])
-    env.Append(LIBPATH=[memory_env.Dir(out_dir)])
-    env.Prepend(LIBS=[library_name])
-
-    env.exposed_includes += env.memory["INCPATH"]
 
 
 def build_spdlog(env):
@@ -167,44 +139,12 @@ def build_spdlog(env):
     )
     if env["platform"] != "macos":
         env.Append(CPPDEFINES=["SPDLOG_FWRITE_UNLOCKED"])
-    spdlog_env = env.Clone()
 
-    include_path = "spdlog/include"
-    source_path = "spdlog/src"
-    source_dir = spdlog_env.Dir(source_path)
-
-    env.spdlog = {}
-    env.spdlog["INCPATH"] = [spdlog_env.Dir(include_path)]
-
-    spdlog_env.Append(CPPPATH=[source_dir, env.spdlog["INCPATH"]])
-    # Mirror spdlog's source tree into the per-config build dir.
-    build_root = (env.get("build_dir") or env.Dir("#").abspath).replace("\\", "/")
-    spdlog_out = build_root + "/spdlog/" + source_path
-    spdlog_env.VariantDir(spdlog_out, source_path, duplicate=True)
-    sources = env.GlobRecursive("*.cpp", [spdlog_out])
-    env.spdlog_sources = sources
-
-    library_name = "libspdlog" + env.get("suffix", "") + env["LIBSUFFIX"]
-    library = spdlog_env.StaticLibrary(target=spdlog_out + "/" + library_name, source=sources)
-    Default(library)
-
-    env.Append(CPPPATH=[env.spdlog["INCPATH"]])
-    if env.get("is_msvc", False):
-        env.Append(CXXFLAGS=[f"/external:I{env.spdlog['INCPATH'][0]}"])
-    else:
-        env.Append(CXXFLAGS=["-isystem", env.spdlog["INCPATH"][0]])
-    env.Append(LIBPATH=[spdlog_env.Dir(spdlog_out)])
-    env.Prepend(LIBS=[library_name])
-
-    env.exposed_includes += env.spdlog["INCPATH"]
+    env.BuildDependencyLibrary(target="libspdlog", src_dir="spdlog/src", include_dir="spdlog/include")
 
 
 def build_xoshiro(env):
-    include_path = "xoshiro"
-    env.xoshiro = {}
-    env.xoshiro["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.xoshiro["INCPATH"])
-    env.exposed_includes += env.xoshiro["INCPATH"]
+    env.AddLibraryIncludes("xoshiro")
 
 
 def build_type_safe(env):
@@ -246,24 +186,15 @@ def build_type_safe(env):
         ]
     )
 
-    include_path = "type_safe/include"
-    debug_assert_include_path = "type_safe/external/debug_assert"
-    env.type_safe = {}
-    env.type_safe["INCPATH"] = [env.Dir(include_path), env.Dir(debug_assert_include_path)]
-    env.Append(CPPPATH=[env.type_safe["INCPATH"]])
+    incls = env.AddLibraryIncludes(["type_safe/include", "type_safe/external/debug_assert"])
     if env.get("is_msvc", False):
-        env.Append(CXXFLAGS=[f"/external:I{env.type_safe['INCPATH'][0]}"])
+        env.Append(CXXFLAGS=[f"/external:I{incls[0]}"])
     else:
-        env.Append(CXXFLAGS=["-isystem", env.type_safe["INCPATH"][0]])
-    env.exposed_includes += env.type_safe["INCPATH"]
+        env.Append(CXXFLAGS=["-isystem", incls[0]])
 
 
 def build_int128(env):
-    include_path = "int128/include"
-    env.int128 = {}
-    env.int128["INCPATH"] = [env.Dir(include_path)]
-    env.Append(CPPPATH=env.int128["INCPATH"])
-    env.exposed_includes += env.int128["INCPATH"]
+    env.AddLibraryIncludes("int128/include")
 
 
 def link_tbb(env):

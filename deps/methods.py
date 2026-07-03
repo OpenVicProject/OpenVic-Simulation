@@ -1,8 +1,15 @@
-from pathlib import Path
+import os
+
+
+def memory_config_header_emitter(target, source, env):
+    for i in range(len(target)):
+        target[i] = os.path.join(env["build_dir"], target[i])
+    return target, source
 
 
 def generate_memory_config_header(target, source, env):
-    header_file_path = Path(str(target[0]))
+    header_file_path = str(target[0])
+    config_data = source[0].read()
 
     header = []
 
@@ -23,7 +30,7 @@ def generate_memory_config_header(target, source, env):
 // clang-format off
 """.split("\n")
 
-    for key, val in env.config_data.items():
+    for key, val in config_data.items():
         if isinstance(val, bool) and val:
             val = 1
         elif isinstance(val, bool) and not val:
@@ -33,12 +40,12 @@ def generate_memory_config_header(target, source, env):
     header.append("// clang-format on")
     header.append("")
 
-    with header_file_path.open("w+", encoding="utf-8") as header_file:
+    with open(header_file_path, "w+", encoding="utf-8") as header_file:
         header_file.write("\n".join(header))
 
 
 def generate_memory_container_size_header(target, source, env):
-    header_file_path = Path(str(target[0]))
+    header_file_path = str(target[0])
 
     header = []
 
@@ -279,5 +286,5 @@ struct {container_name}_node_size
 {{}};
 '''.split("\n")
 
-    with header_file_path.open("w+", encoding="utf-8") as header_file:
+    with open(header_file_path, "w+", encoding="utf-8") as header_file:
         header_file.write("\n".join(header))
