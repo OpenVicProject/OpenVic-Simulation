@@ -317,9 +317,5 @@ bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_
 		return false;
 	}
 
-	//these TODO's should be implemented in ProvinceInstance and/or some military type
-	//TODO verify pop's cultural status is acceptable for regiment type
-	//TODO verify pop is recruitable and has enough size (pop.try_recruit())
-	//TODO actually instantiate a regiment in recruitment state
-	return false;
+	return instance_manager.get_unit_instance_manager().create_regiment(*regiment_type, *pop, *province);
 }

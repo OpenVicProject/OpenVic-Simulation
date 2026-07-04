@@ -579,3 +579,39 @@ bool UnitInstanceManager::create_leader(
 
 	return true;
 }
+
+bool UnitInstanceManager::create_regiment(
+        RegimentType const& regiment_type,
+        Pop& pop,
+        ProvinceInstance& location
+) {
+        CountryInstance* country = location.get_owner();
+        if (OV_unlikely(country == nullptr)) {
+                spdlog::error_s("Trying to recruit regiment in unowned province \"{}\"", location.get_identifier());
+                return false;
+        }
+
+        if (!Pop::is_culture_status_allowed(regiment_type.allowed_cultures, pop.get_culture_status())) {
+                return false;
+        }
+
+        if (!pop.try_recruit()) {
+                return false;
+        }
+
+	//right now the regiment is created at full strength immediately 
+	//XXX TODO: add recruitment times
+        RegimentInstance& regiment = *get_unit_instances<LAND>().insert(
+                [this, &regiment_type, &pop]() -> RegimentInstance {
+                        return { unique_id_counter++, regiment_type.get_identifier(), regiment_type, &pop, false };
+                }()
+        );
+        unit_instance_map.emplace(regiment.unique_id, regiment);
+
+        //always spawns a new army for now
+        ArmyInstance& army = *armies.emplace(unique_id_counter++, regiment_type.get_identifier(), *country, location);
+        unit_instance_group_map.emplace(army.unique_id, army);
+        army.add_unit(regiment);
+
+        return true;
+}

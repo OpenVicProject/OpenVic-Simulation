@@ -217,6 +217,7 @@ namespace OpenVic {
 		LeaderInstance* get_leader_instance_by_unique_id(unique_id_t unique_id);
 		UnitInstance* get_unit_instance_by_unique_id(unique_id_t unique_id);
 		UnitInstanceGroup* get_unit_instance_group_by_unique_id(unique_id_t unique_id);
+		
 
 		// Creates a new leader of the specified branch and adds it to the specified country. The leader's name and traits
 		// can be specified, but if they are not, the leader will be generated with a random name and traits. The country's
@@ -230,5 +231,12 @@ namespace OpenVic {
 			LeaderTrait const* personality = nullptr,
 			LeaderTrait const* background = nullptr
 		);
+		//this seems too minimal, am i missing something?
+		bool create_regiment(
+			RegimentType const& regiment_type,
+			Pop& pop,
+			ProvinceInstance& location
+		);
+
 	};
 }
