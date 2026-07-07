@@ -30,7 +30,7 @@ bool BookmarkManager::add_bookmark(
 ) {
 	return bookmarks.emplace_item(
 		name,
-		Bookmark::index_t { bookmarks.size() }, name, description, date, initial_camera_position
+		index_from_count<Bookmark::index_t>(bookmarks.size()), name, description, date, initial_camera_position
 	);
 }
 

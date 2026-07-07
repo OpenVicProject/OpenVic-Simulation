@@ -129,7 +129,8 @@ bool BuildingTypeManager::add_building_type(
 
 	const bool ret = building_types.emplace_item(
 		identifier,
-		BuildingType::index_t { get_building_type_count() }, province_building_index, identifier, building_type_args
+		index_from_count<BuildingType::index_t>(get_building_type_count()), province_building_index, identifier,
+		building_type_args
 	);
 
 	if (ret) {

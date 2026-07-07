@@ -52,7 +52,7 @@ bool GovernmentTypeManager::add_government_type(
 
 	const bool ret = government_types.emplace_item(
 		identifier,
-		GovernmentType::index_t { get_government_type_count() }, identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
+		index_from_count<GovernmentType::index_t>(get_government_type_count()), identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
 	);
 
 	/* flag_type can be empty here for default/non-ideological flag */

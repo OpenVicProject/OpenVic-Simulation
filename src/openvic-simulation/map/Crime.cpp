@@ -29,7 +29,8 @@ bool CrimeManager::add_crime_modifier(
 	return crime_modifiers.emplace_item(
 		identifier,
 		duplicate_warning_callback,
-		Crime::index_t { get_crime_modifier_count() }, identifier, std::move(values), icon, std::move(trigger), default_active
+		index_from_count<Crime::index_t>(get_crime_modifier_count()), identifier, std::move(values), icon,
+		std::move(trigger), default_active
 	);
 }
 

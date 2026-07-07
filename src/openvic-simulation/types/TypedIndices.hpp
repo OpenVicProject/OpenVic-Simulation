@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -27,15 +29,28 @@
 			return fmt::formatter<base_type>::format(type_safe::get(value), ctx); \
 		} \
 	};
-#define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::size_t)
+#define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::uint32_t)
+
+namespace OpenVic {
+	// Construct a typed index from a size_t count, asserts in debug
+	// builds that the count fits the index's underlying type
+	template<typename IndexT>
+	constexpr IndexT index_from_count(std::size_t count) {
+		using underlying_t = type_safe::underlying_type<IndexT>;
+		assert(count <= static_cast<std::size_t>(std::numeric_limits<underlying_t>::max()));
+		return IndexT { static_cast<underlying_t>(count) };
+	}
+}
 
 TYPED_INDEX(bookmark_index_t)
 TYPED_INDEX(building_type_index_t)
 TYPED_INDEX(province_building_index_t)
 TYPED_INDEX(country_index_t)
 TYPED_INDEX(crime_index_t)
+TYPED_INDEX(good_category_index_t)
 TYPED_INDEX(good_index_t)
 TYPED_INDEX(government_type_index_t)
+TYPED_INDEX(graphical_culture_index_t)
 TYPED_INDEX(ideology_index_t)
 TYPED_INDEX(invention_index_t)
 TYPED_INDEX(map_mode_index_t)
@@ -51,6 +66,7 @@ TYPED_INDEX(strata_index_t)
 TYPED_INDEX(technology_index_t)
 TYPED_INDEX(technology_folder_index_t)
 TYPED_INDEX(terrain_type_index_t)
+TYPED_INDEX(unit_type_index_t)
 
 namespace OpenVic {
 	struct province_index_t : type_safe::strong_typedef<province_index_t, std::uint16_t>,

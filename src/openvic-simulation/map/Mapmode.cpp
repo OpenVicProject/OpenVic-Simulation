@@ -32,7 +32,7 @@ Mapmode::Mapmode(
 	is_parchment_mapmode_allowed { new_is_parchment_mapmode_allowed } {}
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", index_t { std::numeric_limits<std::size_t>::max() }, [](
+	"mapmode_error", Mapmode::ERROR_INDEX, [](
 		MapInstance const& map_instance, ProvinceInstance const& province,
 		CountryInstance const* player_country, ProvinceInstance const* selected_province
 	) -> base_stripe_t {
@@ -63,7 +63,8 @@ bool MapmodeManager::add_mapmode(
 	}
 	return mapmodes.emplace_item(
 		identifier,
-		identifier, Mapmode::index_t { get_mapmode_count() }, colour_func, localisation_key, parchment_mapmode_allowed
+		identifier, index_from_count<Mapmode::index_t>(get_mapmode_count()), colour_func, localisation_key,
+		parchment_mapmode_allowed
 	);
 }
 

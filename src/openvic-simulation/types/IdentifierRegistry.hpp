@@ -407,6 +407,26 @@ namespace OpenVic {
 	) CONST { \
 		return NodeTools::expect_identifier_or_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
+	constexpr NodeTools::NodeCallback auto expect_item_index( \
+		NodeTools::Callback<index_t> auto callback, bool warn = false \
+	) CONST { \
+		return expect_item_identifier( \
+			[callback](external_value_type CONST& item) -> bool { \
+				return callback(item.index); \
+			}, \
+			warn \
+		); \
+	} \
+	constexpr NodeTools::Callback<std::string_view> auto expect_item_index_str( \
+		NodeTools::Callback<index_t> auto callback, bool allow_empty = false, bool warn = false \
+	) CONST { \
+		return expect_item_str( \
+			[callback](external_value_type CONST& item) -> bool { \
+				return callback(item.index); \
+			}, \
+			allow_empty, warn \
+		); \
+	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
 		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
@@ -702,6 +722,17 @@ private:
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
+	} \
+	constexpr NodeTools::NodeCallback auto expect_##singular##_index( \
+		NodeTools::Callback<decltype(registry)::index_t> auto callback, bool warn = false \
+	) const_kw { \
+		return registry.expect_item_index(callback, warn); \
+	} \
+	constexpr NodeTools::Callback<std::string_view> auto expect_##singular##_index_str( \
+		NodeTools::Callback<decltype(registry)::index_t> auto callback, bool allow_empty = false, \
+		bool warn = false \
+	) const_kw { \
+		return registry.expect_item_index_str(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_string( \
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
