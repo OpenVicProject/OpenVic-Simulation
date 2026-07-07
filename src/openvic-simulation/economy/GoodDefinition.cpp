@@ -7,7 +7,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GoodCategory::GoodCategory(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+GoodCategory::GoodCategory(std::string_view new_identifier, index_t new_index)
+	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 GoodDefinition::GoodDefinition(
 	std::string_view new_identifier,
@@ -34,7 +35,10 @@ bool GoodDefinitionManager::add_good_category(std::string_view identifier, size_
 		return false;
 	}
 
-	if (good_categories.emplace_item(identifier, identifier)) {
+	if (good_categories.emplace_item(
+		identifier,
+		identifier, index_from_count<GoodCategory::index_t>(get_good_category_count())
+	)) {
 		good_categories.back().good_definitions.reserve(expected_goods_in_category);
 		return true;
 	} else {
@@ -64,7 +68,7 @@ bool GoodDefinitionManager::add_good_definition(
 
 	if (good_definitions.emplace_item(
 		identifier,
-		identifier, colour, GoodDefinition::index_t { get_good_definition_count() }, category, base_price, is_available_from_start,
+		identifier, colour, index_from_count<GoodDefinition::index_t>(get_good_definition_count()), category, base_price, is_available_from_start,
 		is_tradeable, is_money, has_overseas_penalty
 	)) {
 		category.good_definitions.emplace_back(get_back_good_definition());

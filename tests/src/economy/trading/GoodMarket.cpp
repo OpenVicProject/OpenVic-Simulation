@@ -14,7 +14,7 @@
 
 using namespace OpenVic;
 
-GoodCategory good_category {"test_good_category"};
+GoodCategory good_category {"test_good_category", good_category_index_t{0}};
 
 const fixed_point_t base_price = 16;
 constexpr bool is_not_available_from_start = false;

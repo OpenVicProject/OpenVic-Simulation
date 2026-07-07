@@ -16,8 +16,10 @@ using enum unit_branch_t;
 using enum UnitType::unit_category_t;
 
 UnitType::UnitType(
-	std::string_view new_identifier, unit_branch_t new_branch, unit_type_args_t& unit_args
+	std::string_view new_identifier, unit_type_index_t new_unit_type_index, unit_branch_t new_branch,
+	unit_type_args_t& unit_args
 ) : HasIdentifier { new_identifier },
+	unit_type_index { new_unit_type_index },
 	branch { new_branch },
 	icon { unit_args.icon },
 	sprite { unit_args.sprite },
@@ -47,9 +49,9 @@ UnitType::UnitType(
 }
 
 UnitTypeBranched<LAND>::UnitTypeBranched(
-	index_t new_index, std::string_view new_identifier,
+	index_t new_index, unit_type_index_t new_unit_type_index, std::string_view new_identifier,
 	unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
-) : UnitType { new_identifier, LAND, unit_args },
+) : UnitType { new_identifier, new_unit_type_index, LAND, unit_args },
 	HasIndex { new_index },
 	allowed_cultures { regiment_type_args.allowed_cultures },
 	sprite_override { regiment_type_args.sprite_override },
@@ -64,9 +66,9 @@ UnitTypeBranched<LAND>::UnitTypeBranched(
 	siege { regiment_type_args.siege } {}
 
 UnitTypeBranched<NAVAL>::UnitTypeBranched(
-	index_t new_index, std::string_view new_identifier,
+	index_t new_index, unit_type_index_t new_unit_type_index, std::string_view new_identifier,
 	unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
-) : UnitType { new_identifier, NAVAL, unit_args },
+) : UnitType { new_identifier, new_unit_type_index, NAVAL, unit_args },
 	HasIndex { new_index },
 	naval_icon { ship_type_args.naval_icon },
 	can_sail { ship_type_args.sail },
@@ -135,7 +137,8 @@ bool UnitTypeManager::add_regiment_type(
 
 	bool ret = regiment_types.emplace_item(
 		identifier,
-		RegimentType::index_t { get_regiment_type_count() }, identifier,
+		index_from_count<RegimentType::index_t>(get_regiment_type_count()),
+		index_from_count<unit_type_index_t>(get_unit_type_count()), identifier,
 		unit_args, std::move(regiment_type_args)
 	);
 	if (ret) {
@@ -168,7 +171,8 @@ bool UnitTypeManager::add_ship_type(
 
 	bool ret = ship_types.emplace_item(
 		identifier,
-		ShipType::index_t { get_ship_type_count() }, identifier,
+		index_from_count<ShipType::index_t>(get_ship_type_count()),
+		index_from_count<unit_type_index_t>(get_unit_type_count()), identifier,
 		unit_args, ship_type_args
 	);
 	if (ret) {

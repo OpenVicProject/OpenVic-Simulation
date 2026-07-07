@@ -1,6 +1,10 @@
 #pragma once
 
+#include <limits>
+
 #include <function2/function2.hpp>
+
+#include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -36,6 +40,9 @@ namespace OpenVic {
 		memory::string PROPERTY(localisation_key);
 
 	public:
+		static constexpr index_t ERROR_INDEX {
+			std::numeric_limits<type_safe::underlying_type<index_t>>::max()
+		};
 		static const Mapmode ERROR_MAPMODE;
 		const bool is_parchment_mapmode_allowed;
 

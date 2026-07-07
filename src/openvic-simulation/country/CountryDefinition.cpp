@@ -67,7 +67,7 @@ bool CountryDefinitionManager::add_country(
 
 	return country_definitions.emplace_item(
 		identifier, //
-		identifier, colour, CountryDefinition::index_t { get_country_definition_count() }, *graphical_culture,
+		identifier, colour, index_from_count<CountryDefinition::index_t>(get_country_definition_count()), *graphical_culture,
 		std::move(parties), std::move(unit_names), dynamic_tag, std::move(alternative_colours),
 		/* Default to country colour for the chest and grey for the others. Update later if necessary. */
 		colour, default_colour, default_colour

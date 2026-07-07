@@ -100,7 +100,7 @@ bool TerrainTypeManager::add_terrain_type(
 
 	return terrain_types.emplace_item(
 		identifier,
-		TerrainType::index_t { get_terrain_type_count() }, identifier,
+		index_from_count<TerrainType::index_t>(get_terrain_type_count()), identifier,
 		colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
 	);
 }

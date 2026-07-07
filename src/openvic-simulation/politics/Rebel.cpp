@@ -62,7 +62,7 @@ bool RebelManager::add_rebel_type(
 
 	return rebel_types.emplace_item(
 		new_identifier,
-		RebelType::index_t { get_rebel_type_count() }, new_identifier,
+		index_from_count<RebelType::index_t>(get_rebel_type_count()), new_identifier,
 		icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
 		defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions, allow_all_ideologies,
 		resilient, reinforcing, general, smart, unit_transfer, occupation_mult, std::move(will_rise), std::move(spawn_chance),
