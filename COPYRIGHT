@@ -6,7 +6,7 @@ Source: https://github.com/OpenVicProject/OpenVic-Simulation
 Files: *
 Comment: OpenVic Simulation
 Copyright: 2023-present OpenVic Simulation contributors
-License: Expat
+License: MIT
 
 Files: deps/function2/*
 Comment: function2
@@ -16,7 +16,7 @@ License: BSL-1.0
 Files: deps/lexy-vdf/*
 Comment: Lexy-based VDF Parser
 Copyright: 2023-present lexy-vdf contributors
-License: Expat
+License: MIT
 
 Files: deps/memory/*
 Comment: foonathan/memory
@@ -26,12 +26,12 @@ License: Zlib
 Files: deps/openvic-dataloader/*
 Comment: OpenVic Dataloader
 Copyright: 2023-present Dataloader contributors
-License: Expat
+License: MIT
 
 Files: deps/ordered-map/*
 Comment: ordered-map
 Copyright: 2017, Thibaut Goetghebuer-Planchon
-License: Expat
+License: MIT
 
 Files: deps/plf_colony/*
 Comment: plf::colony
@@ -41,22 +41,22 @@ License: Zlib
 Files: deps/spdlog/*
 Comment: spdlog
 Copyright: 2016, Gabi Melman
-License: Expat
+License: MIT
 
 Files: deps/type_safe/*
 Comment: type_safe
 Copyright: 2016-2020, Jonathan Müller
-License: Expat
+License: MIT
 
 Files: deps/xoshiro/*
 Comment: Xoshiro-cpp
 Copyright: 2020, Ryo Suzuki
-License: Expat
+License: MIT
 
 Files: src/openvic-simulation/types/Signal.hpp
 Comment: sigslot
 Copyright: 2017, Pierre-Antoine Lacaze
-License: Expat
+License: MIT
 
 Files: tests/deps/snitch/*
 Comment: snitch
@@ -66,7 +66,7 @@ License: BSL-1.0
 Files: tests/benchmarks/deps/nanobench/*
 Comment: nanobench
 Copyright: 2019-2023 Martin Leitner-Ankerl
-License: Expat
+License: MIT
 
 License: BSL-1.0
   Boost Software License - Version 1.0 - August 17th, 2003
@@ -93,7 +93,7 @@ License: BSL-1.0
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
   DEALINGS IN THE SOFTWARE.
 
-License: Expat
+License: MIT
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
