@@ -61,9 +61,13 @@ namespace OpenVic {
 
 	protected:
 		/* Non-const reference unit_args so variables can be moved from it. */
-		UnitType(std::string_view new_identifier, unit_branch_t new_branch, unit_type_args_t& unit_args);
+		UnitType(
+			std::string_view new_identifier, unit_type_index_t new_unit_type_index, unit_branch_t new_branch,
+			unit_type_args_t& unit_args
+		);
 
 	public:
+		const unit_type_index_t unit_type_index; // Position in the combined unit type registry
 		const unit_branch_t branch; /* type in defines */
 		const unit_category_t unit_category;
 		const bool starts_unlocked;
@@ -116,7 +120,7 @@ namespace OpenVic {
 		const fixed_point_t siege;
 
 		UnitTypeBranched(
-			index_t new_index, std::string_view new_identifier,
+			index_t new_index, unit_type_index_t new_unit_type_index, std::string_view new_identifier,
 			unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
@@ -155,7 +159,7 @@ namespace OpenVic {
 		const fixed_point_t torpedo_attack;
 
 		UnitTypeBranched(
-			index_t new_index, std::string_view new_identifier,
+			index_t new_index, unit_type_index_t new_unit_type_index, std::string_view new_identifier,
 			unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
 		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
@@ -191,6 +195,27 @@ namespace OpenVic {
 		}
 		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<unit_branch_t> auto callback) {
 			return NodeTools::expect_identifier(expect_branch_str(callback));
+		}
+
+		constexpr NodeTools::NodeCallback auto expect_unit_type_index(
+			NodeTools::Callback<unit_type_index_t> auto callback, bool warn = false
+		) const {
+			return expect_unit_type_identifier(
+				[callback](UnitType const& unit_type) -> bool {
+					return callback(unit_type.unit_type_index);
+				},
+				warn
+			);
+		}
+		constexpr NodeTools::Callback<std::string_view> auto expect_unit_type_index_str(
+			NodeTools::Callback<unit_type_index_t> auto callback, bool allow_empty = false, bool warn = false
+		) const {
+			return expect_unit_type_str(
+				[callback](UnitType const& unit_type) -> bool {
+					return callback(unit_type.unit_type_index);
+				},
+				allow_empty, warn
+			);
 		}
 
 		bool load_unit_type_file(

@@ -3,6 +3,8 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct CultureManager;
@@ -10,11 +12,11 @@ namespace OpenVic {
 	struct CountryDefinitionManager;
 	class Dataloader;
 
-	struct GraphicalCultureType : HasIdentifier {
+	struct GraphicalCultureType : HasIdentifier, HasIndex<GraphicalCultureType, graphical_culture_index_t> {
 		friend struct CultureManager;
 
 	public:
-		GraphicalCultureType(std::string_view new_identifier);
+		GraphicalCultureType(std::string_view new_identifier, index_t new_index);
 		GraphicalCultureType(GraphicalCultureType&&) = default;
 	};
 

@@ -11,7 +11,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier, index_t new_index)
+	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 CultureGroup::CultureGroup(
 	std::string_view new_identifier, std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type,
@@ -35,7 +36,7 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	}
 	return graphical_culture_types.emplace_item(
 		identifier,
-		identifier
+		identifier, index_from_count<GraphicalCultureType::index_t>(get_graphical_culture_type_count())
 	);
 }
 

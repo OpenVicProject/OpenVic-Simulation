@@ -224,8 +224,8 @@ namespace OpenVic {
 			keys_span_type new_keys,
 			GeneratorTemplateType value_generator
 		) : keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values() {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
@@ -264,8 +264,8 @@ namespace OpenVic {
 			keys_span_type new_keys,
 			GeneratorTemplateType value_generator
 		) : keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values { create_empty, new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
@@ -310,8 +310,8 @@ namespace OpenVic {
 			keys_span_type new_keys,
 			GeneratorTemplateType&& value_generator
 		) : keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values() {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {

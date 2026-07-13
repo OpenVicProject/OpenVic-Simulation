@@ -55,7 +55,7 @@ bool InventionManager::add_invention(
 	}
 
 	return inventions.emplace_item(
-		identifier, Invention::index_t { get_invention_count() }, identifier, std::move(values), news,
+		identifier, index_from_count<Invention::index_t>(get_invention_count()), identifier, std::move(values), news,
 		std::move(activated_units), std::move(activated_buildings), std::move(enabled_crimes), unlock_gas_attack,
 		unlock_gas_defence, std::move(limit), std::move(chance),
 		std::move(raw_associated_tech_identifiers)

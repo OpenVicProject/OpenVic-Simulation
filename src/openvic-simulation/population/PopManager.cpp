@@ -66,7 +66,7 @@ bool PopManager::add_strata(std::string_view identifier) {
 	}
 	return stratas.emplace_item(
 		identifier,
-		identifier, Strata::index_t { get_strata_count() }
+		identifier, index_from_count<Strata::index_t>(get_strata_count())
 	);
 }
 
@@ -157,7 +157,7 @@ bool PopManager::add_pop_type(
 		identifier,
 		identifier,
 		colour,
-		PopType::index_t { get_pop_type_count() },
+		index_from_count<PopType::index_t>(get_pop_type_count()),
 		*strata,
 		sprite,
 		std::move(life_needs),
