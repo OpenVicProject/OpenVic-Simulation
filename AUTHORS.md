@@ -15,6 +15,7 @@ ways to development of the simulation.
     Hop311
     George L. Albany (Spartan322)
     BrickPi
+    Justin Nolan (FakeByte)
 
 ## Developers
 
@@ -51,5 +52,4 @@ ways to development of the simulation.
     Dempsey
     kiwi
     Zombie_Freak115
-    FakeByte
     Valerus9
