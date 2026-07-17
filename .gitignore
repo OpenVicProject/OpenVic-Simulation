@@ -44,7 +44,6 @@
 # Godot 4+ specific ignores
 .godot/
 game/bin/openvic/*
-.sconsign*.dblite
 
 # Binaries
 *.o
@@ -53,7 +52,6 @@ game/bin/openvic/*
 *.obj
 *.bc
 *.pyc
-*.dblite
 *.pdb
 *.lib
 bin/*
@@ -65,12 +63,6 @@ bin/*
 *.idb
 *.exp
 
-tests/bin/*
-tests/benchmarks/bin/*
-
-# Build configuarion.
-/custom.py
-
 # MacOS stuff
 .DS_Store
 
@@ -80,16 +72,17 @@ tests/benchmarks/bin/*
 # JetBrains
 .idea
 
-# scons stuff
+# clangd
 .cache
 compile_commands.json
 src/openvic-simulation/testing/test_results/results.txt
-
-# Out-of-source build directory
-/build/
 
 # ccls
 .ccls-cache
 
 # Generated source files
 src/openvic-simulation/gen/*
+
+# CMake out-of-source build directory
+out/
+CMakeUserPresets.json

@@ -82,5 +82,3 @@ namespace OpenVic {
 		);
 	};
 }
-
-extern template struct fmt::formatter<OpenVic::CountryDefinition>;
