@@ -338,7 +338,7 @@ The existing gates, each guarding a different determinism risk:
 | `tests/src/ecs/Checksum.cpp` | Full-state checksum determinism, sensitivity, and the checksum-based worker-count gate above. |
 | `tests/src/ecs/IdentitySnapshotInvariance.cpp` | Save/load: `digest(tick^k(restore(snapshot(s)))) == digest(tick^k(s))` at every worker count, including exact `EntityID` reuse from the restored free list. |
 
-Run them with `scons run_ovsim_tests=yes`. When you add game systems, extend the gate: a worker-count sweep over a realistic scenario, digested with `world_checksum`, is cheap to write and catches the whole class of races and order-dependencies that code review misses. Remember the gate's limits, though — it catches scheduling races only probabilistically. The declarations (rule 3) and the type-level checksum enforcement are what make determinism hold by construction; the gate is the alarm, not the lock.
+Run them with `ctest --preset <preset>-debug` (after building with `cmake --build --preset <preset>-debug`). When you add game systems, extend the gate: a worker-count sweep over a realistic scenario, digested with `world_checksum`, is cheap to write and catches the whole class of races and order-dependencies that code review misses. Remember the gate's limits, though — it catches scheduling races only probabilistically. The declarations (rule 3) and the type-level checksum enforcement are what make determinism hold by construction; the gate is the alarm, not the lock.
 
 ## Cross-references
 

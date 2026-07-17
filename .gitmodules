@@ -1,44 +1,6 @@
 [submodule "deps/openvic-dataloader"]
 	path = deps/openvic-dataloader
 	url = https://github.com/OpenVicProject/OpenVic-Dataloader
-[submodule "scripts"]
-	path = scripts
-	url = https://github.com/OpenVicProject/scripts
 [submodule "deps/lexy-vdf"]
 	path = deps/lexy-vdf
 	url = https://github.com/OpenVicProject/lexy-vdf
-[submodule "deps/ordered-map"]
-	path = deps/ordered-map
-	url = https://github.com/Tessil/ordered-map
-[submodule "deps/plf_colony"]
-	path = deps/plf_colony
-	url = https://github.com/mattreecebentley/plf_colony
-[submodule "tests/deps/snitch"]
-	path = tests/deps/snitch
-	url = https://github.com/snitch-org/snitch
-	ignore = dirty
-[submodule "deps/function2"]
-	path = deps/function2
-	url = https://github.com/Naios/function2
-[submodule "deps/std_function/func"]
-	path = deps/std_function/func
-	url = https://github.com/skarupke/std_function
-[submodule "tests/benchmarks/deps/nanobench"]
-	path = tests/benchmarks/deps/nanobench
-	url = https://github.com/Spartan322/nanobench
-[submodule "deps/memory"]
-	path = deps/memory
-	url = https://github.com/foonathan/memory
-	ignore = dirty
-[submodule "deps/spdlog"]
-	path = deps/spdlog
-	url = https://github.com/gabime/spdlog
-[submodule "deps/xoshiro"]
-	path = deps/xoshiro
-	url = https://github.com/reputeless/xoshiro-cpp
-[submodule "deps/type_safe"]
-	path = deps/type_safe
-	url = https://github.com/foonathan/type_safe
-[submodule "deps/int128"]
-	path = deps/int128
-	url = https://github.com/cppalliance/int128

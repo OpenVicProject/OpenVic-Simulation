@@ -1,0 +1,183 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 27
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CONFIGURATION_TYPES": "Release;RelWithDebInfo;Debug"
+            }
+        },
+        {
+            "name": "p-windows-x64",
+            "hidden": true,
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "windows-x64-md",
+            "inherits": "p-windows-x64",
+            "cacheVariables": {
+                "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL"
+            }
+        },
+        {
+            "name": "windows-x64-mt",
+            "inherits": "p-windows-x64",
+            "cacheVariables": {
+                "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded"
+            }
+        },
+        {
+            "name": "linux-x64",
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "macos-universal",
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "CMAKE_OSX_ARCHITECTURES": "x86_64;arm64"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "windows-x64-md-release",
+            "configurePreset": "windows-x64-md",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-x64-md-debug",
+            "configurePreset": "windows-x64-md",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-x64-md-relwithdebinfo",
+            "configurePreset": "windows-x64-md",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "windows-x64-mt-release",
+            "configurePreset": "windows-x64-mt",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-x64-mt-debug",
+            "configurePreset": "windows-x64-mt",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-x64-mt-relwithdebinfo",
+            "configurePreset": "windows-x64-mt",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "linux-x64-release",
+            "configurePreset": "linux-x64",
+            "configuration": "Release"
+        },
+        {
+            "name": "linux-x64-debug",
+            "configurePreset": "linux-x64",
+            "configuration": "Debug"
+        },
+        {
+            "name": "linux-x64-relwithdebinfo",
+            "configurePreset": "linux-x64",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "macos-universal-release",
+            "configurePreset": "macos-universal",
+            "configuration": "Release"
+        },
+        {
+            "name": "macos-universal-debug",
+            "configurePreset": "macos-universal",
+            "configuration": "Debug"
+        },
+        {
+            "name": "macos-universal-relwithdebinfo",
+            "configurePreset": "macos-universal",
+            "configuration": "RelWithDebInfo"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "windows-x64-md-debug",
+            "configurePreset": "windows-x64-md",
+            "configuration": "Debug",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "windows-x64-md-release",
+            "configurePreset": "windows-x64-md",
+            "configuration": "Release",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "windows-x64-mt-debug",
+            "configurePreset": "windows-x64-mt",
+            "configuration": "Debug",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "windows-x64-mt-release",
+            "configurePreset": "windows-x64-mt",
+            "configuration": "Release",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "linux-x64-debug",
+            "configurePreset": "linux-x64",
+            "configuration": "Debug",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "linux-x64-release",
+            "configurePreset": "linux-x64",
+            "configuration": "Release",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "macos-universal-debug",
+            "configurePreset": "macos-universal",
+            "configuration": "Debug",
+            "output": { "outputOnFailure": true }
+        },
+        {
+            "name": "macos-universal-release",
+            "configurePreset": "macos-universal",
+            "configuration": "Release",
+            "output": { "outputOnFailure": true }
+        }
+    ]
+}

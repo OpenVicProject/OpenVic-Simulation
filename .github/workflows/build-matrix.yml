@@ -17,46 +17,44 @@ jobs:
           - identifier: windows-debug
             os: windows-latest
             name: 🏁 Windows Debug
+            preset: windows-x64-md
+            configuration: Debug
             target: template_debug
-            platform: windows
-            arch: x86_64
-            test-bin-suffix: .md.exe
 
           - identifier: windows-release
             os: windows-latest
             name: 🏁 Windows Release
+            preset: windows-x64-md
+            configuration: Release
             target: template_release
-            platform: windows
-            arch: x86_64
-            test-bin-suffix: .md.exe
 
           - identifier: macos-debug
             os: macos-latest
             name: 🍎 macOS (universal) Debug
+            preset: macos-universal
+            configuration: Debug
             target: template_debug
-            platform: macos
-            arch: universal
 
           - identifier: macos-release
             os: macos-latest
             name: 🍎 macOS (universal) Release
+            preset: macos-universal
+            configuration: Release
             target: template_release
-            platform: macos
-            arch: universal
 
           - identifier: linux-debug
             os: ubuntu-22.04
             name: 🐧 Linux Debug
+            preset: linux-x64
+            configuration: Debug
             target: template_debug
-            platform: linux
-            arch: x86_64
 
           - identifier: linux-release
             os: ubuntu-22.04
             name: 🐧 Linux Release
+            preset: linux-x64
+            configuration: Release
             target: template_release
-            platform: linux
-            arch: x86_64
 
     steps:
       - name: Checkout project
@@ -69,10 +67,8 @@ jobs:
         uses: ./.github/actions/openvic-sim-build
         with:
           identifier: ${{ matrix.identifier }}
+          preset: ${{ matrix.preset }}
+          configuration: ${{ matrix.configuration }}
           target: ${{ matrix.target }}
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-
-      - name: Run tests
-        run: |
-          ./tests/bin/openvic-simulation.tests.${{ matrix.platform }}.${{ matrix.target }}.${{ matrix.arch }}${{ matrix.test-bin-suffix || '' }}
+          # Benchmarks are built (not run) for compile coverage.
+          cmake-args: -DOPENVIC_SIM_BUILD_BENCHMARKS=ON

@@ -60,27 +60,21 @@ jobs:
           - identifier: windows-release
             os: windows-latest
             name: 🏁 Build Windows
-            target: template_release
-            platform: windows
-            arch: x86_64
-            scons-flags: ''
+            preset: windows-x64-md
+            cmake-args: ''
 
           - identifier: macos-release
             os: macos-latest
             name: 🍎 Build macOS
-            target: template_release
-            platform: macos
-            arch: universal
-            scons-flags: lto=full
+            preset: macos-universal
+            cmake-args: -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
 
           - identifier: linux-release
             os: ubuntu-latest
             name: 🐧 Build Linux
             runner: ubuntu-22.04
-            target: template_release
-            platform: linux
-            arch: x86_64
-            scons-flags: lto=full use_static_cpp=yes
+            preset: linux-x64
+            cmake-args: -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
 
     steps:
       - name: Checkout project
@@ -93,11 +87,11 @@ jobs:
         uses: ./.github/actions/openvic-sim-build
         with:
           identifier: ${{ matrix.identifier }}
-          target: ${{ matrix.target }}
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          disable-cache: true
-          scons-flags: use_hot_reload=no build_ovsim_tests=no ${{ matrix.scons-flags }}
+          preset: ${{ matrix.preset }}
+          configuration: Release
+          target: template_release
+          run-tests: false
+          cmake-args: -DOPENVIC_SIM_BUILD_TESTS=OFF ${{ matrix.cmake-args }}
 
   publish-release:
     name: Publish Release
