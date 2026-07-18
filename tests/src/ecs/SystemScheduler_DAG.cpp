@@ -45,7 +45,9 @@ ECS_SYSTEM(SchedDagSystemC)
 namespace {
 	struct SchedDagSystemA : System<SchedDagSystemA> {
 		void tick(TickContext const& /*ctx*/, SchedulerTagA& /*t*/) {
-			if (g_scheduler_dag_log) g_scheduler_dag_log->push_back(1);
+			if (g_scheduler_dag_log) {
+				g_scheduler_dag_log->push_back(1);
+			}
 		}
 	};
 
@@ -57,7 +59,9 @@ namespace {
 			};
 		}
 		void tick(TickContext const& /*ctx*/, SchedulerTagB& /*t*/) {
-			if (g_scheduler_dag_log) g_scheduler_dag_log->push_back(2);
+			if (g_scheduler_dag_log) {
+				g_scheduler_dag_log->push_back(2);
+			}
 		}
 	};
 
@@ -69,7 +73,9 @@ namespace {
 			};
 		}
 		void tick(TickContext const& /*ctx*/, SchedulerTagC& /*t*/) {
-			if (g_scheduler_dag_log) g_scheduler_dag_log->push_back(3);
+			if (g_scheduler_dag_log) {
+				g_scheduler_dag_log->push_back(3);
+			}
 		}
 	};
 }
@@ -124,7 +130,11 @@ TEST_CASE("Scheduler order is identical regardless of registration order",
 		}
 		world.tick_systems(Date {});
 
-		if (run == 0) log_first = log; else log_second = log;
+		if (run == 0) {
+			log_first = log;
+		} else {
+			log_second = log;
+		}
 		g_scheduler_dag_log = nullptr;
 	}
 

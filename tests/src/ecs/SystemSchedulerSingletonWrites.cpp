@@ -46,7 +46,9 @@ namespace {
 			SgwState* state = ctx.world.get_singleton<SgwState>();
 			state->acc = (state->acc * 31 + a.v) % 1000003;
 			a.v = (a.v * 7 + 3) % 1000003;
-			if (g_sgw_log) g_sgw_log->push_back(1);
+			if (g_sgw_log) {
+				g_sgw_log->push_back(1);
+			}
 		}
 	};
 
@@ -71,7 +73,9 @@ namespace {
 		void tick(TickContext const& ctx, SgwB& b) {
 			SgwState const* state = ctx.world.get_singleton<SgwState>();
 			b.v = (b.v * 13 + state->acc) % 1000003;
-			if (g_sgw_log) g_sgw_log->push_back(2);
+			if (g_sgw_log) {
+				g_sgw_log->push_back(2);
+			}
 		}
 	};
 

@@ -261,7 +261,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("this_culture_union", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE_UNION);
 	ret &= add_condition("total_amount_of_divisions", INTEGER, COUNTRY);
 	ret &= add_condition("total_amount_of_ships", INTEGER, COUNTRY);
-	ret &= add_condition("total_defensives", INTEGER, COUNTRY);
+	ret &= add_condition("total_defensives", INTEGER, COUNTRY); // paradox typo
 	ret &= add_condition("total_num_of_ports", INTEGER, COUNTRY);
 	ret &= add_condition("total_of_ours_sunk", INTEGER, COUNTRY);
 	ret &= add_condition("total_pops", INTEGER, COUNTRY);

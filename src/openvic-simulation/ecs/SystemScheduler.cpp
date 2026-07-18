@@ -525,7 +525,7 @@ void SystemScheduler::run(
 						(*cbs)[i].set_parallel_mode(true);
 					}
 					for (std::size_t i = 0; i < chunks.size(); ++i) {
-						WorkItem item;
+						WorkItem item {};
 						item.kind = WorkKind::ThreadedChunk;
 						item.reg_idx = reg_idx;
 						item.archetype_idx = chunks[i].archetype_idx;
@@ -540,7 +540,7 @@ void SystemScheduler::run(
 					// Plain System<> (or a SystemThreaded with no entry points — shouldn't
 					// happen post-Phase-0). One whole-tick work item; dispatch_serial
 					// inside tick_all does not depend on current_system_registration_.
-					WorkItem item;
+					WorkItem item {};
 					item.kind = WorkKind::SerialWhole;
 					item.reg_idx = reg_idx;
 					item.archetype_idx = 0;

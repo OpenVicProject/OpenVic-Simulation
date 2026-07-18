@@ -18,14 +18,22 @@ repos:
     hooks:
       - id: clang-tidy
         files: \.(c|h|cpp|hpp)$
-        args: [--fix, --quiet, --use-color]
+        args:
+          [
+            --fix,
+            --quiet,
+            --use-color,
+            -p=compile_commands.json,
+            -extra-arg=-Wno-unknown-warning-option,
+            -checks=-modernize-use-bool-literals,
+          ]
         types_or: [text]
-        additional_dependencies: [clang-tidy==19.1.0]
+        additional_dependencies: [clang-tidy==22.1.8]
         require_serial: true
         stages: [manual] # Not automatically triggered, invoked via `pre-commit run --hook-stage manual clang-tidy`
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.1
+    rev: v0.15.22
     hooks:
       - id: ruff-check
         args: [--fix]
@@ -36,14 +44,14 @@ repos:
         types_or: [text]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v2.3.0
     hooks:
       - id: mypy
         files: \.py$
         types_or: [text]
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.30.2
+    rev: v1.48.0
     hooks:
       - id: typos
         # exclude: |
