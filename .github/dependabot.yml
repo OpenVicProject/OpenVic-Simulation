@@ -8,3 +8,11 @@ updates:
       - dependency-name: "deps/openvic-dataloader"
       - dependency-name: "scripts"
       - dependency-name: "deps/lexy-vdf"
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
