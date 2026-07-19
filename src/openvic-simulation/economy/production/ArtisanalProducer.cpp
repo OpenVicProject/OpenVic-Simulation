@@ -190,7 +190,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 		return;
 	}
 
-	//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
+	//Figure out the optimal amount of goods to buy based on their price, stockpiled quantity & demand
 	fixed_point_t max_possible_satisfaction_numerator= 1,
 		max_possible_satisfaction_denominator= 1;
 

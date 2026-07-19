@@ -27,27 +27,35 @@ namespace {
 	struct ConflictWriterA : System<ConflictWriterA> {
 		void tick(TickContext const& /*ctx*/, ConflictTagX& x) {
 			x.n += 1;
-			if (g_conflict_log) g_conflict_log->push_back(1);
+			if (g_conflict_log) {
+				g_conflict_log->push_back(1);
+			}
 		}
 	};
 
 	struct ConflictWriterB : System<ConflictWriterB> {
 		void tick(TickContext const& /*ctx*/, ConflictTagX& x) {
 			x.n *= 2;
-			if (g_conflict_log) g_conflict_log->push_back(2);
+			if (g_conflict_log) {
+				g_conflict_log->push_back(2);
+			}
 		}
 	};
 
 	// R/R is fine — should run in the same stage with no conflict edge required.
 	struct ConflictReaderA : System<ConflictReaderA> {
 		void tick(TickContext const& /*ctx*/, ConflictTagY const& /*y*/) {
-			if (g_conflict_log) g_conflict_log->push_back(11);
+			if (g_conflict_log) {
+				g_conflict_log->push_back(11);
+			}
 		}
 	};
 
 	struct ConflictReaderB : System<ConflictReaderB> {
 		void tick(TickContext const& /*ctx*/, ConflictTagY const& /*y*/) {
-			if (g_conflict_log) g_conflict_log->push_back(12);
+			if (g_conflict_log) {
+				g_conflict_log->push_back(12);
+			}
 		}
 	};
 }

@@ -35,3 +35,9 @@ default.extend-ignore-re = [
 	"(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on", # Multiline check disable with // spellchecker:off // spellchecker:on (can also use #)
 	"(?s)(/\\*)\\s*spellchecker:off.*?\\s*spellchecker:on\\s*(\\*/)",    # Multiline check disable with /* spellchecker:off ... spellchecker:on */
 ]
+
+[tool.typos.type.skip_names]
+extend-glob = ["AUTHORS.md", "COPYRIGHT", "CODE_OF_CONDUCT.md", "credits.csv"]
+
+[tool.typos.type.skip_names.extend-identifiers]
+Catylist = "Catylist"

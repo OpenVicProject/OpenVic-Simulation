@@ -314,9 +314,9 @@ namespace OpenVic::ecs {
 		};
 
 		struct AddPayload {
-			component_type_id_t id;
+			component_type_id_t id = 0UL;
 			PayloadSlot value; // .vtable always set (even for tag — size==0); .data null for tag/default
-			bool is_default; // true when add_component<C>() with no value
+			bool is_default = false; // true when add_component<C>() with no value
 		};
 
 		struct Op {
