@@ -20,6 +20,7 @@ def build_lexy_vdf(env):
     env.Prepend(LIBS=lvdf_env.lexy_vdf["LIBS"])
     env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
     env.lexy_vdf = lvdf_env.lexy_vdf
+    env.exposed_includes += env.lexy_vdf["INCPATH"]
 
 
 def build_ordered_map(env):
