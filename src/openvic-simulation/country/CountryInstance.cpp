@@ -2578,5 +2578,3 @@ CountryInstance::good_data_t& CountryInstance::get_good_data(GoodDefinition cons
 CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinition const& good_definition) const {
 	return goods_data.at_index(good_definition.index);
 }
-
-template struct fmt::formatter<OpenVic::CountryInstance>;

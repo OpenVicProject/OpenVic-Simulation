@@ -239,5 +239,3 @@ bool CountryDefinitionManager::load_country_data_file(
 	);
 	return ret;
 }
-
-template struct fmt::formatter<OpenVic::CountryDefinition>;
