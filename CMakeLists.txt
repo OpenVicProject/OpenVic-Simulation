@@ -26,8 +26,6 @@ openvic_disable_rtti()
 
 option(OPENVIC_USE_PCH "Precompile openvic-simulation/pch.hpp" ON)
 
-add_subdirectory(deps)
-
 file(GLOB_RECURSE sim_sources CONFIGURE_DEPENDS src/openvic-simulation/*.cpp)
 list(REMOVE_ITEM sim_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/openvic-simulation/pch.cpp)
 
@@ -88,11 +86,28 @@ target_link_libraries(
         ov_foonathan_memory
 )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+# all Unix (non Apple) systems find TBB via pkg_config
+if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(TBB REQUIRED IMPORTED_TARGET tbb)
-    target_link_libraries(openvic-simulation PUBLIC PkgConfig::TBB)
+    pkg_check_modules(TBB_PC REQUIRED IMPORTED_TARGET GLOBAL tbb)
+    target_link_libraries(openvic-simulation PUBLIC PkgConfig::TBB_PC)
 endif()
+
+# any platform specific code can be added below
+# OpenBSD needs explicit iconv detection so far
+if(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+    find_path(ICONV_INCLUDE_DIR iconv.h)
+    find_library(ICONV_LIBRARY NAMES iconv)
+
+    if(NOT ICONV_INCLUDE_DIR OR NOT ICONV_LIBRARY)
+        message(FATAL_ERROR "iconv not found, try installing it")
+    endif()
+
+    include_directories(${ICONV_INCLUDE_DIR})
+    link_libraries(${ICONV_LIBRARY})
+endif()
+
+add_subdirectory(deps)
 
 if(APPLE)
     # clang emits the TLS init aliases (_ZTH*) for inline thread_local members
