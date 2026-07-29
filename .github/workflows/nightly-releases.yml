@@ -89,13 +89,13 @@ jobs:
           relevant_files=(
             "deps/*"
             "misc/*"
-            "scripts"
             "src/*.hpp"
             "src/*.cpp"
             ':!src/openvic-simulation/pch.hpp'
             ':!src/openvic-simulation/pch.cpp'
             "pyproject.toml"
-            "SConstruct"
+            "CMakeLists.txt"
+            "CMakePresets.json"
             ".github/workflows/builds.yml"
             ".github/actions/openvic-sim-release/action.yml"
             ".github/workflows/nightly-releases.yml"
@@ -131,27 +131,21 @@ jobs:
           - identifier: windows-release
             os: windows-latest
             name: 🏁 Windows Release
-            target: template_release
-            platform: windows
-            arch: x86_64
-            scons-flags: ''
+            preset: windows-x64-md
+            cmake-args: ''
 
           - identifier: macos-release
             os: macos-latest
             name: 🍎 macOS (universal) Release
-            target: template_release
-            platform: macos
-            arch: universal
-            scons-flags: 'lto=full'
+            preset: macos-universal
+            cmake-args: -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
 
           - identifier: linux-release
             os: ubuntu-latest
             name: 🐧 Linux Release
             runner: ubuntu-22.04
-            target: template_release
-            platform: linux
-            arch: x86_64
-            scons-flags: 'lto=full use_static_cpp=yes'
+            preset: linux-x64
+            cmake-args: -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
 
     steps:
       - name: Checkout project
@@ -164,11 +158,13 @@ jobs:
         uses: ./.github/actions/openvic-sim-build
         with:
           identifier: ${{ matrix.identifier }}
-          target: ${{ matrix.target }}
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          disable-cache: true
-          scons-flags: use_hot_reload=no build_ovsim_tests=no debug_symbols=yes optimize=speed_trace ${{ matrix.scons-flags }}
+          preset: ${{ matrix.preset }}
+          # Optimized build with debug symbols (the old optimize=speed_trace
+          # debug_symbols=yes flavor).
+          configuration: RelWithDebInfo
+          target: template_release
+          run-tests: false
+          cmake-args: -DOPENVIC_SIM_BUILD_TESTS=OFF ${{ matrix.cmake-args }}
 
   publish-nightly-release:
     name: Publish Release

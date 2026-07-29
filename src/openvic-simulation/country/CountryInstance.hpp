@@ -723,5 +723,3 @@ namespace OpenVic {
 		fixed_point_t apply_tariff(const fixed_point_t money_spent_on_imports);
 	};
 }
-
-extern template struct fmt::formatter<OpenVic::CountryInstance>;
