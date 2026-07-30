@@ -78,7 +78,7 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 }
 
 void MarketInstance::execute_orders() {
-	thread_pool.process_good_execute_orders();
+	thread_pool.process(work_t::GOOD_EXECUTE_ORDERS);
 }
 
 void MarketInstance::record_price_history() {
