@@ -4,24 +4,23 @@ from pathlib import Path
 def generate_memory_config_header(target, source, env):
     header_file_path = Path(str(target[0]))
 
-    header = []
-
-    header.append("// THIS FILE IS GENERATED. EDITS WILL BE LOST.")
-    header.append("")
-
-    header += """
-// Copyright (C) 2015-2025 Jonathan Müller and foonathan/memory contributors
-// SPDX-License-Identifier: Zlib
-
-#ifndef FOONATHAN_MEMORY_IMPL_IN_CONFIG_HPP
-#error "do not include this file directly, use config.hpp"
-#endif
-
-#include <cstddef>
-
-//=== options ===//
-// clang-format off
-""".split("\n")
+    header = [
+        "// THIS FILE IS GENERATED. EDITS WILL BE LOST.",
+        "",
+        "",
+        "// Copyright (C) 2015-2025 Jonathan Müller and foonathan/memory contributors",
+        "// SPDX-License-Identifier: Zlib",
+        "",
+        "#ifndef FOONATHAN_MEMORY_IMPL_IN_CONFIG_HPP",
+        '#error "do not include this file directly, use config.hpp"',
+        "#endif",
+        "",
+        "#include <cstddef>",
+        "",
+        "//=== options ===//",
+        "// clang-format off",
+        "",
+    ]
 
     for key, val in env.config_data.items():
         if isinstance(val, bool) and val:
@@ -40,78 +39,77 @@ def generate_memory_config_header(target, source, env):
 def generate_memory_container_size_header(target, source, env):
     header_file_path = Path(str(target[0]))
 
-    header = []
-
-    header.append("// THIS FILE IS GENERATED. EDITS WILL BE LOST.")
-    header.append("")
-
-    header += """
-namespace detail
-{
-    template <std::size_t Alignment>
-    struct alignment_type
-    {
-        using type = void;
-        static_assert(Alignment == Alignment);
-    };
-
-    template <>
-    struct alignment_type<1>
-    {
-        using type = char;
-        static_assert(alignof(type) == 1);
-    };
-
-    template <>
-    struct alignment_type<2>
-    {
-        using type = short;
-        static_assert(alignof(type) == 2);
-    };
-
-    template <>
-    struct alignment_type<4>
-    {
-        using type = int;
-        static_assert(alignof(type) == 4);
-    };
-
-    template <>
-    struct alignment_type<8>
-    {
-        using type = std::conditional_t<alignof(long) == 8, long, long double>;
-        static_assert(alignof(type) == 8);
-    };
-
-    template <>
-    struct alignment_type<16>
-    {
-        using type =
-            std::conditional_t<alignof(long double) == 16, long double, alignment_type<0>::type>;
-    };
-
-    template <std::size_t Alignment>
-    using alignment_type_t = alignment_type<Alignment>::type;
-
-    template <typename InitialType, typename T, bool SubtractTSize = true>
-    static consteval std::size_t calculate_node_size_by_type()
-    {
-        static_assert(!std::is_same<InitialType, T>::value && (sizeof(InitialType) != sizeof(T)));
-        static_assert(sizeof(T) > sizeof(InitialType));
-
-        return sizeof(T) - (SubtractTSize ? sizeof(InitialType) : 0);
-    }
-
-    template <std::size_t Alignment, typename T, bool SubtractTSize = true>
-    static consteval std::size_t calculate_node_size()
-    {
-        return calculate_node_size_by_type<alignment_type_t<Alignment>, T, SubtractTSize>();
-    }
-
-    template <std::size_t Alignment>
-    using allocator_type = std::allocator<alignment_type_t<Alignment>>;
-}
-""".split("\n")
+    header = [
+        "// THIS FILE IS GENERATED. EDITS WILL BE LOST.",
+        "",
+        "",
+        "namespace detail",
+        "{",
+        "    template <std::size_t Alignment>",
+        "    struct alignment_type",
+        "    {",
+        "        using type = void;",
+        "        static_assert(Alignment == Alignment);",
+        "    };",
+        "",
+        "    template <>",
+        "    struct alignment_type<1>",
+        "    {",
+        "        using type = char;",
+        "        static_assert(alignof(type) == 1);",
+        "    };",
+        "",
+        "    template <>",
+        "    struct alignment_type<2>",
+        "    {",
+        "        using type = short;",
+        "        static_assert(alignof(type) == 2);",
+        "    };",
+        "",
+        "    template <>",
+        "    struct alignment_type<4>",
+        "    {",
+        "        using type = int;",
+        "        static_assert(alignof(type) == 4);",
+        "    };",
+        "",
+        "    template <>",
+        "    struct alignment_type<8>",
+        "    {",
+        "        using type = std::conditional_t<alignof(long) == 8, long, long double>;",
+        "        static_assert(alignof(type) == 8);",
+        "    };",
+        "",
+        "    template <>",
+        "    struct alignment_type<16>",
+        "    {",
+        "        using type =",
+        "            std::conditional_t<alignof(long double) == 16, long double, alignment_type<0>::type>;",
+        "    };",
+        "",
+        "    template <std::size_t Alignment>",
+        "    using alignment_type_t = alignment_type<Alignment>::type;",
+        "",
+        "    template <typename InitialType, typename T, bool SubtractTSize = true>",
+        "    static consteval std::size_t calculate_node_size_by_type()",
+        "    {",
+        "        static_assert(!std::is_same<InitialType, T>::value && (sizeof(InitialType) != sizeof(T)));",
+        "        static_assert(sizeof(T) > sizeof(InitialType));",
+        "",
+        "        return sizeof(T) - (SubtractTSize ? sizeof(InitialType) : 0);",
+        "    }",
+        "",
+        "    template <std::size_t Alignment, typename T, bool SubtractTSize = true>",
+        "    static consteval std::size_t calculate_node_size()",
+        "    {",
+        "        return calculate_node_size_by_type<alignment_type_t<Alignment>, T, SubtractTSize>();",
+        "    }",
+        "",
+        "    template <std::size_t Alignment>",
+        "    using allocator_type = std::allocator<alignment_type_t<Alignment>>;",
+        "}",
+        "",
+    ]
 
     containers = {
         "forward_list": [

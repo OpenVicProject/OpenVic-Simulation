@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import decimal
 import os
+import sys
 from argparse import ArgumentParser
 
 DEFAULT_PRECISION = 16
@@ -71,7 +72,7 @@ def generate_sin_lut(precision: int, count_log2: int):
         sin_value: decimal.Decimal = decimal_sin(angle)  # sin(angle)
         moved_sin: decimal.Decimal = sin_value * one
         rounded_sin: int = (
-            int(moved_sin + decimal.Decimal(0.5)) if moved_sin > 0 else int(moved_sin - decimal.Decimal(0.5))
+            int(moved_sin + decimal.Decimal("0.5")) if moved_sin > 0 else int(moved_sin - decimal.Decimal("0.5"))
         )
         SinLut.append(rounded_sin)
 
@@ -149,7 +150,7 @@ if __name__ == "__main__":
 
     if args.precision < args.count:
         print("ERROR: invalid count ", args.count, " - can't be greater than precision (", args.precision, ")")
-        exit(-1)
+        sys.exit(-1)
     else:
         generate_sin_lut(args.precision, args.count)
-        exit(0)
+        sys.exit(0)

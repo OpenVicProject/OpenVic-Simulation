@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import decimal
 import os
+import sys
 from argparse import ArgumentParser
 from math import e
-from typing import List
 
 BIT_COUNT = 64
 MAX_VALUE = 2**BIT_COUNT
@@ -16,17 +16,17 @@ DEFAULT_EXP_BASE = e
 def generate_exp_lut(divisor_base: int, divisor_power: int, exp_base: decimal.Decimal):
     divisor: int = divisor_base**divisor_power
 
-    exp_lut: List[int] = []
+    exp_lut: list[int] = []
 
     for index in range(BIT_COUNT):
         exponent: decimal.Decimal = (2**index) / divisor
-        value: int = int(decimal.Decimal(exp_base**exponent) * decimal.Decimal(divisor) + decimal.Decimal(0.5))
+        value: int = int(decimal.Decimal(exp_base**exponent) * decimal.Decimal(divisor) + decimal.Decimal("0.5"))
         if value > MAX_VALUE:
             break
         exp_lut.append(value)
 
     lut_identifier: str = (
-        f"{divisor_base}_{divisor_power}_EXP_{'e' if exp_base == e else ('%g' % exp_base).replace('.', 'p')}"
+        f"{divisor_base}_{divisor_power}_EXP_{'e' if exp_base == e else f'{exp_base:g}'.replace('.', 'p')}"
     )
     lut_size: int = len(exp_lut)
 
@@ -115,4 +115,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     generate_exp_lut(args.base, args.power, args.exp)
-    exit(0)
+    sys.exit(0)
