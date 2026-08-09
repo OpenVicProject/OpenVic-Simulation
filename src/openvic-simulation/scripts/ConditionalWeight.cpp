@@ -1,5 +1,7 @@
 #include "ConditionalWeight.hpp"
 
+#include "openvic-simulation/core/object/Timespan.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 

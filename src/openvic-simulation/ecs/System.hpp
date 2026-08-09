@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/ecs/EntityID.hpp"
 #include "openvic-simulation/ecs/QueryFilter.hpp"
 #include "openvic-simulation/ecs/SystemAccess.hpp"
 #include "openvic-simulation/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic::ecs {
 	struct World;

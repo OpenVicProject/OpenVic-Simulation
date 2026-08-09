@@ -10,6 +10,8 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
@@ -46,7 +48,6 @@
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"

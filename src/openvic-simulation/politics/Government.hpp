@@ -4,7 +4,7 @@
 
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"

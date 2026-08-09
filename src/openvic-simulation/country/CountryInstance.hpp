@@ -7,6 +7,8 @@
 
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/thread/SpinMutex.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -19,7 +21,6 @@
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"

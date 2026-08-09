@@ -23,7 +23,8 @@
 #include <range/v3/view/transform.hpp>
 
 #include "openvic-simulation/core/object/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"

@@ -9,10 +9,10 @@
 
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {

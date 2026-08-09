@@ -6,6 +6,7 @@
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
 #include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -22,7 +23,6 @@
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/population/PopDeps.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 

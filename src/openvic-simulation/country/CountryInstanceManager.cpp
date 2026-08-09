@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"

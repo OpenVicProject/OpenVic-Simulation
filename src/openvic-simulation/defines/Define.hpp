@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/defines/AIDefines.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/defines/DiplomacyDefines.hpp"
@@ -7,7 +8,6 @@
 #include "openvic-simulation/defines/GraphicsDefines.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

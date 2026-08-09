@@ -1,3 +1,4 @@
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/ecs/ChunkSystem.hpp"
 #include "openvic-simulation/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/ecs/EntityID.hpp"
@@ -6,7 +7,6 @@
 #include "openvic-simulation/ecs/SystemImpl.hpp"
 #include "openvic-simulation/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/ecs/World.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 #include <algorithm>
 #include <array>
