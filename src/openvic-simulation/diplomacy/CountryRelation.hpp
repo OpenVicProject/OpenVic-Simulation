@@ -11,7 +11,7 @@
 
 #include "openvic-simulation/core/Compare.hpp"
 #include "openvic-simulation/core/Hash.hpp"
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {

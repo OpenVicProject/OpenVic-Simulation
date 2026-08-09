@@ -1,8 +1,8 @@
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/ecs/SystemImpl.hpp"
 #include "openvic-simulation/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/ecs/World.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 #include <array>
 #include <vector>

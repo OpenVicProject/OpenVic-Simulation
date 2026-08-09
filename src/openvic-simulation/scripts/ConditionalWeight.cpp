@@ -1,5 +1,7 @@
 #include "ConditionalWeight.hpp"
 
+#include "openvic-simulation/core/object/Timespan.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -48,7 +50,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 			"factor", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base))
 		);
 	} else if constexpr (TYPE == TIME) {
-		const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::day_t)) -> auto {
+		const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::value_t)) -> auto {
 			return [this, key, to_timespan](uint32_t value) -> bool {
 				if (base == 0) {
 					base = fixed_point_t::parse_capped((*to_timespan)(value).to_int());
@@ -68,7 +70,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 			key_map,
 			"days", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("days", Timespan::from_days)),
 			"months", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("months", Timespan::from_months)),
-			"years", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("years", Timespan::from_years))
+			"years", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("years", [](Timespan::value_t v) { return Timespan::from_years(v); }))
 		);
 	} else {
 		successfully_set_up_base_keys = false;

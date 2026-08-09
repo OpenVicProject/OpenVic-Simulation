@@ -1,12 +1,12 @@
 #pragma once
 
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
 	struct BuildingTypeManager;

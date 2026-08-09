@@ -2,6 +2,7 @@
 
 #include <range/v3/algorithm/contains.hpp>
 
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 
 using namespace OpenVic;

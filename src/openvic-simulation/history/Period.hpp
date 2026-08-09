@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 namespace OpenVic {
 	struct Period {
