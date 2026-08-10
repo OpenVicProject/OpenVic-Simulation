@@ -92,6 +92,7 @@ jobs:
           target: template_release
           run-tests: false
           cmake-args: -DOPENVIC_SIM_BUILD_TESTS=OFF ${{ matrix.cmake-args }}
+          enable-cache: false
 
   publish-release:
     name: Publish Release

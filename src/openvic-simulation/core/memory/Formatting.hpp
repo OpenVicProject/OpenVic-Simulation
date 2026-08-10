@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iterator>
+
 #include <fmt/base.h>
 #include <fmt/format.h>
 
