@@ -22,13 +22,13 @@
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/transform.hpp>
 
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 
-#include "../types/Colour.hpp" // IWYU pragma: keep
+#include "../core/object/Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
 #include "types/Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>

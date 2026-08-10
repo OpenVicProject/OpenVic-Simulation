@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cmath>
+#include <cstdint>
 
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 
 #include <snitch/snitch_string.hpp>
 #include <snitch/snitch_string_utility.hpp>

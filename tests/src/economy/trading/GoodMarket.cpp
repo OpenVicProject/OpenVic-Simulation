@@ -3,9 +3,9 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 

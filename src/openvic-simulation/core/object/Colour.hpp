@@ -2,22 +2,17 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cassert>
-#include <cctype>
 #include <charconv>
 #include <climits>
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <ostream>
 #include <span>
-#include <string>
 #include <string_view>
 #include <system_error>
 #include <tuple>
 #include <type_traits>
-#include <utility>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -141,7 +136,8 @@ namespace OpenVic {
 
 	/* Colour represented by an unsigned integer, either 24-bit RGB or 32-bit ARGB. */
 	template<typename ValueT, typename ColourIntT, typename ColourTraits = colour_traits<ValueT, ColourIntT>>
-	struct basic_colour_t {
+	class basic_colour_t {
+	public:
 		/* PROPERTY generated getter functions will return colours by value, rather than const reference. */
 		using ov_return_by_value = void;
 
@@ -170,7 +166,7 @@ namespace OpenVic {
 		value_type blue;
 		OV_NO_UNIQUE_ADDRESS _alpha_t alpha;
 
-		static constexpr std::integral_constant<std::size_t, std::is_same_v<decltype(alpha), value_type> ? 4 : 3> size = {};
+		static constexpr std::integral_constant<std::size_t, std::same_as<decltype(alpha), value_type> ? 4 : 3> size = {};
 
 		OV_SPEED_INLINE static constexpr basic_colour_t fill_as(value_type value) {
 			if constexpr (colour_traits::has_alpha) {

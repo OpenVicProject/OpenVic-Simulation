@@ -8,9 +8,9 @@
 
 #include <fmt/base.h>
 
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/template/Functional.hpp" // IWYU pragma: keep: bug fix for std::reference_wrapper hash & equality
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
