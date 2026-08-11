@@ -47,7 +47,7 @@ runs:
       shell: bash
       run: |
         ccache --version | head -n 1
-        ccache --set-config=sloppiness=pch_defines,time_macros
+        ccache --set-config=sloppiness=pch_defines,time_macros,include_file_mtime,include_file_ctime
         ccache -p | grep sloppiness
 
     - name: Setup MSVC environment
@@ -101,7 +101,6 @@ runs:
             `-DGODOTCPP_TARGET=$[env.INPUTS_TARGET]`,
             $[env.INPUTS_ENABLE_CACHE] ? `-DCMAKE_C_COMPILER_LAUNCHER=ccache` : ``,
             $[env.INPUTS_ENABLE_CACHE] ? `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache` : ``,
-            $[env.INPUTS_ENABLE_CACHE] ? `-DOPENVIC_USE_PCH=OFF` : ``,
             $[env.INPUTS_ENABLE_CACHE] && `$[env.RUNNER_OS]` == 'Windows' ? `-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>` : ``
           ].concat(`$[env.INPUTS_CMAKE_ARGS]`.split(/\s+/)).filter((v) => v.length > 0)
         buildPresetCmdString: "[`--build`, `--preset`, `$[env.BUILD_PRESET_NAME]-` + `$[env.INPUTS_CONFIGURATION]`.toLowerCase()]"
@@ -127,7 +126,6 @@ runs:
             `-DGODOTCPP_TARGET=$[env.INPUTS_TARGET]`,
             $[env.INPUTS_ENABLE_CACHE] ? `-DCMAKE_C_COMPILER_LAUNCHER=ccache` : ``,
             $[env.INPUTS_ENABLE_CACHE] ? `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache` : ``,
-            $[env.INPUTS_ENABLE_CACHE] ? `-DOPENVIC_USE_PCH=OFF` : ``,
             $[env.INPUTS_ENABLE_CACHE] && `$[env.RUNNER_OS]` == 'Windows' ? `-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>` : ``
           ].concat(`$[env.INPUTS_CMAKE_ARGS]`.split(/\s+/)).filter((v) => v.length > 0)
         buildPresetCmdString: "[`--build`, `--preset`, `$[env.BUILD_PRESET_NAME]-` + `$[env.INPUTS_CONFIGURATION]`.toLowerCase()]"
