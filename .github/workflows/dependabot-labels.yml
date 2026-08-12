@@ -1,12 +1,11 @@
 name: Dependabot Auto-Label
 on:
   pull_request:
-    types: [opened, labeled]
-    branches: [master]
+    types: opened
+    branches: master
     paths:
       - deps/openvic-dataloader
       - deps/lexy-vdf
-      - scripts
 
 permissions:
   pull-requests: write
@@ -17,25 +16,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7.0.1
+      - name: Shallow Clone
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1 # See: https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
+          persist-credentials: false
 
-      - name: Dependabot metadata
+      - name: Fetch dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Add custom labels based on dependency name
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          DEPENDENCY_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
-          DEPENDENCY_NAME="${{ steps.metadata.outputs.dependency-names }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
           if [[ "$DEPENDENCY_NAME" == "deps/openvic-dataloader" ]]; then
             gh pr edit "$PR_URL" --add-label "topic:dataloader"
           elif [[ "$DEPENDENCY_NAME" == "deps/lexy-vdf" ]]; then
             gh pr edit "$PR_URL" --add-label "topic:dataloader"
-          elif [[ "$DEPENDENCY_NAME" == "scripts" ]]; then
-            gh pr edit "$PR_URL" --add-label "topic:buildsystem"
           fi
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
