@@ -145,23 +145,17 @@ bool MapInstance::apply_history_to_provinces(
 	return ret;
 }
 
-void MapInstance::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
-	for (ProvinceInstance& province : get_province_instances()) {
-		province.update_modifier_sum(today, static_modifier_cache);
-	}
-
-	for (ProvinceInstance& province : get_province_instances()) {
-		province.update_country_modifier_sum();
-	}
+void MapInstance::update_modifier_sums(const Date today) {
+	thread_pool.process(work_t::PROVINCE_UPDATE_MODIFIER_SUMS);
 }
 
-void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
+void MapInstance::update_gamestate() {
 	highest_province_population = 0;
 	total_map_population = 0;
 
-	for (ProvinceInstance& province : get_province_instances()) {
-		province.update_gamestate(instance_manager);
+	thread_pool.process(work_t::PROVINCE_UPDATE_GAMESTATE);
 
+	for (ProvinceInstance& province : get_province_instances()) {
 		// Update population stats
 		const pop_sum_t province_population = province.get_total_population();
 		if (highest_province_population < province_population) {
@@ -174,13 +168,13 @@ void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
 }
 
 void MapInstance::map_tick() {
-	thread_pool.process_province_ticks();
+	thread_pool.process(work_t::PROVINCE_TICK);
 	//state tick
 	//after province tick as province tick sets pop employment to 0
 	//state tick will update pop employment via factories
 }
 
-void MapInstance::initialise_for_new_game(InstanceManager const& instance_manager) {
-	update_gamestate(instance_manager);
-	thread_pool.process_province_initialise_for_new_game();
+void MapInstance::initialise_for_new_game() {
+	update_gamestate();
+	thread_pool.process(work_t::PROVINCE_INITIALISE_FOR_NEW_GAME);
 }
