@@ -1,10 +1,10 @@
-# nanobench (the OpenVic fork with exceptions/RTTI disabled): its own
-# CMakeLists only supports standalone builds, so fetch source-only and
-# hand-roll a static library from the single implementation TU.
+# nanobench: its own CMakeLists only supports standalone builds, so
+# fetch source-only and hand-roll a static library from the single
+# implementation TU.
 openvic_declare_dep(nanobench
-    REPO Spartan322/nanobench
-    SHA f49b052a68bc05d5497acf1f6c0c2d6ef65c6eef # disable/exceptions-and-rtti
-    SHA256 513c81406c5dbc8e1840efbef41a924c7376d0538550bddde9bdf9ee5c62f320
+    REPO martinus/nanobench
+    SHA 8e098d29dd0d2027f2ebc4a4d37c1f2d9c79a878 # v4.5.0
+    SHA256 74003073649f407b356f3bc4ea63746784d20cf1adabf18c8c7c5f307bb46ffa
     DOWNLOAD_ONLY
 )
 FetchContent_MakeAvailable(nanobench)
