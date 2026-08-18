@@ -11,7 +11,7 @@
 
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"

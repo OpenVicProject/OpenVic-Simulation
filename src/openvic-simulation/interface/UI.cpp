@@ -1,8 +1,8 @@
 #include "UI.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
