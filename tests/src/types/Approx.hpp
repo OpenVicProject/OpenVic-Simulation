@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <limits>
 
-#include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/Math.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 
-#include "Vector.hpp" // IWYU pragma: keep
+#include "core/object/Vector.hpp" // IWYU pragma: keep
 #include <snitch/snitch_string.hpp>
 #include <snitch/snitch_string_utility.hpp>
 

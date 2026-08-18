@@ -3,9 +3,9 @@
 #include <cstdint>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/interface/LoadBase.hpp"
-#include "openvic-simulation/types/Vector.hpp"
 
 namespace OpenVic::GFX {
 

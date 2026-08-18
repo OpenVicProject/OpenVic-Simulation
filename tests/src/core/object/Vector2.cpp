@@ -1,13 +1,13 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/Math.hpp"
 
-#include "Approx.hpp"
 #include "Helper.hpp" // IWYU pragma: keep
-#include "Numeric.hpp"
+#include "types/Approx.hpp"
+#include "types/Numeric.hpp"
 #include "Vector.hpp"
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
