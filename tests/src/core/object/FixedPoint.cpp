@@ -1,6 +1,4 @@
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/String.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -8,9 +6,12 @@
 #include <string_view>
 #include <system_error>
 
-#include "Approx.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
+#include "openvic-simulation/core/object/FixedPoint/String.hpp"
+
+#include "core/object/Approx.hpp"
+#include "core/object/Numeric.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>

@@ -6,16 +6,15 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/object/FixedPoint/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
-#include "String.hpp"
-
 /* Base e exponential lookup table */
-#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"
+#include "openvic-simulation/core/object/FixedPoint/LUT_2_16_EXP_e.hpp"
 
 /* Base 2001 exponential lookup table */
-#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
+#include "openvic-simulation/core/object/FixedPoint/LUT_2_16_EXP_2001.hpp"
 
 using namespace OpenVic;
 static_assert(_detail::LUT::_2_16_EXP_e_DIVISOR == 1 << fixed_point_t::PRECISION);

@@ -5,10 +5,10 @@
 
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Fraction.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/fixed_point/Fraction.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "openvic-simulation/core/Math.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/object/Vector.hpp"
 
 #include "core/object/Vector.hpp" // IWYU pragma: keep

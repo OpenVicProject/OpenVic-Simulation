@@ -1,6 +1,6 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch.hpp>

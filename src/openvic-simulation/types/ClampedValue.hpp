@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 

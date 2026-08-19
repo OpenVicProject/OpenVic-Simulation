@@ -16,10 +16,10 @@
 #include <range/v3/view/enumerate.hpp>
 
 #include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint/String.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
-#include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 using namespace OpenVic;
