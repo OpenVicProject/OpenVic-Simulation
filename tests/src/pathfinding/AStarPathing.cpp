@@ -1,8 +1,8 @@
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #include "Helper.hpp"
 #include "pathfinding/Pathing.hpp"

@@ -229,9 +229,9 @@ struct KeyedSumScratch {
 Adapted from `tests/src/ecs/KeyedReductions.cpp` (the `fixed_point_t` worker-count-invariance case):
 
 ```cpp
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/ecs/EcsThreadPool.hpp"
 #include "openvic-simulation/ecs/Reductions.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic::ecs;
 using OpenVic::fixed_point_t;

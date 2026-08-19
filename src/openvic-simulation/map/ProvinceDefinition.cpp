@@ -2,10 +2,10 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

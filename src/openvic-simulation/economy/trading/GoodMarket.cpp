@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <mutex>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;

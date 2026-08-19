@@ -5,11 +5,11 @@
 
 #include "openvic-simulation/core/stl/containers/BulkInsertWrapper.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

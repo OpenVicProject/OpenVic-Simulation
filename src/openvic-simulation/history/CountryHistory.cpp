@@ -1,10 +1,10 @@
 #include "CountryHistory.hpp"
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;

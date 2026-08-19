@@ -6,10 +6,11 @@
 #include <fmt/format.h>
 
 #include "openvic-simulation/core/Math.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/stl/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/template/Concepts.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #define VEC_TYPE vec2_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y)

@@ -19,6 +19,8 @@
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/io/BMP.hpp"
 #include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
@@ -26,8 +28,6 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 

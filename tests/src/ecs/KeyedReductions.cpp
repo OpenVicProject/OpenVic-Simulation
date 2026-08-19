@@ -1,6 +1,6 @@
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/ecs/EcsThreadPool.hpp"
 #include "openvic-simulation/ecs/Reductions.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #include <cstdint>
 #include <span>
