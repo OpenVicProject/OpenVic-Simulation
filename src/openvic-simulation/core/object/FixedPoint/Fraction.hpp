@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {

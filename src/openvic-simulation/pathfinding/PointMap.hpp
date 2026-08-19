@@ -10,9 +10,9 @@
 #include <tsl/ordered_set.h>
 
 #include "openvic-simulation/core/Hash.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 
 namespace OpenVic {

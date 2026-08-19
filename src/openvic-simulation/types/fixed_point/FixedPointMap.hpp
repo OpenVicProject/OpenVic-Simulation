@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 

@@ -5,9 +5,9 @@
 
 #include <fmt/format.h>
 
-#include "Colour.hpp" // IWYU pragma: keep
+#include "core/object/Colour.hpp" // IWYU pragma: keep
+#include "core/object/Numeric.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "types/Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>

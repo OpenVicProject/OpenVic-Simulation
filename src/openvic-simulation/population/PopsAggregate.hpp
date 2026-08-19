@@ -3,8 +3,8 @@
 #include <boost/int128/detail/int128_imp.hpp>
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"

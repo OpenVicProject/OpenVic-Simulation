@@ -5,13 +5,13 @@
 #include <span>
 #include <thread>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;

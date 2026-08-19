@@ -5,6 +5,7 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -12,7 +13,6 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 

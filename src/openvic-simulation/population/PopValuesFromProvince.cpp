@@ -1,6 +1,7 @@
 #include "PopValuesFromProvince.hpp"
 #include <algorithm>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -9,7 +10,6 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 

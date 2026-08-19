@@ -5,13 +5,13 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;

@@ -8,6 +8,7 @@
 
 #include <tsl/ordered_set.h>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
@@ -15,7 +16,6 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 

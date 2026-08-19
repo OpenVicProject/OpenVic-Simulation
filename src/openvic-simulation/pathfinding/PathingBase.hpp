@@ -10,10 +10,10 @@
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Signal.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename KeyT = PointMap::points_key_type>

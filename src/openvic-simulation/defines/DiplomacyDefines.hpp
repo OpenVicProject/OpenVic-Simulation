@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -11,7 +12,6 @@
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
