@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"

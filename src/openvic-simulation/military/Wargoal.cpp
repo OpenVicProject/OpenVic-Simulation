@@ -4,6 +4,7 @@
 
 #include <range/v3/algorithm/contains.hpp>
 
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;

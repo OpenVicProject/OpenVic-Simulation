@@ -1,16 +1,18 @@
 #include "Date.hpp"
 
-#include <cctype>
+#include <array>
 #include <charconv>
-#include <cmath>
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <string_view>
 
+#include <fmt/base.h>
 #include <fmt/format.h>
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;

@@ -4,9 +4,9 @@
 #include <functional>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
