@@ -4,8 +4,8 @@
 
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/memory/FixedVector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 
 using namespace OpenVic;

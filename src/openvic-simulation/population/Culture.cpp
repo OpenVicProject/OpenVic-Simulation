@@ -1,10 +1,11 @@
 #include "Culture.hpp"
+
 #include <string_view>
 
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 

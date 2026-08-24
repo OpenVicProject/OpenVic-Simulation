@@ -1,12 +1,13 @@
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 
-#include <cmath>
-#include <cstdlib>
+#include <cstdint>
 #include <string_view>
+
+#include <fmt/format.h>
 
 #include "Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "Numeric.hpp" // IWYU pragma: keep
+#include "types/Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>

@@ -12,6 +12,7 @@
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -21,7 +22,6 @@
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 
 using namespace OpenVic;
