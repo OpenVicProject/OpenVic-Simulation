@@ -4,18 +4,26 @@
 
 #include <type_traits>
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/map/Crime.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/politics/Reform.hpp"
+#include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
@@ -42,6 +50,8 @@ ProvinceInstance::ProvinceInstance(
 			}
 	}
 {
+	adjacencies.reserve(new_province_definition.get_adjacencies().size());
+	adjacent_nonempty_land_provinces.reserve(new_province_definition.get_adjacencies().size());
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
 }
@@ -233,7 +243,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 	normalise_pops_aggregate();
 }
 
-void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
+void ProvinceInstance::update_modifier_sum(const Date today, StaticModifierCache const& static_modifier_cache) {
 	// Update sum of direct province modifiers
 	modifier_sum.clear();
 
@@ -288,9 +298,17 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	}
 }
 
-void ProvinceInstance::update_country_modifier_sum() {
-	if (controller != nullptr) {
-		controller->contribute_province_modifier_sum(modifier_sum);
+void ProvinceInstance::update_adjecencies() {
+	has_empty_adjacent_province = false;
+	// We assume there are no duplicate province adjacencies, so each adjacency.get_to() is unique in the loop below
+	adjacent_nonempty_land_provinces.clear();
+	for (const std::reference_wrapper<const ProvinceInstance> adjacency_wrapper : get_adjacencies()) {
+		ProvinceInstance const& adjacency = adjacency_wrapper.get();
+		if (adjacency.is_empty()) {
+			has_empty_adjacent_province = true;
+		} else if (!adjacency.province_definition.is_water()) {
+			adjacent_nonempty_land_provinces.emplace_back(adjacency);
+		}
 	}
 }
 
@@ -332,23 +350,8 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(
 	return is_valid_operation;
 }
 
-void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager) {
-	has_empty_adjacent_province = false;
-	// We assume there are no duplicate province adjacencies, so each adjacency.get_to() is unique in the loop below
-	adjacent_nonempty_land_provinces.clear();
-
-	MapInstance const& map_instance = instance_manager.get_map_instance();
-	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
-		ProvinceDefinition const& adjacent_to_definition = adjacency.get_to();
-		ProvinceInstance const& adjacent_to_instance = map_instance.get_province_instance_by_definition(adjacent_to_definition);
-
-		if (adjacent_to_instance.is_empty()) {
-			has_empty_adjacent_province = true;
-		} else if (!adjacent_to_definition.is_water()) {
-			adjacent_nonempty_land_provinces.emplace_back(adjacent_to_instance);
-		}
-	}
-
+void ProvinceInstance::update_gamestate(const Date today, MilitaryDefines const& military_defines) {
+	update_adjecencies();
 	land_regiment_count = 0;
 	for (ArmyInstance const& army : armies) {
 		land_regiment_count += army.get_unit_count();
@@ -363,12 +366,10 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 		occupation_duration = 0;
 	}
 
-	const Date today = instance_manager.get_today();
-
 	for (BuildingInstance& building : buildings) {
 		building.update_gamestate(today);
 	}
-	_update_pops(instance_manager.definition_manager.get_define_manager().get_military_defines());
+	_update_pops(military_defines);
 }
 
 void ProvinceInstance::province_tick(
@@ -504,6 +505,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 
 void ProvinceInstance::initialise_for_new_game(
 	const Date today,
+	MapInstance const& map_instance,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
 	TypedSpan<good_index_t, char> reusable_goods_mask,
@@ -512,6 +514,12 @@ void ProvinceInstance::initialise_for_new_game(
 		VECTORS_FOR_PROVINCE_TICK
 	> reusable_vectors
 ) {
+	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		ProvinceDefinition const& adjacent_to_definition = adjacency.get_to();
+		ProvinceInstance const& adjacent_to_instance = map_instance.get_province_instance_by_definition(adjacent_to_definition);
+		adjacencies.emplace_back(adjacent_to_instance);
+	}
+	update_adjecencies();		
 	initialise_rgo();
 	province_tick(
 		today,
