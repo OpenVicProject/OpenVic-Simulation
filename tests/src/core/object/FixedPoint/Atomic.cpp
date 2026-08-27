@@ -1,11 +1,12 @@
+#include "openvic-simulation/core/object/FixedPoint/Atomic.hpp"
+
 #include <thread>
 #include <vector>
 
-#include "openvic-simulation/types/fixed_point/Atomic.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
+#include "core/object/Numeric.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_misc.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

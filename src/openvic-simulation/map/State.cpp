@@ -1,6 +1,7 @@
 #include "State.hpp"
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -10,7 +11,6 @@
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 

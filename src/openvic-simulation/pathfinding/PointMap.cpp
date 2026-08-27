@@ -12,9 +12,9 @@
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/Formatting.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 

@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

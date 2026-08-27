@@ -1,9 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
-#include "types/Numeric.hpp"
+#include "core/object/Numeric.hpp"
 #include <snitch/snitch_string.hpp>
 #include <snitch/snitch_string_utility.hpp>
 

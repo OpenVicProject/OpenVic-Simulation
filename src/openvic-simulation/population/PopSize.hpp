@@ -7,7 +7,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct pop_size_t : type_safe::strong_typedef<pop_size_t, std::int32_t>,

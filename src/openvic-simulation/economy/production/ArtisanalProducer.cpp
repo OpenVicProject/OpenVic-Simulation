@@ -5,6 +5,8 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/random/RandomGenerator.hpp"
 #include "openvic-simulation/core/random/WeightedSampling.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
@@ -19,8 +21,6 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 
 #include "ArtisanalProducerDeps.hpp"
 

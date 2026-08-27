@@ -6,11 +6,12 @@
 #include <type_traits>
 
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
-    template<typename T>
-    [[nodiscard]] OV_SPEED_INLINE constexpr T abs(const T num);
+	class fixed_point_t;
+
+	template<typename T>
+	[[nodiscard]] constexpr T abs(const T num);
 
 	template<typename T>
 	requires std::integral<T> || std::floating_point<T>
@@ -22,13 +23,8 @@ namespace OpenVic {
 		}
 	}
 
-    template<>
-	[[nodiscard]] OV_SPEED_INLINE constexpr fixed_point_t abs(const fixed_point_t  num) {
-		return num.abs();
-	}
-
-    template<typename T>
-	requires (!(std::integral<T> || std::floating_point<T> || std::is_same_v<T, fixed_point_t>))
+	template<typename T>
+	requires(!(std::integral<T> || std::floating_point<T> || std::same_as<T, fixed_point_t>))
 	[[nodiscard]] OV_SPEED_INLINE constexpr T abs(T const& num);
 
 	template<std::floating_point T>

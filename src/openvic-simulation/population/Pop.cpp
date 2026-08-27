@@ -11,6 +11,8 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
@@ -37,9 +39,7 @@
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"

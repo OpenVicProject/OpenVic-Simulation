@@ -2,6 +2,8 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -16,8 +18,6 @@
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/Math.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 

@@ -4,8 +4,8 @@
 #include <limits>
 #include <span>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	OV_SPEED_INLINE static size_t sample_weighted_index(

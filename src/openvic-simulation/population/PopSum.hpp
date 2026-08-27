@@ -8,8 +8,8 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	namespace detail {

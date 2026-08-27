@@ -9,8 +9,8 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/population/PopIdInProvince.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UniqueId.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"

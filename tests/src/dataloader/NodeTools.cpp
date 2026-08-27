@@ -24,14 +24,14 @@
 
 #include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/String.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/String.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 
-#include "../core/object/Colour.hpp" // IWYU pragma: keep
+#include "core/object/Colour.hpp" // IWYU pragma: keep
+#include "core/object/Numeric.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "types/Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>

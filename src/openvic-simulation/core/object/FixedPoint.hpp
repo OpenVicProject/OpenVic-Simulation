@@ -13,11 +13,12 @@
 
 namespace OpenVic {
 	enum class midpoint_rounding { AWAY_ZERO, TO_ZERO };
-	
+
 	template<typename T>
 	concept integral_max_size_4 = std::integral<T> && sizeof(T) <= 4;
 
-	struct fixed_point_t {
+	class fixed_point_t {
+	public:
 		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
 		using ov_return_by_value = void;
 		using value_type = int64_t;
@@ -40,6 +41,7 @@ namespace OpenVic {
 
 	private:
 		value_type value;
+
 	public:
 		[[nodiscard]] constexpr value_type const& get_raw_value() const {
 			return value;
@@ -48,6 +50,7 @@ namespace OpenVic {
 		OV_ALWAYS_INLINE constexpr fixed_point_t get_frac() const {
 			return parse_raw(value & FRAC_MASK);
 		}
+
 	private:
 		struct raw_value_t {
 			explicit raw_value_t() = default;
@@ -267,7 +270,7 @@ namespace OpenVic {
 
 		static fixed_point_t parse_capped(const int64_t value);
 		static fixed_point_t parse_capped(const uint64_t value);
-		
+
 		template<std::integral T>
 		requires (sizeof(T) >= 4)
 		static fixed_point_t parse_capped(const T value) {

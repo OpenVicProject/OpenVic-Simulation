@@ -1,9 +1,10 @@
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/random/WeightedSampling.hpp"
 
 #include <cstdint>
 #include <limits>
 #include <boost/int128.hpp>
+
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
@@ -11,7 +12,6 @@
 #include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
