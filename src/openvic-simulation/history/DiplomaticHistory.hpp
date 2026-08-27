@@ -3,12 +3,12 @@
 #include <functional>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/history/diplomacy/AllianceHistory.hpp"
 #include "openvic-simulation/history/diplomacy/ReparationsHistory.hpp"
 #include "openvic-simulation/history/diplomacy/SubjectHistory.hpp"
 #include "openvic-simulation/history/diplomacy/WarHistory.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
 	struct CountryDefinitionManager;

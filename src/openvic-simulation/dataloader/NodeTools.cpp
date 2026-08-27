@@ -16,6 +16,7 @@
 #include <range/v3/view/enumerate.hpp>
 
 #include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/fixed_point/String.hpp"
@@ -251,19 +252,19 @@ node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> cal
 }
 
 node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
+	return expect_int<Timespan::value_t>([callback](Timespan::value_t val) mutable -> bool {
 		return callback(Timespan::from_years(val));
 	});
 }
 
 node_callback_t NodeTools::expect_months(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
+	return expect_int<Timespan::value_t>([callback](Timespan::value_t val) mutable -> bool {
 		return callback(Timespan::from_months(val));
 	});
 }
 
 node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
+	return expect_int<Timespan::value_t>([callback](Timespan::value_t val) mutable -> bool {
 		return callback(Timespan::from_days(val));
 	});
 }

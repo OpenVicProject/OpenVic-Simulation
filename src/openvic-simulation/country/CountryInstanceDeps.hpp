@@ -1,9 +1,9 @@
 #pragma once
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/population/PopsAggregateDeps.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {

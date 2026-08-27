@@ -5,6 +5,7 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"

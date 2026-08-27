@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string_view>
 
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Timespan.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
