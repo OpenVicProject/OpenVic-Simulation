@@ -82,10 +82,10 @@ ECS_SYSTEM(MmsWriteDSerial)
 namespace {
 	// Common fixture: N entities each carrying Seed + all four writable components.
 	// Returns the created entity ids in insertion order.
-	std::vector<EntityID> seed_world(World& world, std::size_t N) {
+	std::vector<EntityID> seed_world(World& world, std::size_t n) {
 		std::vector<EntityID> ids;
-		ids.reserve(N);
-		for (std::size_t i = 0; i < N; ++i) {
+		ids.reserve(n);
+		for (std::size_t i = 0; i < n; ++i) {
 			ids.push_back(world.create_entity(
 				MmsSeed { static_cast<int64_t>(i + 1) },
 				MmsA {}, MmsB {}, MmsC {}, MmsD {}
@@ -214,10 +214,10 @@ TEST_CASE("Mixed stage with 2 SystemThreaded + 2 plain System<> all correct",
 // ============================================================================
 
 namespace {
-	int64_t run_mixed_and_digest(uint32_t worker_count, std::size_t N, int ticks) {
+	int64_t run_mixed_and_digest(uint32_t worker_count, std::size_t n, int ticks) {
 		World world;
 		world.set_ecs_worker_count(worker_count);
-		std::vector<EntityID> ids = seed_world(world, N);
+		std::vector<EntityID> ids = seed_world(world, n);
 
 		world.register_system<MmsWriteAThreaded>();
 		world.register_system<MmsWriteBThreaded>();

@@ -30,7 +30,7 @@ TEST_CASE("ErrorSet Constructor methods", "[ErrorSet][ErrorSet-constructor]") {
 	CHECK(set_4[Error::BUG]);
 	CHECK_FALSE(set_4[Error::FAILED]);
 
-	ErrorSet set_5 = std::move(set_4);
+	ErrorSet set_5 = set_4;
 
 	CHECK(set_5.any());
 	CHECK(set_5[Error::BUG]);
