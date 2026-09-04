@@ -113,26 +113,26 @@ namespace OpenVic::stl {
 			return *this;
 		}
 
-		OV_ALWAYS_INLINE reference write() {
+		OV_ALWAYS_INLINE reference write() OV_LIFETIME_BOUND {
 			if (data->count != 1) {
 				*this = cow_ptr(read(), payload_allocator_traits::select_on_container_copy_construction(alloc));
 			}
 			return data->value;
 		}
 
-		OV_ALWAYS_INLINE const_reference read() const {
+		OV_ALWAYS_INLINE const_reference read() const OV_LIFETIME_BOUND {
 			return data->value;
 		}
 
-		OV_ALWAYS_INLINE const_pointer get() const {
+		OV_ALWAYS_INLINE const_pointer get() const OV_LIFETIME_BOUND {
 			return &read();
 		}
 
-		OV_ALWAYS_INLINE const_reference operator*() const {
+		OV_ALWAYS_INLINE const_reference operator*() const OV_LIFETIME_BOUND {
 			return read();
 		}
 
-		OV_ALWAYS_INLINE const_pointer operator->() const {
+		OV_ALWAYS_INLINE const_pointer operator->() const OV_LIFETIME_BOUND {
 			return get();
 		}
 
@@ -142,7 +142,7 @@ namespace OpenVic::stl {
 
 		template<typename... Args>
 		requires std::constructible_from<T, Args...>
-		OV_ALWAYS_INLINE const_reference emplace(Args&&... args) {
+		OV_ALWAYS_INLINE const_reference emplace(Args&&... args) OV_LIFETIME_BOUND {
 			if (data->count > 1) {
 				~cow_ptr();
 				data = _allocate_payload();
@@ -155,7 +155,7 @@ namespace OpenVic::stl {
 
 		template<typename U, typename... Args>
 		requires std::constructible_from<T, std::initializer_list<U>&, Args&&...>
-		OV_ALWAYS_INLINE const_reference emplace(std::initializer_list<U> ilist, Args&&... args) {
+		OV_ALWAYS_INLINE const_reference emplace(std::initializer_list<U> ilist, Args&&... args) OV_LIFETIME_BOUND {
 			if (data->count > 1) {
 				~cow_ptr();
 				data = _allocate_payload();
@@ -189,7 +189,7 @@ namespace OpenVic::stl {
 		OV_NO_UNIQUE_ADDRESS payload_allocator_type alloc;
 		payload* data;
 
-		inline payload* _allocate_payload() {
+		inline payload* _allocate_payload() OV_LIFETIME_BOUND {
 			return payload_allocator_traits::allocate(alloc, 1);
 		}
 	};

@@ -190,11 +190,11 @@ namespace OpenVic {
 			return components;
 		}
 
-		OV_SPEED_INLINE constexpr T& operator[](size_t index) {
+		OV_SPEED_INLINE constexpr T& operator[](size_t index) OV_LIFETIME_BOUND {
 			return components[index % size];
 		}
 
-		OV_SPEED_INLINE constexpr T const& operator[](size_t index) const {
+		OV_SPEED_INLINE constexpr T const& operator[](size_t index) const OV_LIFETIME_BOUND {
 			return components[index % size];
 		}
 

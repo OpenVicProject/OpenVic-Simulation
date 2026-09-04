@@ -5,6 +5,7 @@
 #include <span>
 
 #include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -60,7 +61,7 @@ namespace OpenVic {
 		int32_t get_width() const;
 		int32_t get_height() const;
 		uint16_t get_bits_per_pixel() const;
-		std::span<const palette_colour_t> get_palette() const;
-		std::span<const uint8_t> get_pixel_data() const;
+		std::span<const palette_colour_t> get_palette() const OV_LIFETIME_BOUND;
+		std::span<const uint8_t> get_pixel_data() const OV_LIFETIME_BOUND;
 	};
 }

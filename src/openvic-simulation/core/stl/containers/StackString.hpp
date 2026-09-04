@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	template<size_t Size>
@@ -20,7 +21,7 @@ namespace OpenVic {
 		constexpr StackString() {}
 
 	public:
-		constexpr const char* data() const {
+		constexpr const char* data() const OV_LIFETIME_BOUND {
 			return _array.data();
 		}
 
@@ -32,15 +33,15 @@ namespace OpenVic {
 			return _string_size;
 		}
 
-		constexpr decltype(_array)::const_iterator begin() const {
+		constexpr decltype(_array)::const_iterator begin() const OV_LIFETIME_BOUND {
 			return _array.begin();
 		}
 
-		constexpr decltype(_array)::const_iterator end() const {
+		constexpr decltype(_array)::const_iterator end() const OV_LIFETIME_BOUND {
 			return begin() + size();
 		}
 
-		constexpr decltype(_array)::const_reference operator[](size_t index) const {
+		constexpr decltype(_array)::const_reference operator[](size_t index) const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _array[index];
 		}

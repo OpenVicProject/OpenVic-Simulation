@@ -546,11 +546,11 @@ namespace OpenVic {
 			return operator integer_type() <=> rhs;
 		}
 
-		OV_SPEED_INLINE constexpr value_type& operator[](std::size_t index) {
+		OV_SPEED_INLINE constexpr value_type& operator[](std::size_t index) OV_LIFETIME_BOUND {
 			return _array_access_helper<value_type>(*this, index);
 		}
 
-		OV_SPEED_INLINE constexpr value_type const& operator[](std::size_t index) const {
+		OV_SPEED_INLINE constexpr value_type const& operator[](std::size_t index) const OV_LIFETIME_BOUND {
 			return _array_access_helper<const value_type>(*this, index);
 		}
 
@@ -611,7 +611,7 @@ namespace OpenVic {
 
 	public:
 		template<std::size_t Index>
-		OV_SPEED_INLINE auto&& get() & {
+		OV_SPEED_INLINE auto&& get() & OV_LIFETIME_BOUND {
 			return get_helper<Index>(*this);
 		}
 
@@ -621,12 +621,12 @@ namespace OpenVic {
 		}
 
 		template<std::size_t Index>
-		OV_SPEED_INLINE auto&& get() const& {
+		OV_SPEED_INLINE auto&& get() const& OV_LIFETIME_BOUND {
 			return get_helper<Index>(*this);
 		}
 
 		template<std::size_t Index>
-		OV_SPEED_INLINE auto&& get() const&& {
+		OV_SPEED_INLINE auto&& get() const&& OV_LIFETIME_BOUND {
 			return get_helper<Index>(*this);
 		}
 
