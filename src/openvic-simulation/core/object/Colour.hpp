@@ -884,6 +884,7 @@ struct fmt::formatter<T> {
 		auto write_value = [&](T::value_type const& comp) {
 			ctx.advance_to(out);
 			switch (_value_format_type) {
+			case value_format_type::none:	  break;
 			case value_format_type::value:	  _colour_value.format(comp, ctx); break;
 			case value_format_type::integer:  _integer.format(comp, ctx); break;
 			case value_format_type::floating: _floating.format(double(comp) / T::max_value, ctx); break;
