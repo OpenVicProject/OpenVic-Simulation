@@ -381,6 +381,8 @@ bool CountryInstance::may_build_in(const BuildingRestrictionCategory restriction
 		case BuildingRestrictionCategory::FACTORY:
 			return rule_set.may_invest_in_building_factory_abroad();
 	}
+
+	OpenVic::unreachable();
 }
 
 CountryRelationManager::relation_value_type CountryInstance::get_relations_with(CountryInstance const& country) const {

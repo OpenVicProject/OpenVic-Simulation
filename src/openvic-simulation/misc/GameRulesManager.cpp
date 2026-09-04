@@ -1,5 +1,6 @@
 #include "GameRulesManager.hpp"
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -24,6 +25,8 @@ bool GameRulesManager::may_use_coastal_artisanal_production_types(ProvinceInstan
 		case CoastalProvinces:
 			return is_coastal_province;
 	}
+
+	OpenVic::unreachable();
 }
 
 bool GameRulesManager::may_use_coastal_factory_production_types(State const& state) const {
@@ -40,4 +43,6 @@ bool GameRulesManager::may_use_coastal_factory_production_types(State const& sta
 			return is_coastal_state;
 		}
 	}
+
+	OpenVic::unreachable();
 }
