@@ -47,6 +47,20 @@
 #endif
 #endif // OV_NO_UNIQUE_ADDRESS
 
+#ifndef OV_LIFETIME_BOUND
+#if __has_cpp_attribute(clang::lifetimebound)
+#define OV_LIFETIME_BOUND [[clang::lifetimebound]]
+#elif __has_cpp_attribute(gnu::lifetimebound)
+#define OV_LIFETIME_BOUND [[gnu::lifetimebound]]
+#elif __has_cpp_attribute(msvc::lifetimebound)
+#define OV_LIFETIME_BOUND [[msvc::lifetimebound]]
+#elif __has_cpp_attribute(lifetimebound)
+#define OV_LIFETIME_BOUND [[lifetimebound]]
+#else
+#define OV_LIFETIME_BOUND
+#endif
+#endif // OV_LIFETIME_BOUND
+
 namespace OpenVic {
 	template<std::size_t... Idxs>
 	constexpr auto substring_as_array(std::string_view str, std::index_sequence<Idxs...>) {

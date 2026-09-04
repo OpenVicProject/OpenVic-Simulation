@@ -202,53 +202,53 @@ namespace OpenVic::stl {
 		using iterator = T*;
 		using const_iterator = T const*;
 
-		constexpr iterator begin() { return _data_start_ptr; }
-		constexpr const_iterator begin() const { return _data_start_ptr; }
-		constexpr const_iterator cbegin() const { return _data_start_ptr; }
+		constexpr iterator begin() OV_LIFETIME_BOUND { return _data_start_ptr; }
+		constexpr const_iterator begin() const OV_LIFETIME_BOUND { return _data_start_ptr; }
+		constexpr const_iterator cbegin() const OV_LIFETIME_BOUND { return _data_start_ptr; }
 
-		constexpr iterator end() { return begin() + get_index_as_size_t(_size); }
-		constexpr const_iterator end() const { return begin() + get_index_as_size_t(_size); }
-		constexpr const_iterator cend() const { return cbegin() + get_index_as_size_t(_size); }
+		constexpr iterator end() OV_LIFETIME_BOUND { return begin() + get_index_as_size_t(_size); }
+		constexpr const_iterator end() const OV_LIFETIME_BOUND { return begin() + get_index_as_size_t(_size); }
+		constexpr const_iterator cend() const OV_LIFETIME_BOUND { return cbegin() + get_index_as_size_t(_size); }
 
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		constexpr reverse_iterator rbegin() { return reverse_iterator(end()); }
-		constexpr const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
-		constexpr const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
+		constexpr reverse_iterator rbegin() OV_LIFETIME_BOUND { return reverse_iterator(end()); }
+		constexpr const_reverse_iterator rbegin() const OV_LIFETIME_BOUND { return const_reverse_iterator(end()); }
+		constexpr const_reverse_iterator crbegin() const OV_LIFETIME_BOUND { return const_reverse_iterator(end()); }
 
-		constexpr reverse_iterator rend() { return reverse_iterator(begin()); }
-		constexpr const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
-		constexpr const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
+		constexpr reverse_iterator rend() OV_LIFETIME_BOUND { return reverse_iterator(begin()); }
+		constexpr const_reverse_iterator rend() const OV_LIFETIME_BOUND { return const_reverse_iterator(begin()); }
+		constexpr const_reverse_iterator crend() const OV_LIFETIME_BOUND { return const_reverse_iterator(begin()); }
 
-		constexpr T& operator[](const size_type typed_index) {
+		constexpr T& operator[](const size_type typed_index) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(typed_index, "operator[]");
 			return _data_start_ptr[get_index_as_size_t(typed_index)];
 		}
-		constexpr T const& operator[](const size_type typed_index) const {
+		constexpr T const& operator[](const size_type typed_index) const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(typed_index, "operator[]");
 			return _data_start_ptr[get_index_as_size_t(typed_index)];
 		}
 
-		constexpr T& front() {
+		constexpr T& front() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *begin();
 		}
-		constexpr T const& front() const {
+		constexpr T const& front() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *cbegin();
 		}
-		constexpr T& back() {
+		constexpr T& back() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(end()-1);
 		}
-		constexpr T const& back() const {
+		constexpr T const& back() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(cend()-1);
 		}
 
 		template <typename... Args>
-		constexpr iterator emplace_back(Args&&... args) {
+		constexpr iterator emplace_back(Args&&... args) OV_LIFETIME_BOUND {
 			if (_size >= _max_size) {
 				return end();
 			}

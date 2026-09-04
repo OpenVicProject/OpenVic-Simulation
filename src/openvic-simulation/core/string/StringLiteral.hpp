@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "openvic-simulation/core/stl/BasicIterator.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	template<std::size_t N, typename CharT, class Traits>
@@ -61,42 +62,42 @@ namespace OpenVic {
 			_data[size()] = '\0';
 		}
 
-		[[nodiscard]] constexpr const_iterator begin() const noexcept {
+		[[nodiscard]] constexpr const_iterator begin() const noexcept OV_LIFETIME_BOUND {
 			return const_iterator(_data);
 		}
-		[[nodiscard]] constexpr const_iterator end() const noexcept {
+		[[nodiscard]] constexpr const_iterator end() const noexcept OV_LIFETIME_BOUND {
 			return const_iterator(_data + size());
 		}
-		[[nodiscard]] constexpr const_iterator cbegin() const noexcept {
+		[[nodiscard]] constexpr const_iterator cbegin() const noexcept OV_LIFETIME_BOUND {
 			return begin();
 		}
-		[[nodiscard]] constexpr const_iterator cend() const noexcept {
+		[[nodiscard]] constexpr const_iterator cend() const noexcept OV_LIFETIME_BOUND {
 			return end();
 		}
-		[[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept {
+		[[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept OV_LIFETIME_BOUND {
 			return const_reverse_iterator(end());
 		}
-		[[nodiscard]] constexpr const_reverse_iterator rend() const noexcept {
+		[[nodiscard]] constexpr const_reverse_iterator rend() const noexcept OV_LIFETIME_BOUND {
 			return const_reverse_iterator(begin());
 		}
-		[[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept {
+		[[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept OV_LIFETIME_BOUND {
 			return rbegin();
 		}
-		[[nodiscard]] constexpr const_reverse_iterator crend() const noexcept {
+		[[nodiscard]] constexpr const_reverse_iterator crend() const noexcept OV_LIFETIME_BOUND {
 			return rend();
 		}
 
-		[[nodiscard]] constexpr const_reference front() const noexcept {
+		[[nodiscard]] constexpr const_reference front() const noexcept OV_LIFETIME_BOUND {
 			return as_string_view().front();
 		}
-		[[nodiscard]] constexpr const_reference back() const noexcept {
+		[[nodiscard]] constexpr const_reference back() const noexcept OV_LIFETIME_BOUND {
 			return as_string_view().back();
 		}
-		[[nodiscard]] constexpr const_reference at(size_type pos) const {
+		[[nodiscard]] constexpr const_reference at(size_type pos) const OV_LIFETIME_BOUND {
 			return as_string_view().at(pos);
 		}
 
-		[[nodiscard]] constexpr const_reference operator[](size_type pos) const noexcept {
+		[[nodiscard]] constexpr const_reference operator[](size_type pos) const noexcept OV_LIFETIME_BOUND {
 			return _data[pos];
 		}
 
@@ -199,7 +200,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		[[nodiscard]] constexpr string_literal const& substr() const noexcept {
+		[[nodiscard]] constexpr string_literal const& substr() const noexcept OV_LIFETIME_BOUND {
 			return *this;
 		}
 
@@ -236,23 +237,23 @@ namespace OpenVic {
 			return as_string_view().compare(0, size(), literal, N2 - 1);
 		}
 
-		[[nodiscard]] constexpr operator std::basic_string_view<value_type, traits_type>() const {
+		[[nodiscard]] constexpr operator std::basic_string_view<value_type, traits_type>() const OV_LIFETIME_BOUND {
 			return as_string_view();
 		}
 
-		[[nodiscard]] constexpr std::basic_string_view<value_type, traits_type> as_string_view() const {
+		[[nodiscard]] constexpr std::basic_string_view<value_type, traits_type> as_string_view() const OV_LIFETIME_BOUND {
 			return std::basic_string_view<value_type, traits_type>(_data, size());
 		}
 
-		[[nodiscard]] constexpr operator value_type const*() const {
+		[[nodiscard]] constexpr operator value_type const*() const OV_LIFETIME_BOUND {
 			return c_str();
 		}
 
-		[[nodiscard]] constexpr value_type const* c_str() const {
+		[[nodiscard]] constexpr value_type const* c_str() const OV_LIFETIME_BOUND {
 			return _data;
 		}
 
-		[[nodiscard]] constexpr value_type const* data() const {
+		[[nodiscard]] constexpr value_type const* data() const OV_LIFETIME_BOUND {
 			return _data;
 		}
 

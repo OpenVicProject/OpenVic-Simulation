@@ -6,6 +6,7 @@
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/stl/containers/StackString.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic::fp {
@@ -13,15 +14,15 @@ namespace OpenVic::fp {
 	protected:
 		using StackString::StackString;
 	public:
-		constexpr char* front() {
+		constexpr char* front() OV_LIFETIME_BOUND {
 			return _array.data();
 		}
 
-		constexpr char* back() {
+		constexpr char* back() OV_LIFETIME_BOUND {
 			return _array.data() + _array.size();
 		}
 
-		constexpr uint8_t& string_size() {
+		constexpr uint8_t& string_size() OV_LIFETIME_BOUND {
 			return _string_size;
 		}
 	};

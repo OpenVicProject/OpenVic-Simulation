@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "openvic-simulation/core/Assert.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	// not thread safe
@@ -64,74 +65,74 @@ namespace OpenVic {
 		}
 
 		// Element access based on std::vector
-		constexpr reference operator[](const size_type pos) {
+		constexpr reference operator[](const size_type pos) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return container[pos];
 		}
-		constexpr const_reference operator[](const size_type pos) const {
+		constexpr const_reference operator[](const size_type pos) const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return container[pos];
 		}
 
-		constexpr reference front() {
+		constexpr reference front() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return container[0];
 		}
-		constexpr const_reference front() const {
+		constexpr const_reference front() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return container[0];
 		}
-		
-		constexpr reference back() {
+
+		constexpr reference back() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return container[size()-1];
 		}
-		constexpr const_reference back() const {
+		constexpr const_reference back() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return container[size()-1];
 		}
 
-		constexpr value_type* data() noexcept { return container.data(); }
-		constexpr value_type const* data() const noexcept { return container.data(); }
+		constexpr value_type* data() noexcept OV_LIFETIME_BOUND { return container.data(); }
+		constexpr value_type const* data() const noexcept OV_LIFETIME_BOUND { return container.data(); }
 
 		// Iterators based on std::vector
-		constexpr iterator begin() noexcept {
+		constexpr iterator begin() noexcept OV_LIFETIME_BOUND {
 			return container.begin();
 		}
-		constexpr const_iterator begin() const noexcept {
+		constexpr const_iterator begin() const noexcept OV_LIFETIME_BOUND {
 			return container.begin();
 		}
-		constexpr const_iterator cbegin() const noexcept {
+		constexpr const_iterator cbegin() const noexcept OV_LIFETIME_BOUND {
 			return container.cbegin();
 		}
 
-		constexpr iterator end() noexcept {
+		constexpr iterator end() noexcept OV_LIFETIME_BOUND {
 			return container.end();
 		}
-		constexpr const_iterator end() const noexcept {
+		constexpr const_iterator end() const noexcept OV_LIFETIME_BOUND {
 			return container.end();
 		}
-		constexpr const_iterator cend() const noexcept {
+		constexpr const_iterator cend() const noexcept OV_LIFETIME_BOUND {
 			return container.cend();
 		}
 
-		constexpr reverse_iterator rbegin() noexcept {
+		constexpr reverse_iterator rbegin() noexcept OV_LIFETIME_BOUND {
 			return container.rbegin();
 		}
-		constexpr const_reverse_iterator rbegin() const noexcept {
+		constexpr const_reverse_iterator rbegin() const noexcept OV_LIFETIME_BOUND {
 			return container.rbegin();
 		}
-		constexpr const_reverse_iterator crbegin() const noexcept {
+		constexpr const_reverse_iterator crbegin() const noexcept OV_LIFETIME_BOUND {
 			return container.crbegin();
 		}
 
-		constexpr reverse_iterator rend() noexcept {
+		constexpr reverse_iterator rend() noexcept OV_LIFETIME_BOUND {
 			return container.rend();
 		}
-		constexpr const_reverse_iterator rend() const noexcept {
+		constexpr const_reverse_iterator rend() const noexcept OV_LIFETIME_BOUND {
 			return container.rend();
 		}
-		constexpr const_reverse_iterator crend() const noexcept {
+		constexpr const_reverse_iterator crend() const noexcept OV_LIFETIME_BOUND {
 			return container.crend();
 		}
 
@@ -173,7 +174,7 @@ namespace OpenVic {
 
 		template<typename... Args>
 		requires std::is_trivially_destructible_v<value_type>
-		constexpr reference emplace_back(Args&&... args) {
+		constexpr reference emplace_back(Args&&... args) OV_LIFETIME_BOUND {
 			return container.emplace_back(std::forward<Args>(args)...);
 		}
 
@@ -185,7 +186,7 @@ namespace OpenVic {
 		template <typename InputIt>
 		constexpr void append_range(const InputIt first, const InputIt last) {
 			flush_pending_room();
-			
+
 			const size_type new_valid_size = size() + std::distance(first, last);
 			if (new_valid_size > container.capacity()) {
 				assert(!"append_range called without make_room_for");

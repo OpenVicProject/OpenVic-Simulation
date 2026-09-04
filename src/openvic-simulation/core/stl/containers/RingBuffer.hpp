@@ -216,86 +216,86 @@ namespace OpenVic::stl {
 		}
 
 	private:
-		reference _unsafe_access(const size_type index) {
+		reference _unsafe_access(const size_type index) OV_LIFETIME_BOUND {
 			return _data[_ring_wrap(_offset + index, capacity())];
 		}
-		const_reference _unsafe_access(const size_type index) const {
+		const_reference _unsafe_access(const size_type index) const OV_LIFETIME_BOUND {
 			return _data[_ring_wrap(_offset + index, capacity())];
 		}
 
 	public:
-		reference front() {
+		reference front() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return _unsafe_access(0);
 		}
-		reference back() {
+		reference back() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return _unsafe_access(size() - 1);
 		}
-		const_reference back() const {
+		const_reference back() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return _unsafe_access(size() - 1);
 		}
 
-		const_reference operator[](const size_type index) const {
+		const_reference operator[](const size_type index) const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _unsafe_access(index);
 		}
-		reference operator[](const size_type index) {
+		reference operator[](const size_type index) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _unsafe_access(index);
 		}
 
-		const_reference at(const size_type index) const {
+		const_reference at(const size_type index) const OV_LIFETIME_BOUND {
 			if (OV_unlikely(index >= size())) {
 				_abort_on_out_of_range("at", "index", index, size());
 			}
 			return _unsafe_access(index);
 		}
-		reference at(const size_type index) {
+		reference at(const size_type index) OV_LIFETIME_BOUND {
 			if (OV_unlikely(index >= size())) {
 				_abort_on_out_of_range("at", "index", index, size());
 			}
 			return _unsafe_access(index);
 		}
 
-		iterator begin() noexcept {
+		iterator begin() noexcept OV_LIFETIME_BOUND {
 			return iterator(&_data[0], _offset, 0, _capacity);
 		}
-		iterator end() noexcept {
+		iterator end() noexcept OV_LIFETIME_BOUND {
 			return iterator(&_data[0], _offset, size(), _capacity);
 		}
-		const_iterator begin() const noexcept {
+		const_iterator begin() const noexcept OV_LIFETIME_BOUND {
 			return const_iterator(&_data[0], _offset, 0, _capacity);
 		}
 		const_iterator end() const noexcept {
 			return const_iterator(&_data[0], _offset, size(), _capacity);
 		}
 
-		const_iterator cbegin() const noexcept {
+		const_iterator cbegin() const noexcept OV_LIFETIME_BOUND {
 			return const_cast<RingBuffer const&>(*this).begin();
 		}
-		const_iterator cend() const noexcept {
+		const_iterator cend() const noexcept OV_LIFETIME_BOUND {
 			return const_cast<RingBuffer const&>(*this).end();
 		}
 
-		reverse_iterator rbegin() noexcept {
+		reverse_iterator rbegin() noexcept OV_LIFETIME_BOUND {
 			return reverse_iterator(end());
 		}
-		reverse_iterator rend() noexcept {
+		reverse_iterator rend() noexcept OV_LIFETIME_BOUND {
 			return reverse_iterator(begin());
 		}
-		const_reverse_iterator rbegin() const noexcept {
+		const_reverse_iterator rbegin() const noexcept OV_LIFETIME_BOUND {
 			return const_reverse_iterator(end());
 		}
-		const_reverse_iterator rend() const noexcept {
+		const_reverse_iterator rend() const noexcept OV_LIFETIME_BOUND {
 			return const_reverse_iterator(begin());
 		}
 
-		const_reverse_iterator crbegin() const noexcept {
+		const_reverse_iterator crbegin() const noexcept OV_LIFETIME_BOUND {
 			return const_cast<RingBuffer const&>(*this).rbegin();
 		}
-		const_reverse_iterator crend() const noexcept {
+		const_reverse_iterator crend() const noexcept OV_LIFETIME_BOUND {
 			return const_cast<RingBuffer const&>(*this).rend();
 		}
 
@@ -416,7 +416,7 @@ namespace OpenVic::stl {
 		}
 
 		template<typename... Args>
-		reference emplace_front(Args&&... args) {
+		reference emplace_front(Args&&... args) OV_LIFETIME_BOUND {
 			if (capacity() == 0) {
 				// A buffer of size zero is conceptually sound, so let's support it.
 				return (*this)[0];
@@ -440,7 +440,7 @@ namespace OpenVic::stl {
 		}
 
 		template<typename... Args>
-		reference emplace_back(Args&&... args) {
+		reference emplace_back(Args&&... args) OV_LIFETIME_BOUND {
 			if (capacity() == 0) {
 				// A buffer of size zero is conceptually sound, so let's support it.
 				return (*this)[0];
@@ -459,7 +459,7 @@ namespace OpenVic::stl {
 		/// Appends the range between first (inclusive) and last (exclusive) to end().
 		/// If size() + (last - first) > capacity(), rotates the front elements to the back and overwrites them.
 		template<typename InputIt>
-		iterator append(InputIt first, InputIt last) {
+		iterator append(InputIt first, InputIt last) OV_LIFETIME_BOUND {
 			using distance_type = typename std::iterator_traits<InputIt>::difference_type;
 
 			const size_type _capacity = capacity();
@@ -516,14 +516,14 @@ namespace OpenVic::stl {
 		/// Appends the range from first (inclusive) upto count to end().
 		/// If size() + count > capacity(), rotates the front elements to the back and overwrites them.
 		template<typename InputIt>
-		iterator append(InputIt first, size_type count) {
+		iterator append(InputIt first, size_type count) OV_LIFETIME_BOUND {
 			return append(first, first + count);
 		}
 
 		/// Appends the range to after end, truncated by write_size.
 		/// If size() + (end(range) - begin(range)) > capacity(), rotates the front elements to the back and overwrites them
 		template<ranges::input_range Range>
-		iterator append_range(Range&& range, size_type write_size = std::numeric_limits<size_type>::max()) {
+		iterator append_range(Range&& range, size_type write_size = std::numeric_limits<size_type>::max()) OV_LIFETIME_BOUND {
 			if (write_size < capacity()) {
 				auto end = ranges::begin(range);
 				ranges::advance(end, std::min<size_type>(ranges::distance(range), write_size));
@@ -616,9 +616,7 @@ namespace OpenVic::stl {
 			_next = 0;
 		}
 
-		iterator erase(const_iterator from, const_iterator to) noexcept(
-			noexcept(pop_front()) && std::is_nothrow_move_assignable<value_type>::value
-		) {
+		iterator erase(const_iterator from, const_iterator to) OV_LIFETIME_BOUND {
 			if (OV_unlikely(from > end() || to > end())) {
 				return std::bit_cast<iterator>(from);
 			}
@@ -701,12 +699,12 @@ namespace OpenVic::stl {
 
 			return result;
 		}
-		iterator erase(const_iterator pos, size_type count) noexcept(noexcept(erase(pos, pos + count))) {
+		iterator erase(const_iterator pos, size_type count) OV_LIFETIME_BOUND {
 			const_iterator last = pos;
 			std::advance(last, count);
 			return erase(pos, last);
 		}
-		iterator erase(const_iterator pos) noexcept(noexcept(erase(pos, 1))) {
+		iterator erase(const_iterator pos) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_VALID_ITERATOR(pos, "erase(const_iterator)");
 			return erase(pos, 1);
 		}
@@ -767,7 +765,7 @@ namespace OpenVic::stl {
 			--_size;
 		}
 
-		pointer _allocate(const size_type new_capacity) {
+		pointer _allocate(const size_type new_capacity) OV_LIFETIME_BOUND {
 			return allocator_traits::allocate(_allocator, new_capacity + 1);
 		}
 

@@ -66,11 +66,11 @@ namespace OpenVic {
 			return lhs._generator != rhs._generator;
 		}
 
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr T& generator() {
+		[[nodiscard]] OV_ALWAYS_INLINE constexpr T& generator() OV_LIFETIME_BOUND {
 			return _generator;
 		}
 
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr T const& generator() const {
+		[[nodiscard]] OV_ALWAYS_INLINE constexpr T const& generator() const OV_LIFETIME_BOUND {
 			return _generator;
 		}
 

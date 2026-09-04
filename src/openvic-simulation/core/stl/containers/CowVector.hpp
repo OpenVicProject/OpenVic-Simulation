@@ -169,33 +169,33 @@ namespace OpenVic::stl {
 			return alloc;
 		}
 
-		const_reference at(size_type pos) const {
+		const_reference at(size_type pos) const OV_LIFETIME_BOUND {
 			if (OV_unlikely(pos >= size())) {
 				_abort_on_out_of_range("at", "pos", pos, size());
 			}
 			return _data->array[pos];
 		}
 
-		const_reference operator[](size_type pos) const {
+		const_reference operator[](size_type pos) const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return _data->array[pos];
 		}
 
-		const_reference front() const {
+		const_reference front() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *_data->array;
 		}
 
-		const_reference back() const {
+		const_reference back() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *_data->array_end;
 		}
 
-		T const* data() const {
+		T const* data() const OV_LIFETIME_BOUND {
 			return !_data ? nullptr : _data->array;
 		}
 
-		std::span<const T> read() const {
+		std::span<const T> read() const OV_LIFETIME_BOUND {
 			if (!_data) {
 				return {};
 			}
@@ -203,35 +203,35 @@ namespace OpenVic::stl {
 			return { _data->array, _data->array_end };
 		}
 
-		const_iterator begin() const {
+		const_iterator begin() const OV_LIFETIME_BOUND {
 			return !_data ? end() : const_iterator(_data->array);
 		}
 
-		const_iterator cbegin() const {
+		const_iterator cbegin() const OV_LIFETIME_BOUND {
 			return !_data ? cend() : begin();
 		}
 
-		const_iterator end() const {
+		const_iterator end() const OV_LIFETIME_BOUND {
 			return !_data ? const_iterator() : const_iterator(_data->array_end);
 		}
 
-		const_iterator cend() const {
+		const_iterator cend() const OV_LIFETIME_BOUND {
 			return end();
 		}
 
-		const_reverse_iterator rbegin() const {
+		const_reverse_iterator rbegin() const OV_LIFETIME_BOUND {
 			return !_data ? rend() : const_reverse_iterator(_data->array);
 		}
 
-		const_reverse_iterator crbegin() const {
+		const_reverse_iterator crbegin() const OV_LIFETIME_BOUND {
 			return rbegin();
 		}
 
-		const_reverse_iterator rend() const {
+		const_reverse_iterator rend() const OV_LIFETIME_BOUND {
 			return !_data ? const_reverse_iterator() : const_reverse_iterator(_data->array_end);
 		}
 
-		const_reverse_iterator crend() const {
+		const_reverse_iterator crend() const OV_LIFETIME_BOUND {
 			return rend();
 		}
 
@@ -276,7 +276,7 @@ namespace OpenVic::stl {
 		friend struct writer;
 		struct writer;
 
-		writer& write() {
+		writer& write() OV_LIFETIME_BOUND {
 			if (!_data || _data->count <= 1) {
 				return *reinterpret_cast<writer*>(this);
 			}
@@ -286,7 +286,7 @@ namespace OpenVic::stl {
 			return result;
 		}
 
-		writer& write_for_overwrite() {
+		writer& write_for_overwrite() OV_LIFETIME_BOUND {
 			writer& result = *reinterpret_cast<writer*>(this);
 			if (!_data || _data->count <= 1) {
 				return result;
@@ -315,7 +315,7 @@ namespace OpenVic::stl {
 		OV_NO_UNIQUE_ADDRESS allocator_type alloc;
 		mutable payload* _data;
 
-		inline payload* _allocate_payload(size_t reserve) {
+		inline payload* _allocate_payload(size_t reserve) OV_LIFETIME_BOUND {
 			if (reserve == 0) {
 				return nullptr;
 			}
@@ -374,45 +374,45 @@ namespace OpenVic::stl {
 			_assign_aux(ilist.begin(), ilist.end(), std::random_access_iterator_tag());
 		}
 
-		reference at(size_type pos) {
+		reference at(size_type pos) OV_LIFETIME_BOUND {
 			if (OV_unlikely(pos >= size())) {
 				_abort_on_out_of_range("at", "pos", pos, size());
 			}
 			return _data->array[pos];
 		}
 
-		reference operator[](size_type pos) {
+		reference operator[](size_type pos) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return _data->array[pos];
 		}
 
-		reference front() {
+		reference front() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *_data->array;
 		}
 
-		reference back() {
+		reference back() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *_data->array_end;
 		}
 
-		T* data() {
+		T* data() OV_LIFETIME_BOUND {
 			return !_data ? nullptr : _data->array;
 		}
 
-		iterator begin() {
+		iterator begin() OV_LIFETIME_BOUND {
 			return !_data ? end() : iterator(_data->array);
 		}
 
-		iterator end() {
+		iterator end() OV_LIFETIME_BOUND {
 			return !_data ? iterator() : iterator(_data->array_end);
 		}
 
-		reverse_iterator rbegin() {
+		reverse_iterator rbegin() OV_LIFETIME_BOUND {
 			return !_data ? rend() : reverse_iterator(_data->array);
 		}
 
-		reverse_iterator rend() {
+		reverse_iterator rend() OV_LIFETIME_BOUND {
 			return !_data ? reverse_iterator() : reverse_iterator(_data->array_end);
 		}
 
@@ -467,7 +467,7 @@ namespace OpenVic::stl {
 			_data->array_end = _data->array;
 		}
 
-		iterator insert(const_iterator pos, T const& value) {
+		iterator insert(const_iterator pos, T const& value) OV_LIFETIME_BOUND {
 			const size_type n = pos - begin();
 			if (_data) {
 				if (_data->array_end != _data->store_end) {
@@ -493,35 +493,35 @@ namespace OpenVic::stl {
 			return iterator(_data->array + n);
 		}
 
-		iterator insert(const_iterator pos, T&& value) {
+		iterator insert(const_iterator pos, T&& value) OV_LIFETIME_BOUND {
 			return _insert_rval(pos, std::move(value));
 		}
 
-		iterator insert(const_iterator pos, size_type count, T const& value) {
+		iterator insert(const_iterator pos, size_type count, T const& value) OV_LIFETIME_BOUND {
 			difference_type offset = pos - cbegin();
 			_fill_insert(begin() + offset, count, value);
 			return begin() + offset;
 		}
 
 		template<class InputIt>
-		iterator insert(const_iterator pos, InputIt first, InputIt last) {
+		iterator insert(const_iterator pos, InputIt first, InputIt last) OV_LIFETIME_BOUND {
 			difference_type offset = pos - cbegin();
 			_range_insert(begin() + offset, first, last, std::iterator_traits<decltype(first)>::iterator_category());
 			return begin() + offset;
 		}
 
-		iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
+		iterator insert(const_iterator pos, std::initializer_list<T> ilist) OV_LIFETIME_BOUND {
 			auto offset = pos - cbegin();
 			_range_insert(begin() + offset, ilist.begin(), ilist.end(), std::random_access_iterator_tag());
 			return begin() + offset;
 		}
 
 		template<class... Args>
-		iterator emplace(const_iterator pos, Args&&... args) {
+		iterator emplace(const_iterator pos, Args&&... args) OV_LIFETIME_BOUND {
 			return _emplace_aux(pos, std::forward<Args>(args)...);
 		}
 
-		iterator erase(const_iterator pos) {
+		iterator erase(const_iterator pos) OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_VALID_ITERATOR(pos, "erase(const_iterator)");
 			if (pos + 1 != end()) {
 				std::move(pos + 1, end(), pos);
@@ -531,7 +531,7 @@ namespace OpenVic::stl {
 			return pos;
 		}
 
-		iterator erase(const_iterator first, const_iterator last) {
+		iterator erase(const_iterator first, const_iterator last) OV_LIFETIME_BOUND {
 			if (first != last) {
 				if (last != end()) {
 					std::move(last, end(), first);
@@ -559,7 +559,7 @@ namespace OpenVic::stl {
 		}
 
 		template<class... Args>
-		reference emplace_back(Args&&... args) {
+		reference emplace_back(Args&&... args) OV_LIFETIME_BOUND {
 			if (_data) {
 				if (_data->array_end != _data->store_end) {
 					allocator_traits::construct(alloc, _data->array_end, std::forward<Args>(args)...);
@@ -736,12 +736,12 @@ namespace OpenVic::stl {
 				allocator_traits::destroy(self->alloc, ptr());
 			}
 
-			value_type& value() {
+			value_type& value() OV_LIFETIME_BOUND {
 				return storage.value;
 			}
 
 		private:
-			T* ptr() {
+			T* ptr() OV_LIFETIME_BOUND {
 				return std::addressof(storage.value);
 			}
 
@@ -866,7 +866,7 @@ namespace OpenVic::stl {
 			}
 		}
 
-		iterator _insert_rval(const_iterator pos, value_type&& value) {
+		iterator _insert_rval(const_iterator pos, value_type&& value) OV_LIFETIME_BOUND {
 			const auto n = pos - cbegin();
 			if (_data) {
 				if (_data->array_end != _data->store_end) {
@@ -887,7 +887,7 @@ namespace OpenVic::stl {
 		}
 
 		template<typename... Args>
-		iterator _emplace_aux(const_iterator pos, Args&&... args) {
+		iterator _emplace_aux(const_iterator pos, Args&&... args) OV_LIFETIME_BOUND {
 			const auto n = pos - cbegin();
 			if (_data) {
 				if (_data->array_end != _data->store_end) {
@@ -911,7 +911,7 @@ namespace OpenVic::stl {
 			return iterator(_data->array + n);
 		}
 
-		iterator _emplace_aux(const_iterator pos, value_type&& value) {
+		iterator _emplace_aux(const_iterator pos, value_type&& value) OV_LIFETIME_BOUND {
 			return _insert_rval(pos, std::move(value));
 		}
 
