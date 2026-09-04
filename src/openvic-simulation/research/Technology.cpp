@@ -35,7 +35,7 @@ Technology::Technology(
 	cost { new_cost },
 	index_in_area { new_index_in_area },
 	unciv_military { new_unciv_military },
-	unit_variant { std::move(new_unit_variant) },
+	unit_variant { new_unit_variant },
 	activated_units { std::move(new_activated_units) },
 	activated_buildings { std::move(new_activated_buildings) },
 	ai_chance { std::move(new_ai_chance) } {}
