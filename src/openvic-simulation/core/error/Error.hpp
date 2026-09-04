@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string_view>
 
+#include "openvic-simulation/core/Typedefs.hpp"
+
 namespace OpenVic {
 	enum class Error : uint8_t {
 		OK, // Being 0 means failure can be checked with "if (Error)"
@@ -61,5 +63,7 @@ namespace OpenVic {
 		case BUG:				  return "Bug";
 		case MAX:				  return "";
 		}
+
+		OpenVic::unreachable();
 	}
 }
