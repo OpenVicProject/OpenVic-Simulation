@@ -38,7 +38,7 @@ FactoryProducer::FactoryProducer(
 	days_without_input { new_days_without_input },
 	hiring_priority { new_hiring_priority },
 	profit_history_current { new_profit_history_current },
-	daily_profit_history { std::move(new_daily_profit_history) } {}
+	daily_profit_history { new_daily_profit_history } {}
 
 FactoryProducer::FactoryProducer(ProductionType const& new_production_type, fixed_point_t new_size_multiplier)
 	: FactoryProducer { new_production_type, new_size_multiplier, 0, 0, 0, {}, {}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {} } {}

@@ -11,5 +11,5 @@ BaseIssue::BaseIssue(
 	modifier_type_t new_type
 ) : Modifier { new_identifier, std::move(new_values), new_type },
 	HasColour { new_colour, false },
-	rules { std::move(new_rules) },
+	rules { new_rules },
 	is_jingoism { new_is_jingoism } {}
