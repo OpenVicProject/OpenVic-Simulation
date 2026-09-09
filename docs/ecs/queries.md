@@ -6,7 +6,7 @@ Queries match **archetypes, not individual entities**. An entity is visited if a
 
 ## Building a `Query`
 
-Defined in src/openvic-simulation/ecs/Query.hpp:
+Defined in src/openvic-simulation/core/ecs/Query.hpp:
 
 ```cpp
 struct Query {
@@ -44,7 +44,7 @@ Reuse built queries where you can: it skips the (small) re-sort, and it makes th
 
 ### Determinism
 
-Component ids are compile-time FNV-1a hashes of the `ECS_COMPONENT` name literal (src/openvic-simulation/ecs/ComponentTypeID.hpp), so they are byte-identical across builds, platforms and machines. `build()`'s sorted order, query equality, and the `World`'s cache keys are therefore all stable — a query built on one multiplayer peer means exactly the same thing on another. See [determinism.md](determinism.md).
+Component ids are compile-time FNV-1a hashes of the `ECS_COMPONENT` name literal (src/openvic-simulation/core/ecs/ComponentTypeID.hpp), so they are byte-identical across builds, platforms and machines. `build()`'s sorted order, query equality, and the `World`'s cache keys are therefore all stable — a query built on one multiplayer peer means exactly the same thing on another. See [determinism.md](determinism.md).
 
 ## Matcher semantics
 
@@ -71,7 +71,7 @@ You never compute or compare matcher hashes in game code.
 
 ## Iterating with a query: the `for_each` family
 
-All six variants live on `World` (src/openvic-simulation/ecs/World.hpp):
+All six variants live on `World` (src/openvic-simulation/core/ecs/World.hpp):
 
 ```cpp
 // Visit every entity whose archetype contains all of Cs..., calling fn(C&...) per row.
@@ -159,11 +159,11 @@ int64_t total_wealth(ecs::World& world, ecs::Query const& q) {
 }
 ```
 
-(`ChunkView` is defined in src/openvic-simulation/ecs/ChunkView.hpp; it is the same type `ChunkSystem` hands to `tick_chunk` — see [systems.md](systems.md).)
+(`ChunkView` is defined in src/openvic-simulation/core/ecs/ChunkView.hpp; it is the same type `ChunkSystem` hands to `tick_chunk` — see [systems.md](systems.md).)
 
 ## System filters: `Filter` and `Without`
 
-Systems don't construct `Query` objects by hand. A system's **require** set comes from its tick parameter pack (`System<>` / `SystemThreaded<>`) or its template component list (`ChunkSystem<>`). To add an **exclude** set, declare a `Filters` member alias using the vocabulary in src/openvic-simulation/ecs/QueryFilter.hpp:
+Systems don't construct `Query` objects by hand. A system's **require** set comes from its tick parameter pack (`System<>` / `SystemThreaded<>`) or its template component list (`ChunkSystem<>`). To add an **exclude** set, declare a `Filters` member alias using the vocabulary in src/openvic-simulation/core/ecs/QueryFilter.hpp:
 
 ```cpp
 // Exclusion marker: archetypes containing C are not iterated.
@@ -242,9 +242,9 @@ The consolidated list lives in [pitfalls.md](pitfalls.md).
 
 ## Source files
 
-- src/openvic-simulation/ecs/Query.hpp — `Query` builder.
-- src/openvic-simulation/ecs/QueryFilter.hpp — `Filter`, `Without`, `system_filters_t`.
-- src/openvic-simulation/ecs/World.hpp — `for_each` family, query-cache key types.
-- src/openvic-simulation/ecs/ChunkView.hpp — `ChunkView<Cs...>` passed to `for_each_chunk`.
-- src/openvic-simulation/ecs/ComponentTypeID.hpp — stable FNV component ids underpinning query determinism.
+- src/openvic-simulation/core/ecs/Query.hpp — `Query` builder.
+- src/openvic-simulation/core/ecs/QueryFilter.hpp — `Filter`, `Without`, `system_filters_t`.
+- src/openvic-simulation/core/ecs/World.hpp — `for_each` family, query-cache key types.
+- src/openvic-simulation/core/ecs/ChunkView.hpp — `ChunkView<Cs...>` passed to `for_each_chunk`.
+- src/openvic-simulation/core/ecs/ComponentTypeID.hpp — stable FNV component ids underpinning query determinism.
 - Tests: tests/src/ecs/Query.cpp, tests/src/ecs/Iteration.cpp, tests/src/ecs/MatcherHash.cpp, tests/src/ecs/SystemFilters.cpp.

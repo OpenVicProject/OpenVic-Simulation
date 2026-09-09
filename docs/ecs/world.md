@@ -268,7 +268,7 @@ struct SystemHandle {
 inline constexpr SystemHandle INVALID_SYSTEM_HANDLE = {};
 ```
 
-Defined in src/openvic-simulation/ecs/System.hpp. `is_valid()` only distinguishes a default-constructed handle (`INVALID_SYSTEM_HANDLE`, generation 0) from one actually returned by `register_system` — it does **not** detect staleness, so a handle whose system was since unregistered still returns `true`. Staleness is caught by `unregister_system` itself: destroying a system bumps the registry slot's generation, and an incoming handle is checked against the slot's alive flag and current generation, so a second `unregister_system` with a stale handle is a safe no-op instead of touching the wrong slot. Don't use `handle.is_valid()` to ask "is this system still registered?" — there is no API for that; just hand the handle to `unregister_system` when you're done with it.
+Defined in src/openvic-simulation/core/ecs/System.hpp. `is_valid()` only distinguishes a default-constructed handle (`INVALID_SYSTEM_HANDLE`, generation 0) from one actually returned by `register_system` — it does **not** detect staleness, so a handle whose system was since unregistered still returns `true`. Staleness is caught by `unregister_system` itself: destroying a system bumps the registry slot's generation, and an incoming handle is checked against the slot's alive flag and current generation, so a second `unregister_system` with a stale handle is a safe no-op instead of touching the wrong slot. Don't use `handle.is_valid()` to ask "is this system still registered?" — there is no API for that; just hand the handle to `unregister_system` when you're done with it.
 
 ```cpp
 void unregister_system(SystemHandle handle);
@@ -534,17 +534,17 @@ bool load_session(World& restored, WorldIdentitySnapshot const& snap, std::vecto
 }
 ```
 
-After a correct restore, `digest(tick^k(restore(snapshot(s)))) == digest(tick^k(s))` at every worker count — that equality is enforced by tests/src/ecs/IdentitySnapshotInvariance.cpp. Full-state checksums (`world_checksum` in src/openvic-simulation/ecs/Checksum.hpp) are covered in [determinism.md](determinism.md).
+After a correct restore, `digest(tick^k(restore(snapshot(s)))) == digest(tick^k(s))` at every worker count — that equality is enforced by tests/src/ecs/IdentitySnapshotInvariance.cpp. Full-state checksums (`world_checksum` in src/openvic-simulation/core/ecs/Checksum.hpp) are covered in [determinism.md](determinism.md).
 
 ---
 
 ## Source files
 
-- src/openvic-simulation/ecs/World.hpp — `World`, `WorldIdentitySnapshot`, all signatures quoted above
-- src/openvic-simulation/ecs/World.cpp — out-of-line definitions (guards, snapshot/restore, tick driving)
-- src/openvic-simulation/ecs/System.hpp — `TickContext`, `SystemHandle`, `INVALID_SYSTEM_HANDLE`
-- src/openvic-simulation/ecs/Query.hpp — `Query` builder ([queries.md](queries.md))
-- src/openvic-simulation/ecs/ChunkView.hpp — `ChunkView<Cs...>` passed to `for_each_chunk`
-- src/openvic-simulation/ecs/EntityID.hpp — `EntityID`, `ImmutableEntityID` ([entities.md](entities.md))
+- src/openvic-simulation/core/ecs/World.hpp — `World`, `WorldIdentitySnapshot`, all signatures quoted above
+- src/openvic-simulation/core/ecs/World.cpp — out-of-line definitions (guards, snapshot/restore, tick driving)
+- src/openvic-simulation/core/ecs/System.hpp — `TickContext`, `SystemHandle`, `INVALID_SYSTEM_HANDLE`
+- src/openvic-simulation/core/ecs/Query.hpp — `Query` builder ([queries.md](queries.md))
+- src/openvic-simulation/core/ecs/ChunkView.hpp — `ChunkView<Cs...>` passed to `for_each_chunk`
+- src/openvic-simulation/core/ecs/EntityID.hpp — `EntityID`, `ImmutableEntityID` ([entities.md](entities.md))
 - tests/src/ecs/Integration.cpp, tests/src/ecs/Iteration.cpp, tests/src/ecs/Coverage.cpp — usage examples
 - tests/src/ecs/IdentitySnapshot.cpp, tests/src/ecs/IdentitySnapshotInvariance.cpp — save/load semantics and the invariance gate

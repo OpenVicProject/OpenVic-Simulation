@@ -1,6 +1,6 @@
 # Determinism and checksums
 
-OpenVic targets lockstep multiplayer: every peer runs the same simulation and must produce **bit-identical state** every tick, regardless of CPU, worker-thread count, or whether the session was freshly started or loaded from a save. This page is the contract that makes that work — the rules your game code must follow, the ordering guarantees the ECS gives you in return, and the checksum machinery (`src/openvic-simulation/ecs/Checksum.hpp`) that measures whether two worlds are actually in the same state.
+OpenVic targets lockstep multiplayer: every peer runs the same simulation and must produce **bit-identical state** every tick, regardless of CPU, worker-thread count, or whether the session was freshly started or loaded from a save. This page is the contract that makes that work — the rules your game code must follow, the ordering guarantees the ECS gives you in return, and the checksum machinery (`src/openvic-simulation/core/ecs/Checksum.hpp`) that measures whether two worlds are actually in the same state.
 
 The short version: write per-row integer/fixed-point arithmetic, declare everything you touch, never let a thread id or a memory address influence a result — and the worker-count-invariance tests will hold you to it.
 
@@ -12,7 +12,7 @@ Floating-point results vary with compiler, optimization flags, FMA contraction, 
 
 ### 2. No thread-schedule-dependent results — use `reductions::*`
 
-Any fold whose accumulation order depends on which worker ran first (a shared accumulator, a per-`worker_id` partial array folded in completion order) produces different results at different worker counts. Use the helpers in `src/openvic-simulation/ecs/Reductions.hpp` — `parallel_sum`, `parallel_min`, `parallel_max`, `parallel_keyed_sum`. They buffer per-chunk results keyed by `chunk_idx` and fold them **sequentially in `chunk_idx` ascending order** after the parallel section joins, so the result is bit-identical regardless of worker count. See threading-and-reductions.md for usage.
+Any fold whose accumulation order depends on which worker ran first (a shared accumulator, a per-`worker_id` partial array folded in completion order) produces different results at different worker counts. Use the helpers in `src/openvic-simulation/core/ecs/Reductions.hpp` — `parallel_sum`, `parallel_min`, `parallel_max`, `parallel_keyed_sum`. They buffer per-chunk results keyed by `chunk_idx` and fold them **sequentially in `chunk_idx` ascending order** after the parallel section joins, so the result is bit-identical regardless of worker count. See threading-and-reductions.md for usage.
 
 For the same reason, never key anything off the `worker_id` your code can observe, and never read wall-clock time, thread ids, or process-local RNG inside a tick.
 
@@ -44,7 +44,7 @@ A raw pointer is uniquely representable, so a byte-hashed component containing o
 
 ### 6. Keep `should_run` pure over deterministic state
 
-The optional `static bool should_run(TickContext const&)` cadence gate must be a pure function of `ctx.today` and singletons read via `ctx.world`. It runs on every peer every tick; if it reads anything per-machine, peers diverge on *whether a system ran at all*. The skip is dispatch-time only — `schedule_hash()` is untouched — so gating never perturbs the schedule. Full contract in `src/openvic-simulation/ecs/System.hpp` and systems.md.
+The optional `static bool should_run(TickContext const&)` cadence gate must be a pure function of `ctx.today` and singletons read via `ctx.world`. It runs on every peer every tick; if it reads anything per-machine, peers diverge on *whether a system ran at all*. The skip is dispatch-time only — `schedule_hash()` is untouched — so gating never perturbs the schedule. Full contract in `src/openvic-simulation/core/ecs/System.hpp` and systems.md.
 
 ### 7. Don't make logic sensitive to packing order across save/load
 
@@ -65,11 +65,11 @@ Given identical inputs and game code that follows the rules above, the ECS guara
 uint64_t schedule_hash();
 ```
 
-FNV-1a over the `(stage_index, system_type_id_t)` pairs of the current schedule (`src/openvic-simulation/ecs/World.hpp`). Multiplayer peers compute this at session-start handshake; a mismatch rejects the join. Registration *within* a conflict-free stage is order-insensitive — `tests/src/ecs/SystemFiltersWorkerCountInvariance.cpp` asserts that registering four co-staged systems in reverse order produces the same hash. See scheduling.md.
+FNV-1a over the `(stage_index, system_type_id_t)` pairs of the current schedule (`src/openvic-simulation/core/ecs/World.hpp`). Multiplayer peers compute this at session-start handshake; a mismatch rejects the join. Registration *within* a conflict-free stage is order-insensitive — `tests/src/ecs/SystemFiltersWorkerCountInvariance.cpp` asserts that registering four co-staged systems in reverse order produces the same hash. See scheduling.md.
 
 ## EntityID stability across save/load
 
-`EntityID` is `{ uint32_t index, uint32_t generation }` (`src/openvic-simulation/ecs/EntityID.hpp`). Ids are **save-stable**: the identity layer (slot generations, immutability flags, free-list order) can be snapshotted and restored exactly, so an `EntityID` stored inside a component means the same thing after a load as it did in the never-saved run. This is why checksumming hashes `EntityID` fields raw, and why components reference other entities by id rather than pointer.
+`EntityID` is `{ uint32_t index, uint32_t generation }` (`src/openvic-simulation/core/ecs/EntityID.hpp`). Ids are **save-stable**: the identity layer (slot generations, immutability flags, free-list order) can be snapshotted and restored exactly, so an `EntityID` stored inside a component means the same thing after a load as it did in the never-saved run. This is why checksumming hashes `EntityID` fields raw, and why components reference other entities by id rather than pointer.
 
 ```cpp
 bool snapshot_identity(WorldIdentitySnapshot& out) const;
@@ -79,7 +79,7 @@ template<typename... Cs>
 bool restore_entity(EntityID eid, Cs&&... values);
 ```
 
-- `snapshot_identity` captures the identity layer **only** — per-slot generations, per-slot immutability, free-list order (`WorldIdentitySnapshot` in `src/openvic-simulation/ecs/World.hpp`). Archetypes, packing, singletons, and systems are deliberately not captured; the loader rebuilds them. Refuses (error log + `false`) mid-tick or while any reserved-but-unfinalised slot exists (a `CommandBuffer` holding un-applied creates) — snapshot only between ticks, after every buffer has applied. It also validates the free chain and refuses to save a corrupt one.
+- `snapshot_identity` captures the identity layer **only** — per-slot generations, per-slot immutability, free-list order (`WorldIdentitySnapshot` in `src/openvic-simulation/core/ecs/World.hpp`). Archetypes, packing, singletons, and systems are deliberately not captured; the loader rebuilds them. Refuses (error log + `false`) mid-tick or while any reserved-but-unfinalised slot exists (a `CommandBuffer` holding un-applied creates) — snapshot only between ticks, after every buffer has applied. It also validates the free chain and refuses to save a corrupt one.
 - `restore_identity` requires a **fresh** World (no entity slot ever allocated), outside any tick. The snapshot is fully validated before any mutation; on failure the World is untouched. Afterward every live slot is reserved-but-unfinalised: addressable at its original `(index, generation)` but `is_alive == false` until finalised.
 - `restore_entity` finalises one restored slot with its components (same component rules as `create_entity`). Between `restore_identity` and the last `restore_entity`, the **only** legal entity operations are `restore_entity` calls — in particular, `destroy_entity` on a not-yet-finalised id would push the slot onto the free list and silently corrupt the restored order. Recreate live entities in **slot-index ascending order**: identity correctness is order-independent, but packing is not, and the canonical order is what makes packing reproducible across loads.
 
@@ -193,8 +193,8 @@ Enforcement happens automatically at the two registration points — instantiati
 Adapted from `tests/src/ecs/Checksum.cpp`:
 
 ```cpp
-#include "openvic-simulation/ecs/ChecksumTraits.hpp"
-#include "openvic-simulation/ecs/ComponentTypeID.hpp"
+#include "openvic-simulation/core/ecs/ChecksumTraits.hpp"
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 
 #include <vector>
 
@@ -253,9 +253,9 @@ The contract test: same starting World + same input → bit-identical post-tick 
 The full-state-checksum variant, adapted from `tests/src/ecs/Checksum.cpp` — use this as the template when adding a gate for new game systems:
 
 ```cpp
-#include "openvic-simulation/ecs/Checksum.hpp"
-#include "openvic-simulation/ecs/SystemImpl.hpp"
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/Checksum.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 namespace {
 	// Threaded spawner: every CkSeed entity spawns one CkSpawned with a deterministic value.
@@ -317,7 +317,7 @@ TEST_CASE("Full-state checksum is identical across worker counts and serial mode
 }
 ```
 
-The two World knobs the harness uses (`src/openvic-simulation/ecs/World.hpp`):
+The two World knobs the harness uses (`src/openvic-simulation/core/ecs/World.hpp`):
 
 ```cpp
 // Override the ECS worker count. Call before the first `tick_systems` invocation.
@@ -352,10 +352,10 @@ Run them with `ctest --preset <preset>-debug` (after building with `cmake --buil
 
 ## Source files
 
-- src/openvic-simulation/ecs/Checksum.hpp — `world_checksum`, `world_checksum_breakdown`, `fold_checksum_breakdown`, breakdown structs
-- src/openvic-simulation/ecs/Checksum.cpp — the canonical walk implementation
-- src/openvic-simulation/ecs/ChecksumTraits.hpp — the per-type hashing contract, traits, primitives, `ECS_CHECKSUM_BYTES`
-- src/openvic-simulation/ecs/World.hpp — `schedule_hash`, `set_ecs_worker_count`, `set_serial_mode`, `snapshot_identity` / `restore_identity` / `restore_entity`, `WorldIdentitySnapshot`
-- src/openvic-simulation/ecs/Reductions.hpp — deterministic parallel folds
-- src/openvic-simulation/ecs/EntityID.hpp — `EntityID` / `ImmutableEntityID`
+- src/openvic-simulation/core/ecs/Checksum.hpp — `world_checksum`, `world_checksum_breakdown`, `fold_checksum_breakdown`, breakdown structs
+- src/openvic-simulation/core/ecs/Checksum.cpp — the canonical walk implementation
+- src/openvic-simulation/core/ecs/ChecksumTraits.hpp — the per-type hashing contract, traits, primitives, `ECS_CHECKSUM_BYTES`
+- src/openvic-simulation/core/ecs/World.hpp — `schedule_hash`, `set_ecs_worker_count`, `set_serial_mode`, `snapshot_identity` / `restore_identity` / `restore_entity`, `WorldIdentitySnapshot`
+- src/openvic-simulation/core/ecs/Reductions.hpp — deterministic parallel folds
+- src/openvic-simulation/core/ecs/EntityID.hpp — `EntityID` / `ImmutableEntityID`
 - tests/src/ecs/WorkerCountInvariance.cpp, tests/src/ecs/SystemFiltersWorkerCountInvariance.cpp, tests/src/ecs/Checksum.cpp, tests/src/ecs/IdentitySnapshotInvariance.cpp — the determinism gates

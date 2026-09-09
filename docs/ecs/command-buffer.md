@@ -2,7 +2,7 @@
 
 `CommandBuffer` is how game code performs structural changes — creating and destroying entities, adding and removing components — from inside a system tick. Recording an operation is cheap and immediate; the actual World mutation is deferred to the **stage barrier**, after every system in the current stage has finished iterating. Inside a system you never mutate the World structurally yourself: you call `ctx.cmd.*`, and the scheduler plays your buffer back at a safe, deterministic point.
 
-Defined in [src/openvic-simulation/ecs/CommandBuffer.hpp](../../src/openvic-simulation/ecs/CommandBuffer.hpp) (recording) and [src/openvic-simulation/ecs/CommandBuffer.cpp](../../src/openvic-simulation/ecs/CommandBuffer.cpp) (playback).
+Defined in [src/openvic-simulation/core/ecs/CommandBuffer.hpp](../../src/openvic-simulation/core/ecs/CommandBuffer.hpp) (recording) and [src/openvic-simulation/core/ecs/CommandBuffer.cpp](../../src/openvic-simulation/core/ecs/CommandBuffer.cpp) (playback).
 
 ## Where you get one
 
@@ -323,9 +323,9 @@ You could call `world.add_component` directly between ticks instead (the in-tick
 
 ## Source files
 
-- [src/openvic-simulation/ecs/CommandBuffer.hpp](../../src/openvic-simulation/ecs/CommandBuffer.hpp) — recording API, op storage, payload holders
-- [src/openvic-simulation/ecs/CommandBuffer.cpp](../../src/openvic-simulation/ecs/CommandBuffer.cpp) — `apply` / `clear` / `merge_from` playback
-- [src/openvic-simulation/ecs/World.hpp](../../src/openvic-simulation/ecs/World.hpp) — in-tick mutation guard, reserved-slot lifecycle, `is_immutable`
-- [src/openvic-simulation/ecs/System.hpp](../../src/openvic-simulation/ecs/System.hpp) — `TickContext` (the `cmd` member), per-chunk buffer pool on `SystemThreaded`
-- [src/openvic-simulation/ecs/EntityID.hpp](../../src/openvic-simulation/ecs/EntityID.hpp) — `is_deferred()`, `DEFERRED_GENERATION_BIT`, `ImmutableEntityID`
+- [src/openvic-simulation/core/ecs/CommandBuffer.hpp](../../src/openvic-simulation/core/ecs/CommandBuffer.hpp) — recording API, op storage, payload holders
+- [src/openvic-simulation/core/ecs/CommandBuffer.cpp](../../src/openvic-simulation/core/ecs/CommandBuffer.cpp) — `apply` / `clear` / `merge_from` playback
+- [src/openvic-simulation/core/ecs/World.hpp](../../src/openvic-simulation/core/ecs/World.hpp) — in-tick mutation guard, reserved-slot lifecycle, `is_immutable`
+- [src/openvic-simulation/core/ecs/System.hpp](../../src/openvic-simulation/core/ecs/System.hpp) — `TickContext` (the `cmd` member), per-chunk buffer pool on `SystemThreaded`
+- [src/openvic-simulation/core/ecs/EntityID.hpp](../../src/openvic-simulation/core/ecs/EntityID.hpp) — `is_deferred()`, `DEFERRED_GENERATION_BIT`, `ImmutableEntityID`
 - Tests: [tests/src/ecs/CommandBuffer.cpp](../../tests/src/ecs/CommandBuffer.cpp), [tests/src/ecs/InTickMutationGuard.cpp](../../tests/src/ecs/InTickMutationGuard.cpp), [tests/src/ecs/SystemThreadedSpawn.cpp](../../tests/src/ecs/SystemThreadedSpawn.cpp)

@@ -33,7 +33,7 @@ template<typename... Cs, typename Fn>
 void for_each_chunk(Query const& query, Fn&& fn);
 ```
 
-(`src/openvic-simulation/ecs/World.hpp`.) The callback receives one `ChunkView<Cs...>` per non-empty chunk of every matched archetype. Inserting `chunk_capacity + 1` entities observably produces two views — the first full, the second with one row (from `tests/src/ecs/ChunkOverflow.cpp`):
+(`src/openvic-simulation/core/ecs/World.hpp`.) The callback receives one `ChunkView<Cs...>` per non-empty chunk of every matched archetype. Inserting `chunk_capacity + 1` entities observably produces two views — the first full, the second with one row (from `tests/src/ecs/ChunkOverflow.cpp`):
 
 ```cpp
 struct Heavy {
@@ -83,7 +83,7 @@ template<typename C>
 bool remove_component(EntityID id);
 ```
 
-(`src/openvic-simulation/ecs/World.hpp`.) Because an archetype *is* its component set, adding or removing a component cannot happen in place — the entity must move to a different archetype. One `add_component` call does all of this:
+(`src/openvic-simulation/core/ecs/World.hpp`.) Because an archetype *is* its component set, adding or removing a component cannot happen in place — the entity must move to a different archetype. One `add_component` call does all of this:
 
 1. Builds the target signature (`current ∪ {C}` or `current ∖ {C}`) and looks up — or **creates** — the target archetype. Creating a new archetype bumps the internal archetype epoch, invalidating every cached query result.
 2. Reserves a row in the target (possibly allocating a fresh 16 KB chunk).
@@ -160,7 +160,7 @@ struct ChunkView {
 };
 ```
 
-(`src/openvic-simulation/ecs/ChunkView.hpp`.) A `ChunkView<Cs...>` wraps a single chunk's slabs: the `EntityID` array plus one typed component-array pointer per `Cs...`. All arrays share the same length, `count()`. You receive one in two places:
+(`src/openvic-simulation/core/ecs/ChunkView.hpp`.) A `ChunkView<Cs...>` wraps a single chunk's slabs: the `EntityID` array plus one typed component-array pointer per `Cs...`. All arrays share the same length, `count()`. You receive one in two places:
 
 - `World::for_each_chunk<Cs...>(fn)` / `for_each_chunk<Cs...>(query, fn)` callbacks, and
 - a `ChunkSystem<Derived, Cs...>`'s `tick_chunk(ChunkView<Cs...> view, TickContext const& ctx)` — the chunk-granular system base for tight inner loops (see [systems.md](systems.md)).
@@ -219,11 +219,11 @@ What the storage guarantees about iteration order (`for_each`, `for_each_with_en
 - Matched archetypes are visited in archetype-creation order, chunks left to right, rows `0..count-1`. Given an identical history of operations, this order is bit-identical across runs and machines — chunk iteration is deterministic *within* a run lineage.
 - **Row order is creation order until the first removal in that archetype** — swap-pop compaction then permutes it. Bulk creation (`create_entities`, see [entities.md](entities.md)) packs its batch into contiguous row ranges, identical to the equivalent `create_entity` loop.
 - **Packing is not saved state.** After a save/load round-trip the identity layer (ids, generations, free-list) is reproduced exactly, but row/chunk packing may legitimately differ from the never-saved run. Therefore: anything *id-assignment-sensitive* (e.g. loops issuing `cmd.create_entity` calls where the resulting id assignment matters) must iterate in id / dense-index order, never chunk order. Per-row independent reads/writes are unaffected — for them chunk order genuinely doesn't matter. See [determinism.md](determinism.md) and [world.md](world.md).
-- **Key locality is a heuristic you create, not an invariant the storage maintains.** Because consecutive creations occupy consecutive rows, creating entities grouped by some key at setup time yields chunks whose rows are grouped by that key. `reductions::parallel_keyed_sum` (namespace `OpenVic::ecs::reductions`, `src/openvic-simulation/ecs/Reductions.hpp`) is built to exploit exactly this grouping, but swap-pop removals erode it over time. Code must stay *correct* for arbitrary row order and merely *faster* when locality holds. See [threading-and-reductions.md](threading-and-reductions.md).
+- **Key locality is a heuristic you create, not an invariant the storage maintains.** Because consecutive creations occupy consecutive rows, creating entities grouped by some key at setup time yields chunks whose rows are grouped by that key. `reductions::parallel_keyed_sum` (namespace `OpenVic::ecs::reductions`, `src/openvic-simulation/core/ecs/Reductions.hpp`) is built to exploit exactly this grouping, but swap-pop removals erode it over time. Code must stay *correct* for arbitrary row order and merely *faster* when locality holds. See [threading-and-reductions.md](threading-and-reductions.md).
 
 ## Chunk memory reuse (`ChunkPool`)
 
-Each `World` owns a `ChunkPool` of 16 KB blocks (`src/openvic-simulation/ecs/ChunkPool.hpp`). You never need to call it from game code — it exists so the storage rules above stay cheap:
+Each `World` owns a `ChunkPool` of 16 KB blocks (`src/openvic-simulation/core/ecs/ChunkPool.hpp`). You never need to call it from game code — it exists so the storage rules above stay cheap:
 
 - Dropped chunks go back to the pool and are handed out LIFO, so an archetype of transient per-tick entities that drains and refills every tick reuses warm memory with **zero** steady-state allocations — verified in `tests/src/ecs/ChunkPool.cpp` ("Ping-pong create/destroy reuses pooled chunks"). Blocks are interchangeable across archetypes.
 - The cache is capped at `MAX_POOL_SIZE` (64) blocks, and blocks idle for more than `AGE_THRESHOLD_TICKS` (256) ticks are returned to the OS (`tick_systems` advances the aging clock). Aging affects memory residency only — never simulation results.
@@ -232,10 +232,10 @@ Each `World` owns a `ChunkPool` of 16 KB blocks (`src/openvic-simulation/ecs/Chu
 
 ## Source files
 
-- `src/openvic-simulation/ecs/Archetype.hpp` — archetype, columns, row reservation, swap-pop
-- `src/openvic-simulation/ecs/Chunk.hpp` — `DataChunk`, `CHUNK_BLOCK_BYTES`, `CHUNK_BLOCK_ALIGN`, `OV_RESTRICT`, block layout
-- `src/openvic-simulation/ecs/ChunkPool.hpp` — block pool, cap, aging
-- `src/openvic-simulation/ecs/ChunkView.hpp` — the user-facing chunk window
-- `src/openvic-simulation/ecs/ChunkSystem.hpp` — chunk-granular system base (`tick_chunk`)
-- `src/openvic-simulation/ecs/World.hpp` — `create_entity`, `add_component`, `remove_component`, `component_version_in`, `for_each_chunk`
+- `src/openvic-simulation/core/ecs/Archetype.hpp` — archetype, columns, row reservation, swap-pop
+- `src/openvic-simulation/core/ecs/Chunk.hpp` — `DataChunk`, `CHUNK_BLOCK_BYTES`, `CHUNK_BLOCK_ALIGN`, `OV_RESTRICT`, block layout
+- `src/openvic-simulation/core/ecs/ChunkPool.hpp` — block pool, cap, aging
+- `src/openvic-simulation/core/ecs/ChunkView.hpp` — the user-facing chunk window
+- `src/openvic-simulation/core/ecs/ChunkSystem.hpp` — chunk-granular system base (`tick_chunk`)
+- `src/openvic-simulation/core/ecs/World.hpp` — `create_entity`, `add_component`, `remove_component`, `component_version_in`, `for_each_chunk`
 - Tests: `tests/src/ecs/Archetype.cpp`, `tests/src/ecs/Chunk.cpp`, `tests/src/ecs/ChunkPool.cpp`, `tests/src/ecs/ChunkView.cpp`, `tests/src/ecs/ChunkMigration.cpp`, `tests/src/ecs/ChunkOverflow.cpp`, `tests/src/ecs/Migration.cpp`

@@ -16,7 +16,7 @@ All three share the same metadata surface: `declared_run_after()` / `declared_ru
 
 Multi-system stages mix `System<>` and `SystemThreaded` freely — the scheduler builds one flat work-item list across every system in a stage and dispatches it via a single outer `parallel_for`. There is no "threaded system silently falls back to serial inside a shared stage" footgun.
 
-**Include rule:** a translation unit that defines a concrete system and registers it must include `openvic-simulation/ecs/SystemImpl.hpp` (which pulls in `World.hpp` and `System.hpp`) — the templated iteration drivers are defined there and must be visible at the point `register_system` instantiates them. `ChunkSystem.hpp` already includes it. Do not rely on or document anything *inside* `SystemImpl.hpp`; it is internal.
+**Include rule:** a translation unit that defines a concrete system and registers it must include `openvic-simulation/core/ecs/SystemImpl.hpp` (which pulls in `World.hpp` and `System.hpp`) — the templated iteration drivers are defined there and must be visible at the point `register_system` instantiates them. `ChunkSystem.hpp` already includes it. Do not rely on or document anything *inside* `SystemImpl.hpp`; it is internal.
 
 ## The tick signature is the access declaration
 
@@ -50,9 +50,9 @@ Tag (zero-size) components may appear in the pack to narrow the iteration; the r
 Adapted from `tests/src/ecs/SystemSchedulerSingletonWrites.cpp` and `tests/src/ecs/SystemShouldRun.cpp`:
 
 ```cpp
-#include "openvic-simulation/ecs/SystemImpl.hpp"
-#include "openvic-simulation/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 namespace OpenVic {
 	struct Treasury {
@@ -285,7 +285,7 @@ struct TickContext {
 ```
 
 - `today` — the simulation date for this tick. The only clock a system may consult (wall-clock reads break determinism).
-- `cmd` — the system's `CommandBuffer` for **all structural mutations**: `ctx.cmd.create_entity(ctx.world, Cs {...}...)`, `ctx.cmd.destroy_entity(eid)`, `ctx.cmd.add_component<C>(eid, ...)`, `ctx.cmd.remove_component<C>(eid)`. Ops are deferred and applied at the stage barrier, in the stage's deterministic order across its systems (ascending `system_type_id_t` — see [scheduling.md](scheduling.md)). For `SystemThreaded`, `cmd` refers to a *per-chunk* buffer; the per-chunk buffers are merged in `chunk_idx` ascending order before apply, which is what makes spawn order deterministic and identical across all worker counts (pinned by `tests/src/ecs/SystemThreadedSpawn.cpp`). Calling `ctx.cmd.*` requires including `openvic-simulation/ecs/CommandBuffer.hpp` in your system's TU; details in [command-buffer.md](command-buffer.md).
+- `cmd` — the system's `CommandBuffer` for **all structural mutations**: `ctx.cmd.create_entity(ctx.world, Cs {...}...)`, `ctx.cmd.destroy_entity(eid)`, `ctx.cmd.add_component<C>(eid, ...)`, `ctx.cmd.remove_component<C>(eid)`. Ops are deferred and applied at the stage barrier, in the stage's deterministic order across its systems (ascending `system_type_id_t` — see [scheduling.md](scheduling.md)). For `SystemThreaded`, `cmd` refers to a *per-chunk* buffer; the per-chunk buffers are merged in `chunk_idx` ascending order before apply, which is what makes spawn order deterministic and identical across all worker counts (pinned by `tests/src/ecs/SystemThreadedSpawn.cpp`). Calling `ctx.cmd.*` requires including `openvic-simulation/core/ecs/CommandBuffer.hpp` in your system's TU; details in [command-buffer.md](command-buffer.md).
 - `world` — read access to everything: `get_component` / `has_component` / `get_singleton` / `is_alive` / `is_immutable`. Two hard rules:
 	1. **Never structurally mutate `ctx.world` from inside a tick.** `World::create_entity`, `destroy_entity`, `add_component` and `remove_component` are guarded during `tick_systems` — they are refused as no-ops (returning a null/false result) with an error log rather than corrupting concurrent iteration. `ctx.cmd` is the only mutation path.
 	2. **Every non-iterated read or write through `ctx.world` must be declared** via `extra_reads()` / `extra_writes()` as described above. Writing through a `get_component` pointer on a row you iterate is fine only if that component is in your tick pack as `C&`.
@@ -402,11 +402,11 @@ For the storage model behind chunks and why this layout is fast, see [storage-mo
 
 ## Source files
 
-- `src/openvic-simulation/ecs/System.hpp` — `System<Derived>`, `SystemThreaded<Derived>`, `TickContext`, `SystemHandle`, `should_run` traits and contract
-- `src/openvic-simulation/ecs/SystemAccess.hpp` — `AccessMode`, `ComponentAccess`, access-set merge helpers
-- `src/openvic-simulation/ecs/ChunkSystem.hpp` — `ChunkSystem<Derived, Cs...>`
-- `src/openvic-simulation/ecs/ChunkView.hpp` — `ChunkView<Cs...>`
-- `src/openvic-simulation/ecs/QueryFilter.hpp` — `Filter`, `Without`, the `Filters` alias machinery
-- `src/openvic-simulation/ecs/SystemTypeID.hpp` — `system_type_id_t`, `system_type_id_of`, `ECS_SYSTEM`
-- `src/openvic-simulation/ecs/World.hpp` — `register_system`, `unregister_system`, `tick_systems`, `clear_systems`, `schedule_hash`
+- `src/openvic-simulation/core/ecs/System.hpp` — `System<Derived>`, `SystemThreaded<Derived>`, `TickContext`, `SystemHandle`, `should_run` traits and contract
+- `src/openvic-simulation/core/ecs/SystemAccess.hpp` — `AccessMode`, `ComponentAccess`, access-set merge helpers
+- `src/openvic-simulation/core/ecs/ChunkSystem.hpp` — `ChunkSystem<Derived, Cs...>`
+- `src/openvic-simulation/core/ecs/ChunkView.hpp` — `ChunkView<Cs...>`
+- `src/openvic-simulation/core/ecs/QueryFilter.hpp` — `Filter`, `Without`, the `Filters` alias machinery
+- `src/openvic-simulation/core/ecs/SystemTypeID.hpp` — `system_type_id_t`, `system_type_id_of`, `ECS_SYSTEM`
+- `src/openvic-simulation/core/ecs/World.hpp` — `register_system`, `unregister_system`, `tick_systems`, `clear_systems`, `schedule_hash`
 - Tests with working examples: `tests/src/ecs/System.cpp`, `tests/src/ecs/SystemAccess.cpp`, `tests/src/ecs/ChunkSystem.cpp`, `tests/src/ecs/SystemShouldRun.cpp`, `tests/src/ecs/SystemFilters.cpp`, `tests/src/ecs/SystemThreadedSpawn.cpp`, `tests/src/ecs/SystemSchedulerSingletonWrites.cpp`

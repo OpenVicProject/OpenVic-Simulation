@@ -25,7 +25,7 @@ template<typename C>
 C* add_component(EntityID id, C&& value);
 ```
 
-(`src/openvic-simulation/ecs/World.hpp`)
+(`src/openvic-simulation/core/ecs/World.hpp`)
 
 WHY: an entity's component set IS its archetype, and the archetype decides which chunk slabs the entity's data lives in (see [storage-model.md](storage-model.md)). `add_component` after creation is an **archetype migration**: the World builds the extended signature, finds or creates the target archetype, reserves a row there, move-constructs *every* existing component across, then swap-pop compacts the source archetype (relocating an unrelated entity into the hole) and bumps every column version. That is one full migration **per call, per entity**. At the scale this simulation targets (e.g. a million order entities per tick) it is lethal.
 
@@ -49,14 +49,14 @@ WHY: `create_entities` move-constructs values out of your spans straight into th
 ### **Never mutate World structure from inside a system tick — go through `ctx.cmd`.**
 
 ```cpp
-// On TickContext (src/openvic-simulation/ecs/System.hpp):
+// On TickContext (src/openvic-simulation/core/ecs/System.hpp):
 struct TickContext {
 	World& world;
 	Date today;
 	CommandBuffer& cmd;
 };
 
-// On CommandBuffer (src/openvic-simulation/ecs/CommandBuffer.hpp):
+// On CommandBuffer (src/openvic-simulation/core/ecs/CommandBuffer.hpp):
 template<typename... Cs>
 EntityID create_entity(World& world, Cs&&... values);
 
@@ -76,8 +76,8 @@ WHY: the scheduler sets an in-tick flag around every system's tick, and the Worl
 Working example (adapted from `tests/src/ecs/InTickMutationGuard.cpp`, which asserts exactly these semantics):
 
 ```cpp
-#include "openvic-simulation/ecs/SystemImpl.hpp"
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 using namespace OpenVic::ecs;
 using OpenVic::Date;
@@ -172,7 +172,7 @@ See [entities.md](entities.md).
 
 WHY: For pools and handle release — e.g. `DenseSlotAllocator`'s `release(uint32_t slot)` for singleton side-table rows — the call must be visible where the lifecycle decision is made, so end-of-session sweeps and ownership are auditable by reading the callsites. A destructor hiding the release defeats that. See [components.md](components.md) for `DenseSlotAllocator` side tables.
 
-Corollary contract (`src/openvic-simulation/ecs/DenseSlotAllocator.hpp`): `release` must happen **exactly once per live slot**. A double release is a contract violation that is **not** detected per-release (a per-call scan would make mass end-of-session sweeps quadratic) — the slot re-enters the free list and the next two `allocate()` calls hand out the same row twice. Only `debug_validate()` catches it: a one-shot O(n log n) invariant check for tests and debug sweeps. (Releasing a slot `>= high_water()` *is* caught: logged and ignored.)
+Corollary contract (`src/openvic-simulation/core/ecs/DenseSlotAllocator.hpp`): `release` must happen **exactly once per live slot**. A double release is a contract violation that is **not** detected per-release (a per-call scan would make mass end-of-session sweeps quadratic) — the slot re-enters the free list and the next two `allocate()` calls hand out the same row twice. Only `debug_validate()` catches it: a one-shot O(n log n) invariant check for tests and debug sweeps. (Releasing a slot `>= high_water()` *is* caught: logged and ignored.)
 
 ---
 
@@ -192,7 +192,7 @@ WHY: `get_component` returns a pointer into a chunk slab at the entity's current
 
 The World exposes the invalidation signal directly: `component_version_in<C>(id)` returns the component-column version in the entity's current archetype (0 if dead or no longer carrying `C`). The version monotonically increases on every structural change to that column (push, swap-pop, relocate), so **a stable version implies cached pointers into the column are still valid**.
 
-Across ticks, use `CachedRef<C>` (`src/openvic-simulation/ecs/CachedRef.hpp`), which packages exactly this check — id + version stamp + pointer; the fast path is one comparison:
+Across ticks, use `CachedRef<C>` (`src/openvic-simulation/core/ecs/CachedRef.hpp`), which packages exactly this check — id + version stamp + pointer; the fast path is one comparison:
 
 ```cpp
 CachedRef<province_weather> ref = CachedRef<province_weather>::from(world, eid);
@@ -241,7 +241,7 @@ bool create_immutable_entities(
 );
 ```
 
-(`src/openvic-simulation/ecs/CommandBuffer.hpp`) — the deferred analogue of `World::create_entities`, same input contract (one span per non-empty component in pack order, length `== count`, tags take no span, or no spans to default-construct; input spans are moved-from at record time). In parallel mode `out_ids` receives `count` **sequential deferred placeholders** that are **never rewritten** to real ids — the exact never-persist contract as the single create's returned placeholder, just `count` of them. In serial mode `count` real slots are reserved up-front in creation order, usable for same-buffer `add_component` / `destroy_entity` like single creates. Either way, the bulk op yields the identical id assignment as the equivalent `create_entity` loop.
+(`src/openvic-simulation/core/ecs/CommandBuffer.hpp`) — the deferred analogue of `World::create_entities`, same input contract (one span per non-empty component in pack order, length `== count`, tags take no span, or no spans to default-construct; input spans are moved-from at record time). In parallel mode `out_ids` receives `count` **sequential deferred placeholders** that are **never rewritten** to real ids — the exact never-persist contract as the single create's returned placeholder, just `count` of them. In serial mode `count` real slots are reserved up-front in creation order, usable for same-buffer `add_component` / `destroy_entity` like single creates. Either way, the bulk op yields the identical id assignment as the equivalent `create_entity` loop.
 
 ---
 
@@ -260,7 +260,7 @@ static constexpr std::array<component_type_id_t, 0> extra_writes() { return {}; 
 
 WHY: the scheduler builds its stage layout from declared access only — tick parameters plus `extra_reads()` / `extra_writes()`. Systems with disjoint access run concurrently in one stage; two systems with conflicting declared access are serialised — **unless** the scheduler can prove their iterated archetypes are disjoint (one's tick query requires a component the other excludes via `Filters = Filter<Without<...>>`, and every conflicting component appears purely in both tick parameter packs, never in `extra_reads()` / `extra_writes()`). That is the disjoint-iteration conflict override: e.g. one system writing `C` and reading `B` shares a stage with another writing `C` `Without<B>`, despite the shared write on `C`. See [scheduling.md](scheduling.md). An access you perform through `ctx.world` but did not declare is **invisible** to that model: the scheduler may co-schedule your system against a conflicting writer, producing a data race whose outcome depends on thread timing. That is not a crash — it is a silent lockstep desync, and the worker-count gate (below) catches it only probabilistically. See [systems.md](systems.md) and [scheduling.md](scheduling.md).
 
-The same rule covers `ChunkSystem<Derived, Cs...>` (`src/openvic-simulation/ecs/ChunkSystem.hpp`) — it has no per-row tick parameter pack, so the access set is declared by the `Cs...` template list instead, with identical inference: `C const` is Read, `C` is Write. Only where you write the declaration moves; the contract is the same.
+The same rule covers `ChunkSystem<Derived, Cs...>` (`src/openvic-simulation/core/ecs/ChunkSystem.hpp`) — it has no per-row tick parameter pack, so the access set is declared by the `Cs...` template list instead, with identical inference: `C const` is Read, `C` is Write. Only where you write the declaration moves; the contract is the same.
 
 ### **Singleton access inside a tick MUST be declared, and every singleton must exist before the first `tick_systems`.**
 
@@ -312,7 +312,7 @@ static bool should_run(TickContext const& ctx);
 
 WHY: the scheduler evaluates `should_run` exactly once per tick, on the main thread, at the start of the system's stage. `false` skips dispatch for this tick only — the system still occupies its stage, its ordering/conflict edges still constrain co-staged systems, and `schedule_hash` is untouched. That makes it the lockstep-safe way to do cadence gating; registering/unregistering systems per tick would churn `schedule_hash` (the multiplayer handshake value) instead.
 
-The determinism contract (stated in full in `src/openvic-simulation/ecs/System.hpp`): `should_run` must be a pure function of `ctx.today` and singletons read via `ctx.world`. Reading wall-clock, thread ids, RNG, or any per-machine state desyncs lockstep — and the scheduler cannot check purity. Do not write through `ctx.cmd` or `ctx.world`; the context is for reads only. Singleton reads inside `should_run` need **no** `extra_reads()` declaration: it runs on the main thread while no workers run, observing the previous stage's barrier state.
+The determinism contract (stated in full in `src/openvic-simulation/core/ecs/System.hpp`): `should_run` must be a pure function of `ctx.today` and singletons read via `ctx.world`. Reading wall-clock, thread ids, RNG, or any per-machine state desyncs lockstep — and the scheduler cannot check purity. Do not write through `ctx.cmd` or `ctx.world`; the context is for reads only. Singleton reads inside `should_run` need **no** `extra_reads()` declaration: it runs on the main thread while no workers run, observing the previous stage's barrier state.
 
 It must be `static` (systems are stateless — next rule); a member function, data member, wrong-signature variant, or overload set with a candidate callable with `TickContext const&` hard-fails registration via `static_assert` rather than being silently ignored. The one accepted hole (documented in `System.hpp`): an overload set in which **no** candidate is callable with `TickContext const&` fails both detection probes, reads as absent, and silently behaves as "always run".
 
@@ -334,7 +334,7 @@ WHY: system instances are not serialized. Anything you store on the system objec
 
 ### **Register every phase anchor — unmatched `run_after` / `run_before` ids are silently ignored.**
 
-WHY (scheduler contract, documented in `src/openvic-simulation/ecs/SystemPhase.hpp`): `declared_run_after` / `declared_run_before` ids that match no **registered** system are dropped without error. A phase anchor you declared with `ECS_PHASE_ANCHOR` but forgot to `world.register_system<...>()` makes every edge through it vanish — systems that were supposed to be ordered now schedule freely. Register every anchor; order doesn't matter (the DAG sorts registration order out).
+WHY (scheduler contract, documented in `src/openvic-simulation/core/ecs/SystemPhase.hpp`): `declared_run_after` / `declared_run_before` ids that match no **registered** system are dropped without error. A phase anchor you declared with `ECS_PHASE_ANCHOR` but forgot to `world.register_system<...>()` makes every edge through it vanish — systems that were supposed to be ordered now schedule freely. Register every anchor; order doesn't matter (the DAG sorts registration order out).
 
 Three related hard rules from the same header:
 
@@ -355,7 +355,7 @@ template<typename Body>
 void parallel_for(std::size_t chunk_count, Body&& body); // BLOCKING
 ```
 
-(`src/openvic-simulation/ecs/EcsThreadPool.hpp` — hard invariant: "`parallel_for` is blocking — does not return until every chunk's body has run.")
+(`src/openvic-simulation/core/ecs/EcsThreadPool.hpp` — hard invariant: "`parallel_for` is blocking — does not return until every chunk's body has run.")
 
 WHY: the scheduler already dispatches the outer `parallel_for` around your stage — your tick body is (in general) *already running on a pool worker*. An inner `parallel_for` queues jobs and then blocks that worker waiting for them; the inner jobs sit unowned until **some other** worker picks them up. If every worker is in the same situation, nobody is left to run anything: deadlock.
 
@@ -377,7 +377,7 @@ WHY: chunks of a `SystemThreaded` run concurrently. Any shared mutable state —
 
 ### **Keep tick bodies noexcept — a throw terminates the process.**
 
-WHY: pool invariant (`src/openvic-simulation/ecs/EcsThreadPool.hpp`): "No work is ever silently dropped; bodies that throw will std::terminate (we do not guarantee exception-safety from inside system bodies — they should be noexcept)." There is no recovery path; handle failure as data (error components, logged skips), not exceptions.
+WHY: pool invariant (`src/openvic-simulation/core/ecs/EcsThreadPool.hpp`): "No work is ever silently dropped; bodies that throw will std::terminate (we do not guarantee exception-safety from inside system bodies — they should be noexcept)." There is no recovery path; handle failure as data (error components, logged skips), not exceptions.
 
 ### **Never key results off `worker_id`.**
 
@@ -412,7 +412,7 @@ uint32_t allocate();
 void release(uint32_t slot);
 ```
 
-WHY (determinism contract, `src/openvic-simulation/ecs/DenseSlotAllocator.hpp`): the allocation order is a pure function of the alloc/release **call sequence** — LIFO reuse of released slots, then high-water growth. Inside a `SystemThreaded` tick the execution order is worker-count-dependent, so the call sequence (and therefore every slot assignment) differs per machine: a lockstep desync. Call `allocate` / `release` only from serial code — plain `System<>` tick bodies, `CommandBuffer`-apply-adjacent serial code, or outside ticks entirely. Same discipline as the deferred-create path: structural decisions funnel through a serial point.
+WHY (determinism contract, `src/openvic-simulation/core/ecs/DenseSlotAllocator.hpp`): the allocation order is a pure function of the alloc/release **call sequence** — LIFO reuse of released slots, then high-water growth. Inside a `SystemThreaded` tick the execution order is worker-count-dependent, so the call sequence (and therefore every slot assignment) differs per machine: a lockstep desync. Call `allocate` / `release` only from serial code — plain `System<>` tick bodies, `CommandBuffer`-apply-adjacent serial code, or outside ticks entirely. Same discipline as the deferred-create path: structural decisions funnel through a serial point.
 
 ### **Structural mutation order is deterministic because you used `ctx.cmd` — here is the order you can rely on.**
 
@@ -421,8 +421,8 @@ Per stage: each system's pending `CommandBuffer` is applied at the stage barrier
 Working example (adapted from the deferred-create cases in `tests/src/ecs/WorkerCountInvariance.cpp`):
 
 ```cpp
-#include "openvic-simulation/ecs/SystemImpl.hpp"
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 using namespace OpenVic::ecs;
 using OpenVic::Date;
@@ -498,10 +498,10 @@ Separately from legality: recreate in **slot-index ascending order** — the can
 ### **The name literal in `ECS_COMPONENT` / `ECS_SYSTEM` IS the persistent identity — globally unique, stable, namespace scope.**
 
 ```cpp
-// src/openvic-simulation/ecs/ComponentTypeID.hpp:
+// src/openvic-simulation/core/ecs/ComponentTypeID.hpp:
 ECS_COMPONENT(Type, NameLiteral) // component_type_id_of<Type>() == fnv1a_64(NameLiteral)
 
-// src/openvic-simulation/ecs/SystemTypeID.hpp:
+// src/openvic-simulation/core/ecs/SystemTypeID.hpp:
 ECS_SYSTEM(Type) // system_type_id_of<Type>() == fnv1a_64(#Type) — the macro stringifies
                  // its argument, so the qualified type name you pass IS the literal
 ```
