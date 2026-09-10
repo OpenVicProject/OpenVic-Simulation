@@ -27,8 +27,8 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 
 	if (military_defines.get_leader_recruit_cost() <= 0) {
 		spdlog::error_s(
-			"Invalid leader recruit cost: {} - must be greater than 0, changing to 1",
-			military_defines.get_leader_recruit_cost()
+		    "Invalid leader recruit cost: {} - must be greater than 0, changing to 1",
+		    military_defines.get_leader_recruit_cost()
 		);
 		ret = false;
 		military_defines.leader_recruit_cost = 1;

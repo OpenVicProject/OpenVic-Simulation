@@ -11,23 +11,40 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 WargoalType::WargoalType(
-	std::string_view new_identifier, std::string_view new_war_name, Timespan new_available_length,
-	Timespan new_truce_length, sprite_t new_sprite_index, bool new_triggered_only, bool new_civil_war,
-	bool new_constructing, bool new_crisis, bool new_great_war_obligatory, bool new_mutual,
-	bool new_all_allowed_states, bool new_always, peace_modifiers_t&& new_modifiers, peace_options_t new_peace_options,
-	ConditionScript&& new_can_use, ConditionScript&& new_is_valid, ConditionScript&& new_allowed_states,
-	ConditionScript&& new_allowed_substate_regions, ConditionScript&& new_allowed_states_in_crisis,
-	ConditionScript&& new_allowed_countries, EffectScript&& new_on_add, EffectScript&& new_on_po_accepted
-) : HasIdentifier { new_identifier }, war_name { new_war_name }, available_length { new_available_length },
-	truce_length { new_truce_length }, sprite_index { new_sprite_index }, is_triggered_only { new_triggered_only },
-	is_civil_war { new_civil_war }, constructing { new_constructing }, crisis { new_crisis },
-	is_great_war_obligatory { new_great_war_obligatory }, is_mutual { new_mutual }, all_allowed_states { new_all_allowed_states },
-	always { new_always }, modifiers { std::move(new_modifiers) }, peace_options { new_peace_options },
-	can_use { std::move(new_can_use) }, is_valid { std::move(new_is_valid) }, allowed_states { std::move(new_allowed_states) },
-	allowed_substate_regions { std::move(new_allowed_substate_regions) },
-	allowed_states_in_crisis { std::move(new_allowed_states_in_crisis) },
-	allowed_countries { std::move(new_allowed_countries) }, on_add { std::move(new_on_add) },
-	on_po_accepted { std::move(new_on_po_accepted) } {}
+    std::string_view new_identifier,
+    std::string_view new_war_name,
+    Timespan new_available_length,
+    Timespan new_truce_length,
+    sprite_t new_sprite_index,
+    bool new_triggered_only,
+    bool new_civil_war,
+    bool new_constructing,
+    bool new_crisis,
+    bool new_great_war_obligatory,
+    bool new_mutual,
+    bool new_all_allowed_states,
+    bool new_always,
+    peace_modifiers_t&& new_modifiers,
+    peace_options_t new_peace_options,
+    ConditionScript&& new_can_use,
+    ConditionScript&& new_is_valid,
+    ConditionScript&& new_allowed_states,
+    ConditionScript&& new_allowed_substate_regions,
+    ConditionScript&& new_allowed_states_in_crisis,
+    ConditionScript&& new_allowed_countries,
+    EffectScript&& new_on_add,
+    EffectScript&& new_on_po_accepted
+) :
+    HasIdentifier { new_identifier }, war_name { new_war_name }, available_length { new_available_length },
+    truce_length { new_truce_length }, sprite_index { new_sprite_index }, is_triggered_only { new_triggered_only },
+    is_civil_war { new_civil_war }, constructing { new_constructing }, crisis { new_crisis },
+    is_great_war_obligatory { new_great_war_obligatory }, is_mutual { new_mutual },
+    all_allowed_states { new_all_allowed_states }, always { new_always }, modifiers { std::move(new_modifiers) },
+    peace_options { new_peace_options }, can_use { std::move(new_can_use) }, is_valid { std::move(new_is_valid) },
+    allowed_states { std::move(new_allowed_states) }, allowed_substate_regions { std::move(new_allowed_substate_regions) },
+    allowed_states_in_crisis { std::move(new_allowed_states_in_crisis) },
+    allowed_countries { std::move(new_allowed_countries) }, on_add { std::move(new_on_add) },
+    on_po_accepted { std::move(new_on_po_accepted) } {}
 
 bool WargoalType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -43,13 +60,29 @@ bool WargoalType::parse_scripts(DefinitionManager const& definition_manager) {
 }
 
 bool WargoalTypeManager::add_wargoal_type(
-	std::string_view identifier, std::string_view war_name, Timespan available_length,
-	Timespan truce_length, WargoalType::sprite_t sprite_index, bool triggered_only, bool civil_war,
-	bool constructing, bool crisis, bool great_war_obligatory, bool mutual, bool all_allowed_states,
-	bool always, WargoalType::peace_modifiers_t&& modifiers, WargoalType::peace_options_t peace_options,
-	ConditionScript&& can_use, ConditionScript&& is_valid, ConditionScript&& allowed_states,
-	ConditionScript&& allowed_substate_regions, ConditionScript&& allowed_states_in_crisis,
-	ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
+    std::string_view identifier,
+    std::string_view war_name,
+    Timespan available_length,
+    Timespan truce_length,
+    WargoalType::sprite_t sprite_index,
+    bool triggered_only,
+    bool civil_war,
+    bool constructing,
+    bool crisis,
+    bool great_war_obligatory,
+    bool mutual,
+    bool all_allowed_states,
+    bool always,
+    WargoalType::peace_modifiers_t&& modifiers,
+    WargoalType::peace_options_t peace_options,
+    ConditionScript&& can_use,
+    ConditionScript&& is_valid,
+    ConditionScript&& allowed_states,
+    ConditionScript&& allowed_substate_regions,
+    ConditionScript&& allowed_states_in_crisis,
+    ConditionScript&& allowed_countries,
+    EffectScript&& on_add,
+    EffectScript&& on_po_accepted
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid wargoal identifier - empty!");
@@ -66,11 +99,30 @@ bool WargoalTypeManager::add_wargoal_type(
 	}
 
 	return wargoal_types.emplace_item(
-		identifier,
-		identifier, war_name, available_length, truce_length, sprite_index, triggered_only, civil_war, constructing, crisis,
-		great_war_obligatory, mutual, all_allowed_states, always, std::move(modifiers), peace_options, std::move(can_use),
-		std::move(is_valid), std::move(allowed_states), std::move(allowed_substate_regions),
-		std::move(allowed_states_in_crisis), std::move(allowed_countries), std::move(on_add), std::move(on_po_accepted)
+	    identifier,
+	    identifier,
+	    war_name,
+	    available_length,
+	    truce_length,
+	    sprite_index,
+	    triggered_only,
+	    civil_war,
+	    constructing,
+	    crisis,
+	    great_war_obligatory,
+	    mutual,
+	    all_allowed_states,
+	    always,
+	    std::move(modifiers),
+	    peace_options,
+	    std::move(can_use),
+	    std::move(is_valid),
+	    std::move(allowed_states),
+	    std::move(allowed_substate_regions),
+	    std::move(allowed_states_in_crisis),
+	    std::move(allowed_countries),
+	    std::move(on_add),
+	    std::move(on_po_accepted)
 	);
 }
 
@@ -81,44 +133,43 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 		spdlog::error_s("peace_order could not be interned.");
 	}
 
-	bool ret = expect_dictionary_reserve_length(
-		wargoal_types,
-		[this, &peace_order_symbol](std::string_view identifier, ast::NodeCPtr value) -> bool {
-			// If peace_order_symbol is false, we know there is no peace_order string in the parser
-			if (peace_order_symbol && identifier == peace_order_symbol.c_str()) {
-				return true;
-			}
+	bool ret =
+	    expect_dictionary_reserve_length(wargoal_types, [this, &peace_order_symbol](std::string_view identifier, ast::NodeCPtr value) -> bool {
+		    // If peace_order_symbol is false, we know there is no peace_order string in the parser
+		    if (peace_order_symbol && identifier == peace_order_symbol.c_str()) {
+			    return true;
+		    }
 
-			using enum WargoalType::peace_options_t;
-			using enum scope_type_t;
+		    using enum WargoalType::peace_options_t;
+		    using enum scope_type_t;
 
-			std::string_view war_name;
-			Timespan available {}, truce {};
-			WargoalType::sprite_t sprite_index = 0;
-			bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war_obligatory = false,
-				mutual = false, all_allowed_states = false, always = false;
-			WargoalType::peace_options_t peace_options = NO_PEACE_OPTIONS;
-			WargoalType::peace_modifiers_t modifiers;
-			ConditionScript can_use { COUNTRY, COUNTRY, COUNTRY };
-			ConditionScript is_valid { COUNTRY, COUNTRY, COUNTRY };
-			ConditionScript allowed_states { STATE, COUNTRY, COUNTRY };
-			ConditionScript allowed_substate_regions { STATE, COUNTRY, COUNTRY };
-			ConditionScript allowed_states_in_crisis { STATE, COUNTRY, COUNTRY };
-			ConditionScript allowed_countries { COUNTRY, COUNTRY, COUNTRY };
-			EffectScript on_add, on_po_accepted; //country as default scope for both
+		    std::string_view war_name;
+		    Timespan available {}, truce {};
+		    WargoalType::sprite_t sprite_index = 0;
+		    bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war_obligatory = false,
+		         mutual = false, all_allowed_states = false, always = false;
+		    WargoalType::peace_options_t peace_options = NO_PEACE_OPTIONS;
+		    WargoalType::peace_modifiers_t modifiers;
+		    ConditionScript can_use { COUNTRY, COUNTRY, COUNTRY };
+		    ConditionScript is_valid { COUNTRY, COUNTRY, COUNTRY };
+		    ConditionScript allowed_states { STATE, COUNTRY, COUNTRY };
+		    ConditionScript allowed_substate_regions { STATE, COUNTRY, COUNTRY };
+		    ConditionScript allowed_states_in_crisis { STATE, COUNTRY, COUNTRY };
+		    ConditionScript allowed_countries { COUNTRY, COUNTRY, COUNTRY };
+		    EffectScript on_add, on_po_accepted; // country as default scope for both
 
-			const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> node_callback_t {
-				return expect_bool([&peace_options, peace_option](bool val) -> bool {
-					if (val) {
-						peace_options |= peace_option;
-					} else {
-						peace_options &= ~peace_option;
-					}
-					return true;
-				});
-			};
+		    const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> node_callback_t {
+			    return expect_bool([&peace_options, peace_option](bool val) -> bool {
+				    if (val) {
+					    peace_options |= peace_option;
+				    } else {
+					    peace_options &= ~peace_option;
+				    }
+				    return true;
+			    });
+		    };
 
-			bool ret = expect_dictionary_keys_and_default(
+		    bool ret = expect_dictionary_keys_and_default(
 				[&modifiers, &identifier](std::string_view key, ast::NodeCPtr value) -> bool {
 					using enum WargoalType::PEACE_MODIFIERS;
 					static const string_map_t<WargoalType::PEACE_MODIFIERS> peace_modifier_map {
@@ -196,15 +247,33 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 				"always", ZERO_OR_ONE, expect_bool(assign_variable_callback(always))
 			)(value);
 
-			add_wargoal_type(
-				identifier, war_name, available, truce, sprite_index, triggered_only, civil_war, constructing, crisis,
-				great_war_obligatory, mutual, all_allowed_states, always, std::move(modifiers), peace_options,
-				std::move(can_use), std::move(is_valid), std::move(allowed_states), std::move(allowed_substate_regions),
-				std::move(allowed_states_in_crisis), std::move(allowed_countries), std::move(on_add), std::move(on_po_accepted)
-			);
-			return ret;
-		}
-	)(parser.get_file_node());
+		    add_wargoal_type(
+		        identifier,
+		        war_name,
+		        available,
+		        truce,
+		        sprite_index,
+		        triggered_only,
+		        civil_war,
+		        constructing,
+		        crisis,
+		        great_war_obligatory,
+		        mutual,
+		        all_allowed_states,
+		        always,
+		        std::move(modifiers),
+		        peace_options,
+		        std::move(can_use),
+		        std::move(is_valid),
+		        std::move(allowed_states),
+		        std::move(allowed_substate_regions),
+		        std::move(allowed_states_in_crisis),
+		        std::move(allowed_countries),
+		        std::move(on_add),
+		        std::move(on_po_accepted)
+		    );
+		    return ret;
+	    })(parser.get_file_node());
 
 	/* load order in which CBs are prioritised by AI */
 	ret &= expect_key(

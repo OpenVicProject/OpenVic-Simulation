@@ -49,9 +49,9 @@ namespace OpenVic::ecs {
 				}
 				total = fold_uint64(h, total);
 				if (out != nullptr) {
-					out->archetype_entries.push_back(ArchetypeChecksumEntry {
-						static_cast<uint32_t>(archetype_index), arch.signature, h
-					});
+					out->archetype_entries.push_back(
+					    ArchetypeChecksumEntry { static_cast<uint32_t>(archetype_index), arch.signature, h }
+					);
 				}
 			}
 
@@ -62,12 +62,14 @@ namespace OpenVic::ecs {
 			for (std::pair<component_type_id_t const, World::SingletonRecord> const& entry : world.singletons) {
 				sorted.emplace_back(entry.first, &entry.second);
 			}
-			std::sort(sorted.begin(), sorted.end(), [](
-				std::pair<component_type_id_t, World::SingletonRecord const*> const& lhs,
-				std::pair<component_type_id_t, World::SingletonRecord const*> const& rhs
-			) {
-				return lhs.first < rhs.first;
-			});
+			std::sort(
+			    sorted.begin(),
+			    sorted.end(),
+			    [](std::pair<component_type_id_t, World::SingletonRecord const*> const& lhs,
+			       std::pair<component_type_id_t, World::SingletonRecord const*> const& rhs) {
+				    return lhs.first < rhs.first;
+			    }
+			);
 			for (std::pair<component_type_id_t, World::SingletonRecord const*> const& entry : sorted) {
 				uint64_t h = fold_uint64(entry.first, CHECKSUM_SEED);
 				h = entry.second->checksum(entry.second->ptr.get(), h);

@@ -1,4 +1,8 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ChunkSystem.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
@@ -7,11 +11,7 @@
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -24,8 +24,12 @@ using OpenVic::Date;
 // The worker-count-invariance determinism gate lives in SystemFiltersWorkerCountInvariance.cpp.
 
 namespace {
-	struct SfCore { int64_t v = 0; };
-	struct SfOther { int64_t v = 0; };
+	struct SfCore {
+		int64_t v = 0;
+	};
+	struct SfOther {
+		int64_t v = 0;
+	};
 	struct SfDead {}; // tag: "logically dead" — the component systems below exclude
 	struct SfNever {}; // never instantiated — for the "exclude matches everything" edge
 }
@@ -114,16 +118,14 @@ TEST_CASE("Filter::exclude_ids extracts, sorts, and dedups component ids", "[ecs
 	std::vector<component_type_id_t> const none = Filter<>::exclude_ids();
 	CHECK(none.empty());
 
-	std::vector<component_type_id_t> const many =
-		Filter<Without<SfOther>, Without<SfDead>, Without<SfOther>>::exclude_ids();
+	std::vector<component_type_id_t> const many = Filter<Without<SfOther>, Without<SfDead>, Without<SfOther>>::exclude_ids();
 	REQUIRE(many.size() == 2u); // SfOther duplicate collapsed
 	CHECK(std::is_sorted(many.begin(), many.end()));
 	CHECK(std::find(many.begin(), many.end(), component_type_id_of<SfDead>()) != many.end());
 	CHECK(std::find(many.begin(), many.end(), component_type_id_of<SfOther>()) != many.end());
 }
 
-TEST_CASE("system_filters_t defaults to empty; compute_tick_query_exclude_ids reflects Filters",
-          "[ecs][SystemFilters]") {
+TEST_CASE("system_filters_t defaults to empty; compute_tick_query_exclude_ids reflects Filters", "[ecs][SystemFilters]") {
 	CHECK(system_filters_t<SfPlainSystem>::exclude_ids().empty());
 	CHECK(SfPlainSystem::compute_tick_query_exclude_ids().empty());
 
@@ -137,8 +139,7 @@ TEST_CASE("system_filters_t defaults to empty; compute_tick_query_exclude_ids re
 	CHECK(req[0] == component_type_id_of<SfCore>());
 }
 
-TEST_CASE("Without filter adds no access; the written component keeps Write access",
-          "[ecs][SystemFilters]") {
+TEST_CASE("Without filter adds no access; the written component keeps Write access", "[ecs][SystemFilters]") {
 	std::array<ComponentAccess, 1> const access = SfExcludeDeadSystem::declared_access();
 	CHECK(access[0].component_id == component_type_id_of<SfCore>());
 	CHECK(access[0].mode == AccessMode::Write);
@@ -151,8 +152,7 @@ TEST_CASE("Without filter adds no access; the written component keeps Write acce
 
 // === Serial behaviour ===
 
-TEST_CASE("System Without filter skips archetypes carrying the excluded component",
-          "[ecs][SystemFilters]") {
+TEST_CASE("System Without filter skips archetypes carrying the excluded component", "[ecs][SystemFilters]") {
 	World world;
 	EntityID const a = world.create_entity(SfCore { 0 });
 	EntityID const b = world.create_entity(SfCore { 0 }, SfDead {});
@@ -202,8 +202,7 @@ TEST_CASE("ChunkSystem Without filter skips excluded archetypes", "[ecs][SystemF
 
 // === Threaded behaviour (single-system stage → dispatch_threaded → collect_matching_chunks) ===
 
-TEST_CASE("SystemThreaded single-system stage respects the Without filter",
-          "[ecs][SystemFilters][threaded]") {
+TEST_CASE("SystemThreaded single-system stage respects the Without filter", "[ecs][SystemFilters][threaded]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -227,8 +226,7 @@ TEST_CASE("SystemThreaded single-system stage respects the Without filter",
 
 // === Edge cases ===
 
-TEST_CASE("Without a never-instantiated component matches every archetype",
-          "[ecs][SystemFilters][edge]") {
+TEST_CASE("Without a never-instantiated component matches every archetype", "[ecs][SystemFilters][edge]") {
 	World world;
 	EntityID const a = world.create_entity(SfCore { 0 });
 	EntityID const b = world.create_entity(SfCore { 0 }, SfDead {});
@@ -242,8 +240,7 @@ TEST_CASE("Without a never-instantiated component matches every archetype",
 	CHECK(core_value(world, c) == 1);
 }
 
-TEST_CASE("Without filter excluding every matched archetype visits nothing",
-          "[ecs][SystemFilters][edge]") {
+TEST_CASE("Without filter excluding every matched archetype visits nothing", "[ecs][SystemFilters][edge]") {
 	World world;
 	EntityID const b1 = world.create_entity(SfCore { 0 }, SfDead {});
 	EntityID const b2 = world.create_entity(SfCore { 0 }, SfDead {}, SfOther { 0 });
@@ -255,8 +252,7 @@ TEST_CASE("Without filter excluding every matched archetype visits nothing",
 	CHECK(core_value(world, b2) == 0);
 }
 
-TEST_CASE("Filtered query re-resolves when a new matching archetype appears (serial)",
-          "[ecs][SystemFilters][edge][cache]") {
+TEST_CASE("Filtered query re-resolves when a new matching archetype appears (serial)", "[ecs][SystemFilters][edge][cache]") {
 	World world;
 	EntityID const a = world.create_entity(SfCore { 0 });
 	EntityID const b = world.create_entity(SfCore { 0 }, SfDead {});
@@ -275,8 +271,9 @@ TEST_CASE("Filtered query re-resolves when a new matching archetype appears (ser
 	CHECK(core_value(world, c) == 1);
 }
 
-TEST_CASE("Filtered query re-resolves for a new archetype on the threaded path",
-          "[ecs][SystemFilters][edge][cache][threaded]") {
+TEST_CASE(
+    "Filtered query re-resolves for a new archetype on the threaded path", "[ecs][SystemFilters][edge][cache][threaded]"
+) {
 	World world;
 	world.set_ecs_worker_count(4);
 	EntityID const a = world.create_entity(SfCore { 0 });

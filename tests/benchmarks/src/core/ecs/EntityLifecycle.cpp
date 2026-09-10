@@ -1,6 +1,3 @@
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -8,6 +5,10 @@
 #include <vector>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;

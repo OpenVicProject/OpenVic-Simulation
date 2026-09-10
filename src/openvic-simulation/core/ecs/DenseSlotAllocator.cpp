@@ -24,8 +24,7 @@ uint32_t DenseSlotAllocator::allocate() {
 void DenseSlotAllocator::release(uint32_t slot) {
 	if (slot >= next_unallocated_) {
 		spdlog::error_s(
-			"DenseSlotAllocator::release ignored: slot {} was never allocated (high water {})",
-			slot, next_unallocated_
+		    "DenseSlotAllocator::release ignored: slot {} was never allocated (high water {})", slot, next_unallocated_
 		);
 		return;
 	}
@@ -48,8 +47,7 @@ bool DenseSlotAllocator::restore(Snapshot const& snapshot) {
 	for (std::size_t i = 0; i < sorted.size(); ++i) {
 		if (sorted[i] >= snapshot.next_unallocated) {
 			spdlog::error_s(
-				"DenseSlotAllocator::restore refused: free slot {} >= next_unallocated {}",
-				sorted[i], snapshot.next_unallocated
+			    "DenseSlotAllocator::restore refused: free slot {} >= next_unallocated {}", sorted[i], snapshot.next_unallocated
 			);
 			return false;
 		}

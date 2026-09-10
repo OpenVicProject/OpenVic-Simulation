@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 
-#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/QueryFilter.hpp"
 #include "openvic-simulation/core/ecs/SystemAccess.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 namespace OpenVic::ecs {
 	struct World;
@@ -121,23 +121,20 @@ namespace OpenVic::ecs {
 		};
 
 		template<typename Derived>
-		using tick_args_tuple_t =
-			typename fn_traits<decltype(&Derived::tick)>::args_tuple;
+		using tick_args_tuple_t = typename fn_traits<decltype(&Derived::tick)>::args_tuple;
 
 		template<typename Derived>
-		using component_pack_t =
-			typename strip_context_and_entity<tick_args_tuple_t<Derived>>::components;
+		using component_pack_t = typename strip_context_and_entity<tick_args_tuple_t<Derived>>::components;
 
 		template<typename Derived>
-		constexpr bool tick_takes_entity_v =
-			strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_entity;
+		constexpr bool tick_takes_entity_v = strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_entity;
 
 		// True when Derived::tick takes an ImmutableEntityID (rather than EntityID) as its per-row
 		// handle. The iteration path is the same with-entity path; only the handle type the driver
 		// hands to tick() differs — see the dispatch lambdas in SystemImpl.hpp.
 		template<typename Derived>
 		constexpr bool tick_takes_immutable_entity_v =
-			strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_immutable_entity;
+		    strip_context_and_entity<tick_args_tuple_t<Derived>>::takes_immutable_entity;
 
 		// Build a static AccessSet array from a component pack tuple.
 		template<typename Tuple>
@@ -149,8 +146,7 @@ namespace OpenVic::ecs {
 			static constexpr std::array<ComponentAccess, N> value() {
 				return { ComponentAccess {
 					component_type_id_of<std::remove_cvref_t<Cs>>(),
-					std::is_const_v<std::remove_reference_t<Cs>> ? AccessMode::Read : AccessMode::Write
-				}... };
+					std::is_const_v<std::remove_reference_t<Cs>> ? AccessMode::Read : AccessMode::Write }... };
 			}
 		};
 
@@ -169,9 +165,7 @@ namespace OpenVic::ecs {
 		template<typename... Cs>
 		struct require_ids_from_tuple<std::tuple<Cs...>> {
 			static std::vector<component_type_id_t> compute() {
-				std::vector<component_type_id_t> ids = {
-					component_type_id_of<std::remove_cvref_t<Cs>>()...
-				};
+				std::vector<component_type_id_t> ids = { component_type_id_of<std::remove_cvref_t<Cs>>()... };
 				std::sort(ids.begin(), ids.end());
 				ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
 				return ids;
@@ -186,9 +180,12 @@ namespace OpenVic::ecs {
 
 		template<typename Derived>
 		void dispatch_threaded(
-			Derived& self, World& world, TickContext const& ctx,
-			EcsThreadPool& pool, std::vector<CommandBuffer>& per_chunk_cmds,
-			CommandBuffer& pending_cmd
+		    Derived& self,
+		    World& world,
+		    TickContext const& ctx,
+		    EcsThreadPool& pool,
+		    std::vector<CommandBuffer>& per_chunk_cmds,
+		    CommandBuffer& pending_cmd
 		);
 	}
 
@@ -239,12 +236,11 @@ namespace OpenVic::ecs {
 	template<typename T, typename = void>
 	struct has_should_run_static_call : std::false_type {};
 	template<typename T>
-	struct has_should_run_static_call<T,
-		std::void_t<decltype(T::should_run(std::declval<TickContext const&>()))>> : std::true_type {};
+	struct has_should_run_static_call<T, std::void_t<decltype(T::should_run(std::declval<TickContext const&>()))>>
+	    : std::true_type {};
 
 	template<typename T>
-	constexpr bool has_should_run_v =
-		has_should_run_member<T>::value || has_should_run_static_call<T>::value;
+	constexpr bool has_should_run_v = has_should_run_member<T>::value || has_should_run_static_call<T>::value;
 
 	// Valid iff `&T::should_run` is unambiguous AND convertible to bool (*)(TickContext const&).
 	// Convertibility (not is_same) deliberately admits the noexcept-qualified variant — a
@@ -257,8 +253,7 @@ namespace OpenVic::ecs {
 	struct should_run_signature_valid : std::false_type {};
 	template<typename T>
 	struct should_run_signature_valid<T, std::void_t<decltype(&T::should_run)>>
-		: std::bool_constant<
-			std::is_convertible_v<decltype(&T::should_run), bool (*)(TickContext const&)>> {};
+	    : std::bool_constant<std::is_convertible_v<decltype(&T::should_run), bool (*)(TickContext const&)>> {};
 
 	template<typename T>
 	constexpr bool should_run_signature_valid_v = should_run_signature_valid<T>::value;
@@ -310,9 +305,15 @@ namespace OpenVic::ecs {
 		// detected by trait like the optional `Filters` alias (no defaulted base
 		// implementation — absence means "always run"). See the has_should_run_v /
 		// should_run_signature_valid_v block above for the full determinism contract.
-		static constexpr std::array<system_type_id_t, 0> declared_run_after() { return {}; }
-		static constexpr std::array<system_type_id_t, 0> declared_run_before() { return {}; }
-		static constexpr std::array<component_type_id_t, 0> extra_reads() { return {}; }
+		static constexpr std::array<system_type_id_t, 0> declared_run_after() {
+			return {};
+		}
+		static constexpr std::array<system_type_id_t, 0> declared_run_before() {
+			return {};
+		}
+		static constexpr std::array<component_type_id_t, 0> extra_reads() {
+			return {};
+		}
 
 		// Cross-archetype / singleton WRITE declarations: any component (or World singleton —
 		// singletons share component_type_id_t) the tick body mutates via ctx.world on rows it
@@ -320,7 +321,9 @@ namespace OpenVic::ecs {
 		// scheduler serialises this system against every reader/writer of the same id.
 		// Forbidden on SystemThreaded — a chunk-parallel system would race with ITSELF on the
 		// shared target; see the static_assert in World::register_system.
-		static constexpr std::array<component_type_id_t, 0> extra_writes() { return {}; }
+		static constexpr std::array<component_type_id_t, 0> extra_writes() {
+			return {};
+		}
 
 		// Sorted-unique component ids that define this system's iteration query — the tick
 		// parameter pack only, NOT extra_reads. Read by the scheduler at registration time
@@ -368,12 +371,13 @@ namespace OpenVic::ecs {
 		// invokes tick_one_chunk with that chunk's per_chunk_cmds_ slot as TickContext::cmd.
 		static std::vector<ChunkLocation> collect_chunks(World& world);
 		static void tick_one_chunk(
-			Derived& self, World& world, TickContext const& ctx,
-			uint32_t archetype_idx, uint32_t chunk_idx
+		    Derived& self, World& world, TickContext const& ctx, uint32_t archetype_idx, uint32_t chunk_idx
 		);
 
 		// Pooled across ticks to avoid per-tick allocator churn.
-		std::vector<CommandBuffer>& per_chunk_buffers() { return per_chunk_cmds_; }
+		std::vector<CommandBuffer>& per_chunk_buffers() {
+			return per_chunk_cmds_;
+		}
 
 	private:
 		std::vector<CommandBuffer> per_chunk_cmds_;
@@ -400,8 +404,7 @@ namespace OpenVic::ecs {
 		// over a combined work-item list across every system in a multi-system stage.
 		std::vector<ChunkLocation> (*collect_chunks_fn)(World& world) = nullptr;
 		void (*tick_one_chunk_fn)(
-			void* /*instance*/, World&, TickContext const&,
-			uint32_t /*archetype_idx*/, uint32_t /*chunk_idx*/
+		    void* /*instance*/, World&, TickContext const&, uint32_t /*archetype_idx*/, uint32_t /*chunk_idx*/
 		) = nullptr;
 		// Returns the system's per-chunk CommandBuffer pool. Scheduler resizes / clears /
 		// flips parallel_mode through this accessor when building work items and again on

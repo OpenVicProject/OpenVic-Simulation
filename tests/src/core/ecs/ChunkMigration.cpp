@@ -1,10 +1,10 @@
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/Chunk.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -73,11 +73,15 @@ TEST_CASE("add_component on an entity in a multi-chunk archetype migrates correc
 
 	// Source archetype still has total - 1 entities; target archetype has 1.
 	int a_count = 0;
-	world.for_each<CMigrA>([&](CMigrA&) { ++a_count; });
-	CHECK(a_count == static_cast<int>(total));  // both archetypes carry CMigrA
+	world.for_each<CMigrA>([&](CMigrA&) {
+		++a_count;
+	});
+	CHECK(a_count == static_cast<int>(total)); // both archetypes carry CMigrA
 
 	int b_count = 0;
-	world.for_each<CMigrA, CMigrB>([&](CMigrA&, CMigrB&) { ++b_count; });
+	world.for_each<CMigrA, CMigrB>([&](CMigrA&, CMigrB&) {
+		++b_count;
+	});
 	CHECK(b_count == 1);
 }
 
@@ -108,6 +112,8 @@ TEST_CASE("Migrating many entities into the same target archetype overflows its 
 
 	// Source archetype {CMigrA} should be empty now.
 	int src_count = 0;
-	world.for_each<CMigrA>([&](CMigrA&) { ++src_count; });
+	world.for_each<CMigrA>([&](CMigrA&) {
+		++src_count;
+	});
 	CHECK(src_count == static_cast<int>(total));
 }

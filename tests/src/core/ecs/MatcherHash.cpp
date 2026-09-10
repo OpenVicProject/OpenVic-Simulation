@@ -1,11 +1,11 @@
+#include <bit>
+#include <cstdint>
+
 #include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <bit>
-#include <cstdint>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -45,11 +45,15 @@ TEST_CASE("Query results match for archetypes with require-only filter", "[ecs][
 	world.create_entity(MHA {}, MHB {});
 
 	int a_count = 0;
-	world.for_each<MHA>([&](MHA&) { ++a_count; });
+	world.for_each<MHA>([&](MHA&) {
+		++a_count;
+	});
 	CHECK(a_count == 2);
 
 	int ab_count = 0;
-	world.for_each<MHA, MHB>([&](MHA&, MHB&) { ++ab_count; });
+	world.for_each<MHA, MHB>([&](MHA&, MHB&) {
+		++ab_count;
+	});
 	CHECK(ab_count == 1);
 }
 
@@ -64,7 +68,9 @@ TEST_CASE("Query results respect exclude filter", "[ecs][MatcherHash]") {
 	q.with<MHA>().exclude<MHB>().build();
 
 	int count = 0;
-	world.for_each<MHA>(q, [&](MHA&) { ++count; });
+	world.for_each<MHA>(q, [&](MHA&) {
+		++count;
+	});
 	CHECK(count == 2); // {A} and {A,C}, neither carries B
 }
 
@@ -74,21 +80,27 @@ TEST_CASE("Query results survive new archetype creation", "[ecs][MatcherHash][ca
 	world.create_entity(MHA {});
 
 	int count_before = 0;
-	world.for_each<MHA>([&](MHA&) { ++count_before; });
+	world.for_each<MHA>([&](MHA&) {
+		++count_before;
+	});
 	CHECK(count_before == 2);
 
 	// Create a new archetype that should also match the cached query.
 	world.create_entity(MHA {}, MHC {});
 
 	int count_after = 0;
-	world.for_each<MHA>([&](MHA&) { ++count_after; });
+	world.for_each<MHA>([&](MHA&) {
+		++count_after;
+	});
 	CHECK(count_after == 3);
 }
 
 TEST_CASE("matcher_hash bitfield has exactly N bits set for N distinct components", "[ecs][MatcherHash]") {
 	component_type_id_t const ids[] = {
-		component_type_id_of<MHA>(), component_type_id_of<MHB>(),
-		component_type_id_of<MHC>(), component_type_id_of<MHD>(),
+		component_type_id_of<MHA>(),
+		component_type_id_of<MHB>(),
+		component_type_id_of<MHC>(),
+		component_type_id_of<MHD>(),
 		component_type_id_of<MHE>()
 	};
 
@@ -118,8 +130,10 @@ TEST_CASE("Query with multiple require + exclude filters correctly", "[ecs][Matc
 	q.with<MHA, MHB>().exclude<MHC, MHD>().build();
 
 	int count = 0;
-	world.for_each_with_entity<MHA, MHB>(q, [&](EntityID, MHA&, MHB&) { ++count; });
+	world.for_each_with_entity<MHA, MHB>(q, [&](EntityID, MHA&, MHB&) {
+		++count;
+	});
 	CHECK(count == 2);
-	(void) a;
-	(void) e;
+	(void)a;
+	(void)e;
 }

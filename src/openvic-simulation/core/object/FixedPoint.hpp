@@ -13,7 +13,10 @@
 #include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
-	enum class midpoint_rounding { AWAY_ZERO, TO_ZERO };
+	enum class midpoint_rounding {
+		AWAY_ZERO,
+		TO_ZERO
+	};
 
 	template<typename T>
 	concept integral_max_size_4 = std::integral<T> && sizeof(T) <= 4;
@@ -144,7 +147,7 @@ namespace OpenVic {
 
 		template<std::integral T>
 		OV_SPEED_INLINE constexpr T unsafe_truncate() const {
-			if constexpr(std::unsigned_integral<T>) {
+			if constexpr (std::unsigned_integral<T>) {
 				assert(OV_likely(!is_negative()));
 			}
 			return value >> PRECISION;
@@ -154,11 +157,11 @@ namespace OpenVic {
 
 		template<std::integral T>
 		OV_SPEED_INLINE explicit constexpr operator T() const {
-			#ifdef DEV_ENABLED
+#ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
 				warn_if_truncated();
 			}
-			#endif
+#endif
 			return unsafe_truncate<T>();
 		}
 
@@ -263,21 +266,23 @@ namespace OpenVic {
 			return fixed_point_t { raw_value, value };
 		}
 
-		OV_SPEED_INLINE static constexpr fixed_point_t parse_capped(const int32_t value) { return fixed_point_t(value); }
+		OV_SPEED_INLINE static constexpr fixed_point_t parse_capped(const int32_t value) {
+			return fixed_point_t(value);
+		}
 
 		template<std::integral T>
-		requires (sizeof(T) < 4)
-		OV_SPEED_INLINE static constexpr  fixed_point_t parse_capped(const T value) { return fixed_point_t(static_cast<int32_t>(value)); }
+		requires(sizeof(T) < 4)
+		OV_SPEED_INLINE static constexpr fixed_point_t parse_capped(const T value) {
+			return fixed_point_t(static_cast<int32_t>(value));
+		}
 
 		static fixed_point_t parse_capped(const int64_t value);
 		static fixed_point_t parse_capped(const uint64_t value);
 
 		template<std::integral T>
-		requires (sizeof(T) >= 4)
+		requires(sizeof(T) >= 4)
 		static fixed_point_t parse_capped(const T value) {
-			return std::is_signed_v<T>
-				? parse_capped(static_cast<int64_t>(value))
-				: parse_capped(static_cast<uint64_t>(value));
+			return std::is_signed_v<T> ? parse_capped(static_cast<int64_t>(value)) : parse_capped(static_cast<uint64_t>(value));
 		}
 
 		// Not Deterministic

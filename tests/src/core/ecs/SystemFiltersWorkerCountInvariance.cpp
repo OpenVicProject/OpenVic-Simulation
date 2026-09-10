@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <atomic>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/QueryFilter.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <atomic>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -25,10 +25,16 @@ using OpenVic::Date;
 // detail::build_tick_query.
 
 namespace {
-	struct SfwSeed { int64_t k = 0; };
-	struct SfwValue { int64_t v = 0; };
+	struct SfwSeed {
+		int64_t k = 0;
+	};
+	struct SfwValue {
+		int64_t v = 0;
+	};
 	struct SfwDead {}; // excluded tag
-	struct SfwOther { int64_t v = 0; }; // extra archetype variety (not excluded here)
+	struct SfwOther {
+		int64_t v = 0;
+	}; // extra archetype variety (not excluded here)
 }
 ECS_COMPONENT(SfwSeed, "test_SystemFiltersWCI::Seed")
 ECS_COMPONENT(SfwValue, "test_SystemFiltersWCI::Value")
@@ -88,8 +94,10 @@ namespace {
 	}
 }
 
-TEST_CASE("Filtered serial system: digest is identical across worker counts",
-          "[ecs][SystemFilters][determinism][WorkerCountInvariance]") {
+TEST_CASE(
+    "Filtered serial system: digest is identical across worker counts",
+    "[ecs][SystemFilters][determinism][WorkerCountInvariance]"
+) {
 	std::size_t const entities = 400;
 	int const ticks = 10;
 	int64_t const baseline = run_single_and_digest<SfwExcludeSerial>(1, entities, ticks);
@@ -98,8 +106,10 @@ TEST_CASE("Filtered serial system: digest is identical across worker counts",
 	}
 }
 
-TEST_CASE("Filtered threaded system: digest is identical across worker counts",
-          "[ecs][SystemFilters][determinism][WorkerCountInvariance]") {
+TEST_CASE(
+    "Filtered threaded system: digest is identical across worker counts",
+    "[ecs][SystemFilters][determinism][WorkerCountInvariance]"
+) {
 	std::size_t const entities = 400;
 	int const ticks = 10;
 	int64_t const baseline = run_single_and_digest<SfwExcludeThreaded>(1, entities, ticks);
@@ -118,11 +128,21 @@ TEST_CASE("Filtered threaded system: digest is identical across worker counts",
 // ============================================================================
 
 namespace {
-	struct MfSeed { int64_t k = 0; };
-	struct MfA { int64_t v = 0; };
-	struct MfB { int64_t v = 0; };
-	struct MfC { int64_t v = 0; };
-	struct MfD { int64_t v = 0; };
+	struct MfSeed {
+		int64_t k = 0;
+	};
+	struct MfA {
+		int64_t v = 0;
+	};
+	struct MfB {
+		int64_t v = 0;
+	};
+	struct MfC {
+		int64_t v = 0;
+	};
+	struct MfD {
+		int64_t v = 0;
+	};
 	struct MfDead {}; // excluded by A and D
 	struct MfOther {}; // excluded by B
 }
@@ -176,8 +196,7 @@ namespace {
 			ids.push_back(world.create_entity(MfSeed { k }, MfA {}, MfB {}, MfC {}, MfD {})); // P
 			ids.push_back(world.create_entity(MfSeed { k }, MfA {}, MfB {}, MfC {}, MfD {}, MfDead {})); // Q
 			ids.push_back(world.create_entity(MfSeed { k }, MfA {}, MfB {}, MfC {}, MfD {}, MfOther {})); // R
-			ids.push_back(world.create_entity(
-				MfSeed { k }, MfA {}, MfB {}, MfC {}, MfD {}, MfDead {}, MfOther {})); // S
+			ids.push_back(world.create_entity(MfSeed { k }, MfA {}, MfB {}, MfC {}, MfD {}, MfDead {}, MfOther {})); // S
 		}
 		return ids;
 	}
@@ -221,8 +240,10 @@ ECS_SYSTEM(MfExcludeBSerial)
 ECS_SYSTEM(MfPlainCThreaded)
 ECS_SYSTEM(MfExcludeDSerial)
 
-TEST_CASE("Multi-system filtered parallel stage: digest is identical across worker counts",
-          "[ecs][SystemFilters][determinism][WorkerCountInvariance]") {
+TEST_CASE(
+    "Multi-system filtered parallel stage: digest is identical across worker counts",
+    "[ecs][SystemFilters][determinism][WorkerCountInvariance]"
+) {
 	// wc=1 runs the same multi-system branch but with a single worker — the prewarm still happens,
 	// yet with no concurrency the result is race-free → trusted baseline. wc>=2 introduces real
 	// concurrency, where each filtered system's worker-side query_cache lookup must hit the
@@ -236,8 +257,7 @@ TEST_CASE("Multi-system filtered parallel stage: digest is identical across work
 	}
 }
 
-TEST_CASE("Multi-system filtered parallel stage applies each filter independently",
-          "[ecs][SystemFilters]") {
+TEST_CASE("Multi-system filtered parallel stage applies each filter independently", "[ecs][SystemFilters]") {
 	World world;
 	world.set_ecs_worker_count(4);
 	std::vector<EntityID> ids = seed_multi(world, 1); // exactly P, Q, R, S
@@ -279,8 +299,7 @@ TEST_CASE("Multi-system filtered parallel stage applies each filter independentl
 	CHECK(comp_v<MfD>(world, S) == 0);
 }
 
-TEST_CASE("Filtered systems with disjoint writes share a stage (schedule_hash stable)",
-          "[ecs][SystemFilters][determinism]") {
+TEST_CASE("Filtered systems with disjoint writes share a stage (schedule_hash stable)", "[ecs][SystemFilters][determinism]") {
 	uint64_t h1 = 0;
 	uint64_t h2 = 0;
 	{
@@ -323,7 +342,7 @@ namespace sfw_concurrency {
 		for (int i = 0; i < 2000; ++i) {
 			spin += i;
 		}
-		(void) spin;
+		(void)spin;
 		g_active.fetch_sub(1);
 	}
 
@@ -345,8 +364,7 @@ namespace sfw_concurrency {
 ECS_SYSTEM(sfw_concurrency::SfwConcA)
 ECS_SYSTEM(sfw_concurrency::SfwConcC)
 
-TEST_CASE("Filtered systems in a multi-system stage run bodies concurrently",
-          "[ecs][SystemFilters]") {
+TEST_CASE("Filtered systems in a multi-system stage run bodies concurrently", "[ecs][SystemFilters]") {
 	using namespace sfw_concurrency;
 
 	World world;
@@ -379,9 +397,15 @@ TEST_CASE("Filtered systems in a multi-system stage run bodies concurrently",
 // ============================================================================
 
 namespace {
-	struct DjShared { int64_t v = 0; }; // written by both systems, on disjoint entities
-	struct DjGate { int64_t k = 0; };   // required by the threaded writer; excluded by the plain one
-	struct DjOther { int64_t v = 0; };  // neutral archetype variety
+	struct DjShared {
+		int64_t v = 0;
+	}; // written by both systems, on disjoint entities
+	struct DjGate {
+		int64_t k = 0;
+	}; // required by the threaded writer; excluded by the plain one
+	struct DjOther {
+		int64_t v = 0;
+	}; // neutral archetype variety
 }
 ECS_COMPONENT(DjShared, "test_SystemFiltersWCI::DjShared")
 ECS_COMPONENT(DjGate, "test_SystemFiltersWCI::DjGate")
@@ -409,10 +433,10 @@ namespace {
 		ids.reserve(n * 4);
 		for (std::size_t i = 0; i < n; ++i) {
 			int64_t const k = static_cast<int64_t>(i + 1);
-			ids.push_back(world.create_entity(DjShared { 0 }, DjGate { k }));                 // gated
-			ids.push_back(world.create_entity(DjShared { 0 }));                               // ungated
-			ids.push_back(world.create_entity(DjShared { 0 }, DjGate { k }, DjOther { k }));  // gated + variety
-			ids.push_back(world.create_entity(DjShared { 0 }, DjOther { k }));                // ungated + variety
+			ids.push_back(world.create_entity(DjShared { 0 }, DjGate { k })); // gated
+			ids.push_back(world.create_entity(DjShared { 0 })); // ungated
+			ids.push_back(world.create_entity(DjShared { 0 }, DjGate { k }, DjOther { k })); // gated + variety
+			ids.push_back(world.create_entity(DjShared { 0 }, DjOther { k })); // ungated + variety
 		}
 		return ids;
 	}
@@ -440,8 +464,10 @@ namespace {
 ECS_SYSTEM(DjThreadedWithGate)
 ECS_SYSTEM(DjPlainWithoutGate)
 
-TEST_CASE("Disjoint-filter same-component writers: digest is identical across worker counts",
-          "[ecs][SystemFilters][determinism][WorkerCountInvariance]") {
+TEST_CASE(
+    "Disjoint-filter same-component writers: digest is identical across worker counts",
+    "[ecs][SystemFilters][determinism][WorkerCountInvariance]"
+) {
 	// Guard against a vacuous pass: confirm the two writers actually co-schedule into one
 	// stage (the dropped-edge path). If they serialised, the gate below would still pass but
 	// would no longer be testing concurrent same-component writes.

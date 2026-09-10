@@ -20,8 +20,11 @@ namespace OpenVic {
 		const bool pagan;
 
 		Religion(
-			std::string_view new_identifier, colour_t new_colour, ReligionGroup const& new_group, icon_t new_icon,
-			bool new_pagan
+		    std::string_view new_identifier,
+		    colour_t new_colour,
+		    ReligionGroup const& new_group,
+		    icon_t new_icon,
+		    bool new_pagan
 		);
 		Religion(Religion&&) = default;
 	};
@@ -35,7 +38,7 @@ namespace OpenVic {
 		bool add_religion_group(std::string_view identifier);
 
 		bool add_religion(
-			std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
+		    std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 		);
 
 		bool load_religion_file(ast::NodeCPtr root);

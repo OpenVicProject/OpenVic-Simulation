@@ -26,9 +26,9 @@ bool World::in_tick_or_log_(char const* fn_name) {
 		// logged so the misuse doesn't hide behind a surprise nullptr/false/invalid-id
 		// return.
 		spdlog::error_s(
-			"{} refused: direct structural mutation during tick_systems — queue the op on "
-			"ctx.cmd instead (applies at the stage barrier)",
-			fn_name
+		    "{} refused: direct structural mutation during tick_systems — queue the op on "
+		    "ctx.cmd instead (applies at the stage barrier)",
+		    fn_name
 		);
 		return true;
 	}
@@ -42,8 +42,11 @@ bool World::immutable_or_log_(EntityID id, char const* fn_name, std::string_view
 		// an error. This is the runtime backstop for plain EntityIDs that surface for an immutable
 		// entity (for_each_with_entity, or a laundered unsafe_mutable_id()).
 		spdlog::error_s(
-			"{} refused: entity {}:{} is immutable — its archetype cannot change (component '{}')",
-			fn_name, id.index, id.generation, component_name
+		    "{} refused: entity {}:{} is immutable — its archetype cannot change (component '{}')",
+		    fn_name,
+		    id.index,
+		    id.generation,
+		    component_name
 		);
 		return true;
 	}
@@ -137,9 +140,8 @@ void World::compute_chunk_layout(Archetype& arch) {
 			total_align_overhead += (vt->align - 1);
 		}
 	}
-	std::size_t const usable = (CHUNK_BLOCK_BYTES > total_align_overhead)
-		? (CHUNK_BLOCK_BYTES - total_align_overhead)
-		: CHUNK_BLOCK_BYTES;
+	std::size_t const usable =
+	    (CHUNK_BLOCK_BYTES > total_align_overhead) ? (CHUNK_BLOCK_BYTES - total_align_overhead) : CHUNK_BLOCK_BYTES;
 	std::size_t capacity = std::max<std::size_t>(1, usable / total_per_row);
 
 	// Compute slab offsets at this capacity. If the result happens to overflow (only
@@ -170,9 +172,7 @@ void World::compute_chunk_layout(Archetype& arch) {
 	arch.chunk_capacity = capacity;
 }
 
-uint32_t World::find_or_create_archetype(
-	std::vector<component_type_id_t> const& sig, ColumnVTable const* const* vtables
-) {
+uint32_t World::find_or_create_archetype(std::vector<component_type_id_t> const& sig, ColumnVTable const* const* vtables) {
 	auto it = archetype_by_signature.find(sig);
 	if (it != archetype_by_signature.end()) {
 		return it->second;
@@ -224,9 +224,7 @@ bool World::is_alive(EntityID id) const {
 	return true;
 }
 
-void World::compact_archetype_after_external_move(
-	uint32_t archetype_index, std::size_t chunk_index, std::size_t row
-) {
+void World::compact_archetype_after_external_move(uint32_t archetype_index, std::size_t chunk_index, std::size_t row) {
 	Archetype& arch = archetypes[archetype_index];
 	for (uint64_t& v : arch.column_versions) {
 		++v;
@@ -348,9 +346,9 @@ bool World::snapshot_identity(WorldIdentitySnapshot& out) const {
 		EntitySlot const& slot = entity_slots[i];
 		if (slot.alive && slot.archetype_index == INVALID_ARCHETYPE) {
 			spdlog::error_s(
-				"World::snapshot_identity refused: slot {} is reserved-but-unfinalised (a CommandBuffer "
-				"holds un-applied creates) — apply every buffer before snapshotting",
-				i
+			    "World::snapshot_identity refused: slot {} is reserved-but-unfinalised (a CommandBuffer "
+			    "holds un-applied creates) — apply every buffer before snapshotting",
+			    i
 			);
 			out.slots.clear();
 			return false;
@@ -372,9 +370,7 @@ bool World::snapshot_identity(WorldIdentitySnapshot& out) const {
 		std::size_t steps = 0;
 		while (true) {
 			if (cur >= entity_slots.size() || entity_slots[cur].alive || steps >= entity_slots.size()) {
-				spdlog::error_s(
-					"World::snapshot_identity refused: corrupt free chain at slot {} (step {})", cur, steps
-				);
+				spdlog::error_s("World::snapshot_identity refused: corrupt free chain at slot {} (step {})", cur, steps);
 				out.slots.clear();
 				out.free_list.clear();
 				return false;
@@ -392,8 +388,9 @@ bool World::snapshot_identity(WorldIdentitySnapshot& out) const {
 	// Every dead slot must be chain-reachable — a mismatch means a leaked or doubly-linked slot.
 	if (out.free_list.size() != dead_count) {
 		spdlog::error_s(
-			"World::snapshot_identity refused: free chain holds {} slots but {} slots are dead",
-			out.free_list.size(), dead_count
+		    "World::snapshot_identity refused: free chain holds {} slots but {} slots are dead",
+		    out.free_list.size(),
+		    dead_count
 		);
 		out.slots.clear();
 		out.free_list.clear();
@@ -410,8 +407,7 @@ bool World::restore_identity(WorldIdentitySnapshot const& snapshot) {
 	}
 	if (!entity_slots.empty()) {
 		spdlog::error_s(
-			"World::restore_identity refused: target World is not fresh ({} slots already allocated)",
-			entity_slots.size()
+		    "World::restore_identity refused: target World is not fresh ({} slots already allocated)", entity_slots.size()
 		);
 		return false;
 	}
@@ -421,8 +417,7 @@ bool World::restore_identity(WorldIdentitySnapshot const& snapshot) {
 		uint32_t const gen = snapshot.slots[i].generation;
 		if (gen == 0 || (gen & DEFERRED_GENERATION_BIT) != 0) {
 			spdlog::error_s(
-				"World::restore_identity refused: slot {} has invalid generation {:#x} (must be in [1, 0x7FFFFFFF])",
-				i, gen
+			    "World::restore_identity refused: slot {} has invalid generation {:#x} (must be in [1, 0x7FFFFFFF])", i, gen
 			);
 			return false;
 		}
@@ -432,8 +427,9 @@ bool World::restore_identity(WorldIdentitySnapshot const& snapshot) {
 		for (uint32_t const free_index : snapshot.free_list) {
 			if (free_index >= snapshot.slots.size()) {
 				spdlog::error_s(
-					"World::restore_identity refused: free-list index {} out of range ({} slots)",
-					free_index, snapshot.slots.size()
+				    "World::restore_identity refused: free-list index {} out of range ({} slots)",
+				    free_index,
+				    snapshot.slots.size()
 				);
 				return false;
 			}
@@ -479,9 +475,7 @@ bool World::restore_entity_precheck_(EntityID eid) const {
 		return false;
 	}
 	if (eid.index >= entity_slots.size()) {
-		spdlog::error_s(
-			"World::restore_entity refused: slot index {} out of range ({} slots)", eid.index, entity_slots.size()
-		);
+		spdlog::error_s("World::restore_entity refused: slot index {} out of range ({} slots)", eid.index, entity_slots.size());
 		return false;
 	}
 	EntitySlot const& slot = entity_slots[eid.index];
@@ -491,25 +485,25 @@ bool World::restore_entity_precheck_(EntityID eid) const {
 	}
 	if (slot.generation != eid.generation) {
 		spdlog::error_s(
-			"World::restore_entity refused: stale generation for entity {}:{} (slot holds {})",
-			eid.index, eid.generation, slot.generation
+		    "World::restore_entity refused: stale generation for entity {}:{} (slot holds {})",
+		    eid.index,
+		    eid.generation,
+		    slot.generation
 		);
 		return false;
 	}
 	if (slot.archetype_index != INVALID_ARCHETYPE) {
-		spdlog::error_s(
-			"World::restore_entity refused: entity {}:{} is already finalised", eid.index, eid.generation
-		);
+		spdlog::error_s("World::restore_entity refused: entity {}:{} is already finalised", eid.index, eid.generation);
 		return false;
 	}
 	return true;
 }
 
 void World::finalize_reserved_entity(
-	EntityID eid,
-	std::vector<component_type_id_t> const& sorted_sig,
-	std::vector<ColumnVTable const*> const& sorted_vtables,
-	std::vector<void*> const& sorted_value_slots
+    EntityID eid,
+    std::vector<component_type_id_t> const& sorted_sig,
+    std::vector<ColumnVTable const*> const& sorted_vtables,
+    std::vector<void*> const& sorted_value_slots
 ) {
 	if (eid.index >= entity_slots.size()) {
 		return;
@@ -541,8 +535,7 @@ void World::finalize_reserved_entity(
 }
 
 bool World::bulk_create_sizes_ok_(
-	std::size_t count, std::size_t out_ids_size, std::size_t const* span_sizes,
-	std::size_t span_count, char const* fn_name
+    std::size_t count, std::size_t out_ids_size, std::size_t const* span_sizes, std::size_t span_count, char const* fn_name
 ) const {
 	if (out_ids_size != count) {
 		spdlog::error_s("{} refused: out_ids length {} != count {}", fn_name, out_ids_size, count);
@@ -550,9 +543,7 @@ bool World::bulk_create_sizes_ok_(
 	}
 	for (std::size_t i = 0; i < span_count; ++i) {
 		if (span_sizes[i] != count) {
-			spdlog::error_s(
-				"{} refused: input span {} has length {} != count {}", fn_name, i, span_sizes[i], count
-			);
+			spdlog::error_s("{} refused: input span {} has length {} != count {}", fn_name, i, span_sizes[i], count);
 			return false;
 		}
 	}
@@ -560,10 +551,10 @@ bool World::bulk_create_sizes_ok_(
 }
 
 void World::finalize_reserved_entities_bulk(
-	std::span<EntityID const> ids,
-	std::vector<component_type_id_t> const& sorted_sig,
-	std::vector<ColumnVTable const*> const& sorted_vtables,
-	std::span<void* const> column_blocks
+    std::span<EntityID const> ids,
+    std::vector<component_type_id_t> const& sorted_sig,
+    std::vector<ColumnVTable const*> const& sorted_vtables,
+    std::span<void* const> column_blocks
 ) {
 	std::size_t const count = ids.size();
 	if (count == 0) {
@@ -598,13 +589,11 @@ void World::finalize_reserved_entities_bulk(
 					element_slots[c] = nullptr;
 					continue;
 				}
-				element_slots[c]
-					= static_cast<unsigned char*>(column_blocks[c]) + i * sorted_vtables[c]->size;
+				element_slots[c] = static_cast<unsigned char*>(column_blocks[c]) + i * sorted_vtables[c]->size;
 			}
-			bool const valid = eid.index < entity_slots.size()
-				&& entity_slots[eid.index].alive
-				&& entity_slots[eid.index].generation == eid.generation
-				&& entity_slots[eid.index].archetype_index == INVALID_ARCHETYPE;
+			bool const valid = eid.index < entity_slots.size() && entity_slots[eid.index].alive &&
+			                   entity_slots[eid.index].generation == eid.generation &&
+			                   entity_slots[eid.index].archetype_index == INVALID_ARCHETYPE;
 			if (valid) {
 				finalize_reserved_entity(eid, sorted_sig, sorted_vtables, element_slots);
 			} else {

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/FixedPoint/Math.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	struct Fraction {

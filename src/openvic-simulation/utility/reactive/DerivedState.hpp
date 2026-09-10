@@ -10,7 +10,7 @@
 #include "DependencyTracker.hpp"
 
 namespace OpenVic {
-	template <typename T>
+	template<typename T>
 	struct DerivedState : public DependencyTracker {
 	private:
 		T cached_value;
@@ -29,11 +29,11 @@ namespace OpenVic {
 
 			if (has_no_connections()) {
 				spdlog::warn_s(
-					"DEVELOPER: OpenVic::DerivedState<{}> has no reactive dependencies. "
-					"Its value will never change again. "
-					"If it should be reactive, ensure 'calculate' accesses its dependencies. "
-					"Alternatively use a plain variable or MutableState<T>.",
-					OpenVic::type_name<T>()
+				    "DEVELOPER: OpenVic::DerivedState<{}> has no reactive dependencies. "
+				    "Its value will never change again. "
+				    "If it should be reactive, ensure 'calculate' accesses its dependencies. "
+				    "Alternatively use a plain variable or MutableState<T>.",
+				    OpenVic::type_name<T>()
 				);
 			}
 
@@ -44,17 +44,14 @@ namespace OpenVic {
 	public:
 		template<typename Func>
 		explicit DerivedState(Func&& new_calculate)
-		requires std::is_default_constructible_v<T>
-			&& std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
-			: calculate { std::forward<Func>(new_calculate) },
-			cached_value() {}
+		requires std::is_default_constructible_v<T> && std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
+		    : calculate { std::forward<Func>(new_calculate) }, cached_value() {}
 
 		template<typename Func, typename InitialValue>
-		requires std::is_convertible_v<InitialValue, T>
-			&& std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
-		explicit DerivedState(Func&& new_calculate, InitialValue&& empty_initial_value)
-			: calculate { std::forward<Func>(new_calculate) },
-			cached_value { std::forward<InitialValue>(empty_initial_value) } {}
+		requires std::is_convertible_v<InitialValue, T> &&
+		             std::is_convertible_v<Func, fu2::function<const T(DependencyTracker&)>>
+		explicit DerivedState(Func&& new_calculate, InitialValue&& empty_initial_value) :
+		    calculate { std::forward<Func>(new_calculate) }, cached_value { std::forward<InitialValue>(empty_initial_value) } {}
 
 		DerivedState(DerivedState&&) = delete;
 		DerivedState(DerivedState const&) = delete;
@@ -78,7 +75,7 @@ namespace OpenVic {
 			return cached_value;
 		}
 
-		//special case where connection may be discarded as the observer handles it
+		// special case where connection may be discarded as the observer handles it
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
 		requires OpenVic::_detail::signal::Callable<Pmf, Ptr>
 		connection connect_using_observer(Pmf&& pmf, Ptr&& ptr, OpenVic::_detail::signal::group_id gid = 0) {

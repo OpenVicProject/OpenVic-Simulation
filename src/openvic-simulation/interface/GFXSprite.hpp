@@ -20,8 +20,12 @@ namespace OpenVic::GFX {
 
 	public:
 		Font(
-			std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname,
-			std::string_view new_charset, uint32_t new_height, colour_codes_t&& new_colour_codes
+		    std::string_view new_identifier,
+		    colour_argb_t new_colour,
+		    std::string_view new_fontname,
+		    std::string_view new_charset,
+		    uint32_t new_height,
+		    colour_codes_t&& new_colour_codes
 		);
 		Font(Font&&) = default;
 	};
@@ -41,7 +45,7 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_TYPE
 
 		static NodeTools::node_callback_t expect_sprites(
-			NodeTools::length_callback_t length_callback, NodeTools::callback_t<memory::unique_base_ptr<Sprite>&&> callback
+		    NodeTools::length_callback_t length_callback, NodeTools::callback_t<memory::unique_base_ptr<Sprite>&&> callback
 		);
 	};
 

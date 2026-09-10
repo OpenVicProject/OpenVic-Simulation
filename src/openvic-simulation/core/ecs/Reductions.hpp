@@ -109,8 +109,12 @@ namespace OpenVic::ecs::reductions {
 	// keys no chunk emits keep their initial value. T needs only += (fixed_point_t works).
 	template<typename T, typename Body>
 	void parallel_keyed_sum(
-		EcsThreadPool& pool, std::size_t chunk_count, std::size_t key_count,
-		std::span<T> out, KeyedSumScratch<T>& scratch, Body&& body
+	    EcsThreadPool& pool,
+	    std::size_t chunk_count,
+	    std::size_t key_count,
+	    std::span<T> out,
+	    KeyedSumScratch<T>& scratch,
+	    Body&& body
 	) {
 		assert(out.size() >= key_count);
 		if (scratch.per_chunk.size() < chunk_count) {
@@ -133,8 +137,7 @@ namespace OpenVic::ecs::reductions {
 	// Convenience overload: local scratch, allocates per call.
 	template<typename T, typename Body>
 	void parallel_keyed_sum(
-		EcsThreadPool& pool, std::size_t chunk_count, std::size_t key_count,
-		std::span<T> out, Body&& body
+	    EcsThreadPool& pool, std::size_t chunk_count, std::size_t key_count, std::span<T> out, Body&& body
 	) {
 		KeyedSumScratch<T> scratch;
 		parallel_keyed_sum(pool, chunk_count, key_count, out, scratch, std::forward<Body>(body));

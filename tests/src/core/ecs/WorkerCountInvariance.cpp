@@ -1,13 +1,13 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -63,8 +63,7 @@ namespace {
 		ids.reserve(entity_count);
 		for (std::size_t i = 0; i < entity_count; ++i) {
 			ids.push_back(world.create_entity(
-				WciValue { static_cast<int64_t>(i + 1) },
-				WciDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
+			    WciValue { static_cast<int64_t>(i + 1) }, WciDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
 			));
 		}
 
@@ -86,8 +85,7 @@ namespace {
 	}
 }
 
-TEST_CASE("Serial system: digest is identical across worker counts",
-          "[ecs][determinism][WorkerCountInvariance]") {
+TEST_CASE("Serial system: digest is identical across worker counts", "[ecs][determinism][WorkerCountInvariance]") {
 	std::size_t const entities = 500;
 	int const ticks = 10;
 	int64_t baseline = run_and_digest<WciStepSerial>(1, entities, ticks);
@@ -98,8 +96,7 @@ TEST_CASE("Serial system: digest is identical across worker counts",
 	}
 }
 
-TEST_CASE("Threaded system: digest is identical across worker counts",
-          "[ecs][determinism][WorkerCountInvariance]") {
+TEST_CASE("Threaded system: digest is identical across worker counts", "[ecs][determinism][WorkerCountInvariance]") {
 	std::size_t const entities = 500;
 	int const ticks = 10;
 	int64_t baseline = run_and_digest<WciStepThreaded>(1, entities, ticks);
@@ -110,8 +107,7 @@ TEST_CASE("Threaded system: digest is identical across worker counts",
 	}
 }
 
-TEST_CASE("Serial and threaded systems produce identical results",
-          "[ecs][determinism][WorkerCountInvariance]") {
+TEST_CASE("Serial and threaded systems produce identical results", "[ecs][determinism][WorkerCountInvariance]") {
 	std::size_t const entities = 500;
 	int const ticks = 10;
 	int64_t serial_digest = run_and_digest<WciStepSerial>(1, entities, ticks);
@@ -176,8 +172,10 @@ namespace {
 	}
 }
 
-TEST_CASE("Deferred-create from SystemThreaded: digest is identical across worker counts",
-          "[ecs][determinism][WorkerCountInvariance][deferred]") {
+TEST_CASE(
+    "Deferred-create from SystemThreaded: digest is identical across worker counts",
+    "[ecs][determinism][WorkerCountInvariance][deferred]"
+) {
 	std::size_t const seeds = 500;
 	int const ticks = 1;
 	int64_t baseline = spawn_and_digest(1, seeds, ticks);
@@ -188,8 +186,10 @@ TEST_CASE("Deferred-create from SystemThreaded: digest is identical across worke
 	}
 }
 
-TEST_CASE("Deferred-create from SystemThreaded: digest stays identical across multiple ticks",
-          "[ecs][determinism][WorkerCountInvariance][deferred]") {
+TEST_CASE(
+    "Deferred-create from SystemThreaded: digest stays identical across multiple ticks",
+    "[ecs][determinism][WorkerCountInvariance][deferred]"
+) {
 	// Multi-tick: each tick adds another generation of WciSpawned. Catches ordering instability
 	// that compounds across tick boundaries.
 	std::size_t const seeds = 200;

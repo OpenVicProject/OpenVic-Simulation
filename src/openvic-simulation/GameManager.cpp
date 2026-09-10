@@ -29,12 +29,12 @@ GameManager::elapsed_time_getter_func_t GameManager::get_elapsed_msec_time_callb
 };
 
 GameManager::GameManager(
-	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
-	elapsed_time_getter_func_t new_get_elapsed_usec_callback,
-	elapsed_time_getter_func_t new_get_elapsed_msec_callback
-) : gamestate_updated_callback {
-		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
-	}, definitions_loaded { false }, mod_descriptors_loaded { false } {
+    InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+    elapsed_time_getter_func_t new_get_elapsed_usec_callback,
+    elapsed_time_getter_func_t new_get_elapsed_msec_callback
+) :
+    gamestate_updated_callback { new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {} },
+    definitions_loaded { false }, mod_descriptors_loaded { false } {
 	if (new_get_elapsed_usec_callback) {
 		get_elapsed_usec_time_callback = { std::move(new_get_elapsed_usec_callback) };
 	}
@@ -50,8 +50,8 @@ GameManager::GameManager(
 GameManager::~GameManager() {
 	if (instance_manager) {
 		spdlog::error_s(
-			"Destroying GameManager with an active InstanceManager! "
-			"Calling end_game_session() to ensure proper cleanup and execute any required special end-of-session actions."
+		    "Destroying GameManager with an active InstanceManager! "
+		    "Calling end_game_session() to ensure proper cleanup and execute any required special end-of-session actions."
 		);
 
 		end_game_session();
@@ -84,10 +84,10 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 	 * (Historical Project Mod 0.4.6 or HPM both valid, for example), and load them plus their dependencies.
 	 */
 	for (std::string_view requested_mod : mods_to_find) {
-		memory::vector<Mod>::const_iterator it = ranges::find_if(mod_manager.get_mods(),
-			[&requested_mod](Mod const& mod) -> bool {
-				return mod.get_identifier() == requested_mod || mod.get_user_dir() == requested_mod;
-			}
+		memory::vector<Mod>::const_iterator it = ranges::find_if(
+		    mod_manager.get_mods(), [&requested_mod](Mod const& mod) -> bool {
+			    return mod.get_identifier() == requested_mod || mod.get_user_dir() == requested_mod;
+		    }
 		);
 
 		if (it == mod_manager.get_mods().end()) {
@@ -98,7 +98,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 
 		Mod const& mod = *it;
 		vector_ordered_set<std::reference_wrapper<const Mod>> dependencies = mod.generate_dependency_list(&ret);
-		if(!ret) {
+		if (!ret) {
 			continue;
 		}
 
@@ -178,11 +178,7 @@ bool GameManager::setup_instance(Bookmark const& bookmark) {
 
 	SPDLOG_INFO("Initialising new game instance.");
 
-	instance_manager.emplace(
-		game_rules_manager,
-		definition_manager,
-		gamestate_updated_callback
-	);
+	instance_manager.emplace(game_rules_manager, definition_manager, gamestate_updated_callback);
 
 	SPDLOG_INFO("Setting up new game instance.");
 

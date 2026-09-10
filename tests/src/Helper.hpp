@@ -6,7 +6,7 @@
 
 #define _EXPR(TYPE, EXPECTED, ASSIGN_VALUE, ...) \
 	auto SNITCH_CURRENT_EXPRESSION = \
-		(snitch::impl::expression_extractor<EXPECTED> { TYPE, #__VA_ARGS__ } <= __VA_ARGS__).to_expression(); \
+	    (snitch::impl::expression_extractor<EXPECTED> { TYPE, #__VA_ARGS__ } <= __VA_ARGS__).to_expression(); \
 	ASSIGN_VALUE = SNITCH_CURRENT_EXPRESSION.success;
 
 #define _REQUIRE_IMPL(CHECK, EXPECTED, MAYBE_ABORT, ASSIGN_VALUE, ...) \
@@ -20,8 +20,9 @@
 			SNITCH_REPORT_EXPRESSION(MAYBE_ABORT); \
 		} else { \
 			ASSIGN_VALUE = static_cast<bool>(__VA_ARGS__); \
-			const auto SNITCH_CURRENT_EXPRESSION = \
-				snitch::impl::expression { CHECK, #__VA_ARGS__, {}, ASSIGN_VALUE == EXPECTED }; \
+			const auto SNITCH_CURRENT_EXPRESSION = snitch::impl::expression { \
+				CHECK, #__VA_ARGS__, {}, ASSIGN_VALUE == EXPECTED \
+			}; \
 			SNITCH_REPORT_EXPRESSION(MAYBE_ABORT); \
 		} \
 		SNITCH_WARNING_POP \
@@ -35,10 +36,22 @@
 // clang-format on
 
 #define _OVSIM_CHECK_IF(NAME, ...) \
-	if (bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; [&] { _OVSIM_CHECK(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); }(), (SNITCH_MACRO_CONCAT(result_, __LINE__)))
+	if ( \
+	    bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; \
+	    [&] { \
+		    _OVSIM_CHECK(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); \
+	    }(), \
+	    (SNITCH_MACRO_CONCAT(result_, __LINE__)) \
+	)
 
 #define _OVSIM_CHECK_FALSE_IF(NAME, ...) \
-	if (bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; [&] { _OVSIM_CHECK_FALSE(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); }(), (!SNITCH_MACRO_CONCAT(result_, __LINE__)))
+	if ( \
+	    bool SNITCH_MACRO_CONCAT(result_, __LINE__) = false; \
+	    [&] { \
+		    _OVSIM_CHECK_FALSE(NAME, (SNITCH_MACRO_CONCAT(result_, __LINE__)), __VA_ARGS__); \
+	    }(), \
+	    (!SNITCH_MACRO_CONCAT(result_, __LINE__)) \
+	)
 
 #define CHECK_IF(...) _OVSIM_CHECK_IF("_IF", __VA_ARGS__)
 
@@ -48,13 +61,13 @@
 	_OVSIM_CHECK_IF("_RETURN_BOOL", __VA_ARGS__) { \
 		return true; \
 	} \
-	else return false;
+	else return false
 
 #define CHECK_FALSE_RETURN_BOOL(...) \
 	_OVSIM_CHECK_FALSE_IF("_RETURN_BOOL", __VA_ARGS__) { \
 		return true; \
 	} \
-	else return false;
+	else return false
 
 #define CHECK_OR_RETURN(...) \
 	_OVSIM_CHECK_IF("_OR_RETURN", __VA_ARGS__); \
@@ -69,3 +82,10 @@
 #define CHECK_FALSE_OR_CONTINUE(...) \
 	_OVSIM_CHECK_FALSE_IF("_OR_CONTINUE", __VA_ARGS__); \
 	else continue
+
+#define CHECK_OR_BREAK(...) \
+	_OVSIM_CHECK_IF("_OR_BREAK", __VA_ARGS__); \
+	else break
+#define CHECK_FALSE_OR_BREAK(...) \
+	_OVSIM_CHECK_FALSE_IF("_OR_BREAK", __VA_ARGS__); \
+	else break

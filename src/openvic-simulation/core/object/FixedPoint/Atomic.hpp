@@ -2,8 +2,8 @@
 
 #include <atomic>
 
-#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace std {
 	template<>
@@ -164,8 +164,9 @@ namespace std {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m1, m2);
 		}
 
-		OV_ALWAYS_INLINE bool
-		compare_exchange_strong(value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst) noexcept {
+		OV_ALWAYS_INLINE bool compare_exchange_strong(
+		    value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
+		) noexcept {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m);
 		}
 		OV_ALWAYS_INLINE bool compare_exchange_strong( //

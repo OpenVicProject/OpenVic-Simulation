@@ -3,16 +3,17 @@
 #include <charconv>
 
 #include "openvic-simulation/core/Math.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/stl/containers/StackString.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic::fp {
 	struct stack_string final : public StackString<25> {
 	protected:
 		using StackString::StackString;
+
 	public:
 		constexpr char* front() OV_LIFETIME_BOUND {
 			return _array.data();
@@ -28,10 +29,7 @@ namespace OpenVic::fp {
 	};
 
 	OV_SPEED_INLINE static constexpr std::to_chars_result to_chars(
-		const fixed_point_t v,
-		char* first,
-		char* last,
-		size_t decimal_places = -1
+	    const fixed_point_t v, char* first, char* last, size_t decimal_places = -1
 	) {
 		if (first == nullptr || first >= last) {
 			return { last, std::errc::value_too_large };
@@ -105,27 +103,15 @@ namespace OpenVic::fp {
 		return result;
 	}
 
-	OV_SPEED_INLINE static constexpr stack_string to_array(
-		const fixed_point_t v,
-		size_t decimal_places = -1
-	) {
+	OV_SPEED_INLINE static constexpr stack_string to_array(const fixed_point_t v, size_t decimal_places = -1) {
 		stack_string str {};
-		std::to_chars_result result = OpenVic::fp::to_chars(
-			v,
-			str.front(),
-			str.back(),
-			decimal_places
-		);
+		std::to_chars_result result = OpenVic::fp::to_chars(v, str.front(), str.back(), decimal_places);
 		str.string_size() = result.ptr - str.data();
 		return str;
 	}
 
 	// Deterministic
-	OV_SPEED_INLINE static constexpr std::from_chars_result from_chars(
-		fixed_point_t& v,
-		char const* begin,
-		char const* end
-	) {
+	OV_SPEED_INLINE static constexpr std::from_chars_result from_chars(fixed_point_t& v, char const* begin, char const* end) {
 		if (begin == nullptr || begin >= end) {
 			return { begin, std::errc::invalid_argument };
 		}
@@ -150,7 +136,7 @@ namespace OpenVic::fp {
 			// Non-empty integer part, may be negative
 			int64_t parsed_value = 0;
 			from_chars = string_to_int64(begin, dot_pointer, parsed_value);
-			if (from_chars.ec == std::errc{}) {
+			if (from_chars.ec == std::errc {}) {
 				if (parsed_value > std::numeric_limits<int32_t>::max()) {
 					from_chars.ec = std::errc::value_too_large;
 				} else {
@@ -159,7 +145,7 @@ namespace OpenVic::fp {
 			}
 		}
 
-		if (from_chars.ec != std::errc{}) {
+		if (from_chars.ec != std::errc {}) {
 			return from_chars;
 		}
 
@@ -173,8 +159,9 @@ namespace OpenVic::fp {
 				end = end - fraction_begin > fixed_point_t::PRECISION ? fraction_begin + fixed_point_t::PRECISION : end;
 				uint64_t parsed_value;
 				from_chars = string_to_uint64(fraction_begin, end, parsed_value);
-				if (from_chars.ec == std::errc{}) {
-					for (ptrdiff_t remaining_shift = fixed_point_t::PRECISION - (end - fraction_begin); remaining_shift > 0; remaining_shift--) {
+				if (from_chars.ec == std::errc {}) {
+					for (ptrdiff_t remaining_shift = fixed_point_t::PRECISION - (end - fraction_begin); remaining_shift > 0;
+					     remaining_shift--) {
 						parsed_value *= 10;
 					}
 					uint64_t decimal = OpenVic::pow(static_cast<uint64_t>(10), fixed_point_t::PRECISION);
@@ -193,7 +180,7 @@ namespace OpenVic::fp {
 			result += result.is_negative() || (*begin == '-' && result == fixed_point_t::_0) ? -adder : adder;
 		}
 
-		if (from_chars.ec != std::errc{}) {
+		if (from_chars.ec != std::errc {}) {
 			return { begin, from_chars.ec };
 		}
 
@@ -203,9 +190,7 @@ namespace OpenVic::fp {
 
 	// Deterministic
 	OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_with_plus(
-		fixed_point_t& v,
-		char const* begin,
-		char const* end
+	    fixed_point_t& v, char const* begin, char const* end
 	) {
 		if (begin && *begin == '+') {
 			begin++;
@@ -226,7 +211,9 @@ namespace OpenVic::fp {
 			spdlog::error_s("Unsafe fixed point parse failed to parse the end of a string: \"{}\"", endpointer);
 		}
 
-		fixed_point_t::value_type integer_value = static_cast<long>(double_value * fixed_point_t::ONE + 0.5 * (double_value < 0 ? -1 : 1));
+		fixed_point_t::value_type integer_value = static_cast<long>(
+		    double_value * fixed_point_t::ONE + 0.5 * (double_value < 0 ? -1 : 1)
+		);
 
 		return fixed_point_t::parse_raw(integer_value);
 	}

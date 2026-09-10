@@ -41,8 +41,8 @@ namespace OpenVic::utility::_detail::deque {
 
 		_Deque_unchecked_const_iterator() noexcept : _Mycont(), _Myoff(0) {}
 
-		_Deque_unchecked_const_iterator(_Size_type _Off, const _Container_base12* _Pdeque) noexcept
-			: _Mycont(static_cast<const _Mydeque*>(_Pdeque)), _Myoff(_Off) {}
+		_Deque_unchecked_const_iterator(_Size_type _Off, const _Container_base12* _Pdeque) noexcept :
+		    _Mycont(static_cast<const _Mydeque*>(_Pdeque)), _Myoff(_Off) {}
 
 		_NODISCARD reference operator*() const noexcept {
 			return _Mycont->_Subscript(_Myoff);
@@ -85,8 +85,9 @@ namespace OpenVic::utility::_detail::deque {
 			return _Tmp;
 		}
 
-		_NODISCARD friend _Deque_unchecked_const_iterator
-		operator+(const difference_type _Off, _Deque_unchecked_const_iterator _Next) noexcept {
+		_NODISCARD friend _Deque_unchecked_const_iterator operator+(
+		    const difference_type _Off, _Deque_unchecked_const_iterator _Next
+		) noexcept {
 			_Next += _Off;
 			return _Next;
 		}
@@ -205,8 +206,9 @@ namespace OpenVic::utility::_detail::deque {
 			return _Tmp;
 		}
 
-		_NODISCARD friend _Deque_unchecked_iterator
-		operator+(const difference_type _Off, _Deque_unchecked_iterator _Next) noexcept {
+		_NODISCARD friend _Deque_unchecked_iterator operator+(
+		    const difference_type _Off, _Deque_unchecked_iterator _Next
+		) noexcept {
 			_Next += _Off;
 			return _Next;
 		}
@@ -247,7 +249,9 @@ namespace OpenVic::utility::_detail::deque {
 		using reference = const value_type&;
 
 		using _Mydeque_t = _Mydeque; // helper for expression evaluator
-		enum { _EEN_DS = _Block_size }; // helper for expression evaluator
+		enum {
+			_EEN_DS = _Block_size
+		}; // helper for expression evaluator
 		_Deque_const_iterator() noexcept : _Myoff(0) {
 			_Setcont(nullptr);
 		}
@@ -261,8 +265,8 @@ namespace OpenVic::utility::_detail::deque {
 #if _ITERATOR_DEBUG_LEVEL != 0
 			_STL_VERIFY(_Mycont, "cannot dereference value-initialized deque iterator");
 			_STL_VERIFY(
-				_Mycont->_Myoff <= this->_Myoff && this->_Myoff < _Mycont->_Myoff + _Mycont->_Mysize,
-				"cannot deference out of range deque iterator"
+			    _Mycont->_Myoff <= this->_Myoff && this->_Myoff < _Mycont->_Myoff + _Mycont->_Mysize,
+			    "cannot deference out of range deque iterator"
 			);
 #endif // _ITERATOR_DEBUG_LEVEL != 0
 
@@ -313,8 +317,8 @@ namespace OpenVic::utility::_detail::deque {
 				const auto _Mycont = static_cast<const _Mydeque*>(this->_Getcont());
 				_STL_VERIFY(_Mycont, "cannot seek value-initialized deque iterator");
 				_STL_VERIFY(
-					_Mycont->_Myoff <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Myoff + _Mycont->_Mysize,
-					"cannot seek deque iterator out of range"
+				    _Mycont->_Myoff <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Myoff + _Mycont->_Mysize,
+				    "cannot seek deque iterator out of range"
 				);
 			}
 #endif // _ITERATOR_DEBUG_LEVEL != 0
@@ -412,8 +416,8 @@ namespace OpenVic::utility::_detail::deque {
 				const auto _Mycont = static_cast<const _Mydeque*>(this->_Getcont());
 				_STL_VERIFY(_Mycont, "cannot use value-initialized deque iterator");
 				_STL_VERIFY(
-					_Mycont->_Myoff <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Myoff + _Mycont->_Mysize,
-					"cannot seek deque iterator out of range"
+				    _Mycont->_Myoff <= this->_Myoff + _Off && this->_Myoff + _Off <= _Mycont->_Myoff + _Mycont->_Mysize,
+				    "cannot seek deque iterator out of range"
 				);
 			}
 #endif // ^^^ _ITERATOR_DEBUG_LEVEL != 0 ^^^
@@ -520,7 +524,12 @@ namespace OpenVic::utility::_detail::deque {
 	};
 
 	template<
-		class _Value_type, class _Size_type, class _Difference_type, class _Pointer, class _Const_pointer, class _Mapptr_type>
+	    class _Value_type,
+	    class _Size_type,
+	    class _Difference_type,
+	    class _Pointer,
+	    class _Const_pointer,
+	    class _Mapptr_type>
 	struct _Deque_iter_types {
 		using value_type = _Value_type;
 		using size_type = _Size_type;
@@ -554,11 +563,11 @@ namespace OpenVic::utility::_detail::deque {
 
 	public:
 		static constexpr int _Block_size = 512 /*_Bytes <= 1 ? 16
-			: _Bytes <= 2							   ? 8
-			: _Bytes <= 4							   ? 4
-			: _Bytes <= 8							   ? 2
-													   : 1*/
-			; // elements per block (a power of 2)
+		    : _Bytes <= 2							   ? 8
+		    : _Bytes <= 4							   ? 4
+		    : _Bytes <= 8							   ? 2
+		                                               : 1*/
+		    ; // elements per block (a power of 2)
 
 		_Deque_val() noexcept : _Map(), _Mapsize(0), _Myoff(0), _Mysize(0) {}
 
@@ -596,13 +605,13 @@ namespace OpenVic::utility::_detail::deque {
 	private:
 		friend _Tidy_guard<deque>;
 		static_assert(
-			!_ENFORCE_MATCHING_ALLOCATORS || is_same_v<_Ty, typename _Alloc::value_type>,
-			_MISMATCHED_ALLOCATOR_MESSAGE("deque<T, Allocator>", "T")
+		    !_ENFORCE_MATCHING_ALLOCATORS || is_same_v<_Ty, typename _Alloc::value_type>,
+		    _MISMATCHED_ALLOCATOR_MESSAGE("deque<T, Allocator>", "T")
 		);
 		static_assert(
-			is_object_v<_Ty>,
-			"The C++ Standard forbids containers of non-object types "
-			"because of [container.requirements]."
+		    is_object_v<_Ty>,
+		    "The C++ Standard forbids containers of non-object types "
+		    "because of [container.requirements]."
 		);
 
 		using _Alty = _Rebind_alloc_t<_Alloc, _Ty>;
@@ -615,10 +624,15 @@ namespace OpenVic::utility::_detail::deque {
 		using _Map_difference_type = typename iterator_traits<_Mapptr>::difference_type;
 
 		using _Scary_val = _Deque_val<conditional_t<
-			_Is_simple_alloc_v<_Alty>, _Deque_simple_types<_Ty>,
-			_Deque_iter_types<
-				_Ty, typename _Alty_traits::size_type, typename _Alty_traits::difference_type, typename _Alty_traits::pointer,
-				typename _Alty_traits::const_pointer, _Mapptr>>>;
+		    _Is_simple_alloc_v<_Alty>,
+		    _Deque_simple_types<_Ty>,
+		    _Deque_iter_types<
+		        _Ty,
+		        typename _Alty_traits::size_type,
+		        typename _Alty_traits::difference_type,
+		        typename _Alty_traits::pointer,
+		        typename _Alty_traits::const_pointer,
+		        _Mapptr>>>;
 
 		static constexpr int _Minimum_map_size = 8;
 		static constexpr int _Block_size = _Scary_val::_Block_size;
@@ -640,7 +654,9 @@ namespace OpenVic::utility::_detail::deque {
 
 		using reverse_iterator = _STD reverse_iterator<iterator>;
 		using const_reverse_iterator = _STD reverse_iterator<const_iterator>;
-		enum { _EEN_DS = _Block_size }; // helper for expression evaluator
+		enum {
+			_EEN_DS = _Block_size
+		}; // helper for expression evaluator
 
 		deque() : _Mypair(_Zero_then_variadic_args_t {}) {
 			_Get_data()._Alloc_proxy(static_cast<_Alproxy_ty>(_Getal()));
@@ -650,8 +666,8 @@ namespace OpenVic::utility::_detail::deque {
 			_Get_data()._Alloc_proxy(static_cast<_Alproxy_ty>(_Getal()));
 		}
 
-		explicit deque(_CRT_GUARDOVERFLOW size_type _Count, const _Alloc& _Al = _Alloc())
-			: _Mypair(_One_then_variadic_args_t {}, _Al) {
+		explicit deque(_CRT_GUARDOVERFLOW size_type _Count, const _Alloc& _Al = _Alloc()) :
+		    _Mypair(_One_then_variadic_args_t {}, _Al) {
 			_Alproxy_ty _Alproxy(_Getal());
 			_Container_proxy_ptr12<_Alproxy_ty> _Proxy(_Alproxy, _Get_data());
 			_Tidy_guard<deque> _Guard { this };
@@ -667,8 +683,8 @@ namespace OpenVic::utility::_detail::deque {
 #if _HAS_CXX17
 		template<class _Alloc2 = _Alloc, enable_if_t<_Is_allocator<_Alloc2>::value, int> = 0>
 #endif // _HAS_CXX17
-		deque(_CRT_GUARDOVERFLOW size_type _Count, const _Ty& _Val, const _Alloc& _Al)
-			: _Mypair(_One_then_variadic_args_t {}, _Al) {
+		deque(_CRT_GUARDOVERFLOW size_type _Count, const _Ty& _Val, const _Alloc& _Al) :
+		    _Mypair(_One_then_variadic_args_t {}, _Al) {
 			_Construct_n(_Count, _Val);
 		}
 
@@ -694,8 +710,8 @@ namespace OpenVic::utility::_detail::deque {
 		}
 #endif // _HAS_CXX23
 
-		deque(const deque& _Right)
-			: _Mypair(_One_then_variadic_args_t {}, _Alty_traits::select_on_container_copy_construction(_Right._Getal())) {
+		deque(const deque& _Right) :
+		    _Mypair(_One_then_variadic_args_t {}, _Alty_traits::select_on_container_copy_construction(_Right._Getal())) {
 			_Construct(_Right._Unchecked_begin(), _Right._Unchecked_end());
 		}
 
@@ -712,7 +728,7 @@ namespace OpenVic::utility::_detail::deque {
 			if constexpr (!_Alty_traits::is_always_equal::value) {
 				if (_Getal() != _Right._Getal()) {
 					_Construct(
-						_STD make_move_iterator(_Right._Unchecked_begin()), _STD make_move_iterator(_Right._Unchecked_end())
+					    _STD make_move_iterator(_Right._Unchecked_begin()), _STD make_move_iterator(_Right._Unchecked_end())
 					);
 					return;
 				}
@@ -820,7 +836,7 @@ namespace OpenVic::utility::_detail::deque {
 			} else if constexpr (_Pocma_val == _Pocma_values::_No_propagate_allocators) {
 				if (_Al != _Right_al) {
 					assign(
-						_STD make_move_iterator(_Right._Unchecked_begin()), _STD make_move_iterator(_Right._Unchecked_end())
+					    _STD make_move_iterator(_Right._Unchecked_begin()), _STD make_move_iterator(_Right._Unchecked_end())
 					);
 					return *this;
 				}
@@ -848,8 +864,8 @@ namespace OpenVic::utility::_detail::deque {
 		template<_Container_compatible_range<_Ty> _Rng>
 		void assign_range(_Rng&& _Range) {
 			static_assert(
-				assignable_from<_Ty&, _RANGES range_reference_t<_Rng>>,
-				"Elements must be assignable from the range's reference type (N4993 [sequence.reqmts]/60)."
+			    assignable_from<_Ty&, _RANGES range_reference_t<_Rng>>,
+			    "Elements must be assignable from the range's reference type (N4993 [sequence.reqmts]/60)."
 			);
 			_Assign_range(_RANGES _Ubegin(_Range), _RANGES _Uend(_Range));
 		}
@@ -1022,14 +1038,15 @@ namespace OpenVic::utility::_detail::deque {
 			// (_Myoff() + _Mysize() - 1) is for the last element, i.e. the back() of the deque.
 			// Divide by _Block_size to get the unmasked index of the last used block.
 			// Add 1 to get the unmasked index of the first unused block.
-			const auto _Unmasked_first_unused_block_idx =
-				static_cast<size_type>(((_Myoff() + _Mysize() - 1) / _Block_size) + 1);
+			const auto _Unmasked_first_unused_block_idx = static_cast<size_type>(
+			    ((_Myoff() + _Mysize() - 1) / _Block_size) + 1
+			);
 
 			const auto _First_unused_block_idx = static_cast<size_type>(_Unmasked_first_unused_block_idx & _Mask);
 
 			// deallocate unused blocks, traversing over the circular buffer until the first used block index
 			for (auto _Block_idx = _First_unused_block_idx; _Block_idx != _First_used_block_idx;
-				 _Block_idx = static_cast<size_type>((_Block_idx + 1) & _Mask)) {
+			     _Block_idx = static_cast<size_type>((_Block_idx + 1) & _Mask)) {
 				auto& _Block_ptr = _Map()[static_cast<_Map_difference_type>(_Block_idx)];
 				if (_Block_ptr != nullptr) {
 					_Getal().deallocate(_Block_ptr, _Block_size);
@@ -1037,8 +1054,9 @@ namespace OpenVic::utility::_detail::deque {
 				}
 			}
 
-			const auto _Used_block_count =
-				static_cast<size_type>(_Unmasked_first_unused_block_idx - _Unmasked_first_used_block_idx);
+			const auto _Used_block_count = static_cast<size_type>(
+			    _Unmasked_first_unused_block_idx - _Unmasked_first_used_block_idx
+			);
 
 			size_type _New_block_count = _Minimum_map_size; // should be power of 2
 
@@ -1066,7 +1084,7 @@ namespace OpenVic::utility::_detail::deque {
 
 			// null out the rest of the new map
 			_STD _Uninitialized_value_construct_n_unchecked1(
-				_New_map + static_cast<_Map_difference_type>(_Used_block_count), _New_block_count - _Used_block_count
+			    _New_map + static_cast<_Map_difference_type>(_Used_block_count), _New_block_count - _Used_block_count
 			);
 
 			for (auto _Block = _Map_distance(); _Block > 0;) {
@@ -1319,7 +1337,7 @@ namespace OpenVic::utility::_detail::deque {
 			_STD _Adl_verify_range(_First, _Last);
 			const size_type _Off = static_cast<size_type>(_Where - begin());
 			return _Insert_range<static_cast<_Is_bidi>(_Is_cpp17_bidi_iter_v<_Iter>)>(
-				_Off, _STD _Get_unwrapped(_First), _STD _Get_unwrapped(_Last)
+			    _Off, _STD _Get_unwrapped(_First), _STD _Get_unwrapped(_Last)
 			);
 		}
 
@@ -1330,7 +1348,7 @@ namespace OpenVic::utility::_detail::deque {
 
 			if constexpr (_RANGES bidirectional_range<_Rng>) {
 				return _Insert_range<_Is_bidi::_Yes>(
-					_Off, _RANGES _Ubegin(_Range), _RANGES _Get_final_iterator_unwrapped(_Range)
+				    _Off, _RANGES _Ubegin(_Range), _RANGES _Get_final_iterator_unwrapped(_Range)
 				);
 			} else {
 				return _Insert_range<_Is_bidi::_Nope>(_Off, _RANGES _Ubegin(_Range), _RANGES _Uend(_Range));
@@ -1366,7 +1384,10 @@ namespace OpenVic::utility::_detail::deque {
 			}
 		};
 
-		enum class _Is_bidi : bool { _Nope, _Yes };
+		enum class _Is_bidi : bool {
+			_Nope,
+			_Yes
+		};
 
 		template<_Is_bidi _Bidi, class _Iter, class _Sent>
 		iterator _Insert_range(const size_type _Off, _Iter _First, _Sent _Last) {
@@ -1418,8 +1439,9 @@ namespace OpenVic::utility::_detail::deque {
 
 			const auto _Myfirst = _Unchecked_begin();
 			_STD rotate(
-				_Myfirst + static_cast<difference_type>(_Off), _Myfirst + static_cast<difference_type>(_Oldsize),
-				_Unchecked_end()
+			    _Myfirst + static_cast<difference_type>(_Off),
+			    _Myfirst + static_cast<difference_type>(_Oldsize),
+			    _Unchecked_end()
 			);
 
 			return begin() + static_cast<difference_type>(_Off);
@@ -1456,12 +1478,14 @@ namespace OpenVic::utility::_detail::deque {
 					_Mid = _Unchecked_begin() + static_cast<difference_type>(_Count);
 					_Alloc_temporary2<_Alty> _Tmp(_Getal(), _Val); // in case _Val is in sequence
 					_STD move(
-						_Mid + static_cast<difference_type>(_Count), _Mid + static_cast<difference_type>(_Off),
-						_Mid
+					    _Mid + static_cast<difference_type>(_Count),
+					    _Mid + static_cast<difference_type>(_Off),
+					    _Mid
 					); // copy rest of prefix
 					_STD fill(
-						_Unchecked_begin() + static_cast<difference_type>(_Off), _Mid + static_cast<difference_type>(_Off),
-						_Tmp._Get_value()
+					    _Unchecked_begin() + static_cast<difference_type>(_Off),
+					    _Mid + static_cast<difference_type>(_Off),
+					    _Tmp._Get_value()
 					); // fill in values
 				}
 				_Guard._Container = nullptr;
@@ -1486,8 +1510,9 @@ namespace OpenVic::utility::_detail::deque {
 					_Mid = _Unchecked_begin() + static_cast<difference_type>(_Off);
 					_Alloc_temporary2<_Alty> _Tmp(_Getal(), _Val); // in case _Val is in sequence
 					_STD move_backward(
-						_Mid, _Mid + static_cast<difference_type>(_Rem - _Count),
-						_Mid + static_cast<difference_type>(_Rem)
+					    _Mid,
+					    _Mid + static_cast<difference_type>(_Rem - _Count),
+					    _Mid + static_cast<difference_type>(_Rem)
 					); // copy rest of prefix
 					_STD fill_n(_Mid, _Count, _Tmp._Get_value()); // fill in values
 				}
@@ -1545,7 +1570,7 @@ namespace OpenVic::utility::_detail::deque {
 		}
 
 		iterator erase(
-			const_iterator _First_arg, const_iterator _Last_arg
+		    const_iterator _First_arg, const_iterator _Last_arg
 		) noexcept(is_nothrow_move_assignable_v<value_type>) /* strengthened */ {
 			iterator _First = _Make_iter(_First_arg);
 			iterator _Last = _Make_iter(_Last_arg);
@@ -1801,8 +1826,9 @@ namespace OpenVic::utility::_detail::deque {
 
 #if _HAS_CXX17
 	template<
-		class _Iter, class _Alloc = allocator<_Iter_value_t<_Iter>>,
-		enable_if_t<conjunction_v<_Is_iterator<_Iter>, _Is_allocator<_Alloc>>, int> = 0>
+	    class _Iter,
+	    class _Alloc = allocator<_Iter_value_t<_Iter>>,
+	    enable_if_t<conjunction_v<_Is_iterator<_Iter>, _Is_allocator<_Alloc>>, int> = 0>
 	deque(_Iter, _Iter, _Alloc = _Alloc()) -> deque<_Iter_value_t<_Iter>, _Alloc>;
 #endif // _HAS_CXX17
 
@@ -1819,15 +1845,18 @@ namespace OpenVic::utility::_detail::deque {
 	_EXPORT_STD template<class _Ty, class _Alloc>
 	_NODISCARD bool operator==(const deque<_Ty, _Alloc>& _Left, const deque<_Ty, _Alloc>& _Right) {
 		return _Left.size() == _Right.size() &&
-			_STD equal(_Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin());
+		       _STD equal(_Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin());
 	}
 
 #if _HAS_CXX20
 	_EXPORT_STD template<class _Ty, class _Alloc>
 	_NODISCARD _Synth_three_way_result<_Ty> operator<=>(const deque<_Ty, _Alloc>& _Left, const deque<_Ty, _Alloc>& _Right) {
 		return _STD lexicographical_compare_three_way(
-			_Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin(), _Right._Unchecked_end(),
-			_Synth_three_way {}
+		    _Left._Unchecked_begin(),
+		    _Left._Unchecked_end(),
+		    _Right._Unchecked_begin(),
+		    _Right._Unchecked_end(),
+		    _Synth_three_way {}
 		);
 	}
 #else // ^^^ _HAS_CXX20 / !_HAS_CXX20 vvv
@@ -1839,7 +1868,7 @@ namespace OpenVic::utility::_detail::deque {
 	template<class _Ty, class _Alloc>
 	_NODISCARD bool operator<(const deque<_Ty, _Alloc>& _Left, const deque<_Ty, _Alloc>& _Right) {
 		return _STD lexicographical_compare(
-			_Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin(), _Right._Unchecked_end()
+		    _Left._Unchecked_begin(), _Left._Unchecked_end(), _Right._Unchecked_begin(), _Right._Unchecked_end()
 		);
 	}
 

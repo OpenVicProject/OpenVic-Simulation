@@ -34,24 +34,25 @@ namespace OpenVic::_detail::forwardable_span {
 	struct is_std_array<std::array<T, Size>> : std::true_type {};
 
 	template<class Range, class ElementType>
-	concept span_compatible_range = !is_std_span<std::remove_cvref_t<Range>>::value && //
-		std::ranges::contiguous_range<Range> && //
-		std::ranges::sized_range<Range> && //
-		(std::ranges::borrowed_range<Range> || std::is_const_v<ElementType>) && //
-		!is_std_array<std::remove_cvref_t<Range>>::value && //
-		!std::is_array_v<std::remove_cvref_t<Range>> && //
-		std::is_convertible_v<std::remove_reference_t<std::ranges::range_reference_t<Range>> (*)[], ElementType (*)[]>;
+	concept span_compatible_range =
+	    !is_std_span<std::remove_cvref_t<Range>>::value && //
+	    std::ranges::contiguous_range<Range> && //
+	    std::ranges::sized_range<Range> && //
+	    (std::ranges::borrowed_range<Range> || std::is_const_v<ElementType>) && //
+	    !is_std_array<std::remove_cvref_t<Range>>::value && //
+	    !std::is_array_v<std::remove_cvref_t<Range>> && //
+	    std::is_convertible_v<std::remove_reference_t<std::ranges::range_reference_t<Range>> (*)[], ElementType (*)[]>;
 
 	template<class From, class To>
 	concept span_array_convertible = std::is_convertible_v<From (*)[], To (*)[]>;
 
 	template<class It, class T>
 	concept span_compatible_iterator =
-		std::contiguous_iterator<It> && span_array_convertible<std::remove_reference_t<std::iter_reference_t<It>>, T>;
+	    std::contiguous_iterator<It> && span_array_convertible<std::remove_reference_t<std::iter_reference_t<It>>, T>;
 
 	template<class Sentinel, class It>
 	concept span_compatible_sentinel_for =
-		std::sized_sentinel_for<Sentinel, It> && !std::is_convertible_v<Sentinel, std::size_t>;
+	    std::sized_sentinel_for<Sentinel, It> && !std::is_convertible_v<Sentinel, std::size_t>;
 
 	template<size_t Extent>
 	struct extent_storage {
@@ -123,17 +124,17 @@ namespace OpenVic::_detail::forwardable_span {
 
 		constexpr span()
 		requires(Extent == dynamic_extent || Extent == 0)
-			: _ptr(nullptr), _extent(_v<0>) {}
+		    : _ptr(nullptr), _extent(_v<0>) {}
 
 		constexpr span(const span&) = default;
 
 		template<span_compatible_iterator<element_type> It>
-		constexpr explicit(extent != dynamic_extent) span(It first, size_type count)
-			: _ptr(std::to_address(first)), _extent(count) {}
+		constexpr explicit(extent != dynamic_extent) span(It first, size_type count) :
+		    _ptr(std::to_address(first)), _extent(count) {}
 
 		template<span_compatible_iterator<element_type> It, span_compatible_sentinel_for<It> End>
-		constexpr explicit(extent != dynamic_extent) span(It first, End last)
-			: _ptr(std::to_address(first)), _extent(static_cast<size_type>(last - first)) {}
+		constexpr explicit(extent != dynamic_extent) span(It first, End last) :
+		    _ptr(std::to_address(first)), _extent(static_cast<size_type>(last - first)) {}
 
 		template<std::size_t ArrayExtent>
 		requires(Extent == dynamic_extent || ArrayExtent == Extent)
@@ -147,20 +148,20 @@ namespace OpenVic::_detail::forwardable_span {
 		constexpr span(std::array<OtherElementType, ArrayExtent> const& arr) : _ptr(arr.data()), _extent(_v<ArrayExtent>) {}
 
 		template<span_compatible_range<element_type> Range>
-		constexpr explicit(extent != dynamic_extent) span(Range&& r)
-			: _ptr { std::ranges::data(r) }, _extent(std::ranges::size(r)) {}
+		constexpr explicit(extent != dynamic_extent) span(Range&& r) :
+		    _ptr { std::ranges::data(r) }, _extent(std::ranges::size(r)) {}
 
 		template<span_array_convertible<element_type> OtherElementType, std::size_t OtherExtent>
 		requires(Extent == dynamic_extent || OtherExtent == dynamic_extent || Extent == OtherExtent)
-		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent)
-			span(span<OtherElementType, OtherExtent> const& s)
-			: _ptr(s.data()), _extent(s.size()) {}
+		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent) span(
+		    span<OtherElementType, OtherExtent> const& s
+		) : _ptr(s.data()), _extent(s.size()) {}
 
 		template<span_array_convertible<element_type> OtherElementType, std::size_t OtherExtent>
 		requires(Extent == dynamic_extent || OtherExtent == dynamic_extent || Extent == OtherExtent)
-		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent)
-			span(std::span<OtherElementType, OtherExtent> const& s)
-			: _ptr(s.data()), _extent(s.size()) {}
+		constexpr explicit(extent != dynamic_extent && OtherExtent == dynamic_extent) span(
+		    std::span<OtherElementType, OtherExtent> const& s
+		) : _ptr(s.data()), _extent(s.size()) {}
 
 
 		constexpr span& operator=(span const&) = default;
@@ -325,7 +326,7 @@ namespace OpenVic::_detail::forwardable_span {
 
 		OV_ALWAYS_INLINE constexpr explicit span(_SizedPtr __ptr)
 		requires(extent != dynamic_extent)
-			: _ptr(__ptr._ptr), _extent(_v<extent>) {}
+		    : _ptr(__ptr._ptr), _extent(_v<extent>) {}
 
 		pointer _ptr;
 		OV_NO_UNIQUE_ADDRESS extent_storage<extent> _extent;
@@ -364,9 +365,9 @@ namespace std {
 	}
 
 	template<typename T, size_t Extent>
-	[[nodiscard]] inline OpenVic::forwardable_span<
-		const std::byte, Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T)>
-	as_bytes(OpenVic::forwardable_span<T, Extent> sp) {
+	[[nodiscard]] inline OpenVic::
+	    forwardable_span<const std::byte, Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T)>
+	    as_bytes(OpenVic::forwardable_span<T, Extent> sp) {
 		auto data = reinterpret_cast<const std::byte*>(sp.data());
 		auto size = sp.size_bytes();
 		constexpr std::size_t extent = Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T);

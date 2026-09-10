@@ -5,8 +5,8 @@
 #include <numeric>
 #include <ostream>
 
-#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -24,8 +24,7 @@ namespace OpenVic {
 		static constexpr month_t MONTHS_IN_YEAR = DAYS_IN_MONTH.size();
 		static_assert(MONTHS_IN_YEAR == 12);
 
-		static constexpr value_t DAYS_IN_YEAR =
-			std::accumulate(DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), value_t { 0 });
+		static constexpr value_t DAYS_IN_YEAR = std::accumulate(DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), value_t { 0 });
 		static_assert(DAYS_IN_YEAR == 365);
 
 		static constexpr std::array<value_t, MONTHS_IN_YEAR> DAYS_UP_TO_MONTH = [] {

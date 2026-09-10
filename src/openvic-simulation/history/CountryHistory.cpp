@@ -1,20 +1,23 @@
 #include "CountryHistory.hpp"
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryHistoryEntry::CountryHistoryEntry(
-	CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
-	decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
-) : HistoryEntry { new_date }, country { new_country }, upper_house_proportion_by_ideology { ideology_keys },
-	flag_overrides_by_government_type { government_type_keys } {}
+    CountryDefinition const& new_country,
+    Date new_date,
+    decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+    decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
+) :
+    HistoryEntry { new_date }, country { new_country }, upper_house_proportion_by_ideology { ideology_keys },
+    flag_overrides_by_government_type { government_type_keys } {}
 
 fixed_point_t CountryHistoryEntry::get_upper_house_proportion_by_ideology(Ideology const& key) const {
 	return upper_house_proportion_by_ideology.at(key);
@@ -25,8 +28,9 @@ GovernmentType const* CountryHistoryEntry::get_flag_overrides_by_government_type
 }
 
 CountryHistoryMap::CountryHistoryMap(
-	CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
-	decltype(government_type_keys) new_government_type_keys
+    CountryDefinition const& new_country,
+    decltype(ideology_keys) new_ideology_keys,
+    decltype(government_type_keys) new_government_type_keys
 ) : country { new_country }, ideology_keys { new_ideology_keys }, government_type_keys { new_government_type_keys } {}
 
 memory::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
@@ -44,8 +48,11 @@ static constexpr auto _flag_callback(string_map_t<bool>& flags, bool value) {
 }
 
 bool CountryHistoryMap::_load_history_entry(
-	DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-	CountryHistoryEntry& entry, ast::NodeCPtr root
+    DefinitionManager const& definition_manager,
+    Dataloader const& dataloader,
+    DeploymentManager& deployment_manager,
+    CountryHistoryEntry& entry,
+    ast::NodeCPtr root
 ) {
 	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
@@ -65,20 +72,23 @@ bool CountryHistoryMap::_load_history_entry(
 			} else if (it->second == add) {
 				// Desired culture instruction already exists
 				spdlog::warn_s(
-					"Duplicate attempt to {} accepted culture {} {} country history of {}",
-					add ? "add" : "remove", add ? "to" : "from", culture, entry.country
+				    "Duplicate attempt to {} accepted culture {} {} country history of {}",
+				    add ? "add" : "remove",
+				    add ? "to" : "from",
+				    culture,
+				    entry.country
 				);
 				return true;
 			} else {
 				// Opposite culture instruction exists
 				entry.accepted_cultures.erase(it);
 				spdlog::warn_s(
-					"Attempted to {} accepted culture {} {} country history of {} after previously {} it",
-					add ? "add" : "remove",
-					culture,
-					add ? "to" : "from",
-					entry.country,
-					add ? "removing" : "adding"
+				    "Attempted to {} accepted culture {} {} country history of {} after previously {} it",
+				    add ? "add" : "remove",
+				    culture,
+				    add ? "to" : "from",
+				    entry.country,
+				    add ? "removing" : "adding"
 				);
 				return true;
 			}
@@ -328,9 +338,12 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefin
 }
 
 bool CountryHistoryManager::load_country_history_file(
-	DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
-	decltype(CountryHistoryMap::ideology_keys) ideology_keys,
-	decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
+    DefinitionManager& definition_manager,
+    Dataloader const& dataloader,
+    CountryDefinition const& country,
+    decltype(CountryHistoryMap::ideology_keys) ideology_keys,
+    decltype(CountryHistoryMap::government_type_keys) government_type_keys,
+    ast::NodeCPtr root
 ) {
 	if (locked) {
 		spdlog::error_s("Attempted to load country history file for {} after country history registry was locked!", country);
@@ -343,8 +356,9 @@ bool CountryHistoryManager::load_country_history_file(
 
 	decltype(country_histories)::iterator it = country_histories.find(&country);
 	if (it == country_histories.end()) {
-		const std::pair<decltype(country_histories)::iterator, bool> result =
-			country_histories.emplace(&country, CountryHistoryMap { country, ideology_keys, government_type_keys });
+		const std::pair<decltype(country_histories)::iterator, bool> result = country_histories.emplace(
+		    &country, CountryHistoryMap { country, ideology_keys, government_type_keys }
+		);
 		if (result.second) {
 			it = result.first;
 		} else {
@@ -355,6 +369,6 @@ bool CountryHistoryManager::load_country_history_file(
 	CountryHistoryMap& country_history = it.value();
 
 	return country_history._load_history_file(
-		definition_manager, dataloader, definition_manager.get_military_manager().get_deployment_manager(), root
+	    definition_manager, dataloader, definition_manager.get_military_manager().get_deployment_manager(), root
 	);
 }

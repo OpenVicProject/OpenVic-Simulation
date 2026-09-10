@@ -97,8 +97,7 @@ namespace OpenVic::ecs {
 		PayloadColumn(PayloadColumn const&) = delete;
 		PayloadColumn& operator=(PayloadColumn const&) = delete;
 
-		PayloadColumn(PayloadColumn&& other) noexcept
-			: data { other.data }, vtable { other.vtable }, count { other.count } {
+		PayloadColumn(PayloadColumn&& other) noexcept : data { other.data }, vtable { other.vtable }, count { other.count } {
 			other.data = nullptr;
 			other.vtable = nullptr;
 			other.count = 0;
@@ -194,16 +193,12 @@ namespace OpenVic::ecs {
 		// count == 0 records nothing. Returns false (error log, nothing recorded) on
 		// out_ids / span length mismatch.
 		template<typename... Cs, typename... Spans>
-		bool create_entities(
-			World& world, std::size_t count, std::span<EntityID> out_ids, Spans&&... spans
-		);
+		bool create_entities(World& world, std::size_t count, std::span<EntityID> out_ids, Spans&&... spans);
 
 		// Bulk analogue of create_immutable_entity: apply() stamps every created entity's
 		// slot immutable; out_ids receives ImmutableEntityID handles.
 		template<typename... Cs, typename... Spans>
-		bool create_immutable_entities(
-			World& world, std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans
-		);
+		bool create_immutable_entities(World& world, std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans);
 
 		inline void destroy_entity(EntityID id) {
 			Op op;
@@ -276,8 +271,7 @@ namespace OpenVic::ecs {
 		// ImmutableEntityID.
 		template<typename OutIdT, typename... Cs, typename... Spans>
 		bool record_create_entities(
-			bool immutable, World& world, std::size_t count, std::span<OutIdT> out_ids,
-			Spans&&... spans
+		    bool immutable, World& world, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans
 		);
 
 		enum class OpKind {
@@ -370,9 +364,8 @@ namespace OpenVic::ecs {
 		// `apply()` allocates the real slot at the stage barrier and rewrites the placeholder.
 		// In serial mode, reserve a real slot up-front so callers get a usable EntityID
 		// immediately (e.g. for `cmd.add_component(eid, ...)` later in the same recording).
-		EntityID const eid = parallel_mode_
-			? EntityID { deferred_count_++, DEFERRED_GENERATION_BIT }
-			: world.reserve_entity_slot();
+		EntityID const eid =
+		    parallel_mode_ ? EntityID { deferred_count_++, DEFERRED_GENERATION_BIT } : world.reserve_entity_slot();
 
 		Op op;
 		op.kind = OpKind::CreateEntity;
@@ -400,8 +393,8 @@ namespace OpenVic::ecs {
 			if constexpr (!std::is_empty_v<TC>) {
 				::new (op.create.sorted_values[target].data) TC(std::forward<C>(value));
 			} else {
-				(void) value;
-				(void) target;
+				(void)value;
+				(void)target;
 			}
 		};
 		(place(std::forward<Cs>(values)), ...);
@@ -423,18 +416,18 @@ namespace OpenVic::ecs {
 
 	template<typename OutIdT, typename... Cs, typename... Spans>
 	bool CommandBuffer::record_create_entities(
-		bool immutable, World& world, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans
+	    bool immutable, World& world, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans
 	) {
 		static_assert(sizeof...(Cs) > 0, "CommandBuffer::create_entities requires at least one component");
 		static_assert(
-			(std::is_same_v<Cs, std::remove_cvref_t<Cs>> && ...),
-			"create_entities component types must be plain types (no const/volatile/reference)"
+		    (std::is_same_v<Cs, std::remove_cvref_t<Cs>> && ...),
+		    "create_entities component types must be plain types (no const/volatile/reference)"
 		);
 		constexpr std::size_t const non_empty = detail::non_empty_component_count<Cs...>();
 		static_assert(
-			sizeof...(Spans) == non_empty || sizeof...(Spans) == 0,
-			"create_entities takes one span per non-empty component (matched to the non-empty "
-			"Cs... in pack order; tags take no span), or no spans to default-construct"
+		    sizeof...(Spans) == non_empty || sizeof...(Spans) == 0,
+		    "create_entities takes one span per non-empty component (matched to the non-empty "
+		    "Cs... in pack order; tags take no span), or no spans to default-construct"
 		);
 		constexpr bool const use_spans = sizeof...(Spans) > 0;
 
@@ -449,20 +442,16 @@ namespace OpenVic::ecs {
 			std::size_t span_sizes[non_empty];
 			std::size_t si = 0;
 			std::apply(
-				[&](auto const&... s) {
-					((span_sizes[si++] = s.size()), ...);
-				},
-				typed_spans
+			    [&](auto const&... s) {
+				    ((span_sizes[si++] = s.size()), ...);
+			    },
+			    typed_spans
 			);
-			if (!world.bulk_create_sizes_ok_(
-				count, out_ids.size(), span_sizes, non_empty, "CommandBuffer::create_entities"
-			)) {
+			if (!world.bulk_create_sizes_ok_(count, out_ids.size(), span_sizes, non_empty, "CommandBuffer::create_entities")) {
 				return false;
 			}
 		} else {
-			if (!world.bulk_create_sizes_ok_(
-				count, out_ids.size(), nullptr, 0, "CommandBuffer::create_entities"
-			)) {
+			if (!world.bulk_create_sizes_ok_(count, out_ids.size(), nullptr, 0, "CommandBuffer::create_entities")) {
 				return false;
 			}
 		}
@@ -563,21 +552,15 @@ namespace OpenVic::ecs {
 	}
 
 	template<typename... Cs, typename... Spans>
-	bool CommandBuffer::create_entities(
-		World& world, std::size_t count, std::span<EntityID> out_ids, Spans&&... spans
-	) {
-		return record_create_entities<EntityID, Cs...>(
-			false, world, count, out_ids, std::forward<Spans>(spans)...
-		);
+	bool CommandBuffer::create_entities(World& world, std::size_t count, std::span<EntityID> out_ids, Spans&&... spans) {
+		return record_create_entities<EntityID, Cs...>(false, world, count, out_ids, std::forward<Spans>(spans)...);
 	}
 
 	template<typename... Cs, typename... Spans>
 	bool CommandBuffer::create_immutable_entities(
-		World& world, std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans
+	    World& world, std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans
 	) {
-		return record_create_entities<ImmutableEntityID, Cs...>(
-			true, world, count, out_ids, std::forward<Spans>(spans)...
-		);
+		return record_create_entities<ImmutableEntityID, Cs...>(true, world, count, out_ids, std::forward<Spans>(spans)...);
 	}
 
 	template<typename C>
@@ -592,7 +575,7 @@ namespace OpenVic::ecs {
 		if constexpr (!std::is_empty_v<TC>) {
 			::new (op.add.value.data) TC(std::forward<C>(value));
 		} else {
-			(void) value;
+			(void)value;
 		}
 		ops.push_back(std::move(op));
 	}

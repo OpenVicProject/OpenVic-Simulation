@@ -1,12 +1,13 @@
-#include "openvic-simulation/core/ecs/Chunk.hpp"
 #include "openvic-simulation/core/ecs/ChunkView.hpp"
+
+#include <set>
+#include <vector>
+
+#include "openvic-simulation/core/ecs/Chunk.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <set>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -63,7 +64,9 @@ TEST_CASE("ChunkView::array yields the same values as for_each", "[ecs][ChunkVie
 	}
 
 	std::vector<int> reference;
-	world.for_each<CVA>([&](CVA& c) { reference.push_back(c.v); });
+	world.for_each<CVA>([&](CVA& c) {
+		reference.push_back(c.v);
+	});
 
 	std::vector<int> via_chunk;
 	world.for_each_chunk<CVA>([&](ChunkView<CVA> view) {
@@ -119,7 +122,9 @@ TEST_CASE("Mutations through ChunkView::array are visible to subsequent for_each
 	});
 
 	int sum = 0;
-	world.for_each<CVA>([&](CVA& c) { sum += c.v; });
+	world.for_each<CVA>([&](CVA& c) {
+		sum += c.v;
+	});
 	CHECK(sum == (0 + 10 + 20 + 30));
 }
 
@@ -149,6 +154,8 @@ TEST_CASE("for_each_chunk(Query, fn) respects exclude", "[ecs][ChunkView][query]
 TEST_CASE("for_each_chunk on empty world is a no-op", "[ecs][ChunkView]") {
 	World world;
 	int chunk_visits = 0;
-	world.for_each_chunk<CVA>([&](ChunkView<CVA>) { ++chunk_visits; });
+	world.for_each_chunk<CVA>([&](ChunkView<CVA>) {
+		++chunk_visits;
+	});
 	CHECK(chunk_visits == 0);
 }

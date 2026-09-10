@@ -1,4 +1,3 @@
-#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
 #include "openvic-simulation/core/ecs/Reductions.hpp"
 
 #include <atomic>
@@ -8,6 +7,9 @@
 #include <string>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -44,8 +46,9 @@ TEST_CASE("reductions::parallel_sum sweep", "[benchmarks][benchmark-ecs][ecs-red
 			EcsThreadPool pool { wc };
 			bench.batch(chunks).run("parallel_sum" + suffix(chunks, wc), [&] {
 				int64_t const result = reductions::parallel_sum<int64_t>(
-					pool, chunks, int64_t { 0 },
-					[](std::size_t chunk_idx) { return chunkSum(chunk_idx); }
+				    pool, chunks, int64_t { 0 }, [](std::size_t chunk_idx) {
+					    return chunkSum(chunk_idx);
+				    }
 				);
 				ankerl::nanobench::doNotOptimizeAway(result);
 			});
@@ -62,8 +65,9 @@ TEST_CASE("reductions::parallel_min sweep", "[benchmarks][benchmark-ecs][ecs-red
 			EcsThreadPool pool { wc };
 			bench.batch(chunks).run("parallel_min" + suffix(chunks, wc), [&] {
 				int64_t const result = reductions::parallel_min<int64_t>(
-					pool, chunks, std::numeric_limits<int64_t>::max(),
-					[](std::size_t chunk_idx) { return chunkSum(chunk_idx); }
+				    pool, chunks, std::numeric_limits<int64_t>::max(), [](std::size_t chunk_idx) {
+					    return chunkSum(chunk_idx);
+				    }
 				);
 				ankerl::nanobench::doNotOptimizeAway(result);
 			});
@@ -80,8 +84,9 @@ TEST_CASE("reductions::parallel_max sweep", "[benchmarks][benchmark-ecs][ecs-red
 			EcsThreadPool pool { wc };
 			bench.batch(chunks).run("parallel_max" + suffix(chunks, wc), [&] {
 				int64_t const result = reductions::parallel_max<int64_t>(
-					pool, chunks, std::numeric_limits<int64_t>::min(),
-					[](std::size_t chunk_idx) { return chunkSum(chunk_idx); }
+				    pool, chunks, std::numeric_limits<int64_t>::min(), [](std::size_t chunk_idx) {
+					    return chunkSum(chunk_idx);
+				    }
 				);
 				ankerl::nanobench::doNotOptimizeAway(result);
 			});

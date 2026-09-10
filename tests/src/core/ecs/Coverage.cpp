@@ -1,16 +1,16 @@
 // Coverage gap-fill — add tests for public API surfaces not directly hit by the
 // thematic test files. Each test below targets a method or scenario that
 // otherwise would not have explicit assertion coverage.
+#include <cstdint>
+#include <utility>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/CachedRef.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 #include "openvic-simulation/core/ecs/System.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <utility>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -89,9 +89,7 @@ TEST_CASE("SystemHandle operator!= is the inverse of ==", "[ecs][System][coverag
 // === Many-component archetype ===
 TEST_CASE("Entity with five distinct components round-trips correctly", "[ecs][World][coverage]") {
 	World world;
-	EntityID const eid = world.create_entity(
-		CovA { 1 }, CovB { 2 }, CovC { 3 }, CovD { 4 }, CovE { 5 }
-	);
+	EntityID const eid = world.create_entity(CovA { 1 }, CovB { 2 }, CovC { 3 }, CovD { 4 }, CovE { 5 });
 	CHECK(world.has_component<CovA>(eid));
 	CHECK(world.has_component<CovB>(eid));
 	CHECK(world.has_component<CovC>(eid));
@@ -107,9 +105,7 @@ TEST_CASE("Entity with five distinct components round-trips correctly", "[ecs][W
 
 TEST_CASE("Migration preserves five-component values across add", "[ecs][World][coverage][migration]") {
 	World world;
-	EntityID const eid = world.create_entity(
-		CovA { 11 }, CovB { 22 }, CovC { 33 }, CovD { 44 }
-	);
+	EntityID const eid = world.create_entity(CovA { 11 }, CovB { 22 }, CovC { 33 }, CovD { 44 });
 	world.add_component<CovE>(eid, CovE { 55 });
 
 	CHECK(world.get_component<CovA>(eid)->v == 11);
@@ -129,7 +125,9 @@ TEST_CASE("Archetype can be emptied and refilled", "[ecs][World][coverage]") {
 	world.destroy_entity(b);
 
 	int count = 0;
-	world.for_each<CovA, CovB>([&](CovA&, CovB&) { ++count; });
+	world.for_each<CovA, CovB>([&](CovA&, CovB&) {
+		++count;
+	});
 	CHECK(count == 0);
 
 	// Refill — same archetype, slot-reuse path.
@@ -139,7 +137,9 @@ TEST_CASE("Archetype can be emptied and refilled", "[ecs][World][coverage]") {
 	CHECK(world.get_component<CovB>(c)->w == 6);
 
 	count = 0;
-	world.for_each<CovA, CovB>([&](CovA&, CovB&) { ++count; });
+	world.for_each<CovA, CovB>([&](CovA&, CovB&) {
+		++count;
+	});
 	CHECK(count == 1);
 }
 
@@ -147,12 +147,16 @@ TEST_CASE("Archetype can be emptied and refilled", "[ecs][World][coverage]") {
 TEST_CASE("for_each_with_entity on empty World is safe and a no-op", "[ecs][World][iter][coverage]") {
 	World world;
 	int count = 0;
-	world.for_each_with_entity<CovA>([&](EntityID, CovA&) { ++count; });
+	world.for_each_with_entity<CovA>([&](EntityID, CovA&) {
+		++count;
+	});
 	CHECK(count == 0);
 
 	Query q;
 	q.with<CovA>().build();
-	world.for_each_with_entity<CovA>(q, [&](EntityID, CovA&) { ++count; });
+	world.for_each_with_entity<CovA>(q, [&](EntityID, CovA&) {
+		++count;
+	});
 	CHECK(count == 0);
 }
 
@@ -162,9 +166,9 @@ TEST_CASE("CachedRef is trivially copyable", "[ecs][CachedRef][coverage]") {
 	EntityID const eid = world.create_entity(CovA { 42 });
 	auto ref1 = CachedRef<CovA>::from(world, eid);
 
-	CachedRef<CovA> ref2 = ref1;     // copy-construct
+	CachedRef<CovA> ref2 = ref1; // copy-construct
 	CachedRef<CovA> ref3;
-	ref3 = ref1;                     // copy-assign
+	ref3 = ref1; // copy-assign
 
 	CHECK(ref1.get(world)->v == 42);
 	CHECK(ref2.get(world)->v == 42);
@@ -176,12 +180,12 @@ TEST_CASE("CachedRef is trivially copyable", "[ecs][CachedRef][coverage]") {
 // === Queries match correctly across many archetypes ===
 TEST_CASE("Query selects the intended subset across many archetypes", "[ecs][World][query][coverage]") {
 	World world;
-	world.create_entity(CovA { 1 });                            // A
-	world.create_entity(CovA { 2 }, CovB { 1 });                // AB
-	world.create_entity(CovA { 3 }, CovC { 1 });                // AC
-	world.create_entity(CovA { 4 }, CovB { 1 }, CovC { 1 });    // ABC
-	world.create_entity(CovA { 5 }, CovD { 1 });                // AD
-	world.create_entity(CovB { 1 }, CovC { 1 });                // BC (no A)
+	world.create_entity(CovA { 1 }); // A
+	world.create_entity(CovA { 2 }, CovB { 1 }); // AB
+	world.create_entity(CovA { 3 }, CovC { 1 }); // AC
+	world.create_entity(CovA { 4 }, CovB { 1 }, CovC { 1 }); // ABC
+	world.create_entity(CovA { 5 }, CovD { 1 }); // AD
+	world.create_entity(CovB { 1 }, CovC { 1 }); // BC (no A)
 
 	// Want all entities with A but not D.
 	Query q;
@@ -192,7 +196,7 @@ TEST_CASE("Query selects the intended subset across many archetypes", "[ecs][Wor
 		++count;
 		sum += a.v;
 	});
-	CHECK(count == 4);          // A, AB, AC, ABC
+	CHECK(count == 4); // A, AB, AC, ABC
 	CHECK(sum == 1 + 2 + 3 + 4);
 }
 
@@ -211,11 +215,15 @@ TEST_CASE("Stress: many archetype migrations, query stays accurate", "[ecs][Worl
 	}
 
 	int with_b = 0;
-	world.for_each<CovA, CovB>([&](CovA&, CovB&) { ++with_b; });
+	world.for_each<CovA, CovB>([&](CovA&, CovB&) {
+		++with_b;
+	});
 	CHECK(with_b == 25);
 
 	int total_a = 0;
-	world.for_each<CovA>([&](CovA&) { ++total_a; });
+	world.for_each<CovA>([&](CovA&) {
+		++total_a;
+	});
 	CHECK(total_a == 50);
 
 	// Now demote half of the {CovA, CovB} entities back.
@@ -227,11 +235,15 @@ TEST_CASE("Stress: many archetype migrations, query stays accurate", "[ecs][Worl
 	}
 
 	int after_b = 0;
-	world.for_each<CovA, CovB>([&](CovA&, CovB&) { ++after_b; });
+	world.for_each<CovA, CovB>([&](CovA&, CovB&) {
+		++after_b;
+	});
 	CHECK(after_b == 12); // 25 → 12 after removing 13 (i=0,2,...,24)
 
 	int after_a = 0;
-	world.for_each<CovA>([&](CovA&) { ++after_a; });
+	world.for_each<CovA>([&](CovA&) {
+		++after_a;
+	});
 	CHECK(after_a == 50);
 }
 
@@ -269,7 +281,9 @@ TEST_CASE("Component order at create_entity is normalised", "[ecs][World][covera
 
 	// All three visible in a single for_each.
 	int count = 0;
-	world.for_each<CovA, CovB, CovC>([&](CovA&, CovB&, CovC&) { ++count; });
+	world.for_each<CovA, CovB, CovC>([&](CovA&, CovB&, CovC&) {
+		++count;
+	});
 	CHECK(count == 3);
 }
 
@@ -293,7 +307,9 @@ TEST_CASE("Tag-only archetype handles destroy + create cycles", "[ecs][World][ta
 	}
 
 	int count = 0;
-	world.for_each<CovTag>([&](CovTag&) { ++count; });
+	world.for_each<CovTag>([&](CovTag&) {
+		++count;
+	});
 	CHECK(count == 0);
 
 	for (int i = 0; i < 3; ++i) {
@@ -301,14 +317,16 @@ TEST_CASE("Tag-only archetype handles destroy + create cycles", "[ecs][World][ta
 	}
 
 	count = 0;
-	world.for_each<CovTag>([&](CovTag&) { ++count; });
+	world.for_each<CovTag>([&](CovTag&) {
+		++count;
+	});
 	CHECK(count == 3);
 }
 
 // === component_version_in distinguishes per-archetype-column versions ===
 TEST_CASE("component_version_in is per-archetype, not global per type", "[ecs][World][version][coverage]") {
 	World world;
-	EntityID const a = world.create_entity(CovA { 1 });             // archetype {A}
+	EntityID const a = world.create_entity(CovA { 1 }); // archetype {A}
 	EntityID const b = world.create_entity(CovA { 2 }, CovB { 3 }); // archetype {A,B}
 
 	uint64_t va_in_a = world.component_version_in<CovA>(a);
@@ -319,8 +337,8 @@ TEST_CASE("component_version_in is per-archetype, not global per type", "[ecs][W
 	uint64_t va_in_a2 = world.component_version_in<CovA>(a);
 	uint64_t va_in_b2 = world.component_version_in<CovA>(b);
 
-	CHECK(va_in_a2 > va_in_a);   // mutated
-	CHECK(va_in_b2 == va_in_b);  // {A,B} archetype untouched
+	CHECK(va_in_a2 > va_in_a); // mutated
+	CHECK(va_in_b2 == va_in_b); // {A,B} archetype untouched
 }
 
 // === Empty Query (only require_ids, no exclude) is the same as no Query ===
@@ -331,12 +349,16 @@ TEST_CASE("Query-overload matches non-Query for_each on identical require set", 
 	world.create_entity(CovA { 3 }, CovB { 0 }, CovC { 0 });
 
 	int n_plain = 0;
-	world.for_each<CovA>([&](CovA&) { ++n_plain; });
+	world.for_each<CovA>([&](CovA&) {
+		++n_plain;
+	});
 
 	Query q;
 	q.with<CovA>().build();
 	int n_query = 0;
-	world.for_each<CovA>(q, [&](CovA&) { ++n_query; });
+	world.for_each<CovA>(q, [&](CovA&) {
+		++n_query;
+	});
 
 	CHECK(n_plain == n_query);
 	CHECK(n_plain == 3);

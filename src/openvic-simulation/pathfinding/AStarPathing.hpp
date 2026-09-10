@@ -59,10 +59,7 @@ namespace OpenVic {
 	};
 
 	struct ArmyAStarPathing final : public AStarPathing {
-		ArmyAStarPathing(
-			MapDefinition const& new_map_definition,
-			MapInstance const& new_map_instance
-		);
+		ArmyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance);
 
 	protected:
 		UnitInstanceGroupBranched<unit_branch_t::LAND> const* PROPERTY_RW_ACCESS(army_instance, protected, nullptr);
@@ -72,10 +69,7 @@ namespace OpenVic {
 	};
 
 	struct NavyAStarPathing final : public AStarPathing {
-		NavyAStarPathing(
-			MapDefinition const& new_map_definition,
-			MapInstance const& new_map_instance
-		);
+		NavyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance);
 
 	protected:
 		UnitInstanceGroupBranched<unit_branch_t::NAVAL> const* PROPERTY_RW_ACCESS(navy_instance, protected, nullptr);

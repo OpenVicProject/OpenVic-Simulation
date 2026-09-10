@@ -1,6 +1,11 @@
-#include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/Checksum.hpp"
-#include "openvic-simulation/core/object/Date.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/ChecksumTraits.hpp"
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
@@ -8,11 +13,7 @@
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstddef>
-#include <cstdint>
-#include <string>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -324,10 +325,7 @@ namespace {
 		}
 
 		for (std::size_t i = 0; i < seed_count; ++i) {
-			world.create_entity(
-				CkSeed { static_cast<int64_t>((i * 17) % 251 + 1) },
-				CkValue { static_cast<int64_t>(i + 1) }
-			);
+			world.create_entity(CkSeed { static_cast<int64_t>((i * 17) % 251 + 1) }, CkValue { static_cast<int64_t>(i + 1) });
 		}
 		world.set_singleton(CkVecSingleton { { 4, 5, 6 } });
 
@@ -342,8 +340,10 @@ namespace {
 	}
 }
 
-TEST_CASE("Full-state checksum is identical across worker counts and serial mode",
-          "[ecs][Checksum][determinism][WorkerCountInvariance]") {
+TEST_CASE(
+    "Full-state checksum is identical across worker counts and serial mode",
+    "[ecs][Checksum][determinism][WorkerCountInvariance]"
+) {
 	std::size_t const seeds = 200;
 	int const ticks = 5;
 	uint64_t const baseline = run_and_checksum(1, false, seeds, ticks);

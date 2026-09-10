@@ -1,47 +1,42 @@
 #include "ProvinceInstance.hpp"
-#include "ProvinceInstanceDeps.hpp"
-#include "population/PopsAggregateDeps.hpp"
 
 #include <type_traits>
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
+#include "ProvinceInstanceDeps.hpp"
+#include "population/PopsAggregateDeps.hpp"
+
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
-	ProvinceDefinition const& new_province_definition,
-	ProvinceInstanceDeps const& province_instance_deps
-) : HasIdentifierAndColour { new_province_definition },
-	HasIndex { new_province_definition.index },
-	FlagStrings { "province" },
-	PopsAggregate {	province_instance_deps.pops_aggregate_deps },
-	province_definition { new_province_definition },
-	game_rules_manager { province_instance_deps.game_rules_manager },
-	terrain_type { new_province_definition.get_default_terrain_type() },
-	rgo { province_instance_deps.rgo_deps },
-	pops_cache_by_type { generate_values, province_instance_deps.pops_aggregate_deps.pop_type_count },
-	buildings {
-		new_province_definition.is_water()
-			? province_building_index_t(0)
-			: province_building_index_t(province_instance_deps.building_type_manager.get_province_building_types().size()),
-			[&province_instance_deps](const province_building_index_t i) -> BuildingType const& {
-				return province_instance_deps.building_type_manager.get_province_building_types()[i];
-			}
-	}
-{
+    ProvinceDefinition const& new_province_definition, ProvinceInstanceDeps const& province_instance_deps
+) :
+    HasIdentifierAndColour { new_province_definition }, HasIndex { new_province_definition.index }, FlagStrings { "province" },
+    PopsAggregate { province_instance_deps.pops_aggregate_deps }, province_definition { new_province_definition },
+    game_rules_manager { province_instance_deps.game_rules_manager },
+    terrain_type { new_province_definition.get_default_terrain_type() }, rgo { province_instance_deps.rgo_deps },
+    pops_cache_by_type { generate_values, province_instance_deps.pops_aggregate_deps.pop_type_count }, buildings {
+	    new_province_definition.is_water()
+	        ? province_building_index_t(0)
+	        : province_building_index_t(province_instance_deps.building_type_manager.get_province_building_types().size()),
+	    [&province_instance_deps](const province_building_index_t i) -> BuildingType const& {
+	        return province_instance_deps.building_type_manager.get_province_building_types()[i];
+	    }
+    } {
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
 }
@@ -64,20 +59,18 @@ GoodDefinition const* ProvinceInstance::get_rgo_good() const {
 }
 
 bool ProvinceInstance::set_rgo_production_type_nullable(
-	TypedSpan<pop_type_index_t, const PopType> pop_types,
-	ProductionType const* rgo_production_type_nullable
+    TypedSpan<pop_type_index_t, const PopType> pop_types, ProductionType const* rgo_production_type_nullable
 ) {
 	bool is_valid_operation = true;
 	if (rgo_production_type_nullable != nullptr) {
 		ProductionType const& rgo_production_type = *rgo_production_type_nullable;
 		if (rgo_production_type.template_type != ProductionType::template_type_t::RGO) {
 			spdlog::error_s(
-				"Tried setting province {} rgo to {} which is not of template_type RGO.",
-				*this, rgo_production_type
+			    "Tried setting province {} rgo to {} which is not of template_type RGO.", *this, rgo_production_type
 			);
 			is_valid_operation = false;
 		}
-		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(pop_types, rgo_production_type);
+		is_valid_operation &= convert_rgo_worker_pops_to_equivalent(pop_types, rgo_production_type);
 	}
 
 	rgo.set_production_type_nullable(rgo_production_type_nullable);
@@ -106,9 +99,7 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 		if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::Owner) {
 			country_to_report_economy = new_owner;
 		} else if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::NeitherWhenOccupied) {
-			country_to_report_economy = is_occupied()
-				? nullptr
-				: owner;
+			country_to_report_economy = is_occupied() ? nullptr : owner;
 		}
 	}
 
@@ -136,9 +127,7 @@ bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
 		if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::Controller) {
 			country_to_report_economy = new_controller;
 		} else if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::NeitherWhenOccupied) {
-			country_to_report_economy = is_occupied()
-				? nullptr
-				: owner;
+			country_to_report_economy = is_occupied() ? nullptr : owner;
 		}
 	}
 
@@ -149,10 +138,7 @@ bool ProvinceInstance::add_core(CountryInstance& new_core, bool warn) {
 	if (cores.emplace(&new_core).second) {
 		return new_core.add_core_province(*this);
 	} else if (warn) {
-		spdlog::warn_s(
-			"Attempted to add core \"{}\" to province {}: already exists!",
-			new_core, *this
-		);
+		spdlog::warn_s("Attempted to add core \"{}\" to province {}: already exists!", new_core, *this);
 	}
 	return true;
 }
@@ -161,35 +147,22 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	if (cores.erase(&core_to_remove) > 0) {
 		return core_to_remove.remove_core_province(*this);
 	} else if (warn) {
-		spdlog::warn_s(
-			"Attempted to remove core \"{}\" from province {}: does not exist!",
-			core_to_remove, *this
-		);
+		spdlog::warn_s("Attempted to remove core \"{}\" from province {}: does not exist!", core_to_remove, *this);
 	}
 	return true;
 }
 
 bool ProvinceInstance::expand_building(
-	ModifierEffectCache const& modifier_effect_cache,
-	const province_building_index_t index,
-	CountryInstance& actor
+    ModifierEffectCache const& modifier_effect_cache, const province_building_index_t index, CountryInstance& actor
 ) {
 	return buildings[index].expand(modifier_effect_cache, actor, *this);
 }
 
-bool ProvinceInstance::add_pop_vec(
-	std::span<const PopBase> pop_vec,
-	PopDeps const& pop_deps
-) {
+bool ProvinceInstance::add_pop_vec(std::span<const PopBase> pop_vec, PopDeps const& pop_deps) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
 		for (PopBase const& pop : pop_vec) {
-			pops.emplace(
-				*this,
-				pop,
-				pop_deps,
-				++last_pop_id
-			);
+			pops.emplace(*this, pop, pop_deps, ++last_pop_id);
 		}
 		return true;
 	} else {
@@ -217,9 +190,11 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 	using enum colony_status_t;
 
 	const fixed_point_t pop_size_per_regiment_multiplier =
-		colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
-		: colony_status == COLONY ? military_defines.get_pop_size_per_regiment_colony_multiplier()
-		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
+	    colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
+	    : colony_status == COLONY     ? military_defines.get_pop_size_per_regiment_colony_multiplier()
+	    : is_owner_core()
+	        ? fixed_point_t::_1
+	        : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
 		pops_cache_by_type[pop.get_type().index].push_back(pop);
@@ -259,7 +234,7 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 		modifier_sum.add_modifier(static_modifier_cache.get_land_province());
 
 		modifier_sum.add_modifier(
-			province_definition.is_coastal() ? static_modifier_cache.get_coastal() : static_modifier_cache.get_non_coastal()
+		    province_definition.is_coastal() ? static_modifier_cache.get_coastal() : static_modifier_cache.get_non_coastal()
 		);
 
 		// TODO - overseas, blockaded, no_adjacent_controlled, has_siege, occupied, nationalism, infrastructure
@@ -312,8 +287,7 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 }
 
 bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(
-	TypedSpan<pop_type_index_t, const PopType> pop_types,
-	ProductionType const& production_type
+    TypedSpan<pop_type_index_t, const PopType> pop_types, ProductionType const& production_type
 ) {
 	bool is_valid_operation = true;
 	std::span<const Job> jobs = production_type.get_jobs();
@@ -324,7 +298,7 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(
 			if (job_pop_type != old_pop_type) {
 				PopType const* const equivalent_ptr = old_pop_type.get_equivalent();
 				if (equivalent_ptr != nullptr && job_pop_type == *equivalent_ptr) {
-					is_valid_operation&=pop.convert_to_equivalent();
+					is_valid_operation &= pop.convert_to_equivalent();
 				}
 			}
 		}
@@ -372,14 +346,11 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 }
 
 void ProvinceInstance::province_tick(
-	const Date today,
-	PopValuesFromProvince& reusable_pop_values,
-	RandomU32& random_number_generator,
-	TypedSpan<good_index_t, char> reusable_goods_mask,
-	forwardable_span<
-		memory::vector<fixed_point_t>,
-		VECTORS_FOR_PROVINCE_TICK
-	> reusable_vectors
+    const Date today,
+    PopValuesFromProvince& reusable_pop_values,
+    RandomU32& random_number_generator,
+    TypedSpan<good_index_t, char> reusable_goods_mask,
+    forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_PROVINCE_TICK> reusable_vectors
 ) {
 	if (is_occupied()) {
 		++occupation_duration;
@@ -388,12 +359,7 @@ void ProvinceInstance::province_tick(
 	if (!pops.empty()) {
 		reusable_pop_values.update_pop_values_from_province(*this);
 		for (Pop& pop : pops) {
-			pop.pop_tick(
-				reusable_pop_values,
-				random_number_generator,
-				reusable_goods_mask,
-				reusable_vectors
-			);
+			pop.pop_tick(reusable_pop_values, random_number_generator, reusable_goods_mask, reusable_vectors);
 		}
 	}
 
@@ -407,38 +373,35 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 	using enum unit_branch_t;
 
 	switch (group.branch) {
-	case LAND:
-		armies.emplace_back(static_cast<ArmyInstance&>(group));
-		return true;
-	case NAVAL:
-		navies.emplace_back(static_cast<NavyInstance&>(group));
-		return true;
+	case LAND:  armies.emplace_back(static_cast<ArmyInstance&>(group)); return true;
+	case NAVAL: navies.emplace_back(static_cast<NavyInstance&>(group)); return true;
 	default:
 		spdlog::error_s(
-			"Trying to add unit group \"{}\" with invalid branch {} to province {}",
-			group.get_name(), static_cast<uint32_t>(group.branch), *this
+		    "Trying to add unit group \"{}\" with invalid branch {} to province {}",
+		    group.get_name(),
+		    static_cast<uint32_t>(group.branch),
+		    *this
 		);
 		return false;
 	}
 }
 
 bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
-	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
-		memory::vector<std::reference_wrapper<UnitInstanceGroupBranched<Branch>>>& unit_instance_groups
-	) -> bool {
-		auto it = std::find(
-			unit_instance_groups.begin(),
-			unit_instance_groups.end(),
-			group
-		);
+	const auto remove_from_vector =
+	    [this, &group]<unit_branch_t Branch>(
+	        memory::vector<std::reference_wrapper<UnitInstanceGroupBranched<Branch>>>& unit_instance_groups
+	    ) -> bool {
+		auto it = std::find(unit_instance_groups.begin(), unit_instance_groups.end(), group);
 
 		if (it != unit_instance_groups.end()) {
 			unit_instance_groups.erase(it);
 			return true;
 		} else {
 			spdlog::error_s(
-				"Trying to remove non-existent {} \"{}\" from province {}",
-				get_branched_unit_group_name(Branch), group.get_name(), *this
+			    "Trying to remove non-existent {} \"{}\" from province {}",
+			    get_branched_unit_group_name(Branch),
+			    group.get_name(),
+			    *this
 			);
 			return false;
 		}
@@ -447,14 +410,14 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 	using enum unit_branch_t;
 
 	switch (group.branch) {
-	case LAND:
-		return remove_from_vector(armies);
-	case NAVAL:
-		return remove_from_vector(navies);
+	case LAND:  return remove_from_vector(armies);
+	case NAVAL: return remove_from_vector(navies);
 	default:
 		spdlog::error_s(
-			"Trying to remove unit group \"{}\" with invalid branch {} from province {}",
-			group.get_name(), static_cast<uint32_t>(group.branch), *this
+		    "Trying to remove unit group \"{}\" with invalid branch {} from province {}",
+		    group.get_name(),
+		    static_cast<uint32_t>(group.branch),
+		    *this
 		);
 		return false;
 	}
@@ -503,23 +466,14 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 }
 
 void ProvinceInstance::initialise_for_new_game(
-	const Date today,
-	PopValuesFromProvince& reusable_pop_values,
-	RandomU32& random_number_generator,
-	TypedSpan<good_index_t, char> reusable_goods_mask,
-	forwardable_span<
-		memory::vector<fixed_point_t>,
-		VECTORS_FOR_PROVINCE_TICK
-	> reusable_vectors
+    const Date today,
+    PopValuesFromProvince& reusable_pop_values,
+    RandomU32& random_number_generator,
+    TypedSpan<good_index_t, char> reusable_goods_mask,
+    forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_PROVINCE_TICK> reusable_vectors
 ) {
 	initialise_rgo();
-	province_tick(
-		today,
-		reusable_pop_values,
-		random_number_generator,
-		reusable_goods_mask,
-		reusable_vectors
-	);
+	province_tick(today, reusable_pop_values, random_number_generator, reusable_goods_mask, reusable_vectors);
 }
 
 void ProvinceInstance::initialise_rgo() {
@@ -537,7 +491,9 @@ memory::colony<Pop>& ProvinceInstance::get_mutable_pops() {
 }
 
 template<typename T>
-std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> ProvinceInstance::_find_pop_by_id(T& self, const pop_id_in_province_t pop_id) {
+std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> ProvinceInstance::_find_pop_by_id(
+    T& self, const pop_id_in_province_t pop_id
+) {
 	if (pop_id.is_null()) {
 		return nullptr;
 	}
@@ -550,5 +506,9 @@ std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> ProvinceInstance::_find
 
 	return nullptr;
 }
-Pop* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) { return _find_pop_by_id(*this, pop_id); }
-Pop const* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) const { return _find_pop_by_id(*this, pop_id); }
+Pop* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) {
+	return _find_pop_by_id(*this, pop_id);
+}
+Pop const* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) const {
+	return _find_pop_by_id(*this, pop_id);
+}

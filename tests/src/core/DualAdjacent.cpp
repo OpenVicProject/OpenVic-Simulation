@@ -78,7 +78,7 @@ TEST_CASE("find_if_dual_adjacent", "[algorithm][dual-adjacent][find_if_dual_adja
 	CONSTEXPR_CHECK(find_if_dual_adjacent(array_up.begin(), array_up.end(), callback_spread) == array_up.end());
 	CONSTEXPR_CHECK(find_if_dual_adjacent(array_down.begin(), array_down.end(), callback_spread) == array_down.end());
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_spread.begin(), array_spread.end(), callback_spread) == array_spread.begin() + 3
+	    find_if_dual_adjacent(array_spread.begin(), array_spread.end(), callback_spread) == array_spread.begin() + 3
 	);
 
 	CONSTEXPR_CHECK(find_if_dual_adjacent(array_up.begin(), array_up.end(), callback_none) == array_up.end());
@@ -86,23 +86,23 @@ TEST_CASE("find_if_dual_adjacent", "[algorithm][dual-adjacent][find_if_dual_adja
 	CONSTEXPR_CHECK(find_if_dual_adjacent(array_spread.begin(), array_spread.end(), callback_none) == array_spread.end());
 
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_up.begin(), array_up.end(), std::bind_front(callback_bind, 1)) == array_up.end()
+	    find_if_dual_adjacent(array_up.begin(), array_up.end(), std::bind_front(callback_bind, 1)) == array_up.end()
 	);
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_down.begin(), array_down.end(), std::bind_front(callback_bind, 9)) == array_down.end()
+	    find_if_dual_adjacent(array_down.begin(), array_down.end(), std::bind_front(callback_bind, 9)) == array_down.end()
 	);
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_spread.begin(), array_spread.end(), std::bind_front(callback_bind, 5)) == array_spread.end()
+	    find_if_dual_adjacent(array_spread.begin(), array_spread.end(), std::bind_front(callback_bind, 5)) == array_spread.end()
 	);
 
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_up.begin(), array_up.end(), std::bind_front(callback_bind, 9)) == array_up.end()
+	    find_if_dual_adjacent(array_up.begin(), array_up.end(), std::bind_front(callback_bind, 9)) == array_up.end()
 	);
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_down.begin(), array_down.end(), std::bind_front(callback_bind, 1)) == array_down.end()
+	    find_if_dual_adjacent(array_down.begin(), array_down.end(), std::bind_front(callback_bind, 1)) == array_down.end()
 	);
 	CONSTEXPR_CHECK(
-		find_if_dual_adjacent(array_spread.begin(), array_spread.end(), std::bind_front(callback_bind, 6)) == array_spread.end()
+	    find_if_dual_adjacent(array_spread.begin(), array_spread.end(), std::bind_front(callback_bind, 6)) == array_spread.end()
 	);
 }
 
@@ -150,23 +150,23 @@ TEST_CASE("remove_if_dual_adjacent", "[algorithm][dual-adjacent][remove_if_dual_
 		remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 1)) == vector_up.end()
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 9)) == vector_down.end()
+	    remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 9)) == vector_down.end()
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 5)) ==
-		vector_spread.end()
+	    remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 5)) ==
+	    vector_spread.end()
 	);
 
 	CHECK( //
 		remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 9)) == vector_up.end() - 1
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 1)) ==
-		vector_down.end() - 1
+	    remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 1)) ==
+	    vector_down.end() - 1
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 6)) ==
-		vector_spread.end() - 1
+	    remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 6)) ==
+	    vector_spread.end() - 1
 	);
 
 	static constexpr auto removed_vector_up = std::to_array<int>({ 1, 2, 3, 5, 6, 7, 8, 9, 9 });

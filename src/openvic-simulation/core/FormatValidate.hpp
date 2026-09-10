@@ -19,6 +19,6 @@ template<typename T>
 struct fmt::formatter<ovfmt::validate_view<T>> : fmt::formatter<T> {
 	fmt::format_context::iterator format(ovfmt::validate_view<T> const& value, fmt::format_context& ctx) const {
 		return value.ptr ? fmt::formatter<T>::format(*value.ptr, ctx)
-						 : fmt::formatter<fmt::string_view> {}.format(value.invalid_string, ctx);
+		                 : fmt::formatter<fmt::string_view> {}.format(value.invalid_string, ctx);
 	}
 };

@@ -17,7 +17,7 @@ using namespace OpenVic;
 using namespace std::string_view_literals;
 
 using SignalTypes =
-	snitch::type_list<OpenVic::signal<int&, int>, nothread::signal<int&, int>, basic_signal<spin_mutex, int&, int>>;
+    snitch::type_list<OpenVic::signal<int&, int>, nothread::signal<int&, int>, basic_signal<spin_mutex, int&, int>>;
 
 void test_func(int& sum, int i) {
 	sum += i;

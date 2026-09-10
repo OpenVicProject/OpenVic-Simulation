@@ -1,11 +1,11 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -14,9 +14,15 @@ using namespace OpenVic::ecs;
 using OpenVic::Date;
 
 namespace {
-	struct SchedulerTagA { int n = 0; };
-	struct SchedulerTagB { int n = 0; };
-	struct SchedulerTagC { int n = 0; };
+	struct SchedulerTagA {
+		int n = 0;
+	};
+	struct SchedulerTagB {
+		int n = 0;
+	};
+	struct SchedulerTagC {
+		int n = 0;
+	};
 }
 ECS_COMPONENT(SchedulerTagA, "test_SystemScheduler_DAG::TagA")
 ECS_COMPONENT(SchedulerTagB, "test_SystemScheduler_DAG::TagB")
@@ -54,9 +60,7 @@ namespace {
 	struct SchedDagSystemB : System<SchedDagSystemB> {
 		// B explicitly runs after A.
 		static constexpr auto declared_run_after() {
-			return std::array<system_type_id_t, 1> {
-				system_type_id_of<SchedDagSystemA>()
-			};
+			return std::array<system_type_id_t, 1> { system_type_id_of<SchedDagSystemA>() };
 		}
 		void tick(TickContext const& /*ctx*/, SchedulerTagB& /*t*/) {
 			if (g_scheduler_dag_log) {
@@ -68,9 +72,7 @@ namespace {
 	struct SchedDagSystemC : System<SchedDagSystemC> {
 		// C explicitly runs before A.
 		static constexpr auto declared_run_before() {
-			return std::array<system_type_id_t, 1> {
-				system_type_id_of<SchedDagSystemA>()
-			};
+			return std::array<system_type_id_t, 1> { system_type_id_of<SchedDagSystemA>() };
 		}
 		void tick(TickContext const& /*ctx*/, SchedulerTagC& /*t*/) {
 			if (g_scheduler_dag_log) {
@@ -105,8 +107,7 @@ TEST_CASE("Scheduler honours run_after / run_before ordering", "[ecs][SystemSche
 	g_scheduler_dag_log = nullptr;
 }
 
-TEST_CASE("Scheduler order is identical regardless of registration order",
-          "[ecs][SystemScheduler][determinism]") {
+TEST_CASE("Scheduler order is identical regardless of registration order", "[ecs][SystemScheduler][determinism]") {
 	std::vector<int> log_first;
 	std::vector<int> log_second;
 
@@ -141,8 +142,7 @@ TEST_CASE("Scheduler order is identical regardless of registration order",
 	CHECK(log_first == log_second);
 }
 
-TEST_CASE("schedule_hash is non-zero and stable across registration orders",
-          "[ecs][SystemScheduler][Hash][determinism]") {
+TEST_CASE("schedule_hash is non-zero and stable across registration orders", "[ecs][SystemScheduler][Hash][determinism]") {
 	uint64_t h_first = 0;
 	uint64_t h_second = 0;
 

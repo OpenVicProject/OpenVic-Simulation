@@ -5,12 +5,12 @@
 
 #include <function2/function2.hpp>
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/gen/commit_info.gen.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 
 namespace OpenVic {
@@ -33,9 +33,9 @@ namespace OpenVic {
 
 	public:
 		GameManager(
-			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
-			elapsed_time_getter_func_t new_get_elapsed_usec_callback,
-			elapsed_time_getter_func_t new_get_elapsed_msec_callback
+		    InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+		    elapsed_time_getter_func_t new_get_elapsed_usec_callback,
+		    elapsed_time_getter_func_t new_get_elapsed_msec_callback
 		);
 		~GameManager();
 

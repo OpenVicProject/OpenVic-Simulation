@@ -11,16 +11,16 @@
 #include <tuple>
 #include <type_traits>
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/stl/containers/CowVector.hpp"
 #include "openvic-simulation/core/thread/NullMutex.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 // For OpenVic::_detail::signal::make_shared
 #ifdef DEBUG_ENABLED
-	#include "openvic-simulation/core/memory/allocators/NewAllocator.hpp"
+#include "openvic-simulation/core/memory/allocators/NewAllocator.hpp"
 #else
-	#include "openvic-simulation/core/memory/SmartPtr.hpp"
+#include "openvic-simulation/core/memory/SmartPtr.hpp"
 #endif
 
 // Based heavily on https://github.com/palacaze/sigslot and https://github.com/mousebyte/sigslot20
@@ -659,8 +659,8 @@ namespace OpenVic::_detail::signal {
 	template<typename Pmf, typename Ptr, typename... Args>
 	struct slot_pmf final : public basic_slot<Args...> {
 		template<typename F, typename P>
-		constexpr slot_pmf(cleanable& c, F&& f, P&& p, group_id gid)
-			: basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
+		constexpr slot_pmf(cleanable& c, F&& f, P&& p, group_id gid) :
+		    basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
 
 	protected:
 		void call_slot(Args... args) override {
@@ -683,8 +683,8 @@ namespace OpenVic::_detail::signal {
 	template<typename Pmf, typename Ptr, typename... Args>
 	struct slot_pmf_extended final : public basic_slot<Args...> {
 		template<typename F, typename P>
-		constexpr slot_pmf_extended(cleanable& c, F&& f, P&& p, group_id gid)
-			: basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
+		constexpr slot_pmf_extended(cleanable& c, F&& f, P&& p, group_id gid) :
+		    basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
 
 		connection conn;
 
@@ -708,8 +708,8 @@ namespace OpenVic::_detail::signal {
 	template<typename Func, typename WeakPtr, typename... Args>
 	struct slot_tracked final : public basic_slot<Args...> {
 		template<typename F, typename P>
-		constexpr slot_tracked(cleanable& c, F&& f, P&& p, group_id gid)
-			: basic_slot<Args...>(c, gid), func { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
+		constexpr slot_tracked(cleanable& c, F&& f, P&& p, group_id gid) :
+		    basic_slot<Args...>(c, gid), func { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
 
 		bool connected() const override {
 			return !ptr.expired() && slot_state::connected();
@@ -743,8 +743,8 @@ namespace OpenVic::_detail::signal {
 	template<typename Pmf, typename WeakPtr, typename... Args>
 	struct slot_pmf_tracked final : public basic_slot<Args...> {
 		template<typename F, typename P>
-		constexpr slot_pmf_tracked(cleanable& c, F&& f, P&& p, group_id gid)
-			: basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
+		constexpr slot_pmf_tracked(cleanable& c, F&& f, P&& p, group_id gid) :
+		    basic_slot<Args...>(c, gid), pmf { std::forward<F>(f) }, ptr { std::forward<P>(p) } {}
 
 		bool connected() const override {
 			return !ptr.expired() && slot_state::connected();
@@ -803,13 +803,15 @@ namespace OpenVic::_detail::signal {
 
 		template<typename L>
 		using cow_type = std::conditional_t<
-			is_thread_safe<L>::value, ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
-			list_type>;
+		    is_thread_safe<L>::value,
+		    ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+		    list_type>;
 
 		template<typename L>
 		using cow_copy_type = std::conditional_t<
-			is_thread_safe<L>::value, ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
-			list_type const&>;
+		    is_thread_safe<L>::value,
+		    ::OpenVic::stl::cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+		    list_type const&>;
 
 	public:
 		using arg_list = std::tuple<Args...>;
@@ -1057,8 +1059,8 @@ namespace OpenVic::_detail::signal {
 		 */
 		template<typename C>
 		requires(
-			(Callable<C, Args...> || Callable<C, connection&, Args...> || MemberFunctionPointer<C>) &&
-			function_traits<C>::is_disconnectable
+		    (Callable<C, Args...> || Callable<C, connection&, Args...> || MemberFunctionPointer<C>) &&
+		    function_traits<C>::is_disconnectable
 		)
 		size_t disconnect(C const& c) {
 			return disconnect_if([&](slot_ptr const& s) {
@@ -1434,8 +1436,8 @@ namespace OpenVic {
 	template<typename Lockable1, typename Lockable2, typename... T1, typename... T2, typename... Args>
 	connection connect(basic_signal<Lockable1, T1...>& sig1, basic_signal<Lockable2, T2...>& sig2, Args&&... args) {
 		return sig1.connect(
-			_detail::signal::signal_wrapper<basic_signal<Lockable2, T2...>> { std::addressof(sig2) },
-			std::forward<Args>(args)...
+		    _detail::signal::signal_wrapper<basic_signal<Lockable2, T2...>> { std::addressof(sig2) },
+		    std::forward<Args>(args)...
 		);
 	}
 }

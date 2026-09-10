@@ -44,13 +44,7 @@ namespace OpenVic::ecs {
 	inline ColumnVTable const& column_vtable_for() {
 		if constexpr (std::is_empty_v<C>) {
 			static ColumnVTable const v {
-				0,
-				0,
-				[](void*, void*) {},
-				[](void*) {},
-				[](void*, void*, std::size_t) {},
-				[](void*, std::size_t) {},
-				nullptr
+				0, 0, [](void*, void*) {}, [](void*) {}, [](void*, void*, std::size_t) {}, [](void*, std::size_t) {}, nullptr
 			};
 			return v;
 		} else {
@@ -58,34 +52,34 @@ namespace OpenVic::ecs {
 				sizeof(C),
 				alignof(C),
 				[](void* dst, void* src) {
-					::new (dst) C(std::move(*static_cast<C*>(src)));
-					static_cast<C*>(src)->~C();
+				    ::new (dst) C(std::move(*static_cast<C*>(src)));
+				    static_cast<C*>(src)->~C();
 				},
 				[](void* dst) {
-					static_cast<C*>(dst)->~C();
+				    static_cast<C*>(dst)->~C();
 				},
 				[](void* dst, void* src, std::size_t n) {
-					if constexpr (std::is_trivially_copyable_v<C>) {
-						std::memcpy(dst, src, n * sizeof(C));
-					} else {
-						C* d = static_cast<C*>(dst);
-						C* s = static_cast<C*>(src);
-						for (std::size_t i = 0; i < n; ++i) {
-							::new (d + i) C(std::move(s[i]));
-							s[i].~C();
-						}
-					}
+				    if constexpr (std::is_trivially_copyable_v<C>) {
+					    std::memcpy(dst, src, n * sizeof(C));
+				    } else {
+					    C* d = static_cast<C*>(dst);
+					    C* s = static_cast<C*>(src);
+					    for (std::size_t i = 0; i < n; ++i) {
+						    ::new (d + i) C(std::move(s[i]));
+						    s[i].~C();
+					    }
+				    }
 				},
 				[](void* dst, std::size_t n) {
-					if constexpr (std::is_trivially_destructible_v<C>) {
-						(void) dst;
-						(void) n;
-					} else {
-						C* d = static_cast<C*>(dst);
-						for (std::size_t i = 0; i < n; ++i) {
-							d[i].~C();
-						}
-					}
+				    if constexpr (std::is_trivially_destructible_v<C>) {
+					    (void)dst;
+					    (void)n;
+				    } else {
+					    C* d = static_cast<C*>(dst);
+					    for (std::size_t i = 0; i < n; ++i) {
+						    d[i].~C();
+					    }
+				    }
 				},
 				// Global checksum enforcement point: instantiating this thunk static_asserts
 				// the universal hashing rule for every component type used with a World.
@@ -251,7 +245,7 @@ namespace OpenVic::ecs {
 				fresh.data = chunk_pool->acquire();
 			} else {
 				fresh.data = static_cast<unsigned char*>(
-					::operator new(CHUNK_BLOCK_BYTES, std::align_val_t { CHUNK_BLOCK_ALIGN })
+				    ::operator new(CHUNK_BLOCK_BYTES, std::align_val_t { CHUNK_BLOCK_ALIGN })
 				);
 			}
 			chunks.push_back(std::move(fresh));

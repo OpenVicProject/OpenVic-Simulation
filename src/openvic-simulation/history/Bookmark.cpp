@@ -13,41 +13,36 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Bookmark::Bookmark(
-	index_t new_index,
-	std::string_view new_name,
-	std::string_view new_description,
-	Date new_date,
-	fvec2_t new_initial_camera_position
-) : HasIdentifier { std::to_string(type_safe::get(new_index)) },
-	HasIndex { new_index },
-	name { new_name },
-	description { new_description },
-	date { new_date },
-	initial_camera_position { new_initial_camera_position } {}
+    index_t new_index,
+    std::string_view new_name,
+    std::string_view new_description,
+    Date new_date,
+    fvec2_t new_initial_camera_position
+) :
+    HasIdentifier { std::to_string(type_safe::get(new_index)) }, HasIndex { new_index }, name { new_name },
+    description { new_description }, date { new_date }, initial_camera_position { new_initial_camera_position } {}
 
 bool BookmarkManager::add_bookmark(
-	std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
+    std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
 ) {
 	return bookmarks.emplace_item(
-		name,
-		index_from_count<Bookmark::index_t>(bookmarks.size()), name, description, date, initial_camera_position
+	    name, index_from_count<Bookmark::index_t>(bookmarks.size()), name, description, date, initial_camera_position
 	);
 }
 
 bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		bookmarks,
-		[this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key != "bookmark") {
-				spdlog::error_s("Invalid bookmark declaration {}", key);
-				return false;
-			}
+	const bool ret =
+	    expect_dictionary_reserve_length(bookmarks, [this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
+		    if (key != "bookmark") {
+			    spdlog::error_s("Invalid bookmark declaration {}", key);
+			    return false;
+		    }
 
-			std::string_view name, description;
-			Date date;
-			fvec2_t initial_camera_position;
+		    std::string_view name, description;
+		    Date date;
+		    fvec2_t initial_camera_position;
 
-			bool ret = expect_dictionary_keys(
+		    bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name)),
 				"desc", ONE_EXACTLY, expect_string(assign_variable_callback(description)),
 				"date", ONE_EXACTLY, expect_date(assign_variable_callback(date)),
@@ -56,10 +51,9 @@ bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr
 					expect_fixed_point(flip_height_callback(assign_variable_callback(initial_camera_position.y), map_height))
 			)(value);
 
-			ret &= add_bookmark(name, description, date, initial_camera_position);
-			return ret;
-		}
-	)(root);
+		    ret &= add_bookmark(name, description, date, initial_camera_position);
+		    return ret;
+	    })(root);
 	lock_bookmarks();
 
 	return ret;

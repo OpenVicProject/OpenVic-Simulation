@@ -1,10 +1,10 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -13,8 +13,12 @@ using namespace OpenVic::ecs;
 using OpenVic::Date;
 
 namespace {
-	struct ConflictTagX { int n = 0; };
-	struct ConflictTagY { int n = 0; };
+	struct ConflictTagX {
+		int n = 0;
+	};
+	struct ConflictTagY {
+		int n = 0;
+	};
 }
 ECS_COMPONENT(ConflictTagX, "test_SystemScheduler_Conflicts::TagX")
 ECS_COMPONENT(ConflictTagY, "test_SystemScheduler_Conflicts::TagY")
@@ -64,8 +68,7 @@ ECS_SYSTEM(ConflictWriterB)
 ECS_SYSTEM(ConflictReaderA)
 ECS_SYSTEM(ConflictReaderB)
 
-TEST_CASE("Auto-orientation produces deterministic order on W/W conflict",
-          "[ecs][SystemScheduler][Conflicts]") {
+TEST_CASE("Auto-orientation produces deterministic order on W/W conflict", "[ecs][SystemScheduler][Conflicts]") {
 	// Run the same registration twice with the same systems but different orderings
 	// — auto-orientation must pick the same direction both times.
 	std::vector<int> log_run1;

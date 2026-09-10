@@ -12,7 +12,12 @@ namespace OpenVic {
 	struct ProvinceInstance;
 
 	struct BuildingInstance : HasIdentifier { // used in the actual game
-		enum class ExpansionState { CannotExpand, CanExpand, Preparing, Expanding };
+		enum class ExpansionState {
+			CannotExpand,
+			CanExpand,
+			Preparing,
+			Expanding
+		};
 
 	private:
 		building_level_t PROPERTY(level);
@@ -29,11 +34,7 @@ namespace OpenVic {
 		BuildingInstance(BuildingType const& new_building_type, building_level_t new_level = building_level_t { 0 });
 		BuildingInstance(BuildingInstance&&) = default;
 
-		bool expand(
-			ModifierEffectCache const& modifier_effect_cache,
-			CountryInstance& actor,
-			ProvinceInstance const& location
-		);
+		bool expand(ModifierEffectCache const& modifier_effect_cache, CountryInstance& actor, ProvinceInstance const& location);
 		void update_gamestate(Date today);
 		void tick(Date today);
 		void set_level(const building_level_t new_level);

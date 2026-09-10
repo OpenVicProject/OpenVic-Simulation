@@ -22,9 +22,7 @@ unsigned char* ChunkPool::acquire() {
 		return data;
 	}
 	++total_allocations_;
-	return static_cast<unsigned char*>(
-		::operator new(CHUNK_BLOCK_BYTES, std::align_val_t { CHUNK_BLOCK_ALIGN })
-	);
+	return static_cast<unsigned char*>(::operator new(CHUNK_BLOCK_BYTES, std::align_val_t { CHUNK_BLOCK_ALIGN }));
 }
 
 void ChunkPool::release(unsigned char* data) {

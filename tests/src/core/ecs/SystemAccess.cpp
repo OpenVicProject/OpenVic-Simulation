@@ -8,22 +8,11 @@
 using namespace OpenVic::ecs;
 
 TEST_CASE("access_overlaps detects W/W and W/R", "[ecs][SystemAccess]") {
-	std::vector<ComponentAccess> a = {
-		ComponentAccess { 100, AccessMode::Write },
-		ComponentAccess { 200, AccessMode::Read }
-	};
-	std::vector<ComponentAccess> b_ww = {
-		ComponentAccess { 100, AccessMode::Write }
-	};
-	std::vector<ComponentAccess> b_rw = {
-		ComponentAccess { 200, AccessMode::Write }
-	};
-	std::vector<ComponentAccess> b_rr = {
-		ComponentAccess { 200, AccessMode::Read }
-	};
-	std::vector<ComponentAccess> b_disjoint = {
-		ComponentAccess { 999, AccessMode::Write }
-	};
+	std::vector<ComponentAccess> a = { ComponentAccess { 100, AccessMode::Write }, ComponentAccess { 200, AccessMode::Read } };
+	std::vector<ComponentAccess> b_ww = { ComponentAccess { 100, AccessMode::Write } };
+	std::vector<ComponentAccess> b_rw = { ComponentAccess { 200, AccessMode::Write } };
+	std::vector<ComponentAccess> b_rr = { ComponentAccess { 200, AccessMode::Read } };
+	std::vector<ComponentAccess> b_disjoint = { ComponentAccess { 999, AccessMode::Write } };
 
 	CHECK(access_overlaps(a, b_ww));
 	CHECK(access_overlaps(a, b_rw));
@@ -32,10 +21,7 @@ TEST_CASE("access_overlaps detects W/W and W/R", "[ecs][SystemAccess]") {
 }
 
 TEST_CASE("access_conflict_components reports overlapping ids", "[ecs][SystemAccess]") {
-	std::vector<ComponentAccess> a = {
-		ComponentAccess { 100, AccessMode::Write },
-		ComponentAccess { 200, AccessMode::Read }
-	};
+	std::vector<ComponentAccess> a = { ComponentAccess { 100, AccessMode::Write }, ComponentAccess { 200, AccessMode::Read } };
 	std::vector<ComponentAccess> b = {
 		ComponentAccess { 100, AccessMode::Read },
 		ComponentAccess { 200, AccessMode::Write },
@@ -48,9 +34,7 @@ TEST_CASE("access_conflict_components reports overlapping ids", "[ecs][SystemAcc
 }
 
 TEST_CASE("merge_extra_reads adds Read entries; W coalesces over R", "[ecs][SystemAccess]") {
-	std::vector<ComponentAccess> set = {
-		ComponentAccess { 100, AccessMode::Write }
-	};
+	std::vector<ComponentAccess> set = { ComponentAccess { 100, AccessMode::Write } };
 	std::vector<component_type_id_t> extras = { 100, 200 };
 	merge_extra_reads(set, extras);
 	canonicalise_access_set(set);
@@ -64,9 +48,7 @@ TEST_CASE("merge_extra_reads adds Read entries; W coalesces over R", "[ecs][Syst
 }
 
 TEST_CASE("merge_extra_writes adds Write entries; existing R upgrades to W", "[ecs][SystemAccess]") {
-	std::vector<ComponentAccess> set = {
-		ComponentAccess { 100, AccessMode::Read }
-	};
+	std::vector<ComponentAccess> set = { ComponentAccess { 100, AccessMode::Read } };
 	std::vector<component_type_id_t> extras = { 100, 200 };
 	merge_extra_writes(set, extras);
 	canonicalise_access_set(set);
@@ -79,8 +61,7 @@ TEST_CASE("merge_extra_writes adds Write entries; existing R upgrades to W", "[e
 	CHECK(set[1].mode == AccessMode::Write);
 }
 
-TEST_CASE("Same id in extra_reads and extra_writes coalesces to W in either merge order",
-          "[ecs][SystemAccess]") {
+TEST_CASE("Same id in extra_reads and extra_writes coalesces to W in either merge order", "[ecs][SystemAccess]") {
 	std::vector<component_type_id_t> extras = { 100 };
 
 	std::vector<ComponentAccess> reads_first;

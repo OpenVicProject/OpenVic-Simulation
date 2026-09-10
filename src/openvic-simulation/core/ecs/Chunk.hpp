@@ -25,12 +25,12 @@ namespace OpenVic::ecs {
 	// local declaration; weaker on function returns. Not standard C++ — each target
 	// compiler spells it differently.
 #if defined(_MSC_VER)
-#	define OV_RESTRICT __restrict
+#define OV_RESTRICT __restrict
 #elif defined(__GNUC__) || defined(__clang__)
-#	define OV_RESTRICT __restrict__
+#define OV_RESTRICT __restrict__
 #else
-#	define OV_RESTRICT
-#endif
+#define OV_RESTRICT
+#endif // defined(_MSC_VER)
 
 	// Passive holder for one chunk's 16 KB block. Lifecycle is managed explicitly at every
 	// callsite that owns a chunk:

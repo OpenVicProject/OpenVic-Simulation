@@ -25,18 +25,33 @@ namespace OpenVic {
 		using icon_t = uint16_t;
 
 		enum class area_t {
-			NATION, NATION_RELIGION, NATION_CULTURE,
-			CULTURE, CULTURE_GROUP, RELIGION, ALL
+			NATION,
+			NATION_RELIGION,
+			NATION_CULTURE,
+			CULTURE,
+			CULTURE_GROUP,
+			RELIGION,
+			ALL
 		};
 
 		enum class defection_t {
-			NONE, CULTURE, CULTURE_GROUP, RELIGION,
-			IDEOLOGY, PAN_NATIONALIST, ANY
+			NONE,
+			CULTURE,
+			CULTURE_GROUP,
+			RELIGION,
+			IDEOLOGY,
+			PAN_NATIONALIST,
+			ANY
 		};
 
 		enum class independence_t {
-			NONE, CULTURE, CULTURE_GROUP, RELIGION,
-			COLONIAL, PAN_NATIONALIST, ANY
+			NONE,
+			CULTURE,
+			CULTURE_GROUP,
+			RELIGION,
+			COLONIAL,
+			PAN_NATIONALIST,
+			ANY
 		};
 
 	private:
@@ -71,16 +86,33 @@ namespace OpenVic {
 		const fixed_point_t occupation_mult;
 
 		RebelType(
-			index_t new_index, std::string_view new_identifier,
-			RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
-			RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
-			bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
-			bool reinforcing, bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult,
-			ConditionalWeightFactorMul&& new_will_rise, ConditionalWeightFactorMul&& new_spawn_chance,
-			ConditionalWeightFactorMul&& new_movement_evaluation, ConditionScript&& new_siege_won_trigger,
-			EffectScript&& new_siege_won_effect, ConditionScript&& new_demands_enforced_trigger,
-			EffectScript&& new_demands_enforced_effect
+		    index_t new_index,
+		    std::string_view new_identifier,
+		    RebelType::icon_t icon,
+		    RebelType::area_t area,
+		    bool break_alliance_on_win,
+		    RebelType::government_map_t&& desired_governments,
+		    RebelType::defection_t defection,
+		    RebelType::independence_t independence,
+		    uint16_t defect_delay,
+		    Ideology const* ideology,
+		    bool allow_all_cultures,
+		    bool allow_all_culture_groups,
+		    bool allow_all_religions,
+		    bool allow_all_ideologies,
+		    bool resilient,
+		    bool reinforcing,
+		    bool general,
+		    bool smart,
+		    bool unit_transfer,
+		    fixed_point_t occupation_mult,
+		    ConditionalWeightFactorMul&& new_will_rise,
+		    ConditionalWeightFactorMul&& new_spawn_chance,
+		    ConditionalWeightFactorMul&& new_movement_evaluation,
+		    ConditionScript&& new_siege_won_trigger,
+		    EffectScript&& new_siege_won_effect,
+		    ConditionScript&& new_demands_enforced_trigger,
+		    EffectScript&& new_demands_enforced_effect
 		);
 		RebelType(RebelType&&) = default;
 	};
@@ -91,18 +123,36 @@ namespace OpenVic {
 
 	public:
 		bool add_rebel_type(
-			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
-			RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
-			bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
-			bool reinforcing, bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult,
-			ConditionalWeightFactorMul&& will_rise, ConditionalWeightFactorMul&& spawn_chance,
-			ConditionalWeightFactorMul&& movement_evaluation, ConditionScript&& siege_won_trigger,
-			EffectScript&& siege_won_effect, ConditionScript&& demands_enforced_trigger, EffectScript&& demands_enforced_effect
+		    std::string_view new_identifier,
+		    RebelType::icon_t icon,
+		    RebelType::area_t area,
+		    bool break_alliance_on_win,
+		    RebelType::government_map_t&& desired_governments,
+		    RebelType::defection_t defection,
+		    RebelType::independence_t independence,
+		    uint16_t defect_delay,
+		    Ideology const* ideology,
+		    bool allow_all_cultures,
+		    bool allow_all_culture_groups,
+		    bool allow_all_religions,
+		    bool allow_all_ideologies,
+		    bool resilient,
+		    bool reinforcing,
+		    bool general,
+		    bool smart,
+		    bool unit_transfer,
+		    fixed_point_t occupation_mult,
+		    ConditionalWeightFactorMul&& will_rise,
+		    ConditionalWeightFactorMul&& spawn_chance,
+		    ConditionalWeightFactorMul&& movement_evaluation,
+		    ConditionScript&& siege_won_trigger,
+		    EffectScript&& siege_won_effect,
+		    ConditionScript&& demands_enforced_trigger,
+		    EffectScript&& demands_enforced_effect
 		);
 
 		bool load_rebels_file(
-			IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
+		    IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
 		);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 

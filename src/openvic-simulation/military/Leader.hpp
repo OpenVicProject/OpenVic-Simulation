@@ -4,8 +4,8 @@
 
 #include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
-#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UniqueId.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -32,8 +32,13 @@ namespace OpenVic {
 		const Date date;
 
 		LeaderBase(
-			std::string_view new_name, unit_branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
-			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
+		    std::string_view new_name,
+		    unit_branch_t new_branch,
+		    Date new_date,
+		    LeaderTrait const* new_personality,
+		    LeaderTrait const* new_background,
+		    fixed_point_t new_prestige,
+		    std::string_view new_picture
 		);
 		LeaderBase(LeaderBase&&) = default;
 
@@ -52,6 +57,7 @@ namespace OpenVic {
 	private:
 		UnitInstanceGroup* PROPERTY_PTR(unit_instance_group, nullptr);
 		bool PROPERTY_RW(can_be_used, true);
+
 	public:
 		const unique_id_t unique_id;
 

@@ -1,8 +1,8 @@
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstdint>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

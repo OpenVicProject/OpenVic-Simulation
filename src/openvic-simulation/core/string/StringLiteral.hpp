@@ -6,8 +6,8 @@
 #include <string_view>
 #include <type_traits>
 
-#include "openvic-simulation/core/stl/BasicIterator.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/stl/BasicIterator.hpp"
 
 namespace OpenVic {
 	template<std::size_t N, typename CharT, class Traits>
@@ -188,7 +188,7 @@ namespace OpenVic {
 
 		template<size_type pos = 0, size_type count = npos>
 		[[nodiscard]] constexpr decltype(auto) substr() //
-			const noexcept {
+		    const noexcept {
 			static_assert(pos <= size(), "pos must be less than or equal to size");
 			constexpr size_type result_size = std::min(count, size() - pos) + 1;
 
@@ -259,7 +259,7 @@ namespace OpenVic {
 
 		template<size_type N2>
 		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+( //
-			string_literal<N2, value_type, traits_type> const& other
+		    string_literal<N2, value_type, traits_type> const& other
 		) const noexcept {
 			string_literal<size() + N2, value_type, traits_type> result;
 			for (size_type i = 0u; i != size(); i++) {
@@ -274,7 +274,7 @@ namespace OpenVic {
 
 		template<size_type N2>
 		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+( //
-			const value_type (&rhs)[N2]
+		    const value_type (&rhs)[N2]
 		) const noexcept {
 			return *this + _to_string(rhs);
 		}

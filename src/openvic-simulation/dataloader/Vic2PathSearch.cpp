@@ -73,8 +73,10 @@ struct search_log {
 	bool _warn;
 
 	search_log(
-		bool warn, spdlog::format_string_t<Args...> fmt, Args&&... args,
-		std::source_location const& location = std::source_location::current()
+	    bool warn,
+	    spdlog::format_string_t<Args...> fmt,
+	    Args&&... args,
+	    std::source_location const& location = std::source_location::current()
 	) {
 		_warn = warn;
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
@@ -82,8 +84,9 @@ struct search_log {
 		fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
 
 		spdlog::default_logger_raw()->log(
-			spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
-			warn ? spdlog::level::warn : spdlog::level::info, spdlog::string_view_t(buf.data(), buf.size())
+		    spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+		    warn ? spdlog::level::warn : spdlog::level::info,
+		    spdlog::string_view_t(buf.data(), buf.size())
 		);
 #else
 		if (warn) {
@@ -91,8 +94,9 @@ struct search_log {
 			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
 
 			spdlog::default_logger_raw()->log(
-				spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
-				spdlog::level::warn, spdlog::string_view_t(buf.data(), buf.size())
+			    spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    spdlog::level::warn,
+			    spdlog::string_view_t(buf.data(), buf.size())
 			);
 		}
 #endif
@@ -130,8 +134,9 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 
 	if (hint_empty) {
 #if defined(_WIN32)
-		static const fs::path registry_path =
-			Windows::ReadRegValue<char>(HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Paradox Interactive\\Victoria 2", "path");
+		static const fs::path registry_path = Windows::ReadRegValue<char>(
+		    HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Paradox Interactive\\Victoria 2", "path"
+		);
 
 		if (!registry_path.empty()) {
 			return registry_path;
@@ -215,21 +220,21 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 	bool vic2_install_confirmed = false;
 	// if current_path is not a regular file, this is a non-default Steam Library, skip this parser evaluation
 	if (fs::is_regular_file(current_path, error_code) &&
-		(is_libraryfolders_vdf || filename_equals(libraryfolders, current_path))) {
+	    (is_libraryfolders_vdf || filename_equals(libraryfolders, current_path))) {
 		lexy_vdf::Parser parser;
 
 		memory::string buffer;
 		auto error_log_stream = detail::make_callback_stream<char>(
-			[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
-				if (s != nullptr && n > 0 && user_data != nullptr) {
-					static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);
-					return n;
-				} else {
-					spdlog::warn("Invalid input to parser error log callback: {} / {} / {}", s, n, user_data);
-					return 0;
-				}
-			},
-			&buffer
+		    [](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
+			    if (s != nullptr && n > 0 && user_data != nullptr) {
+				    static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);
+				    return n;
+			    } else {
+				    spdlog::warn("Invalid input to parser error log callback: {} / {} / {}", s, n, user_data);
+				    return 0;
+			    }
+		    },
+		    &buffer
 		);
 		parser.set_error_log_to(error_log_stream);
 
@@ -261,7 +266,8 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 		current_node = std::visit(visit_node, it->second);
 
 		if (!current_node.has_value()) {
-			return search_log(hint_empty, "Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.").result();
+			return search_log(hint_empty, "Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.")
+			    .result();
 		}
 
 		// Array of strings contain "0" to std::to_string(max_amount_of_steam_libraries - 1)
@@ -293,15 +299,15 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 				it = node.value().find("path");
 				if (it != node.value().end()) {
 					vic2_steam_lib_directory = std::visit(
-						[](auto&& arg) -> std::string_view {
-							using T = std::decay_t<decltype(arg)>;
-							if constexpr (std::is_same_v<T, std::string>) {
-								return arg;
-							} else {
-								return "";
-							}
-						},
-						it->second
+					    [](auto&& arg) -> std::string_view {
+						    using T = std::decay_t<decltype(arg)>;
+						    if constexpr (std::is_same_v<T, std::string>) {
+							    return arg;
+						    } else {
+							    return "";
+						    }
+					    },
+					    it->second
 					);
 					vic2_install_confirmed = true;
 					break;
@@ -350,12 +356,12 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 
 	bool is_Victoria_2_folder = false;
 	if ((is_common_folder || filename_equals(common_folder, vic2_steam_lib_directory)) &&
-		fs::is_directory(vic2_steam_lib_directory, error_code)) {
+	    fs::is_directory(vic2_steam_lib_directory, error_code)) {
 		vic2_steam_lib_directory /= Victoria_2_folder;
 		is_Victoria_2_folder = true;
 	}
 	if ((is_Victoria_2_folder || filename_equals(Victoria_2_folder, vic2_steam_lib_directory)) &&
-		fs::is_regular_file(vic2_steam_lib_directory / v2_game_exe, error_code)) {
+	    fs::is_regular_file(vic2_steam_lib_directory / v2_game_exe, error_code)) {
 		return vic2_steam_lib_directory;
 	}
 

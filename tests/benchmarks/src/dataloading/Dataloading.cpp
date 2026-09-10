@@ -15,9 +15,9 @@ TEST_CASE("Dataloading benchmark", "[benchmarks][benchmark-dataloading]") {
 
 		game_manager.set_base_path(roots);
 		game_manager.load_definitions(
-			[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
-				return true;
-			}
+		    [](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
+			    return true;
+		    }
 		);
 	});
 }

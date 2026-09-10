@@ -36,8 +36,7 @@ TEST_CASE("EcsThreadPool::parallel_for visits each chunk_idx exactly once", "[ec
 	}
 }
 
-TEST_CASE("EcsThreadPool::parallel_for produces same result regardless of worker count",
-          "[ecs][EcsThreadPool][determinism]") {
+TEST_CASE("EcsThreadPool::parallel_for produces same result regardless of worker count", "[ecs][EcsThreadPool][determinism]") {
 	std::vector<int> baseline(500, 0);
 	{
 		EcsThreadPool serial { 1 };
@@ -62,9 +61,15 @@ TEST_CASE("EcsThreadPool::run_concurrent runs each function exactly once", "[ecs
 	std::atomic<int> b { 0 };
 	std::atomic<int> c { 0 };
 	std::vector<std::function<void()>> bodies;
-	bodies.emplace_back([&a]() { a.fetch_add(1); });
-	bodies.emplace_back([&b]() { b.fetch_add(1); });
-	bodies.emplace_back([&c]() { c.fetch_add(1); });
+	bodies.emplace_back([&a]() {
+		a.fetch_add(1);
+	});
+	bodies.emplace_back([&b]() {
+		b.fetch_add(1);
+	});
+	bodies.emplace_back([&c]() {
+		c.fetch_add(1);
+	});
 	pool.run_concurrent(std::span<std::function<void()> const>(bodies.data(), bodies.size()));
 	CHECK(a.load() == 1);
 	CHECK(b.load() == 1);

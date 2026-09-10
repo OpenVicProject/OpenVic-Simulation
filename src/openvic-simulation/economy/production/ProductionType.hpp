@@ -16,23 +16,26 @@ namespace OpenVic {
 	struct PopType;
 
 	struct Job {
-		enum struct effect_t { THROUGHPUT, INPUT, OUTPUT };
+		enum struct effect_t {
+			THROUGHPUT,
+			INPUT,
+			OUTPUT
+		};
 
 	public:
 		const pop_type_index_t pop_type_index;
 		const effect_t effect_type;
 		const fixed_point_t effect_multiplier;
 		const fixed_point_t amount;
-		
+
 		constexpr Job(
-			const pop_type_index_t new_pop_type_index,
-			const effect_t new_effect_type,
-			const fixed_point_t new_effect_multiplier,
-			const fixed_point_t new_amount
-		) : pop_type_index { new_pop_type_index },
-			effect_type { new_effect_type },
-			effect_multiplier { new_effect_multiplier },
-			amount { new_amount } {}
+		    const pop_type_index_t new_pop_type_index,
+		    const effect_t new_effect_type,
+		    const fixed_point_t new_effect_multiplier,
+		    const fixed_point_t new_amount
+		) :
+		    pop_type_index { new_pop_type_index }, effect_type { new_effect_type }, effect_multiplier { new_effect_multiplier },
+		    amount { new_amount } {}
 
 		constexpr Job() : Job({}, effect_t::THROUGHPUT, fixed_point_t::_0, fixed_point_t::_0) {};
 	};
@@ -47,7 +50,11 @@ namespace OpenVic {
 	struct ProductionType : HasIdentifier {
 		friend struct ProductionTypeManager;
 
-		enum struct template_type_t { FACTORY, RGO, ARTISAN };
+		enum struct template_type_t {
+			FACTORY,
+			RGO,
+			ARTISAN
+		};
 
 		using bonus_t = std::pair<ConditionScript, fixed_point_t>;
 
@@ -70,20 +77,20 @@ namespace OpenVic {
 		const fixed_point_t base_output_quantity;
 
 		ProductionType(
-			GameRulesManager const& new_game_rules_manager,
-			const std::string_view new_identifier,
-			std::optional<Job>&& new_owner,
-			memory::vector<Job>&& new_jobs,
-			const template_type_t new_template_type,
-			const pop_size_t new_base_workforce_size,
-			fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
-			GoodDefinition const& new_output_good,
-			const fixed_point_t new_base_output_quantity,
-			memory::vector<bonus_t>&& new_bonuses,
-			fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
-			const bool new_is_coastal,
-			const bool new_is_farm,
-			const bool new_is_mine
+		    GameRulesManager const& new_game_rules_manager,
+		    const std::string_view new_identifier,
+		    std::optional<Job>&& new_owner,
+		    memory::vector<Job>&& new_jobs,
+		    const template_type_t new_template_type,
+		    const pop_size_t new_base_workforce_size,
+		    fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
+		    GoodDefinition const& new_output_good,
+		    const fixed_point_t new_base_output_quantity,
+		    memory::vector<bonus_t>&& new_bonuses,
+		    fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
+		    const bool new_is_coastal,
+		    const bool new_is_farm,
+		    const bool new_is_mine
 		);
 
 		constexpr bool get_is_farm_for_non_tech() const {
@@ -106,46 +113,43 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(GoodDefinition, ProductionType const*, good_to_rgo_production_type);
 
 		NodeTools::node_callback_t _expect_job(
-			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<
-				pop_type_index_t,
-				Job::effect_t,
-				fixed_point_t,
-				fixed_point_t
-			> emplace_callback
+		    GoodDefinitionManager const& good_definition_manager,
+		    PopManager const& pop_manager,
+		    NodeTools::callback_t<pop_type_index_t, Job::effect_t, fixed_point_t, fixed_point_t> emplace_callback
 		);
 		NodeTools::node_callback_t _expect_job_list(
-			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<memory::vector<Job>&&> callback
+		    GoodDefinitionManager const& good_definition_manager,
+		    PopManager const& pop_manager,
+		    NodeTools::callback_t<memory::vector<Job>&&> callback
 		);
 
 	public:
-		constexpr ProductionTypeManager()
-			: good_to_rgo_production_type { decltype(good_to_rgo_production_type){create_empty} } {}
+		constexpr ProductionTypeManager() :
+		    good_to_rgo_production_type { decltype(good_to_rgo_production_type) { create_empty } } {}
 
 		bool add_production_type(
-			GameRulesManager const& game_rules_manager,
-			TypedSpan<pop_type_index_t, const PopType> pop_types,
-			const std::string_view identifier,
-			std::optional<Job>&& owner,
-			memory::vector<Job>&& jobs,
-			const ProductionType::template_type_t template_type,
-			const pop_size_t base_workforce_size,
-			fixed_point_map_t<GoodDefinition const*>&& input_goods,
-			GoodDefinition const* const output_good,
-			const fixed_point_t base_output_quantity,
-			memory::vector<ProductionType::bonus_t>&& bonuses,
-			fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
-			const bool is_coastal,
-			const bool is_farm,
-			const bool is_mine
+		    GameRulesManager const& game_rules_manager,
+		    TypedSpan<pop_type_index_t, const PopType> pop_types,
+		    const std::string_view identifier,
+		    std::optional<Job>&& owner,
+		    memory::vector<Job>&& jobs,
+		    const ProductionType::template_type_t template_type,
+		    const pop_size_t base_workforce_size,
+		    fixed_point_map_t<GoodDefinition const*>&& input_goods,
+		    GoodDefinition const* const output_good,
+		    const fixed_point_t base_output_quantity,
+		    memory::vector<ProductionType::bonus_t>&& bonuses,
+		    fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
+		    const bool is_coastal,
+		    const bool is_farm,
+		    const bool is_mine
 		);
 
 		bool load_production_types_file(
-			GameRulesManager const& game_rules_manager,
-			GoodDefinitionManager const& good_definition_manager,
-			PopManager const& pop_manager,
-			ovdl::v2script::Parser const& parser
+		    GameRulesManager const& game_rules_manager,
+		    GoodDefinitionManager const& good_definition_manager,
+		    PopManager const& pop_manager,
+		    ovdl::v2script::Parser const& parser
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

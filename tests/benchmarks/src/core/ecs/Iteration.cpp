@@ -1,13 +1,14 @@
-#include "openvic-simulation/core/ecs/ChunkView.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/Query.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/ChunkView.hpp"
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/Query.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -59,7 +60,7 @@ namespace {
 		}
 		for (std::size_t i = 0; i < rest; ++i) {
 			world.create_entity(
-				IterA { static_cast<int>(i) }, IterB { static_cast<float>(i) }, IterC { static_cast<int64_t>(i) }
+			    IterA { static_cast<int>(i) }, IterB { static_cast<float>(i) }, IterC { static_cast<int64_t>(i) }
 			);
 		}
 	}
@@ -75,7 +76,9 @@ TEST_CASE("for_each over single-archetype world", "[benchmarks][benchmark-ecs][e
 
 		bench.batch(n).run("for_each<IterA>" + suffix(n), [&] {
 			int64_t acc = 0;
-			world.for_each<IterA>([&](IterA& a) { acc += a.v; });
+			world.for_each<IterA>([&](IterA& a) {
+				acc += a.v;
+			});
 			ankerl::nanobench::doNotOptimizeAway(acc);
 		});
 
@@ -107,7 +110,9 @@ TEST_CASE("for_each over multi-archetype world", "[benchmarks][benchmark-ecs][ec
 
 		bench.batch(n).run("for_each<IterA> (all 3)" + suffix(n), [&] {
 			int64_t acc = 0;
-			world.for_each<IterA>([&](IterA& a) { acc += a.v; });
+			world.for_each<IterA>([&](IterA& a) {
+				acc += a.v;
+			});
 			ankerl::nanobench::doNotOptimizeAway(acc);
 		});
 
@@ -175,7 +180,9 @@ TEST_CASE("for_each with Query::exclude<Tag>", "[benchmarks][benchmark-ecs][ecs-
 
 		bench.batch(n).run("Query exclude<IterDead>" + suffix(n), [&] {
 			int64_t acc = 0;
-			world.for_each<IterA, IterB>(query, [&](IterA& a, IterB&) { acc += a.v; });
+			world.for_each<IterA, IterB>(query, [&](IterA& a, IterB&) {
+				acc += a.v;
+			});
 			ankerl::nanobench::doNotOptimizeAway(acc);
 		});
 	}

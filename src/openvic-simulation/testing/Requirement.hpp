@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

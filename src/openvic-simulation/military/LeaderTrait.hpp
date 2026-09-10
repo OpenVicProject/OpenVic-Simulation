@@ -10,7 +10,10 @@
 namespace OpenVic {
 	struct LeaderTrait : Modifier {
 
-		enum class trait_type_t { PERSONALITY, BACKGROUND };
+		enum class trait_type_t {
+			PERSONALITY,
+			BACKGROUND
+		};
 
 	public:
 		const trait_type_t trait_type;
@@ -51,7 +54,7 @@ namespace OpenVic {
 		LeaderTraitManager();
 
 		bool setup_leader_prestige_modifier(
-			ModifierEffectCache const& modifier_effect_cache, MilitaryDefines const& military_defines
+		    ModifierEffectCache const& modifier_effect_cache, MilitaryDefines const& military_defines
 		);
 
 		bool add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers);

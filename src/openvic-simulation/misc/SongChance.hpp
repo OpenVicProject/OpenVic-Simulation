@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	/*For music/Songs.txt if it exists*/
@@ -24,10 +24,9 @@ namespace OpenVic {
 	struct SongChanceManager {
 	private:
 		IdentifierRegistry<SongChance> IDENTIFIER_REGISTRY(song_chance);
-		//Songs.txt
+		// Songs.txt
 	public:
 		bool load_songs_file(ast::NodeCPtr root);
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }
-

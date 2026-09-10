@@ -8,8 +8,8 @@
 
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -41,8 +41,8 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 
 		// Find point closer to end_point, or same distance to end_point but closer to begin_point.
 		if (last_closest_point == search.end() || last_closest_point.value().abs_f_score > p.value().abs_f_score ||
-			(last_closest_point.value().abs_f_score >= p.value().abs_f_score && //
-			 last_closest_point.value().g_score > p.value().g_score)) {
+		    (last_closest_point.value().abs_f_score >= p.value().abs_f_score && //
+		     last_closest_point.value().g_score > p.value().g_score)) {
 			last_closest_point = p;
 		}
 
@@ -98,12 +98,8 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 	return found_route;
 }
 
-ArmyAStarPathing::ArmyAStarPathing(
-	MapDefinition const& new_map_definition,
-	MapInstance const& new_map_instance
-) : map_instance { new_map_instance },
-	AStarPathing(&new_map_definition.get_path_map_land())
-	{}
+ArmyAStarPathing::ArmyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance) :
+    map_instance { new_map_instance }, AStarPathing(&new_map_definition.get_path_map_land()) {}
 
 bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {
@@ -133,12 +129,8 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	return army_instance->get_country().can_army_units_enter(*province_owner);
 }
 
-NavyAStarPathing::NavyAStarPathing(
-	MapDefinition const& new_map_definition,
-	MapInstance const& new_map_instance
-) : map_instance {new_map_instance},
-	AStarPathing(&new_map_definition.get_path_map_land())
-	{}
+NavyAStarPathing::NavyAStarPathing(MapDefinition const& new_map_definition, MapInstance const& new_map_instance) :
+    map_instance { new_map_instance }, AStarPathing(&new_map_definition.get_path_map_land()) {}
 
 bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {

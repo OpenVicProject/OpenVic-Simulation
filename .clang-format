@@ -1,8 +1,7 @@
 ---
 Language: Cpp
-UseCRLF: false
 Standard: c++20
-UseTab: Always
+UseTab: ForIndentation
 TabWidth: 4
 IndentWidth: 4
 ColumnLimit: 128
@@ -37,20 +36,20 @@ IndentRequiresClause: false
 IncludeBlocks: Regroup
 FixNamespaceComments: false
 EmptyLineBeforeAccessModifier: LogicalBlock
-Cpp11BracedListStyle: false
+Cpp11BracedListStyle: Block
 CompactNamespaces: false
-BreakConstructorInitializers: BeforeColon
+BreakConstructorInitializers: AfterColon
 BreakBeforeBraces: Attach
 AlwaysBreakTemplateDeclarations: Yes
-AlwaysBreakAfterReturnType: None
-PenaltyReturnTypeOnItsOwnLine: 10
+AlwaysBreakAfterReturnType: ExceptShortType
+PenaltyReturnTypeOnItsOwnLine: 500
 BreakBeforeConceptDeclarations: Always
 AllowShortLambdasOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
-AllowShortEnumsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
-# AllowShortCompoundRequirementOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortLoopsOnASingleLine: false
 AlignTrailingComments:
@@ -58,22 +57,30 @@ AlignTrailingComments:
   OverEmptyLines: 0
 AlignEscapedNewlines: DontAlign
 AlignAfterOpenBracket: BlockIndent
-AlignOperands: DontAlign
+AlignOperands: AlignAfterOperator
 AlignConsecutiveShortCaseStatements:
   Enabled: true
   AcrossEmptyLines: true
   AcrossComments: true
   AlignCaseColons: false
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: OnePerLine
 AccessModifierOffset: -4
 InsertNewlineAtEOF: true
 InsertBraces: true
 MaxEmptyLinesToKeep: 2
 RequiresClausePosition: OwnLine
-SortIncludes:
-  Enabled: true
-  IgnoreCase: true
+PenaltyBreakAssignment: 100
+PenaltyIndentedWhitespace: 5
+AttributeMacros:
+  - OV_ALWAYS_INLINE
+  - OV_SPEED_INLINE
+  - OV_NO_UNIQUE_ADDRESS
+  - OV_LIFETIME_BOUND
+  - OV_RESTRICT
+IfMacros:
+  - CHECK_IF
+  - CHECK_FALSE_IF
 IncludeCategories:
   - Regex: <[[:alnum:]_]+>
     Priority: 1

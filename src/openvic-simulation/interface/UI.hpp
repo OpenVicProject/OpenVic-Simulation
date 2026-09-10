@@ -13,7 +13,7 @@ namespace OpenVic {
 		NamedBaseInstanceRegistry<GFX::Object> IDENTIFIER_REGISTRY(object);
 
 		NamedBaseInstanceRegistry<GUI::Scene, UIManager const&> IDENTIFIER_REGISTRY(scene);
-		
+
 		bool _load_font(ast::NodeCPtr node);
 		NodeTools::NodeCallback auto _load_fonts(std::string_view font_key);
 
@@ -23,8 +23,12 @@ namespace OpenVic {
 		UIManager(DefinitionManager const& manager);
 
 		bool add_font(
-			std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset,
-			uint32_t height, GFX::Font::colour_codes_t&& colour_codes
+		    std::string_view identifier,
+		    colour_argb_t colour,
+		    std::string_view fontname,
+		    std::string_view charset,
+		    uint32_t height,
+		    GFX::Font::colour_codes_t&& colour_codes
 		);
 
 		void lock_gfx_registries();

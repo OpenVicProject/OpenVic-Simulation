@@ -25,9 +25,9 @@ namespace OpenVic {
 
 		inline constexpr auto operator<=>(UnorderedCountryInstancePair const& rhs) const {
 			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), //
-				left2 = std::bit_cast<uintptr_t>(second), //
-				right1 = std::bit_cast<uintptr_t>(rhs.first), //
-				right2 = std::bit_cast<uintptr_t>(rhs.second);
+			    left2 = std::bit_cast<uintptr_t>(second), //
+			    right1 = std::bit_cast<uintptr_t>(rhs.first), //
+			    right2 = std::bit_cast<uintptr_t>(rhs.second);
 
 			using ordering = decltype(three_way_compare(std::tie(left1, left2), std::tie(right1, right2)));
 
@@ -47,16 +47,14 @@ namespace OpenVic {
 			auto& rhs_comp_first = rhs_left > rhs_right ? rhs_left : rhs_right;
 			auto& rhs_comp_second = rhs_left < rhs_right ? rhs_left : rhs_right;
 
-			return three_way_compare(
-				std::tie(lhs_comp_first, lhs_comp_second), std::tie(rhs_comp_first, rhs_comp_second)
-			);
+			return three_way_compare(std::tie(lhs_comp_first, lhs_comp_second), std::tie(rhs_comp_first, rhs_comp_second));
 		}
 
 		inline constexpr bool operator==(UnorderedCountryInstancePair const& rhs) const {
 			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), //
-				left2 = std::bit_cast<uintptr_t>(second), //
-				right1 = std::bit_cast<uintptr_t>(rhs.first), //
-				right2 = std::bit_cast<uintptr_t>(rhs.second);
+			    left2 = std::bit_cast<uintptr_t>(second), //
+			    right1 = std::bit_cast<uintptr_t>(rhs.first), //
+			    right2 = std::bit_cast<uintptr_t>(rhs.second);
 
 			auto tied = std::tie(left1, left2);
 			return tied == std::tie(right1, right2) || tied == std::tie(right2, right1);
@@ -69,7 +67,7 @@ namespace std {
 	struct hash<OpenVic::CountryInstancePair> {
 		size_t operator()(OpenVic::CountryInstancePair const& pair) const {
 			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
-				second = std::bit_cast<uintptr_t>(pair.second);
+			    second = std::bit_cast<uintptr_t>(pair.second);
 
 			std::size_t seed1 = 0;
 			OpenVic::hash_combine(seed1, first);
@@ -83,7 +81,7 @@ namespace std {
 	struct hash<OpenVic::UnorderedCountryInstancePair> {
 		size_t operator()(OpenVic::UnorderedCountryInstancePair const& pair) const {
 			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
-				second = std::bit_cast<uintptr_t>(pair.second);
+			    second = std::bit_cast<uintptr_t>(pair.second);
 
 			std::size_t seed1 = 0;
 			OpenVic::hash_combine(seed1, first);
@@ -222,8 +220,9 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type&
-			operator%=(influence_value_type& lhs, influence_value_type const& rhs) {
+			friend inline constexpr influence_value_type& operator%=(
+			    influence_value_type& lhs, influence_value_type const& rhs
+			) {
 				return lhs %= rhs.value;
 			}
 
@@ -250,7 +249,7 @@ namespace OpenVic {
 public: \
 	VALUE_TYPE get_##FUNC_NAME(CountryInstance const* country, CountryInstance const* recipient) const; \
 	VALUE_TYPE& assign_or_get_##FUNC_NAME( \
-		CountryInstance* country, CountryInstance RECIPIENT_CONST* recipient, VALUE_TYPE default_value = {} \
+	    CountryInstance* country, CountryInstance RECIPIENT_CONST* recipient, VALUE_TYPE default_value = {} \
 	); \
 	bool set_##FUNC_NAME(CountryInstance* country, CountryInstance RECIPIENT_CONST* recipient, VALUE_TYPE value); \
 	decltype(NAME)::values_container_type const& get_##FUNC_NAME##_values() const; \
@@ -267,7 +266,9 @@ private:
 		RELATION_PAIR_MAP(CountryInstancePair, bool, vision, has_vision, const);
 		RELATION_PAIR_MAP(CountryInstancePair, OpinionType, opinions, country_opinion, const);
 		RELATION_PAIR_MAP(CountryInstancePair, influence_value_type, influence, influence_with, const);
-		RELATION_PAIR_MAP(CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const);
+		RELATION_PAIR_MAP(
+		    CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const
+		);
 
 		vector_ordered_map<CountryInstancePair, Date> discredits;
 		vector_ordered_map<CountryInstancePair, Date> embassy_bans;
@@ -306,9 +307,9 @@ constexpr OpenVic::CountryRelationManager::OpinionType& operator++(OpenVic::Coun
 	using underlying_type = std::underlying_type_t<OpenVic::CountryRelationManager::OpinionType>;
 	type = static_cast<OpenVic::CountryRelationManager::OpinionType>(static_cast<underlying_type>(type) + 1);
 	type = static_cast<underlying_type>(type) >
-			static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Sphere) //
-		? OpenVic::CountryRelationManager::OpinionType::Sphere
-		: type;
+	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Sphere) //
+	         ? OpenVic::CountryRelationManager::OpinionType::Sphere
+	         : type;
 	return type;
 }
 
@@ -322,9 +323,9 @@ constexpr OpenVic::CountryRelationManager::OpinionType& operator--(OpenVic::Coun
 	using underlying_type = std::underlying_type_t<OpenVic::CountryRelationManager::OpinionType>;
 	type = static_cast<OpenVic::CountryRelationManager::OpinionType>(static_cast<underlying_type>(type) - 1);
 	type = static_cast<underlying_type>(type) <
-			static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Hostile) //
-		? OpenVic::CountryRelationManager::OpinionType::Hostile
-		: type;
+	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Hostile) //
+	         ? OpenVic::CountryRelationManager::OpinionType::Hostile
+	         : type;
 	return type;
 }
 

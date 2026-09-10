@@ -17,6 +17,7 @@ namespace OpenVic {
 
 	private:
 		memory::vector<std::reference_wrapper<const GoodDefinition>> SPAN_PROPERTY(good_definitions);
+
 	public:
 		GoodCategory(std::string_view new_identifier, index_t new_index);
 		GoodCategory(GoodCategory&&) = default;
@@ -45,9 +46,15 @@ namespace OpenVic {
 		const bool counters_overseas_penalty;
 
 		GoodDefinition(
-			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
-			fixed_point_t new_base_price, bool new_is_available_from_start, bool new_is_tradeable, bool new_is_money,
-			bool new_counters_overseas_penalty
+		    std::string_view new_identifier,
+		    colour_t new_colour,
+		    index_t new_index,
+		    GoodCategory const& new_category,
+		    fixed_point_t new_base_price,
+		    bool new_is_available_from_start,
+		    bool new_is_tradeable,
+		    bool new_is_money,
+		    bool new_counters_overseas_penalty
 		);
 		GoodDefinition(GoodDefinition&&) = default;
 	};
@@ -63,8 +70,14 @@ namespace OpenVic {
 		bool add_good_category(std::string_view identifier, size_t expected_goods_in_category);
 
 		bool add_good_definition(
-			std::string_view identifier, colour_t colour, GoodCategory& category, fixed_point_t base_price,
-			bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
+		    std::string_view identifier,
+		    colour_t colour,
+		    GoodCategory& category,
+		    fixed_point_t base_price,
+		    bool is_available_from_start,
+		    bool is_tradeable,
+		    bool is_money,
+		    bool has_overseas_penalty
 		);
 
 		bool load_goods_file(ast::NodeCPtr root);

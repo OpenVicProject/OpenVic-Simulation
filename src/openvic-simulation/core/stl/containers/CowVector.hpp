@@ -13,9 +13,9 @@
 
 #include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/Compare.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/stl/BasicIterator.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Allocator.hpp"
 
 namespace OpenVic::stl {
@@ -37,8 +37,8 @@ namespace OpenVic::stl {
 		static constexpr allocate_tag_t allocate_tag {};
 
 		OV_ALWAYS_INLINE cow_vector(allocate_tag_t, size_t reserve) : _data(_allocate_payload(reserve)) {}
-		OV_ALWAYS_INLINE cow_vector(allocate_tag_t, Allocator const& alloc, size_t reserve)
-			: alloc(alloc), _data(_allocate_payload(reserve)) {}
+		OV_ALWAYS_INLINE cow_vector(allocate_tag_t, Allocator const& alloc, size_t reserve) :
+		    alloc(alloc), _data(_allocate_payload(reserve)) {}
 
 		[[noreturn]] void _abort_on_out_of_range(const char* func_name, const char* var_name, size_t var, size_t size) const {
 			OV_THROW_OUT_OF_RANGE("cow_vector", func_name, var_name, var, size);
@@ -65,19 +65,19 @@ namespace OpenVic::stl {
 			_data->array_end = uninitialized_default_n(_data->array, count, this->alloc);
 		}
 
-		OV_ALWAYS_INLINE cow_vector(size_type count, const T& value, Allocator const& alloc = Allocator())
-			: cow_vector(count, alloc) {
+		OV_ALWAYS_INLINE cow_vector(size_type count, const T& value, Allocator const& alloc = Allocator()) :
+		    cow_vector(count, alloc) {
 			_data->array_end = uninitialized_fill_n(_data->array, count, value, this->alloc);
 		}
 
 		template<class InputIt>
-		OV_ALWAYS_INLINE cow_vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
-			: cow_vector(allocate_tag, alloc, _validate_iterator_difference(last - first)) {
+		OV_ALWAYS_INLINE cow_vector(InputIt first, InputIt last, const Allocator& alloc = Allocator()) :
+		    cow_vector(allocate_tag, alloc, _validate_iterator_difference(last - first)) {
 			_data->array_end = uninitialized_copy(first, last, _data->array, this->alloc);
 		}
 
-		OV_ALWAYS_INLINE cow_vector(cow_vector const& other)
-			: alloc(allocator_traits::select_on_container_copy_construction(other.alloc)), _data(other._data) {
+		OV_ALWAYS_INLINE cow_vector(cow_vector const& other) :
+		    alloc(allocator_traits::select_on_container_copy_construction(other.alloc)), _data(other._data) {
 			if (_data) {
 				++_data->count;
 			}
@@ -87,8 +87,8 @@ namespace OpenVic::stl {
 			other._data = nullptr;
 		}
 
-		OV_ALWAYS_INLINE cow_vector(cow_vector const& other, std::type_identity_t<Allocator> const& alloc)
-			: cow_vector(other.begin(), other.end(), alloc) {}
+		OV_ALWAYS_INLINE cow_vector(cow_vector const& other, std::type_identity_t<Allocator> const& alloc) :
+		    cow_vector(other.begin(), other.end(), alloc) {}
 
 		OV_ALWAYS_INLINE cow_vector(cow_vector&& other, std::type_identity_t<Allocator> const& alloc) : alloc(alloc) {
 			if constexpr (allocator_traits::is_always_equal::value) {
@@ -105,8 +105,8 @@ namespace OpenVic::stl {
 			}
 		}
 
-		OV_ALWAYS_INLINE cow_vector(std::initializer_list<T> init, Allocator const& alloc = Allocator())
-			: cow_vector(init.begin(), init.end(), alloc) {}
+		OV_ALWAYS_INLINE cow_vector(std::initializer_list<T> init, Allocator const& alloc = Allocator()) :
+		    cow_vector(init.begin(), init.end(), alloc) {}
 
 		OV_ALWAYS_INLINE ~cow_vector() {
 			if (_data && --_data->count == 0) {
@@ -128,8 +128,9 @@ namespace OpenVic::stl {
 			cow_vector tmp = std::move(x);
 			writer& tmp_writer = *reinterpret_cast<writer*>(&tmp);
 
-			if constexpr (allocator_traits::propagate_on_container_move_assignment::value ||
-						  allocator_traits::is_always_equal::value) {
+			if constexpr (
+			    allocator_traits::propagate_on_container_move_assignment::value || allocator_traits::is_always_equal::value
+			) {
 				self_writer.swap(tmp_writer);
 			} else if (alloc == x.alloc) {
 				self_writer.swap(tmp_writer);
@@ -139,8 +140,9 @@ namespace OpenVic::stl {
 				tmp_writer = tmp.write();
 
 				self_writer._assign_aux(
-					std::make_move_iterator(tmp_writer.begin()), std::make_move_iterator(tmp_writer.end()),
-					std::random_access_iterator_tag()
+				    std::make_move_iterator(tmp_writer.begin()),
+				    std::make_move_iterator(tmp_writer.end()),
+				    std::random_access_iterator_tag()
 				);
 				tmp_writer.clear();
 			}
@@ -1101,8 +1103,9 @@ namespace OpenVic::stl {
 	};
 
 	template<typename T, typename Allocator>
-	inline constexpr cow_vector<T, Allocator>::size_type cow_vector<T, Allocator>::payload::content_size =
-		std::max<size_type>(1ul, (sizeof(payload) - sizeof(array)) / sizeof(T));
+	inline constexpr cow_vector<T, Allocator>::size_type cow_vector<T, Allocator>::payload::content_size = std::max<size_type>(
+	    1ul, (sizeof(payload) - sizeof(array)) / sizeof(T)
+	);
 
 	template<typename T, typename Allocator>
 	[[nodiscard]] inline bool operator==(cow_vector<T, Allocator> const& x, cow_vector<T, Allocator> const& y) {
@@ -1115,7 +1118,7 @@ namespace OpenVic::stl {
 	}
 
 	static_assert(
-		sizeof(cow_vector<int>) == sizeof(cow_vector<int>::writer), "cow_vector must always be the same size as it's writer"
+	    sizeof(cow_vector<int>) == sizeof(cow_vector<int>::writer), "cow_vector must always be the same size as it's writer"
 	);
 }
 

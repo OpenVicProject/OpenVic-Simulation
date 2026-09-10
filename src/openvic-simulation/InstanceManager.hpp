@@ -84,9 +84,9 @@ namespace OpenVic {
 		DefinitionManager const& definition_manager;
 
 		InstanceManager(
-			GameRulesManager const& new_game_rules_manager,
-			DefinitionManager const& new_definition_manager,
-			gamestate_updated_func_t gamestate_updated_callback
+		    GameRulesManager const& new_game_rules_manager,
+		    DefinitionManager const& new_definition_manager,
+		    gamestate_updated_func_t gamestate_updated_callback
 		);
 
 		inline constexpr bool is_bookmark_loaded() const {
@@ -103,12 +103,7 @@ namespace OpenVic {
 
 		template<typename T, typename... Args>
 		bool queue_game_action(Args&&... args) {
-			return queue_game_action(
-				game_action_t(
-					std::in_place_type<T>,
-					std::forward<Args>(args)...
-				)
-			);
+			return queue_game_action(game_action_t(std::in_place_type<T>, std::forward<Args>(args)...));
 		}
 		bool queue_game_action(game_action_t&& game_action);
 	};

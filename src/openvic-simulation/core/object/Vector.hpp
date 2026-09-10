@@ -6,11 +6,11 @@
 #include <fmt/format.h>
 
 #include "openvic-simulation/core/Math.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/object/FixedPoint/Math.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/stl/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/template/Concepts.hpp" // IWYU pragma: keep
-#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 
 #define VEC_TYPE vec2_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y)
@@ -22,7 +22,9 @@
 #undef VEC_TYPE
 
 #define VEC_TYPE vec3_t
-#define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z)
+#define FOR_VEC_COMPONENTS(F, SEP) \
+	F(x) SEP F(y) \
+	SEP F(z)
 #define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) END_F(z)
 #include "VectorN.inc"
 
@@ -31,7 +33,10 @@
 #undef VEC_TYPE
 
 #define VEC_TYPE vec4_t
-#define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w)
+#define FOR_VEC_COMPONENTS(F, SEP) \
+	F(x) SEP F(y) \
+	SEP F(z) \
+	SEP F(w)
 #define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) F(w) END_F(w)
 #include "VectorN.inc"
 
@@ -44,8 +49,8 @@ namespace OpenVic {
 #define MAKE_VEC_ALIAS(prefix, type, size) \
 	using prefix##vec##size##_t = vec##size##_t<type>; \
 	static_assert( \
-		sizeof(prefix##vec##size##_t) == size * sizeof(type), \
-		#prefix "vec" #size "_t size does not equal the sum of its parts' sizes" \
+	    sizeof(prefix##vec##size##_t) == size * sizeof(type), \
+	    #prefix "vec" #size "_t size does not equal the sum of its parts' sizes" \
 	); \
 	extern template struct vec##size##_t<type>;
 

@@ -50,25 +50,17 @@ namespace OpenVic {
 	struct TerrainType;
 	struct UnitInstanceGroup;
 
-	//HasIndex index_t must match ProvinceDefinition's index_t
-	struct ProvinceInstance
-		: HasIdentifierAndColour,
-		HasIndex<ProvinceInstance, province_index_t>,
-		FlagStrings,
-		PopsAggregate {
+	// HasIndex index_t must match ProvinceDefinition's index_t
+	struct ProvinceInstance : HasIdentifierAndColour, HasIndex<ProvinceInstance, province_index_t>, FlagStrings, PopsAggregate {
 		friend struct MapInstance;
 
 		static constexpr std::string_view get_colony_status_string(colony_status_t colony_status) {
 			using enum colony_status_t;
 			switch (colony_status) {
-			case STATE:
-				return "state";
-			case PROTECTORATE:
-				return "protectorate";
-			case COLONY:
-				return "colony";
-			default:
-				return "unknown colony status";
+			case STATE:        return "state";
+			case PROTECTORATE: return "protectorate";
+			case COLONY:       return "colony";
+			default:           return "unknown colony status";
 			}
 		}
 
@@ -100,10 +92,12 @@ namespace OpenVic {
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		memory::FixedVector<BuildingInstance, province_building_index_t> buildings;
+
 	public:
 		constexpr TypedSpan<province_building_index_t, const BuildingInstance> get_buildings() const {
 			return buildings;
 		}
+
 	private:
 		memory::vector<std::reference_wrapper<ArmyInstance>> SPAN_PROPERTY(armies);
 		memory::vector<std::reference_wrapper<NavyInstance>> SPAN_PROPERTY(navies);
@@ -116,26 +110,20 @@ namespace OpenVic {
 		OV_UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
 	private:
-		pop_id_in_province_t last_pop_id{0};
+		pop_id_in_province_t last_pop_id { 0 };
 		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		void _update_pops(MilitaryDefines const& military_defines);
 		bool convert_rgo_worker_pops_to_equivalent(
-			TypedSpan<pop_type_index_t, const PopType> pop_types,
-			ProductionType const& production_type
+		    TypedSpan<pop_type_index_t, const PopType> pop_types, ProductionType const& production_type
 		);
 		void initialise_rgo();
 
-		memory::FixedVector<
-			memory::vector<std::reference_wrapper<Pop>>,
-			pop_type_index_t
-		> SPAN_PROPERTY(pops_cache_by_type);
+		memory::FixedVector<memory::vector<std::reference_wrapper<Pop>>, pop_type_index_t> SPAN_PROPERTY(pops_cache_by_type);
+
 	public:
 		ProvinceDefinition const& province_definition;
 
-		ProvinceInstance(
-			ProvinceDefinition const& new_province_definition,
-			ProvinceInstanceDeps const& province_instance_deps
-		);
+		ProvinceInstance(ProvinceDefinition const& new_province_definition, ProvinceInstanceDeps const& province_instance_deps);
 		ProvinceInstance(ProvinceInstance const&) = delete;
 		ProvinceInstance& operator=(ProvinceInstance const&) = delete;
 		ProvinceInstance(ProvinceInstance&&) = delete;
@@ -149,8 +137,7 @@ namespace OpenVic {
 
 		GoodDefinition const* get_rgo_good() const;
 		bool set_rgo_production_type_nullable(
-			TypedSpan<pop_type_index_t, const PopType> pop_types,
-			ProductionType const* rgo_production_type_nullable
+		    TypedSpan<pop_type_index_t, const PopType> pop_types, ProductionType const* rgo_production_type_nullable
 		);
 
 		bool set_owner(CountryInstance* new_owner);
@@ -179,15 +166,10 @@ namespace OpenVic {
 			return !is_occupied();
 		}
 		bool expand_building(
-			ModifierEffectCache const& modifier_effect_cache,
-			const province_building_index_t index,
-			CountryInstance& actor
+		    ModifierEffectCache const& modifier_effect_cache, const province_building_index_t index, CountryInstance& actor
 		);
 
-		bool add_pop_vec(
-			std::span<const PopBase> pop_vec,
-			PopDeps const& pop_deps
-		);
+		bool add_pop_vec(std::span<const PopBase> pop_vec, PopDeps const& pop_deps);
 		size_t get_pop_count() const;
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
@@ -208,28 +190,21 @@ namespace OpenVic {
 		}
 		void update_gamestate(InstanceManager const& instance_manager);
 		static constexpr size_t VECTORS_FOR_PROVINCE_TICK = std::max(
-			ResourceGatheringOperation::VECTORS_FOR_RGO_TICK,
-			Pop::VECTORS_FOR_POP_TICK
+		    ResourceGatheringOperation::VECTORS_FOR_RGO_TICK, Pop::VECTORS_FOR_POP_TICK
 		);
 		void province_tick(
-			const Date today,
-			PopValuesFromProvince& reusable_pop_values,
-			RandomU32& random_number_generator,
-			TypedSpan<good_index_t, char> reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_PROVINCE_TICK
-			> reusable_vectors
+		    const Date today,
+		    PopValuesFromProvince& reusable_pop_values,
+		    RandomU32& random_number_generator,
+		    TypedSpan<good_index_t, char> reusable_goods_mask,
+		    forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_PROVINCE_TICK> reusable_vectors
 		);
 		void initialise_for_new_game(
-			const Date today,
-			PopValuesFromProvince& reusable_pop_values,
-			RandomU32& random_number_generator,
-			TypedSpan<good_index_t, char> reusable_goods_mask,
-			forwardable_span<
-				memory::vector<fixed_point_t>,
-				VECTORS_FOR_PROVINCE_TICK
-			> reusable_vectors
+		    const Date today,
+		    PopValuesFromProvince& reusable_pop_values,
+		    RandomU32& random_number_generator,
+		    TypedSpan<good_index_t, char> reusable_goods_mask,
+		    forwardable_span<memory::vector<fixed_point_t>, VECTORS_FOR_PROVINCE_TICK> reusable_vectors
 		);
 
 		bool add_unit_instance_group(UnitInstanceGroup& group);
@@ -239,9 +214,13 @@ namespace OpenVic {
 
 		void setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms);
 		memory::colony<Pop>& get_mutable_pops();
+
 	private:
 		template<typename T>
-		static std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> _find_pop_by_id(T& self, const pop_id_in_province_t pop_id);
+		static std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> _find_pop_by_id(
+		    T& self, const pop_id_in_province_t pop_id
+		);
+
 	public:
 		Pop* find_pop_by_id(const pop_id_in_province_t pop_id);
 		Pop const* find_pop_by_id(const pop_id_in_province_t pop_id) const;

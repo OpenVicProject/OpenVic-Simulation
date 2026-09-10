@@ -5,10 +5,10 @@
 #include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/object/Vector.hpp"
 
+#include "Helper.hpp" // IWYU pragma: keep
 #include "core/object/Approx.hpp"
 #include "core/object/Numeric.hpp"
 #include "core/object/Vector.hpp"
-#include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -143,20 +143,20 @@ TEST_CASE("fvec2_t Operators", "[vec2_t][fvec2_t][fvec2_t-operators]") {
 	CONSTEXPR_CHECK(power1 + power2 == testing::approx_vec2 { 1.25, 1.625 });
 
 	CONSTEXPR_CHECK(
-		decimal1 - decimal2 ==
-		testing::approx_vec2 {
-			(1.1_a).epsilon(testing::INACCURATE_EPSILON), //
-			(1.5_a).epsilon(testing::INACCURATE_EPSILON) //
-		}
+	    decimal1 - decimal2 ==
+	    testing::approx_vec2 {
+	        (1.1_a).epsilon(testing::INACCURATE_EPSILON), //
+	        (1.5_a).epsilon(testing::INACCURATE_EPSILON) //
+	    }
 	);
 	CONSTEXPR_CHECK(power1 - power2 == testing::approx_vec2 { 0.25, 1.375 });
 
 	CONSTEXPR_CHECK(
-		decimal1 * decimal2 ==
-		testing::approx_vec2 {
-			(2.76_a).epsilon(testing::INACCURATE_EPSILON), //
-			(16.66_a).epsilon(testing::INACCURATE_EPSILON) //
-		}
+	    decimal1 * decimal2 ==
+	    testing::approx_vec2 {
+	        (2.76_a).epsilon(testing::INACCURATE_EPSILON), //
+	        (16.66_a).epsilon(testing::INACCURATE_EPSILON) //
+	    }
 	);
 	CONSTEXPR_CHECK(power1 * power2 == testing::approx_vec2 { 0.375, 0.1875 });
 

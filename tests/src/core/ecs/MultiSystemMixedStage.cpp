@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <atomic>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <atomic>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -29,11 +29,21 @@ using OpenVic::Date;
 // the systems are conflict-free and the scheduler lands them in the same stage.
 
 namespace {
-	struct MmsA { int64_t v = 0; };
-	struct MmsB { int64_t v = 0; };
-	struct MmsC { int64_t v = 0; };
-	struct MmsD { int64_t v = 0; };
-	struct MmsSeed { int64_t k = 0; };
+	struct MmsA {
+		int64_t v = 0;
+	};
+	struct MmsB {
+		int64_t v = 0;
+	};
+	struct MmsC {
+		int64_t v = 0;
+	};
+	struct MmsD {
+		int64_t v = 0;
+	};
+	struct MmsSeed {
+		int64_t k = 0;
+	};
 }
 ECS_COMPONENT(MmsA, "test_MultiSystemMixedStage::A")
 ECS_COMPONENT(MmsB, "test_MultiSystemMixedStage::B")
@@ -86,10 +96,7 @@ namespace {
 		std::vector<EntityID> ids;
 		ids.reserve(N);
 		for (std::size_t i = 0; i < N; ++i) {
-			ids.push_back(world.create_entity(
-				MmsSeed { static_cast<int64_t>(i + 1) },
-				MmsA {}, MmsB {}, MmsC {}, MmsD {}
-			));
+			ids.push_back(world.create_entity(MmsSeed { static_cast<int64_t>(i + 1) }, MmsA {}, MmsB {}, MmsC {}, MmsD {}));
 		}
 		return ids;
 	}
@@ -99,8 +106,7 @@ namespace {
 // Test 1: Two SystemThreaded sharing a stage.
 // ============================================================================
 
-TEST_CASE("Two SystemThreaded sharing a stage write disjoint components correctly",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Two SystemThreaded sharing a stage write disjoint components correctly", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -125,8 +131,7 @@ TEST_CASE("Two SystemThreaded sharing a stage write disjoint components correctl
 // Test 2: Two plain System<> sharing a stage.
 // ============================================================================
 
-TEST_CASE("Two plain System<> sharing a stage write disjoint components correctly",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Two plain System<> sharing a stage write disjoint components correctly", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -151,8 +156,7 @@ TEST_CASE("Two plain System<> sharing a stage write disjoint components correctl
 // Test 3: Mixed 1 SystemThreaded + 1 plain System<>.
 // ============================================================================
 
-TEST_CASE("Mixed stage 1 SystemThreaded + 1 plain System<> both correct",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Mixed stage 1 SystemThreaded + 1 plain System<> both correct", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -177,8 +181,7 @@ TEST_CASE("Mixed stage 1 SystemThreaded + 1 plain System<> both correct",
 // Test 4: Mixed 2 SystemThreaded + 2 plain System<> (full combinatorial case).
 // ============================================================================
 
-TEST_CASE("Mixed stage with 2 SystemThreaded + 2 plain System<> all correct",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Mixed stage with 2 SystemThreaded + 2 plain System<> all correct", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -243,8 +246,7 @@ namespace {
 	}
 }
 
-TEST_CASE("Multi-system mixed stage: digest is identical across worker counts",
-          "[ecs][MultiSystemMixedStage][determinism]") {
+TEST_CASE("Multi-system mixed stage: digest is identical across worker counts", "[ecs][MultiSystemMixedStage][determinism]") {
 	std::size_t const entities = 500;
 	int const ticks = 10;
 	int64_t baseline = run_mixed_and_digest(1, entities, ticks);
@@ -265,8 +267,12 @@ TEST_CASE("Multi-system mixed stage: digest is identical across worker counts",
 // ============================================================================
 
 namespace {
-	struct MmsSpawnSrc { int32_t id = 0; };
-	struct MmsSpawned { int32_t source_id = 0; };
+	struct MmsSpawnSrc {
+		int32_t id = 0;
+	};
+	struct MmsSpawned {
+		int32_t source_id = 0;
+	};
 }
 ECS_COMPONENT(MmsSpawnSrc, "test_MultiSystemMixedStage::SpawnSrc")
 ECS_COMPONENT(MmsSpawned, "test_MultiSystemMixedStage::Spawned")
@@ -297,10 +303,7 @@ namespace {
 		// Sources carry both SpawnSrc (for the spawner) and Seed (for the noop). Same
 		// archetype keeps the analysis simple.
 		for (std::size_t i = 0; i < source_count; ++i) {
-			world.create_entity(
-				MmsSpawnSrc { static_cast<int32_t>(i) },
-				MmsSeed { static_cast<int64_t>(i) }
-			);
+			world.create_entity(MmsSpawnSrc { static_cast<int32_t>(i) }, MmsSeed { static_cast<int64_t>(i) });
 		}
 
 		world.register_system<MmsSpawnerThreaded>();
@@ -315,8 +318,7 @@ namespace {
 	}
 }
 
-TEST_CASE("Multi-system stage with threaded spawner: finalised order invariant",
-          "[ecs][MultiSystemMixedStage][determinism]") {
+TEST_CASE("Multi-system stage with threaded spawner: finalised order invariant", "[ecs][MultiSystemMixedStage][determinism]") {
 	std::size_t const sources = 250;
 	std::vector<int32_t> const baseline = spawn_and_capture(1, sources);
 	REQUIRE(baseline.size() == sources);
@@ -335,8 +337,7 @@ TEST_CASE("Multi-system stage with threaded spawner: finalised order invariant",
 // single plain System<> should keep producing the same results as before.
 // ============================================================================
 
-TEST_CASE("Single SystemThreaded stage still produces expected per-row results",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Single SystemThreaded stage still produces expected per-row results", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -353,8 +354,7 @@ TEST_CASE("Single SystemThreaded stage still produces expected per-row results",
 	}
 }
 
-TEST_CASE("Single plain System<> stage still produces expected per-row results",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Single plain System<> stage still produces expected per-row results", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 
@@ -425,7 +425,7 @@ namespace mms_concurrency {
 		for (int i = 0; i < 2000; ++i) {
 			spin += i;
 		}
-		(void) spin;
+		(void)spin;
 		g_active.fetch_sub(1);
 	}
 
@@ -446,15 +446,14 @@ namespace mms_concurrency {
 ECS_SYSTEM(mms_concurrency::MmsConcThreadedA)
 ECS_SYSTEM(mms_concurrency::MmsConcThreadedB)
 
-TEST_CASE("Multi-system stage actually runs bodies concurrently",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Multi-system stage actually runs bodies concurrently", "[ecs][MultiSystemMixedStage]") {
 	using namespace mms_concurrency;
 
 	World world;
 	world.set_ecs_worker_count(4);
 
 	std::size_t const N = 2000; // many chunks → many work items → ample overlap opportunity
-	(void) seed_world(world, N);
+	(void)seed_world(world, N);
 
 	g_active.store(0);
 	g_peak.store(0);
@@ -470,8 +469,7 @@ TEST_CASE("Multi-system stage actually runs bodies concurrently",
 	CHECK(peak >= 2);
 }
 
-TEST_CASE("Multi-system stage applies deferred add_component at stage barrier",
-          "[ecs][MultiSystemMixedStage]") {
+TEST_CASE("Multi-system stage applies deferred add_component at stage barrier", "[ecs][MultiSystemMixedStage]") {
 	World world;
 	world.set_ecs_worker_count(4);
 

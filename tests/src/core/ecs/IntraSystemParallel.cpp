@@ -1,13 +1,13 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -35,8 +35,7 @@ namespace {
 }
 ECS_SYSTEM(ParMover)
 
-TEST_CASE("SystemThreaded touches each row exactly once",
-          "[ecs][IntraSystemParallel]") {
+TEST_CASE("SystemThreaded touches each row exactly once", "[ecs][IntraSystemParallel]") {
 	for (uint32_t wc : { 1u, 2u, 4u, 8u, 16u }) {
 		World world;
 		world.set_ecs_worker_count(wc);
@@ -45,10 +44,7 @@ TEST_CASE("SystemThreaded touches each row exactly once",
 		std::size_t const N = 500;
 		ids.reserve(N);
 		for (std::size_t i = 0; i < N; ++i) {
-			ids.push_back(world.create_entity(
-				ParPos { static_cast<int64_t>(i) },
-				ParVel { 7 }
-			));
+			ids.push_back(world.create_entity(ParPos { static_cast<int64_t>(i) }, ParVel { 7 }));
 		}
 
 		world.register_system<ParMover>();
@@ -63,8 +59,7 @@ TEST_CASE("SystemThreaded touches each row exactly once",
 	}
 }
 
-TEST_CASE("SystemThreaded result is identical across worker counts",
-          "[ecs][IntraSystemParallel][determinism]") {
+TEST_CASE("SystemThreaded result is identical across worker counts", "[ecs][IntraSystemParallel][determinism]") {
 	auto run = [](uint32_t wc) {
 		World world;
 		world.set_ecs_worker_count(wc);
@@ -72,10 +67,9 @@ TEST_CASE("SystemThreaded result is identical across worker counts",
 		std::size_t const N = 250;
 		ids.reserve(N);
 		for (std::size_t i = 0; i < N; ++i) {
-			ids.push_back(world.create_entity(
-				ParPos { static_cast<int64_t>(i + 1) },
-				ParVel { static_cast<int64_t>((i * 13) % 17 + 1) }
-			));
+			ids.push_back(
+			    world.create_entity(ParPos { static_cast<int64_t>(i + 1) }, ParVel { static_cast<int64_t>((i * 13) % 17 + 1) })
+			);
 		}
 		world.register_system<ParMover>();
 		for (int t = 0; t < 5; ++t) {

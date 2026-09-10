@@ -4,8 +4,8 @@
 #include <fstream>
 #include <span>
 
-#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;

@@ -9,16 +9,17 @@ namespace OpenVic {
 
 	struct Crime final : HasIndex<Crime, crime_index_t>, TriggeredModifier {
 		friend struct CrimeManager;
+
 	public:
 		bool is_default_active;
 
 		Crime(
-			index_t new_index,
-			std::string_view new_identifier,
-			ModifierValue&& new_values,
-			icon_t new_icon,
-			ConditionScript&& new_trigger,
-			bool new_default_active
+		    index_t new_index,
+		    std::string_view new_identifier,
+		    ModifierValue&& new_values,
+		    icon_t new_icon,
+		    ConditionScript&& new_trigger,
+		    bool new_default_active
 		);
 		Crime(Crime&&) = default;
 	};
@@ -29,8 +30,11 @@ namespace OpenVic {
 
 	public:
 		bool add_crime_modifier(
-			std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger,
-			bool default_active
+		    std::string_view identifier,
+		    ModifierValue&& values,
+		    IconModifier::icon_t icon,
+		    ConditionScript&& trigger,
+		    bool default_active
 		);
 
 		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);

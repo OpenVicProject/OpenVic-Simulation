@@ -9,9 +9,9 @@
 #include "openvic-simulation/core/object/FixedPoint/Math.hpp"
 #include "openvic-simulation/core/object/FixedPoint/String.hpp"
 
+#include "Helper.hpp" // IWYU pragma: keep
 #include "core/object/Approx.hpp"
 #include "core/object/Numeric.hpp" // IWYU pragma: keep
-#include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -142,13 +142,13 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	static constexpr std::string_view plus_fixed_point_str = "+4.5432"sv;
 	fixed_point_t fp = fixed_point_t::_0;
 	CHECK(
-		fp::from_chars(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc::invalid_argument
+	    fp::from_chars(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
+	    std::errc::invalid_argument
 	);
 	CHECK(fp == 0.0_a);
 	CHECK(
-		fp::from_chars_with_plus(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc {}
+	    fp::from_chars_with_plus(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size())
+	        .ec == std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
 }
@@ -266,24 +266,21 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CONSTEXPR_CHECK(((int32_t)decimal4) == 3);
 
 	CONSTEXPR_CHECK(
-		fp::mul_div(
-			fixed_point_t::parse_raw(2),
-			fixed_point_t::parse_raw(3),
-			fixed_point_t::parse_raw(6)
-		) == fixed_point_t::parse_raw(1)
+	    fp::mul_div(fixed_point_t::parse_raw(2), fixed_point_t::parse_raw(3), fixed_point_t::parse_raw(6)) ==
+	    fixed_point_t::parse_raw(1)
 	);
 
 	CONSTEXPR_CHECK(
-		fp::multiply_truncate<int64_t>(
-			4294967295LL, //2^32 - 1
-			fixed_point_t::usable_max //2^31 / 2^16
-		) == 140737488322560LL //2^47 - 2^15
+	    fp::multiply_truncate<int64_t>(
+	        4294967295LL, // 2^32 - 1
+	        fixed_point_t::usable_max // 2^31 / 2^16
+	    ) == 140737488322560LL // 2^47 - 2^15
 	);
 	CONSTEXPR_CHECK(
-		fp::multiply_truncate<int64_t>(
-			281474976710655LL, //2^48 - 1
-			fixed_point_t::_0_50
-		) == 140737488355327LL //2^47 - 1
+	    fp::multiply_truncate<int64_t>(
+	        281474976710655LL, // 2^48 - 1
+	        fixed_point_t::_0_50
+	    ) == 140737488355327LL // 2^47 - 1
 	);
 }
 

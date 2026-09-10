@@ -1,4 +1,7 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <thread>
+
 #include "openvic-simulation/core/ecs/Checksum.hpp"
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
@@ -6,10 +9,7 @@
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstddef>
-#include <cstdint>
-#include <thread>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -54,17 +54,25 @@ ECS_COMPONENT(SrEvalLog, "test_SystemShouldRun::EvalLog")
 // the traits don't require the CRTP System base. ===
 namespace {
 	struct SrValidPred {
-		static bool should_run(TickContext const&) { return true; }
+		static bool should_run(TickContext const&) {
+			return true;
+		}
 	};
 	struct SrNoexceptPred {
-		static bool should_run(TickContext const&) noexcept { return true; }
+		static bool should_run(TickContext const&) noexcept {
+			return true;
+		}
 	};
 	struct SrAbsent {};
 	struct SrNonStatic {
-		bool should_run(TickContext const&) { return true; }
+		bool should_run(TickContext const&) {
+			return true;
+		}
 	};
 	struct SrWrongParam {
-		static bool should_run(int) { return true; }
+		static bool should_run(int) {
+			return true;
+		}
 	};
 	struct SrWrongRet {
 		static void should_run(TickContext const&) {}
@@ -84,8 +92,12 @@ namespace {
 	// (address-of is ambiguous), validity fails (ambiguous &) — hard error, never a
 	// silent pick-one.
 	struct SrOverloaded {
-		static bool should_run(TickContext const&) { return true; }
-		static bool should_run(Date) { return true; }
+		static bool should_run(TickContext const&) {
+			return true;
+		}
+		static bool should_run(Date) {
+			return true;
+		}
 	};
 
 	static_assert(has_should_run_v<SrValidPred> && should_run_signature_valid_v<SrValidPred>);
@@ -99,8 +111,7 @@ namespace {
 	static_assert(has_should_run_v<SrOverloaded> && !should_run_signature_valid_v<SrOverloaded>);
 }
 
-TEST_CASE("should_run compile-time guarantees hold (static_assert wall)",
-          "[ecs][scheduler][should_run][compiletime]") {
+TEST_CASE("should_run compile-time guarantees hold (static_assert wall)", "[ecs][scheduler][should_run][compiletime]") {
 	// The static_assert block above is the real test; this case just surfaces it in the report.
 	CHECK(true);
 }
@@ -131,15 +142,25 @@ namespace {
 namespace {
 	// (a) gate semantics.
 	struct SrAlwaysOff : System<SrAlwaysOff> {
-		static bool should_run(TickContext const&) { return false; }
-		void tick(TickContext const&, SrA& a) { a.v += 1000; }
+		static bool should_run(TickContext const&) {
+			return false;
+		}
+		void tick(TickContext const&, SrA& a) {
+			a.v += 1000;
+		}
 	};
 	struct SrAlwaysOn : System<SrAlwaysOn> {
-		static bool should_run(TickContext const&) { return true; }
-		void tick(TickContext const&, SrB& b) { b.v += 1; }
+		static bool should_run(TickContext const&) {
+			return true;
+		}
+		void tick(TickContext const&, SrB& b) {
+			b.v += 1;
+		}
 	};
 	struct SrNoPredicateSys : System<SrNoPredicateSys> {
-		void tick(TickContext const&, SrC& c) { c.v += 1; }
+		void tick(TickContext const&, SrC& c) {
+			c.v += 1;
+		}
 	};
 
 	// (b) exactly-once + main-thread.
@@ -148,21 +169,29 @@ namespace {
 			sr_record_eval(ctx);
 			return true;
 		}
-		void tick(TickContext const&, SrA& a) { a.v += 1; }
+		void tick(TickContext const&, SrA& a) {
+			a.v += 1;
+		}
 	};
 	struct SrEvalCounterOff : System<SrEvalCounterOff> {
 		static bool should_run(TickContext const& ctx) {
 			sr_record_eval(ctx);
 			return false;
 		}
-		void tick(TickContext const&, SrA& a) { a.v += 1000; }
+		void tick(TickContext const&, SrA& a) {
+			a.v += 1000;
+		}
 	};
 	// Disjoint fillers to force a multi-system stage around the counter.
 	struct SrFillerB : System<SrFillerB> {
-		void tick(TickContext const&, SrB& b) { b.v += 1; }
+		void tick(TickContext const&, SrB& b) {
+			b.v += 1;
+		}
 	};
 	struct SrFillerC : System<SrFillerC> {
-		void tick(TickContext const&, SrC& c) { c.v += 1; }
+		void tick(TickContext const&, SrC& c) {
+			c.v += 1;
+		}
 	};
 
 	// (c)/(d) multi-system stage with a date-gated SystemThreaded. Disjoint write targets
@@ -171,17 +200,25 @@ namespace {
 		static bool should_run(TickContext const& ctx) {
 			return ctx.today.is_month_start();
 		}
-		void tick(TickContext const&, SrA& a) { a.v = a.v * 31 + 7; }
+		void tick(TickContext const&, SrA& a) {
+			a.v = a.v * 31 + 7;
+		}
 	};
 	// Predicate-free twin with identical access — for the (d) stage-layout comparison.
 	struct SrThreadedTwin : SystemThreaded<SrThreadedTwin> {
-		void tick(TickContext const&, SrA& a) { a.v = a.v * 31 + 7; }
+		void tick(TickContext const&, SrA& a) {
+			a.v = a.v * 31 + 7;
+		}
 	};
 	struct SrThreadedRun : SystemThreaded<SrThreadedRun> {
-		void tick(TickContext const&, SrB& b) { b.v = b.v * 31 + 3; }
+		void tick(TickContext const&, SrB& b) {
+			b.v = b.v * 31 + 3;
+		}
 	};
 	struct SrSerialRun : System<SrSerialRun> {
-		void tick(TickContext const&, SrC& c) { c.v = c.v * 31 + 5; }
+		void tick(TickContext const&, SrC& c) {
+			c.v = c.v * 31 + 5;
+		}
 	};
 
 	// (e) gate ≡ in-body early-out, serial and threaded variants. Same kernel, same
@@ -190,7 +227,9 @@ namespace {
 		static bool should_run(TickContext const& ctx) {
 			return ctx.today.is_month_start();
 		}
-		void tick(TickContext const&, SrA& a) { a.v = a.v * 31 + 7; }
+		void tick(TickContext const&, SrA& a) {
+			a.v = a.v * 31 + 7;
+		}
 	};
 	struct SrMonthlyEarlyOut : System<SrMonthlyEarlyOut> {
 		void tick(TickContext const& ctx, SrA& a) {
@@ -204,7 +243,9 @@ namespace {
 		static bool should_run(TickContext const& ctx) {
 			return ctx.today.is_month_start();
 		}
-		void tick(TickContext const&, SrA& a) { a.v = a.v * 31 + 7; }
+		void tick(TickContext const&, SrA& a) {
+			a.v = a.v * 31 + 7;
+		}
 	};
 	struct SrMonthlyEarlyOutThreaded : SystemThreaded<SrMonthlyEarlyOutThreaded> {
 		void tick(TickContext const& ctx, SrA& a) {
@@ -233,13 +274,10 @@ ECS_SYSTEM(SrMonthlyEarlyOutThreaded)
 
 // === (a) gate semantics ===
 
-TEST_CASE("should_run false skips the tick body; true and absent always run",
-          "[ecs][scheduler][should_run]") {
+TEST_CASE("should_run false skips the tick body; true and absent always run", "[ecs][scheduler][should_run]") {
 	World world;
 	for (std::size_t i = 0; i < 100; ++i) {
-		world.create_entity(
-			SrA { static_cast<int64_t>(i) }, SrB { 0 }, SrC { 0 }
-		);
+		world.create_entity(SrA { static_cast<int64_t>(i) }, SrB { 0 }, SrC { 0 });
 	}
 	world.register_system<SrAlwaysOff>();
 	world.register_system<SrAlwaysOn>();
@@ -278,10 +316,14 @@ namespace {
 		if (multi_stage) {
 			world.register_system<SrFillerB>();
 			world.register_system<SrFillerC>();
-			REQUIRE(world.debug_stage_index_of(system_type_id_of<CounterSystem>())
-				== world.debug_stage_index_of(system_type_id_of<SrFillerB>()));
-			REQUIRE(world.debug_stage_index_of(system_type_id_of<CounterSystem>())
-				== world.debug_stage_index_of(system_type_id_of<SrFillerC>()));
+			REQUIRE(
+			    world.debug_stage_index_of(system_type_id_of<CounterSystem>()) ==
+			    world.debug_stage_index_of(system_type_id_of<SrFillerB>())
+			);
+			REQUIRE(
+			    world.debug_stage_index_of(system_type_id_of<CounterSystem>()) ==
+			    world.debug_stage_index_of(system_type_id_of<SrFillerC>())
+			);
 		}
 
 		for (int t = 0; t < ticks; ++t) {
@@ -290,7 +332,9 @@ namespace {
 
 		if (out_a_sum != nullptr) {
 			int64_t sum = 0;
-			world.for_each<SrA>([&](SrA& a) { sum += a.v; });
+			world.for_each<SrA>([&](SrA& a) {
+				sum += a.v;
+			});
 			*out_a_sum = sum;
 		}
 		SrEvalLog const* log = world.get_singleton<SrEvalLog>();
@@ -299,8 +343,7 @@ namespace {
 	}
 }
 
-TEST_CASE("should_run is evaluated exactly once per tick, on the main thread",
-          "[ecs][scheduler][should_run]") {
+TEST_CASE("should_run is evaluated exactly once per tick, on the main thread", "[ecs][scheduler][should_run]") {
 	sr_main_tid = std::this_thread::get_id();
 	sr_all_evals_on_main = true;
 	int const ticks = 9;
@@ -330,17 +373,15 @@ TEST_CASE("should_run is evaluated exactly once per tick, on the main thread",
 namespace {
 	// Tick the gated trio across `tick_count` consecutive days starting 1836-01-01 (the
 	// skip pattern flips at every month boundary) and return the full-state checksum.
-	uint64_t run_trio_and_checksum(
-		uint32_t worker_count, bool serial_mode, std::size_t entity_count, int tick_count
-	) {
+	uint64_t run_trio_and_checksum(uint32_t worker_count, bool serial_mode, std::size_t entity_count, int tick_count) {
 		World world;
 		world.set_ecs_worker_count(worker_count);
 		world.set_serial_mode(serial_mode);
 		for (std::size_t i = 0; i < entity_count; ++i) {
 			world.create_entity(
-				SrA { static_cast<int64_t>(i + 1) },
-				SrB { static_cast<int64_t>((i * 17) % 13 + 1) },
-				SrC { static_cast<int64_t>((i * 7) % 11 + 1) }
+			    SrA { static_cast<int64_t>(i + 1) },
+			    SrB { static_cast<int64_t>((i * 17) % 13 + 1) },
+			    SrC { static_cast<int64_t>((i * 7) % 11 + 1) }
 			);
 		}
 		world.register_system<SrThreadedGated>();
@@ -356,8 +397,9 @@ namespace {
 	}
 }
 
-TEST_CASE("Skipping SystemThreaded in a multi-system stage: checksum identical across worker counts",
-          "[ecs][determinism][should_run]") {
+TEST_CASE(
+    "Skipping SystemThreaded in a multi-system stage: checksum identical across worker counts", "[ecs][determinism][should_run]"
+) {
 	std::size_t const entities = 500;
 	int const ticks = 65; // spans the Feb 1 and Mar 1 month starts → skip pattern varies
 
@@ -385,8 +427,9 @@ TEST_CASE("Skipping SystemThreaded in a multi-system stage: checksum identical a
 	CHECK(serial_result == baseline);
 }
 
-TEST_CASE("Skipping SystemThreaded alone in its stage: checksum identical across worker counts",
-          "[ecs][determinism][should_run]") {
+TEST_CASE(
+    "Skipping SystemThreaded alone in its stage: checksum identical across worker counts", "[ecs][determinism][should_run]"
+) {
 	// Single-system-stage branch: the skip happens by not calling tick_all at all.
 	std::size_t const entities = 500;
 	int const ticks = 65;
@@ -416,8 +459,9 @@ TEST_CASE("Skipping SystemThreaded alone in its stage: checksum identical across
 
 // === (d) schedule stability — predicates and skip patterns never touch the schedule ===
 
-TEST_CASE("schedule_hash and stage layout are constant across ticks with varying skip patterns",
-          "[ecs][scheduler][should_run][Hash]") {
+TEST_CASE(
+    "schedule_hash and stage layout are constant across ticks with varying skip patterns", "[ecs][scheduler][should_run][Hash]"
+) {
 	World world;
 	for (std::size_t i = 0; i < 50; ++i) {
 		world.create_entity(SrA { 1 }, SrB { 1 }, SrC { 1 });
@@ -439,8 +483,9 @@ TEST_CASE("schedule_hash and stage layout are constant across ticks with varying
 	}
 }
 
-TEST_CASE("A predicated system occupies the same stage layout as its predicate-free twin",
-          "[ecs][scheduler][should_run][Hash]") {
+TEST_CASE(
+    "A predicated system occupies the same stage layout as its predicate-free twin", "[ecs][scheduler][should_run][Hash]"
+) {
 	// schedule_hash folds (stage_idx, type_id), and the predicate is part of the type — so
 	// two DIFFERENT types can never compare hash-equal. The schedule-invariance claim is
 	// about layout: predicate presence must not move a system between stages or change the
@@ -456,12 +501,18 @@ TEST_CASE("A predicated system occupies the same stage layout as its predicate-f
 	without_pred.register_system<SrSerialRun>();
 
 	CHECK(with_pred.debug_stage_count() == without_pred.debug_stage_count());
-	CHECK(with_pred.debug_stage_index_of(system_type_id_of<SrThreadedGated>())
-		== without_pred.debug_stage_index_of(system_type_id_of<SrThreadedTwin>()));
-	CHECK(with_pred.debug_stage_index_of(system_type_id_of<SrThreadedRun>())
-		== without_pred.debug_stage_index_of(system_type_id_of<SrThreadedRun>()));
-	CHECK(with_pred.debug_stage_index_of(system_type_id_of<SrSerialRun>())
-		== without_pred.debug_stage_index_of(system_type_id_of<SrSerialRun>()));
+	CHECK(
+	    with_pred.debug_stage_index_of(system_type_id_of<SrThreadedGated>()) ==
+	    without_pred.debug_stage_index_of(system_type_id_of<SrThreadedTwin>())
+	);
+	CHECK(
+	    with_pred.debug_stage_index_of(system_type_id_of<SrThreadedRun>()) ==
+	    without_pred.debug_stage_index_of(system_type_id_of<SrThreadedRun>())
+	);
+	CHECK(
+	    with_pred.debug_stage_index_of(system_type_id_of<SrSerialRun>()) ==
+	    without_pred.debug_stage_index_of(system_type_id_of<SrSerialRun>())
+	);
 }
 
 // === (e) should_run gating ≡ in-body early-out ===
@@ -483,16 +534,21 @@ namespace {
 	}
 }
 
-TEST_CASE("is_month_start gating via should_run equals an in-body early-out",
-          "[ecs][determinism][should_run]") {
+TEST_CASE("is_month_start gating via should_run equals an in-body early-out", "[ecs][determinism][should_run]") {
 	std::size_t const entities = 300;
 	int const ticks = 65; // 1836-01-01 .. 1836-03-05 — three month starts hit
 
-	CHECK(run_monthly_and_checksum<SrMonthlyGated>(entities, ticks)
-		== run_monthly_and_checksum<SrMonthlyEarlyOut>(entities, ticks));
-	CHECK(run_monthly_and_checksum<SrMonthlyGatedThreaded>(entities, ticks)
-		== run_monthly_and_checksum<SrMonthlyEarlyOutThreaded>(entities, ticks));
+	CHECK(
+	    run_monthly_and_checksum<SrMonthlyGated>(entities, ticks) ==
+	    run_monthly_and_checksum<SrMonthlyEarlyOut>(entities, ticks)
+	);
+	CHECK(
+	    run_monthly_and_checksum<SrMonthlyGatedThreaded>(entities, ticks) ==
+	    run_monthly_and_checksum<SrMonthlyEarlyOutThreaded>(entities, ticks)
+	);
 	// Gated serial ≡ gated threaded ≡ early-out serial — all four agree.
-	CHECK(run_monthly_and_checksum<SrMonthlyGated>(entities, ticks)
-		== run_monthly_and_checksum<SrMonthlyGatedThreaded>(entities, ticks));
+	CHECK(
+	    run_monthly_and_checksum<SrMonthlyGated>(entities, ticks) ==
+	    run_monthly_and_checksum<SrMonthlyGatedThreaded>(entities, ticks)
+	);
 }

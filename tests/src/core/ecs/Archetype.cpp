@@ -1,10 +1,11 @@
 #include "openvic-simulation/core/ecs/Archetype.hpp"
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
+#include "openvic-simulation/core/ecs/EntityID.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -104,13 +105,13 @@ TEST_CASE("Archetype matches_all on subset / superset / disjoint", "[ecs][Archet
 		return v;
 	};
 
-	CHECK(arch.matches_all({}));                            // empty required
-	CHECK(arch.matches_all(sorted({ a })));                 // subset
-	CHECK(arch.matches_all(sorted({ a, b })));              // subset
-	CHECK(arch.matches_all(sorted({ a, b, c })));           // exact
-	CHECK_FALSE(arch.matches_all(sorted({ a, d })));        // requires missing
-	CHECK_FALSE(arch.matches_all(sorted({ d })));           // entirely disjoint
-	CHECK_FALSE(arch.matches_all(sorted({ a, b, c, d })));  // superset of arch
+	CHECK(arch.matches_all({})); // empty required
+	CHECK(arch.matches_all(sorted({ a }))); // subset
+	CHECK(arch.matches_all(sorted({ a, b }))); // subset
+	CHECK(arch.matches_all(sorted({ a, b, c }))); // exact
+	CHECK_FALSE(arch.matches_all(sorted({ a, d }))); // requires missing
+	CHECK_FALSE(arch.matches_all(sorted({ d }))); // entirely disjoint
+	CHECK_FALSE(arch.matches_all(sorted({ a, b, c, d }))); // superset of arch
 }
 
 TEST_CASE("Archetype matches_none on disjoint / overlap / empty", "[ecs][Archetype]") {
@@ -129,10 +130,10 @@ TEST_CASE("Archetype matches_none on disjoint / overlap / empty", "[ecs][Archety
 		return v;
 	};
 
-	CHECK(arch.matches_none({}));                       // empty exclude
-	CHECK(arch.matches_none(sorted({ c })));            // disjoint
-	CHECK(arch.matches_none(sorted({ c, d })));         // disjoint
-	CHECK_FALSE(arch.matches_none(sorted({ a })));      // overlap
-	CHECK_FALSE(arch.matches_none(sorted({ a, c })));   // partial overlap
-	CHECK_FALSE(arch.matches_none(sorted({ a, b })));   // full overlap
+	CHECK(arch.matches_none({})); // empty exclude
+	CHECK(arch.matches_none(sorted({ c }))); // disjoint
+	CHECK(arch.matches_none(sorted({ c, d }))); // disjoint
+	CHECK_FALSE(arch.matches_none(sorted({ a }))); // overlap
+	CHECK_FALSE(arch.matches_none(sorted({ a, c }))); // partial overlap
+	CHECK_FALSE(arch.matches_none(sorted({ a, b }))); // full overlap
 }

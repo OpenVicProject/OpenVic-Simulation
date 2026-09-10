@@ -45,22 +45,23 @@ namespace OpenVic::ecs::detail {
 	template<typename Derived, typename... Cs>
 	struct dispatch_serial_impl<Derived, /*WithEntity=*/false, std::tuple<Cs...>> {
 		static void run(Derived& self, World& world, TickContext const& ctx) {
-			static_assert(sizeof...(Cs) > 0,
-				"System::tick must have at least one component parameter after TickContext");
-			world.template for_each<std::remove_cvref_t<Cs>...>(build_tick_query<Derived>(),
-				[&self, &ctx](std::remove_cvref_t<Cs>&... cs) {
-					self.tick(ctx, cs...);
-				});
+			static_assert(sizeof...(Cs) > 0, "System::tick must have at least one component parameter after TickContext");
+			world.template for_each<std::remove_cvref_t<Cs>...>(
+			    build_tick_query<Derived>(), [&self, &ctx](std::remove_cvref_t<Cs>&... cs) {
+				    self.tick(ctx, cs...);
+			    }
+			);
 		}
 	};
 
 	template<typename Derived, typename... Cs>
 	struct dispatch_serial_impl<Derived, /*WithEntity=*/true, std::tuple<Cs...>> {
 		static void run(Derived& self, World& world, TickContext const& ctx) {
-			world.template for_each_with_entity<std::remove_cvref_t<Cs>...>(build_tick_query<Derived>(),
-				[&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-					invoke_tick_with_entity(self, ctx, eid, cs...);
-				});
+			world.template for_each_with_entity<std::remove_cvref_t<Cs>...>(
+			    build_tick_query<Derived>(), [&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
+				    invoke_tick_with_entity(self, ctx, eid, cs...);
+			    }
+			);
 		}
 	};
 
@@ -93,8 +94,7 @@ namespace OpenVic::ecs::detail {
 	// exclude sets identical between the main-thread collect and any worker-side dispatch.
 	inline std::vector<ChunkLocation> collect_matching_chunks(World& world, Query const& query) {
 		QueryCacheKey key { query.require_ids, query.exclude_ids };
-		std::vector<uint32_t> const& matched
-			= world.resolve_query_cache_for_threaded(key).archetype_indices;
+		std::vector<uint32_t> const& matched = world.resolve_query_cache_for_threaded(key).archetype_indices;
 
 		std::vector<ChunkLocation> out;
 		for (uint32_t arch_idx : matched) {
@@ -111,12 +111,14 @@ namespace OpenVic::ecs::detail {
 	template<typename Derived, typename... Cs>
 	struct dispatch_threaded_impl<Derived, /*WithEntity=*/false, std::tuple<Cs...>> {
 		static void run(
-			Derived& self, World& world, TickContext const& ctx_template,
-			EcsThreadPool& pool, std::vector<CommandBuffer>& per_chunk_cmds,
-			CommandBuffer& pending_cmd
+		    Derived& self,
+		    World& world,
+		    TickContext const& ctx_template,
+		    EcsThreadPool& pool,
+		    std::vector<CommandBuffer>& per_chunk_cmds,
+		    CommandBuffer& pending_cmd
 		) {
-			std::vector<ChunkLocation> const chunks
-				= collect_matching_chunks(world, build_tick_query<Derived>());
+			std::vector<ChunkLocation> const chunks = collect_matching_chunks(world, build_tick_query<Derived>());
 			std::size_t const N = chunks.size();
 			if (N == 0) {
 				return;
@@ -136,10 +138,10 @@ namespace OpenVic::ecs::detail {
 				CommandBuffer& cmd = per_chunk_cmds[chunk_idx];
 				TickContext per_chunk { ctx_template.world, ctx_template.today, cmd };
 				world.template iterate_one_chunk_for_threaded<std::remove_cvref_t<Cs>...>(
-					loc.archetype_idx, loc.chunk_idx,
-					[&self, &per_chunk](std::remove_cvref_t<Cs>&... cs) {
-						self.tick(per_chunk, cs...);
-					});
+				    loc.archetype_idx, loc.chunk_idx, [&self, &per_chunk](std::remove_cvref_t<Cs>&... cs) {
+					    self.tick(per_chunk, cs...);
+				    }
+				);
 			});
 
 			// Merge in chunk_idx ascending order — deterministic regardless of worker_count.
@@ -153,12 +155,14 @@ namespace OpenVic::ecs::detail {
 	template<typename Derived, typename... Cs>
 	struct dispatch_threaded_impl<Derived, /*WithEntity=*/true, std::tuple<Cs...>> {
 		static void run(
-			Derived& self, World& world, TickContext const& ctx_template,
-			EcsThreadPool& pool, std::vector<CommandBuffer>& per_chunk_cmds,
-			CommandBuffer& pending_cmd
+		    Derived& self,
+		    World& world,
+		    TickContext const& ctx_template,
+		    EcsThreadPool& pool,
+		    std::vector<CommandBuffer>& per_chunk_cmds,
+		    CommandBuffer& pending_cmd
 		) {
-			std::vector<ChunkLocation> const chunks
-				= collect_matching_chunks(world, build_tick_query<Derived>());
+			std::vector<ChunkLocation> const chunks = collect_matching_chunks(world, build_tick_query<Derived>());
 			std::size_t const N = chunks.size();
 			if (N == 0) {
 				return;
@@ -176,12 +180,11 @@ namespace OpenVic::ecs::detail {
 				ChunkLocation const& loc = chunks[chunk_idx];
 				CommandBuffer& cmd = per_chunk_cmds[chunk_idx];
 				TickContext per_chunk { ctx_template.world, ctx_template.today, cmd };
-				world.template iterate_one_chunk_with_entity_for_threaded<
-					std::remove_cvref_t<Cs>...>(
-					loc.archetype_idx, loc.chunk_idx,
-					[&self, &per_chunk](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-						invoke_tick_with_entity(self, per_chunk, eid, cs...);
-					});
+				world.template iterate_one_chunk_with_entity_for_threaded<std::remove_cvref_t<Cs>...>(
+				    loc.archetype_idx, loc.chunk_idx, [&self, &per_chunk](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
+					    invoke_tick_with_entity(self, per_chunk, eid, cs...);
+				    }
+				);
 			});
 
 			for (std::size_t i = 0; i < N; ++i) {
@@ -193,14 +196,16 @@ namespace OpenVic::ecs::detail {
 
 	template<typename Derived>
 	void dispatch_threaded(
-		Derived& self, World& world, TickContext const& ctx,
-		EcsThreadPool& pool, std::vector<CommandBuffer>& per_chunk_cmds,
-		CommandBuffer& pending_cmd
+	    Derived& self,
+	    World& world,
+	    TickContext const& ctx,
+	    EcsThreadPool& pool,
+	    std::vector<CommandBuffer>& per_chunk_cmds,
+	    CommandBuffer& pending_cmd
 	) {
 		using Components = component_pack_t<Derived>;
 		constexpr bool with_entity = tick_takes_entity_v<Derived>;
-		dispatch_threaded_impl<Derived, with_entity, Components>::run(
-			self, world, ctx, pool, per_chunk_cmds, pending_cmd);
+		dispatch_threaded_impl<Derived, with_entity, Components>::run(self, world, ctx, pool, per_chunk_cmds, pending_cmd);
 	}
 }
 
@@ -224,8 +229,7 @@ namespace OpenVic::ecs {
 			return;
 		}
 		EcsThreadPool& pool = world.ecs_thread_pool();
-		detail::dispatch_threaded<Derived>(
-			static_cast<Derived&>(*this), world, ctx, pool, per_chunk_cmds_, *reg->pending_cmd);
+		detail::dispatch_threaded<Derived>(static_cast<Derived&>(*this), world, ctx, pool, per_chunk_cmds_, *reg->pending_cmd);
 	}
 
 	// === Multi-system-stage entry points ===
@@ -243,27 +247,23 @@ namespace OpenVic::ecs {
 
 	template<typename Derived>
 	void SystemThreaded<Derived>::tick_one_chunk(
-		Derived& self, World& world, TickContext const& ctx,
-		uint32_t archetype_idx, uint32_t chunk_idx
+	    Derived& self, World& world, TickContext const& ctx, uint32_t archetype_idx, uint32_t chunk_idx
 	) {
 		using Components = detail::component_pack_t<Derived>;
 		constexpr bool with_entity = detail::tick_takes_entity_v<Derived>;
 
 		[&]<typename... Cs>(std::tuple<Cs...>*) {
 			if constexpr (with_entity) {
-				world.template iterate_one_chunk_with_entity_for_threaded<
-					std::remove_cvref_t<Cs>...>(
-					archetype_idx, chunk_idx,
-					[&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
-						invoke_tick_with_entity(self, ctx, eid, cs...);
-					}
+				world.template iterate_one_chunk_with_entity_for_threaded<std::remove_cvref_t<Cs>...>(
+				    archetype_idx, chunk_idx, [&self, &ctx](EntityID eid, std::remove_cvref_t<Cs>&... cs) {
+					    invoke_tick_with_entity(self, ctx, eid, cs...);
+				    }
 				);
 			} else {
 				world.template iterate_one_chunk_for_threaded<std::remove_cvref_t<Cs>...>(
-					archetype_idx, chunk_idx,
-					[&self, &ctx](std::remove_cvref_t<Cs>&... cs) {
-						self.tick(ctx, cs...);
-					}
+				    archetype_idx, chunk_idx, [&self, &ctx](std::remove_cvref_t<Cs>&... cs) {
+					    self.tick(ctx, cs...);
+				    }
 				);
 			}
 		}(static_cast<Components*>(nullptr));

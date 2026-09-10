@@ -18,56 +18,45 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
-	index_t new_index,
-	std::optional<province_building_index_t> new_province_building_index,
-	std::string_view new_identifier,
-	building_type_args_t& building_type_args
-) : HasIndex { new_index },
-	Modifier { new_identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
-	province_building_index { new_province_building_index },
-	type { building_type_args.type },
-	on_completion { building_type_args.on_completion },
-	completion_size { building_type_args.completion_size },
-	max_level { building_type_args.max_level },
-	goods_cost { std::move(building_type_args.goods_cost) },
-	cost { building_type_args.cost },
-	build_time { building_type_args.build_time },
-	should_display_on_map { building_type_args.on_map },
-	is_enabled_by_default { building_type_args.default_enabled },
-	production_type { building_type_args.production_type },
-	is_pop_build_factory { building_type_args.pop_build_factory },
-	is_strategic_factory { building_type_args.strategic_factory },
-	is_advanced_factory { building_type_args.advanced_factory },
-	fort_level { building_type_args.fort_level },
-	naval_capacity { building_type_args.naval_capacity },
-	colonial_points { std::move(building_type_args.colonial_points) },
-	is_in_province { building_type_args.in_province },
-	restriction_category {
-		building_type_args.pop_build_factory
-			? building_type_args.in_province
-				? BuildingRestrictionCategory::INFRASTRUCTURE
-				: BuildingRestrictionCategory::FACTORY
-			: BuildingRestrictionCategory::UNRESTRICTED
-	},
-	is_limited_to_one_per_state { building_type_args.one_per_state },
-	colonial_range { building_type_args.colonial_range },
-	infrastructure { building_type_args.infrastructure },
-	should_spawn_railway_track { building_type_args.spawn_railway_track },
-	is_sail { building_type_args.sail },
-	is_steam { building_type_args.steam },
-	capital { building_type_args.capital },
-	is_port { building_type_args.port } {}
+    index_t new_index,
+    std::optional<province_building_index_t> new_province_building_index,
+    std::string_view new_identifier,
+    building_type_args_t& building_type_args
+) :
+    HasIndex { new_index }, Modifier { new_identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
+    province_building_index { new_province_building_index }, type { building_type_args.type },
+    on_completion { building_type_args.on_completion }, completion_size { building_type_args.completion_size },
+    max_level { building_type_args.max_level }, goods_cost { std::move(building_type_args.goods_cost) },
+    cost { building_type_args.cost }, build_time { building_type_args.build_time },
+    should_display_on_map { building_type_args.on_map }, is_enabled_by_default { building_type_args.default_enabled },
+    production_type { building_type_args.production_type }, is_pop_build_factory { building_type_args.pop_build_factory },
+    is_strategic_factory { building_type_args.strategic_factory }, is_advanced_factory { building_type_args.advanced_factory },
+    fort_level { building_type_args.fort_level }, naval_capacity { building_type_args.naval_capacity },
+    colonial_points { std::move(building_type_args.colonial_points) }, is_in_province { building_type_args.in_province },
+    restriction_category {
+	    building_type_args.pop_build_factory
+	        ? building_type_args.in_province
+	            ? BuildingRestrictionCategory::INFRASTRUCTURE
+	            : BuildingRestrictionCategory::FACTORY
+	        : BuildingRestrictionCategory::UNRESTRICTED
+    },
+    is_limited_to_one_per_state { building_type_args.one_per_state }, colonial_range { building_type_args.colonial_range },
+    infrastructure { building_type_args.infrastructure }, should_spawn_railway_track { building_type_args.spawn_railway_track },
+    is_sail { building_type_args.sail }, is_steam { building_type_args.steam }, capital { building_type_args.capital },
+    is_port { building_type_args.port } {}
 
 bool BuildingType::can_be_built_in(
-	ModifierEffectCache const& modifier_effect_cache,
-	const building_level_t desired_level,
-	CountryInstance const& actor,
-	ProvinceInstance const& location
+    ModifierEffectCache const& modifier_effect_cache,
+    const building_level_t desired_level,
+    CountryInstance const& actor,
+    ProvinceInstance const& location
 ) const {
 	OV_ERR_FAIL_COND_V_MSG(
-		!is_in_province,
-		false,
-		memory::fmt::format("BuildingType::can_be_built_in (province variant) was called on state level building {}", get_identifier())
+	    !is_in_province,
+	    false,
+	    memory::fmt::format(
+	        "BuildingType::can_be_built_in (province variant) was called on state level building {}", get_identifier()
+	    )
 	);
 
 	if (desired_level > max_level) {
@@ -94,7 +83,8 @@ bool BuildingType::can_be_built_in(
 					continue;
 				}
 
-				const building_level_t other_building_level = province_in_state.get_buildings()[province_building_index.value()].get_level();
+				const building_level_t other_building_level =
+				    province_in_state.get_buildings()[province_building_index.value()].get_level();
 				if (other_building_level > building_level_t(0)) {
 					return false;
 				}
@@ -105,8 +95,8 @@ bool BuildingType::can_be_built_in(
 	building_level_t const& unlocked_max_level = actor.get_building_type_unlock_levels(*this);
 	ModifierEffectCache::building_type_effects_t const& effects = modifier_effect_cache.get_building_type_effects(*this);
 	const fixed_point_t min_level_modifier = location.get_modifier_effect_value(*effects.get_min_level());
-	return fixed_point_t { type_safe::get(unlocked_max_level) }
-		>= fixed_point_t { type_safe::get(desired_level) } + min_level_modifier;
+	return fixed_point_t { type_safe::get(unlocked_max_level) } >=
+	       fixed_point_t { type_safe::get(desired_level) } + min_level_modifier;
 }
 
 bool BuildingType::can_be_built_in(ProvinceDefinition const& location) const {
@@ -116,21 +106,24 @@ bool BuildingType::can_be_built_in(ProvinceDefinition const& location) const {
 BuildingTypeManager::BuildingTypeManager() : infrastructure_building_type { nullptr }, port_building_type { nullptr } {}
 
 bool BuildingTypeManager::add_building_type(
-	std::string_view identifier, BuildingType::building_type_args_t& building_type_args
+    std::string_view identifier, BuildingType::building_type_args_t& building_type_args
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid building identifier - empty!");
 		return false;
 	}
-	
-	std::optional<province_building_index_t> province_building_index = building_type_args.in_province
-		? std::make_optional<province_building_index_t>(province_building_types.size())
-		: std::nullopt;
+
+	std::optional<province_building_index_t> province_building_index =
+	    building_type_args.in_province
+	        ? std::make_optional<province_building_index_t>(province_building_types.size())
+	        : std::nullopt;
 
 	const bool ret = building_types.emplace_item(
-		identifier,
-		index_from_count<BuildingType::index_t>(get_building_type_count()), province_building_index, identifier,
-		building_type_args
+	    identifier,
+	    index_from_count<BuildingType::index_t>(get_building_type_count()),
+	    province_building_index,
+	    identifier,
+	    building_type_args
 	);
 
 	if (ret) {
@@ -144,16 +137,16 @@ bool BuildingTypeManager::add_building_type(
 }
 
 bool BuildingTypeManager::load_buildings_file(
-	GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
-	ModifierManager& modifier_manager, ast::NodeCPtr root
+    GoodDefinitionManager const& good_definition_manager,
+    ProductionTypeManager const& production_type_manager,
+    ModifierManager& modifier_manager,
+    ast::NodeCPtr root
 ) {
-	bool ret = expect_dictionary_reserve_length(
-		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
-			std::string_view key, ast::NodeCPtr value
-		) -> bool {
-			BuildingType::building_type_args_t building_type_args {};
+	bool ret =
+	    expect_dictionary_reserve_length(building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+		    BuildingType::building_type_args_t building_type_args {};
 
-			bool ret = NodeTools::expect_dictionary_keys_and_default(
+		    bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_province_modifier(building_type_args.modifier),
 				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
 				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
@@ -198,19 +191,16 @@ bool BuildingTypeManager::load_buildings_file(
 				"port", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.port))
 			)(value);
 
-			ret &= add_building_type(key, building_type_args);
+		    ret &= add_building_type(key, building_type_args);
 
-			return ret;
-		}
-	)(root);
+		    return ret;
+	    })(root);
 	lock_building_types();
 
 	auto& building_type_effects = modifier_manager.modifier_effect_cache.building_type_effects;
 	building_type_effects = std::move(
-		decltype(ModifierEffectCache::building_type_effects) {
-			generate_values,
-			building_type_index_t(get_building_type_count())
-		}
+	    decltype(ModifierEffectCache::building_type_effects) {
+	        generate_values, building_type_index_t(get_building_type_count()) }
 	);
 
 	for (BuildingType const& building_type : get_building_types()) {
@@ -222,13 +212,16 @@ bool BuildingTypeManager::load_buildings_file(
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";
 		ret &= modifier_manager.register_technology_modifier_effect(
-			this_building_type_effects.max_level, append_string_views(max_prefix, building_type.get_identifier()),
-			FORMAT_x1_0DP_POS, memory::fmt::format("${}$ $TECH_MAX_LEVEL$", building_type)
+		    this_building_type_effects.max_level,
+		    append_string_views(max_prefix, building_type.get_identifier()),
+		    FORMAT_x1_0DP_POS,
+		    memory::fmt::format("${}$ $TECH_MAX_LEVEL$", building_type)
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
 		ret &= modifier_manager.register_terrain_modifier_effect(
-			this_building_type_effects.min_level, append_string_views(min_prefix, building_type.get_identifier()),
-			FORMAT_x1_0DP_NEG
+		    this_building_type_effects.min_level,
+		    append_string_views(min_prefix, building_type.get_identifier()),
+		    FORMAT_x1_0DP_NEG
 		);
 		if (building_type.is_in_province) {
 			if (building_type.is_port) {
@@ -236,8 +229,9 @@ bool BuildingTypeManager::load_buildings_file(
 					port_building_type = &building_type;
 				} else {
 					spdlog::error_s(
-						"Building type {} is marked as a port, but we are already using {} as the port building type!",
-						building_type, *port_building_type
+					    "Building type {} is marked as a port, but we are already using {} as the port building type!",
+					    building_type,
+					    *port_building_type
 					);
 					ret = false;
 				}
@@ -246,17 +240,17 @@ bool BuildingTypeManager::load_buildings_file(
 					infrastructure_building_type = &building_type;
 				} else {
 					spdlog::error_s(
-						"Building type {} is marked as a infrastructure, but we are already using {} as the infrastructure building type!",
-						building_type, *infrastructure_building_type
+					    "Building type {} is marked as a infrastructure, but we are already using {} as the infrastructure "
+					    "building type!",
+					    building_type,
+					    *infrastructure_building_type
 					);
 					ret = false;
 				}
 			}
 		} else {
 			if (building_type.is_port) {
-				spdlog::error_s(
-					"Building type {} is marked as a port, but is not a province building!", building_type
-				);
+				spdlog::error_s("Building type {} is marked as a port, but is not a province building!", building_type);
 				ret = false;
 			}
 		}
@@ -277,8 +271,9 @@ bool BuildingTypeManager::load_buildings_file(
 		ret = false;
 	} else {
 		SPDLOG_INFO(
-			"Found {} province building types out of {} total building types",
-			province_building_types.size(), get_building_type_count()
+		    "Found {} province building types out of {} total building types",
+		    province_building_types.size(),
+		    get_building_type_count()
 		);
 	}
 

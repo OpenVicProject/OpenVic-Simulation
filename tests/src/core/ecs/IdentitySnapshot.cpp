@@ -1,10 +1,10 @@
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -45,8 +45,7 @@ TEST_CASE("snapshot/restore: empty world round-trips", "[ecs][identity]") {
 	CHECK(b == a);
 }
 
-TEST_CASE("live entities reconstruct at original (index, generation); stale handles stay dead",
-          "[ecs][identity]") {
+TEST_CASE("live entities reconstruct at original (index, generation); stale handles stay dead", "[ecs][identity]") {
 	World original;
 
 	// 8 entities across two archetypes, mixing mutable and immutable creation.

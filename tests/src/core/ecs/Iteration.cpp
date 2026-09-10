@@ -1,9 +1,9 @@
+#include <set>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <set>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -47,7 +47,9 @@ TEST_CASE("for_each visits all entities of a single-component archetype", "[ecs]
 TEST_CASE("for_each visits zero entities when no archetype matches", "[ecs][World][iter]") {
 	World world;
 	int count = 0;
-	world.for_each<IA>([&](IA&) { ++count; });
+	world.for_each<IA>([&](IA&) {
+		++count;
+	});
 	CHECK(count == 0);
 }
 
@@ -59,13 +61,15 @@ TEST_CASE("for_each visits only matching archetype superset", "[ecs][World][iter
 
 	int a_only_count = 0;
 	world.for_each<IA>([&](IA& a) {
-		(void) a;
+		(void)a;
 		++a_only_count;
 	});
 	CHECK(a_only_count == 2); // both IA-only and IA+IB
 
 	int both_count = 0;
-	world.for_each<IA, IB>([&](IA&, IB&) { ++both_count; });
+	world.for_each<IA, IB>([&](IA&, IB&) {
+		++both_count;
+	});
 	CHECK(both_count == 1);
 }
 
@@ -75,7 +79,9 @@ TEST_CASE("for_each_with_entity passes the correct EntityID", "[ecs][World][iter
 	EntityID const b = world.create_entity(IA { 11 });
 
 	std::set<uint64_t> seen;
-	world.for_each_with_entity<IA>([&](EntityID e, IA&) { seen.insert(e.to_uint64()); });
+	world.for_each_with_entity<IA>([&](EntityID e, IA&) {
+		seen.insert(e.to_uint64());
+	});
 
 	CHECK(seen.count(a.to_uint64()) == 1u);
 	CHECK(seen.count(b.to_uint64()) == 1u);
@@ -87,10 +93,14 @@ TEST_CASE("for_each lambda can mutate components in place", "[ecs][World][iter]"
 	for (int i = 0; i < 4; ++i) {
 		world.create_entity(IA { i });
 	}
-	world.for_each<IA>([](IA& a) { a.v *= 2; });
+	world.for_each<IA>([](IA& a) {
+		a.v *= 2;
+	});
 
 	int sum = 0;
-	world.for_each<IA>([&](IA& a) { sum += a.v; });
+	world.for_each<IA>([&](IA& a) {
+		sum += a.v;
+	});
 	CHECK(sum == (0 + 2 + 4 + 6));
 }
 
@@ -124,7 +134,9 @@ TEST_CASE("Query overload of for_each_with_entity respects exclude", "[ecs][Worl
 	q.with<IA>().exclude<IDead>().build();
 
 	std::set<uint64_t> seen;
-	world.for_each_with_entity<IA>(q, [&](EntityID e, IA&) { seen.insert(e.to_uint64()); });
+	world.for_each_with_entity<IA>(q, [&](EntityID e, IA&) {
+		seen.insert(e.to_uint64());
+	});
 	CHECK(seen.size() == 2u);
 	CHECK(seen.count(a.to_uint64()) == 1u);
 	CHECK(seen.count(c.to_uint64()) == 1u);
@@ -137,7 +149,9 @@ TEST_CASE("for_each works repeatedly (cached query)", "[ecs][World][iter][cache]
 
 	for (int round = 0; round < 3; ++round) {
 		int count = 0;
-		world.for_each<IA>([&](IA&) { ++count; });
+		world.for_each<IA>([&](IA&) {
+			++count;
+		});
 		CHECK(count == 2);
 	}
 }
@@ -145,17 +159,21 @@ TEST_CASE("for_each works repeatedly (cached query)", "[ecs][World][iter][cache]
 TEST_CASE("Query cache is invalidated when a new archetype is created", "[ecs][World][iter][cache]") {
 	World world;
 	EntityID const a = world.create_entity(IA { 1 });
-	(void) a;
+	(void)a;
 
 	int count_before = 0;
-	world.for_each<IA>([&](IA&) { ++count_before; });
+	world.for_each<IA>([&](IA&) {
+		++count_before;
+	});
 	CHECK(count_before == 1);
 
 	// New archetype: {IA, IB}. Cached "IA" query should now also include this.
 	world.create_entity(IA { 2 }, IB { 0 });
 
 	int count_after = 0;
-	world.for_each<IA>([&](IA&) { ++count_after; });
+	world.for_each<IA>([&](IA&) {
+		++count_after;
+	});
 	CHECK(count_after == 2);
 }
 
@@ -207,7 +225,9 @@ TEST_CASE("Query with empty require_ids matches all archetypes that don't carry 
 	Query q;
 	q.with<IA>().build();
 	int count = 0;
-	world.for_each<IA>(q, [&](IA&) { ++count; });
+	world.for_each<IA>(q, [&](IA&) {
+		++count;
+	});
 	CHECK(count == 2);
 }
 
@@ -221,7 +241,9 @@ TEST_CASE("for_each is safe to call from within another for_each (read-only)", "
 	int inner_total = 0;
 	world.for_each<IA>([&](IA&) {
 		++outer_count;
-		world.for_each<IA>([&](IA& a) { inner_total += a.v; });
+		world.for_each<IA>([&](IA& a) {
+			inner_total += a.v;
+		});
 	});
 	CHECK(outer_count == 3);
 	CHECK(inner_total == 3 * (1 + 2 + 3));

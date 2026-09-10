@@ -9,12 +9,12 @@
 #include "openvic-simulation/core/memory/MemoryTracker.hpp"
 
 namespace OpenVic::memory {
-	template<typename CharT, typename CharTraits = std::char_traits<CharT>, class RawAllocator = foonathan::memory::default_allocator>
-	using basic_stringstream = std::basic_stringstream<
-		CharT,
-		CharTraits,
-		foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>
-	>;
+	template<
+	    typename CharT,
+	    typename CharTraits = std::char_traits<CharT>,
+	    class RawAllocator = foonathan::memory::default_allocator>
+	using basic_stringstream =
+	    std::basic_stringstream<CharT, CharTraits, foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>>;
 
 	template<class RawAllocator = foonathan::memory::default_allocator>
 	using stringstream_alloc = basic_stringstream<char, std::char_traits<char>, RawAllocator>;

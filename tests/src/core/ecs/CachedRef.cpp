@@ -1,8 +1,9 @@
 #include "openvic-simulation/core/ecs/CachedRef.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <cstdint>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -131,8 +132,8 @@ TEST_CASE("CachedRef::get re-resolves after structural change in archetype", "[e
 
 	auto ref_a = CachedRef<VA>::from(world, a);
 	auto ref_b = CachedRef<VA>::from(world, b);
-	(void) ref_a.get(world);
-	(void) ref_b.get(world);
+	(void)ref_a.get(world);
+	(void)ref_b.get(world);
 
 	// Destroying `a` swap-pops it. `b` (last row) gets relocated into a's slot.
 	world.destroy_entity(a);

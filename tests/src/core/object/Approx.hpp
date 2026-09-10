@@ -18,10 +18,10 @@ namespace OpenVic::testing {
 	concept explicit_convertible_to = requires { static_cast<To>(std::declval<From>()); };
 
 	struct approx {
-		constexpr approx(double value)
-			: _epsilon(static_cast<double>(std::numeric_limits<float>::epsilon()) * 100), //
-			  _scale(1.0), //
-			  _value(value) {}
+		constexpr approx(double value) :
+		    _epsilon(static_cast<double>(std::numeric_limits<float>::epsilon()) * 100), //
+		    _scale(1.0), //
+		    _value(value) {}
 
 		constexpr approx operator()(double value) const {
 			approx approx(value);

@@ -18,8 +18,23 @@ namespace OpenVic {
 		friend struct LeaderTraitManager;
 
 		enum struct modifier_type_t : uint8_t {
-			EVENT, STATIC, TRIGGERED, CRIME, TERRAIN, CLIMATE, CONTINENT, BUILDING, LEADER, UNIT_TERRAIN,
-			NATIONAL_VALUE, NATIONAL_FOCUS, PARTY_POLICY, REFORM, TECHNOLOGY, INVENTION, TECH_SCHOOL
+			EVENT,
+			STATIC,
+			TRIGGERED,
+			CRIME,
+			TERRAIN,
+			CLIMATE,
+			CONTINENT,
+			BUILDING,
+			LEADER,
+			UNIT_TERRAIN,
+			NATIONAL_VALUE,
+			NATIONAL_FOCUS,
+			PARTY_POLICY,
+			REFORM,
+			TECHNOLOGY,
+			INVENTION,
+			TECH_SCHOOL
 		};
 
 		static std::string_view modifier_type_to_string(modifier_type_t type);
@@ -55,8 +70,11 @@ namespace OpenVic {
 
 	public:
 		TriggeredModifier(
-			std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon,
-			ConditionScript&& new_trigger
+		    std::string_view new_identifier,
+		    ModifierValue&& new_values,
+		    modifier_type_t new_type,
+		    icon_t new_icon,
+		    ConditionScript&& new_trigger
 		);
 		TriggeredModifier(TriggeredModifier&&) = default;
 	};

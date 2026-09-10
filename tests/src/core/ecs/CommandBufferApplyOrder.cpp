@@ -1,4 +1,5 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstdint>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
@@ -6,8 +7,7 @@
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -26,9 +26,15 @@ using OpenVic::Date;
 // buffer's value: the system with the GREATER type id wins.
 
 namespace {
-	struct CbaoIterA { int32_t v = 0; }; // iterated/written only by CbaoWriterA
-	struct CbaoIterB { int32_t v = 0; }; // iterated/written only by CbaoWriterB
-	struct CbaoProbe { int32_t v = 0; }; // on the probe entity; never in any tick signature
+	struct CbaoIterA {
+		int32_t v = 0;
+	}; // iterated/written only by CbaoWriterA
+	struct CbaoIterB {
+		int32_t v = 0;
+	}; // iterated/written only by CbaoWriterB
+	struct CbaoProbe {
+		int32_t v = 0;
+	}; // on the probe entity; never in any tick signature
 }
 ECS_COMPONENT(CbaoIterA, "test_CmdBufApplyOrder::IterA")
 ECS_COMPONENT(CbaoIterB, "test_CmdBufApplyOrder::IterB")
@@ -63,8 +69,8 @@ ECS_SYSTEM(CbaoWriterA)
 ECS_SYSTEM(CbaoWriterB)
 
 TEST_CASE(
-	"Stage-barrier buffers apply in ascending system_type_id_t, independent of registration order",
-	"[ecs][CommandBuffer][SystemScheduler][determinism]"
+    "Stage-barrier buffers apply in ascending system_type_id_t, independent of registration order",
+    "[ecs][CommandBuffer][SystemScheduler][determinism]"
 ) {
 	constexpr system_type_id_t id_a = system_type_id_of<CbaoWriterA>();
 	constexpr system_type_id_t id_b = system_type_id_of<CbaoWriterB>();

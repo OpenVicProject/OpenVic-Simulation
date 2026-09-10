@@ -9,43 +9,37 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TechnologyFolder::TechnologyFolder(std::string_view new_identifier, index_t new_index)
-	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
+TechnologyFolder::TechnologyFolder(std::string_view new_identifier, index_t new_index) :
+    HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
-TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder)
-	: HasIdentifier { new_identifier }, folder { new_folder } {}
+TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder) :
+    HasIdentifier { new_identifier }, folder { new_folder } {}
 
 Technology::Technology(
-	std::string_view new_identifier,
-	index_t new_index,
-	TechnologyArea const& new_area,
-	Date::year_t new_year,
-	fixed_point_t new_cost,
-	area_index_t new_index_in_area,
-	bool new_unciv_military,
-	std::optional<unit_variant_t>&& new_unit_variant,
-	unit_set_t&& new_activated_units,
-	building_set_t&& new_activated_buildings,
-	ModifierValue&& new_values,
-	ConditionalWeightFactorMul&& new_ai_chance
-) : Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
-	HasIndex { new_index },
-	area { new_area },
-	year { new_year },
-	cost { new_cost },
-	index_in_area { new_index_in_area },
-	unciv_military { new_unciv_military },
-	unit_variant { std::move(new_unit_variant) },
-	activated_units { std::move(new_activated_units) },
-	activated_buildings { std::move(new_activated_buildings) },
-	ai_chance { std::move(new_ai_chance) } {}
+    std::string_view new_identifier,
+    index_t new_index,
+    TechnologyArea const& new_area,
+    Date::year_t new_year,
+    fixed_point_t new_cost,
+    area_index_t new_index_in_area,
+    bool new_unciv_military,
+    std::optional<unit_variant_t>&& new_unit_variant,
+    unit_set_t&& new_activated_units,
+    building_set_t&& new_activated_buildings,
+    ModifierValue&& new_values,
+    ConditionalWeightFactorMul&& new_ai_chance
+) :
+    Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY }, HasIndex { new_index }, area { new_area },
+    year { new_year }, cost { new_cost }, index_in_area { new_index_in_area }, unciv_military { new_unciv_military },
+    unit_variant { std::move(new_unit_variant) }, activated_units { std::move(new_activated_units) },
+    activated_buildings { std::move(new_activated_buildings) }, ai_chance { std::move(new_ai_chance) } {}
 
 bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
 	return ai_chance.parse_scripts(definition_manager);
 }
 
-TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
-	: Modifier { new_identifier, std::move(new_values), modifier_type_t::TECH_SCHOOL } {}
+TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values) :
+    Modifier { new_identifier, std::move(new_values), modifier_type_t::TECH_SCHOOL } {}
 
 bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -54,8 +48,7 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	}
 
 	return technology_folders.emplace_item(
-		identifier,
-		identifier, index_from_count<TechnologyFolder::index_t>(get_technology_folder_count())
+	    identifier, identifier, index_from_count<TechnologyFolder::index_t>(get_technology_folder_count())
 	);
 }
 
@@ -65,16 +58,20 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 		return false;
 	}
 
-	return technology_areas.emplace_item(
-		identifier,
-		identifier, folder
-	);
+	return technology_areas.emplace_item(identifier, identifier, folder);
 }
 
 bool TechnologyManager::add_technology(
-	std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-	std::optional<unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
-	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
+    std::string_view identifier,
+    TechnologyArea* area,
+    Date::year_t year,
+    fixed_point_t cost,
+    bool unciv_military,
+    std::optional<unit_variant_t>&& unit_variant,
+    Technology::unit_set_t&& activated_units,
+    Technology::building_set_t&& activated_buildings,
+    ModifierValue&& values,
+    ConditionalWeightFactorMul&& ai_chance
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid technology identifier - empty!");
@@ -92,27 +89,29 @@ bool TechnologyManager::add_technology(
 
 	if (index_in_area >= MAX_TECHS_IN_AREA) {
 		spdlog::error_s(
-			"Cannot add technology \"{}\" - too many technologies in area \"{}\"! Each area can have at most {} technologies.",
-			identifier, *area, MAX_TECHS_IN_AREA
+		    "Cannot add technology \"{}\" - too many technologies in area \"{}\"! Each area can have at most {} technologies.",
+		    identifier,
+		    *area,
+		    MAX_TECHS_IN_AREA
 		);
 		return false;
 	}
 
 	if (!technologies.emplace_item(
-		identifier,
-		identifier,
-		index_from_count<Technology::index_t>(get_technology_count()),
-		*area,
-		year,
-		cost,
-		static_cast<Technology::area_index_t>(index_in_area),
-		unciv_military,
-		std::move(unit_variant),
-		std::move(activated_units),
-		std::move(activated_buildings),
-		std::move(values),
-		std::move(ai_chance)
-	)) {
+	        identifier,
+	        identifier,
+	        index_from_count<Technology::index_t>(get_technology_count()),
+	        *area,
+	        year,
+	        cost,
+	        static_cast<Technology::area_index_t>(index_in_area),
+	        unciv_military,
+	        std::move(unit_variant),
+	        std::move(activated_units),
+	        std::move(activated_buildings),
+	        std::move(values),
+	        std::move(ai_chance)
+	    )) {
 		return false;
 	}
 
@@ -126,10 +125,7 @@ bool TechnologyManager::add_technology_school(std::string_view identifier, Modif
 		return false;
 	}
 
-	return technology_schools.emplace_item(
-		identifier,
-		identifier, std::move(values)
-	);
+	return technology_schools.emplace_item(identifier, identifier, std::move(values));
 }
 
 bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root) {
@@ -167,9 +163,7 @@ bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr roo
 	)(root);
 }
 
-bool TechnologyManager::load_technology_file_schools(
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
-) {
+bool TechnologyManager::load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
 	if (!technology_folders.is_locked() || !technology_areas.is_locked()) {
 		spdlog::error_s("Cannot load technology schools until technology folders and areas are locked!");
 		return false;
@@ -202,12 +196,12 @@ bool TechnologyManager::load_technology_file_schools(
 }
 
 bool TechnologyManager::load_technologies_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-	BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+    ModifierManager const& modifier_manager,
+    UnitTypeManager const& unit_type_manager,
+    BuildingTypeManager const& building_type_manager,
+    ast::NodeCPtr root
 ) {
-	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
-		std::string_view tech_key, ast::NodeCPtr tech_value
-	) -> bool {
+	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](std::string_view tech_key, ast::NodeCPtr tech_value) -> bool {
 		using enum scope_type_t;
 
 		ModifierValue modifiers;
@@ -236,8 +230,16 @@ bool TechnologyManager::load_technologies_file(
 		)(tech_value);
 
 		ret &= add_technology(
-			tech_key, area, year, cost, unciv_military, std::move(unit_variant), std::move(activated_units),
-			std::move(activated_buildings), std::move(modifiers), std::move(ai_chance)
+		    tech_key,
+		    area,
+		    year,
+		    cost,
+		    unciv_military,
+		    std::move(unit_variant),
+		    std::move(activated_units),
+		    std::move(activated_buildings),
+		    std::move(modifiers),
+		    std::move(ai_chance)
 		);
 		return ret;
 	})(root);
@@ -248,13 +250,11 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	using enum ModifierEffect::target_t;
 
 	memory::FixedVector<ModifierEffect const*, technology_folder_index_t>& research_bonus_effects =
-		modifier_manager.modifier_effect_cache.research_bonus_effects;
+	    modifier_manager.modifier_effect_cache.research_bonus_effects;
 
 	research_bonus_effects = std::move(
-		decltype(ModifierEffectCache::research_bonus_effects) {
-			generate_values,
-			technology_folder_index_t(get_technology_folder_count())
-		}
+	    decltype(ModifierEffectCache::research_bonus_effects) {
+	        generate_values, technology_folder_index_t(get_technology_folder_count()) }
 	);
 
 	bool ret = true;
@@ -263,7 +263,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 		const memory::string modifier_identifier = memory::fmt::format("{}_research_bonus", folder);
 
 		ret &= modifier_manager.register_base_country_modifier_effect(
-			research_bonus_effects[folder.index], modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
+		    research_bonus_effects[folder.index], modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
 		);
 	}
 
@@ -299,8 +299,10 @@ bool TechnologyManager::generate_technology_lists() {
 	for (TechnologyArea const& area : technology_areas.get_items()) {
 		if (area.get_technologies().size() != area.get_tech_count()) {
 			spdlog::error_s(
-				"Technology area \"{}\" has a mismatch between tech count ({}) and tech list size ({})!",
-				area, area.get_tech_count(), area.get_technologies().size()
+			    "Technology area \"{}\" has a mismatch between tech count ({}) and tech list size ({})!",
+			    area,
+			    area.get_tech_count(),
+			    area.get_technologies().size()
 			);
 			ret = false;
 		}

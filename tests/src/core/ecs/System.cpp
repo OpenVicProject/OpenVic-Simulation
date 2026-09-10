@@ -1,11 +1,11 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -102,7 +102,7 @@ TEST_CASE("tick_systems calls tick on alive systems", "[ecs][System]") {
 	seed(world);
 	int counter = 0;
 	SystemHandle h = world.register_system<CounterSystem>();
-	(void) h;
+	(void)h;
 	// Set the counter pointer on the registered instance.
 	// The instance is owned by the World's registry; registration parameters aren't
 	// supported in the templated form (we keep it simple — `register_system<T>()` only
@@ -110,7 +110,7 @@ TEST_CASE("tick_systems calls tick on alive systems", "[ecs][System]") {
 	// `set_*` member after registration.
 	// (For brevity here we skip configuration; the `tick` body checks for nullptr.)
 	world.tick_systems(Date {});
-	(void) counter;
+	(void)counter;
 }
 
 TEST_CASE("tick_systems with one system", "[ecs][System]") {

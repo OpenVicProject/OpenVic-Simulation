@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -94,10 +94,9 @@ namespace {
 		std::vector<EntityID> source_ids;
 		source_ids.reserve(source_count);
 		for (std::size_t i = 0; i < source_count; ++i) {
-			source_ids.push_back(world.create_entity(
-				STSSource { static_cast<int32_t>(i) },
-				STSSpawnCount { static_cast<int32_t>((i % 4) + 1) }
-			));
+			source_ids.push_back(
+			    world.create_entity(STSSource { static_cast<int32_t>(i) }, STSSpawnCount { static_cast<int32_t>((i % 4) + 1) })
+			);
 		}
 
 		world.register_system<STSSpawnSystem>();
@@ -137,8 +136,7 @@ namespace {
 	}
 }
 
-TEST_CASE("SystemThreaded can spawn via cmd.create_entity, downstream stage observes them",
-          "[ecs][SystemThreadedSpawn]") {
+TEST_CASE("SystemThreaded can spawn via cmd.create_entity, downstream stage observes them", "[ecs][SystemThreadedSpawn]") {
 	std::size_t const sources = 100;
 	ScenarioResult r = run_scenario(8, sources);
 
@@ -154,8 +152,9 @@ TEST_CASE("SystemThreaded can spawn via cmd.create_entity, downstream stage obse
 	CHECK(r.spawned_source_ids.size() == static_cast<std::size_t>(expected_total));
 }
 
-TEST_CASE("SystemThreaded spawn produces identical finalised order across worker counts",
-          "[ecs][SystemThreadedSpawn][determinism]") {
+TEST_CASE(
+    "SystemThreaded spawn produces identical finalised order across worker counts", "[ecs][SystemThreadedSpawn][determinism]"
+) {
 	std::size_t const sources = 200;
 	ScenarioResult baseline = run_scenario(1, sources);
 

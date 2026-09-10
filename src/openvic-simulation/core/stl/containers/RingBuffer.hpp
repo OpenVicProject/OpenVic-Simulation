@@ -45,8 +45,8 @@ namespace OpenVic::stl {
 			using iterator_category = std::random_access_iterator_tag;
 
 			constexpr _iterator() noexcept = default;
-			_iterator(pointer data, const size_type ring_offset, const size_type ring_index, const size_type ring_capacity)
-				: _data(data), _offset(ring_offset), _index(ring_index), _capacity(ring_capacity) {}
+			_iterator(pointer data, const size_type ring_offset, const size_type ring_index, const size_type ring_capacity) :
+			    _data(data), _offset(ring_offset), _index(ring_index), _capacity(ring_capacity) {}
 
 			constexpr operator _iterator<typename allocator_traits::const_pointer>() const {
 				return _iterator<typename allocator_traits::const_pointer>(_data, _offset, _index, _capacity);
@@ -151,8 +151,8 @@ namespace OpenVic::stl {
 			_deallocate();
 		}
 
-		RingBuffer(RingBuffer const& other)
-			: RingBuffer(other, allocator_traits::select_on_container_copy_construction(other._allocator)) {}
+		RingBuffer(RingBuffer const& other) :
+		    RingBuffer(other, allocator_traits::select_on_container_copy_construction(other._allocator)) {}
 
 		RingBuffer(RingBuffer const& other, allocator_type const& allocator) : RingBuffer(other._capacity, allocator) {
 			clear();
@@ -190,8 +190,8 @@ namespace OpenVic::stl {
 		}
 
 		RingBuffer& operator=(RingBuffer&& other) noexcept(
-			allocator_traits::propagate_on_container_move_assignment::value ||
-			std::is_nothrow_move_constructible<value_type>::value
+		    allocator_traits::propagate_on_container_move_assignment::value ||
+		    std::is_nothrow_move_constructible<value_type>::value
 		) {
 			if (allocator_traits::propagate_on_container_move_assignment::value || _allocator == other._allocator) {
 				// We're either getting the other's allocator or they're already the same,

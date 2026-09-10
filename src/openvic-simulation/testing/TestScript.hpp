@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/testing/Requirement.hpp"
 
 namespace OpenVic {
@@ -36,7 +36,7 @@ namespace OpenVic {
 
 		// Methods
 		void pass_or_fail_req_with_actual_and_target_values(
-			memory::string req_name, memory::string target_value, memory::string actual_value
+		    memory::string req_name, memory::string target_value, memory::string actual_value
 		);
 	};
 }

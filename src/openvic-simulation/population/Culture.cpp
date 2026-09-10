@@ -2,31 +2,41 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/core/string/Utility.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier, index_t new_index)
-	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
+GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier, index_t new_index) :
+    HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 CultureGroup::CultureGroup(
-	std::string_view new_identifier, std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type,
-	bool new_is_overseas, CountryDefinition const* new_union_country
-) : HasIdentifier { new_identifier }, leader { new_leader }, unit_graphical_culture_type { new_unit_graphical_culture_type },
-	is_overseas { new_is_overseas }, union_country { new_union_country } {}
+    std::string_view new_identifier,
+    std::string_view new_leader,
+    GraphicalCultureType const& new_unit_graphical_culture_type,
+    bool new_is_overseas,
+    CountryDefinition const* new_union_country
+) :
+    HasIdentifier { new_identifier }, leader { new_leader }, unit_graphical_culture_type { new_unit_graphical_culture_type },
+    is_overseas { new_is_overseas }, union_country { new_union_country } {}
 
 Culture::Culture(
-	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t&& new_first_names,
-	name_list_t&& new_last_names, fixed_point_t new_radicalism, CountryDefinition const* new_primary_country
-) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group },
-	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) }, radicalism { new_radicalism },
-	primary_country { new_primary_country } {}
+    std::string_view new_identifier,
+    colour_t new_colour,
+    CultureGroup const& new_group,
+    name_list_t&& new_first_names,
+    name_list_t&& new_last_names,
+    fixed_point_t new_radicalism,
+    CountryDefinition const* new_primary_country
+) :
+    HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group },
+    first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) }, radicalism { new_radicalism },
+    primary_country { new_primary_country } {}
 
 CultureManager::CultureManager() : default_graphical_culture_type { nullptr } {}
 
@@ -36,14 +46,16 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 		return false;
 	}
 	return graphical_culture_types.emplace_item(
-		identifier,
-		identifier, index_from_count<GraphicalCultureType::index_t>(get_graphical_culture_type_count())
+	    identifier, identifier, index_from_count<GraphicalCultureType::index_t>(get_graphical_culture_type_count())
 	);
 }
 
 bool CultureManager::add_culture_group(
-	std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas,
-	CountryDefinition const* union_country
+    std::string_view identifier,
+    std::string_view leader,
+    GraphicalCultureType const* graphical_culture_type,
+    bool is_overseas,
+    CountryDefinition const* union_country
 ) {
 	if (!graphical_culture_types.is_locked()) {
 		spdlog::error_s("Cannot register culture groups until graphical culture types are locked!");
@@ -67,24 +79,25 @@ bool CultureManager::add_culture_group(
 		}
 		leader = default_leader;
 		spdlog::warn_s(
-			"In culture group \"{}\" - group leader is undefined, set to default of: \"{}\".",
-			identifier, default_leader
+		    "In culture group \"{}\" - group leader is undefined, set to default of: \"{}\".", identifier, default_leader
 		);
 	}
-	if (!culture_groups.emplace_item(
-		identifier,
-		identifier, leader, *graphical_culture_type, is_overseas, union_country
-	)) {
+	if (!culture_groups.emplace_item(identifier, identifier, leader, *graphical_culture_type, is_overseas, union_country)) {
 		return false;
 	}
-	
+
 	leader_picture_counts.emplace(leader, general_admiral_picture_count_t { 0, 0 });
 	return true;
 }
 
 bool CultureManager::add_culture(
-	std::string_view identifier, colour_t colour, CultureGroup const& group, name_list_t&& first_names,
-	name_list_t&& last_names, fixed_point_t radicalism, CountryDefinition const* primary_country
+    std::string_view identifier,
+    colour_t colour,
+    CultureGroup const& group,
+    name_list_t&& first_names,
+    name_list_t&& last_names,
+    fixed_point_t radicalism,
+    CountryDefinition const* primary_country
 ) {
 	if (!culture_groups.is_locked()) {
 		spdlog::error_s("Cannot register cultures until culture groups are locked!");
@@ -98,16 +111,15 @@ bool CultureManager::add_culture(
 	// TODO - check radicalism range
 
 	return cultures.emplace_item(
-		identifier,
-		identifier, colour, group, std::move(first_names), std::move(last_names), radicalism, primary_country
+	    identifier, identifier, colour, group, std::move(first_names), std::move(last_names), radicalism, primary_country
 	);
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
-	const bool ret = expect_list_reserve_length(
-		graphical_culture_types,
-		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
-	)(root);
+	const bool ret =
+	    expect_list_reserve_length(graphical_culture_types, expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this)))(
+	        root
+	    );
 
 	lock_graphical_culture_types();
 
@@ -123,8 +135,10 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 }
 
 bool CultureManager::_load_culture_group(
-	CountryDefinitionManager const& country_definition_manager, size_t& total_expected_cultures,
-	std::string_view culture_group_key, ast::NodeCPtr culture_group_node
+    CountryDefinitionManager const& country_definition_manager,
+    size_t& total_expected_cultures,
+    std::string_view culture_group_key,
+    ast::NodeCPtr culture_group_node
 ) {
 	std::string_view leader {};
 	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
@@ -145,8 +159,10 @@ bool CultureManager::_load_culture_group(
 }
 
 bool CultureManager::_load_culture(
-	CountryDefinitionManager const& country_definition_manager, CultureGroup const& culture_group, std::string_view culture_key,
-	ast::NodeCPtr culture_node
+    CountryDefinitionManager const& country_definition_manager,
+    CultureGroup const& culture_group,
+    std::string_view culture_key,
+    ast::NodeCPtr culture_node
 ) {
 	colour_t colour = colour_t::null();
 	name_list_t first_names {}, last_names {};
@@ -162,7 +178,7 @@ bool CultureManager::_load_culture(
 			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(primary_country))
 	)(culture_node);
 	ret &= add_culture(
-		culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism, primary_country
+	    culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism, primary_country
 	);
 	return ret;
 }
@@ -194,35 +210,28 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 	}
 
 	size_t total_expected_cultures = 0;
-	bool ret = expect_dictionary_reserve_length(culture_groups,
-		[this, &country_definition_manager, &total_expected_cultures](
-			std::string_view key, ast::NodeCPtr value
-		) -> bool {
-			return _load_culture_group(country_definition_manager, total_expected_cultures, key, value);
-		}
-	)(root);
+	bool ret =
+	    expect_dictionary_reserve_length(culture_groups, [this, &country_definition_manager, &total_expected_cultures](std::string_view key, ast::NodeCPtr value) -> bool {
+		    return _load_culture_group(country_definition_manager, total_expected_cultures, key, value);
+	    })(root);
 	lock_culture_groups();
 	reserve_more_cultures(total_expected_cultures);
 
-	ret &= expect_culture_group_dictionary(
-		[this, &country_definition_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
-			return expect_dictionary(
-				[this, &country_definition_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
-					if (reserved_keys.contains(key)) {
-						return true;
-					}
-					return _load_culture(country_definition_manager, culture_group, key, value);
-				}
-			)(culture_group_value);
-		}
-	)(root);
+	ret &= expect_culture_group_dictionary([this, &country_definition_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
+		return expect_dictionary([this, &country_definition_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
+			static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
+			if (reserved_keys.contains(key)) {
+				return true;
+			}
+			return _load_culture(country_definition_manager, culture_group, key, value);
+		})(culture_group_value);
+	})(root);
 	lock_cultures();
 	return ret;
 }
 
 memory::string CultureManager::make_leader_picture_name(
-	std::string_view cultural_type, unit_branch_t branch, leader_count_t count
+    std::string_view cultural_type, unit_branch_t branch, leader_count_t count
 ) {
 	if (cultural_type.empty()) {
 		spdlog::error_s("Cannot construct leader picture name - empty cultural type!");
@@ -237,15 +246,11 @@ memory::string CultureManager::make_leader_picture_name(
 	using enum unit_branch_t;
 
 	switch (branch) {
-		case LAND:
-			branch_text = &GENERAL_TEXT;
-			break;
-		case NAVAL:
-			branch_text = &ADMIRAL_TEXT;
-			break;
-		default:
-			spdlog::error_s("Cannot construct leader picture name - invalid branch type: {}", static_cast<uint32_t>(branch));
-			return {};
+	case LAND:  branch_text = &GENERAL_TEXT; break;
+	case NAVAL: branch_text = &ADMIRAL_TEXT; break;
+	default:
+		spdlog::error_s("Cannot construct leader picture name - invalid branch type: {}", static_cast<uint32_t>(branch));
+		return {};
 	}
 
 	return append_string_views(cultural_type, *branch_text, std::to_string(count));
@@ -269,22 +274,19 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 	bool ret = true;
 
 	for (auto [cultural_type, general_and_admiral_count] : mutable_iterator(leader_picture_counts)) {
-		const auto search = [&dataloader, &cultural_type, &ret](
-			unit_branch_t branch, leader_count_t& leader_count
-		) -> void {
-			while (
-				leader_count < std::numeric_limits<leader_count_t>::max() &&
-				!dataloader.lookup_file(
-					make_leader_picture_path(make_leader_picture_name(cultural_type, branch, leader_count)), false
-				).empty()
-			) {
+		const auto search = [&dataloader, &cultural_type, &ret](unit_branch_t branch, leader_count_t& leader_count) -> void {
+			while (leader_count < std::numeric_limits<leader_count_t>::max() &&
+			       !dataloader
+			            .lookup_file(
+			                make_leader_picture_path(make_leader_picture_name(cultural_type, branch, leader_count)), false
+			            )
+			            .empty()) {
 				leader_count++;
 			}
 
 			if (leader_count < 1) {
 				spdlog::error_s(
-					"No {} pictures found for cultural type \"{}\"!",
-					get_branched_leader_name(branch), cultural_type
+				    "No {} pictures found for cultural type \"{}\"!", get_branched_leader_name(branch), cultural_type
 				);
 				ret = false;
 			}
@@ -311,24 +313,20 @@ memory::string CultureManager::get_leader_picture_name(std::string_view cultural
 	using enum unit_branch_t;
 
 	switch (branch) {
-	case LAND:
-		desired_picture_count = it->second.first;
-		break;
-	case NAVAL:
-		desired_picture_count = it->second.second;
-		break;
+	case LAND:  desired_picture_count = it->second.first; break;
+	case NAVAL: desired_picture_count = it->second.second; break;
 	default:
 		spdlog::error_s(
-			"Cannot get \"{}\" leader picture name - invalid branch type: {}",
-			cultural_type, static_cast<uint32_t>(branch)
+		    "Cannot get \"{}\" leader picture name - invalid branch type: {}", cultural_type, static_cast<uint32_t>(branch)
 		);
 		return {};
 	}
 
 	if (desired_picture_count < 1) {
 		spdlog::error_s(
-			"Cannot get \"{}\" {} picture name - no pictures of this type were found during game loading!",
-			cultural_type, get_branched_leader_name(branch)
+		    "Cannot get \"{}\" {} picture name - no pictures of this type were found during game loading!",
+		    cultural_type,
+		    get_branched_leader_name(branch)
 		);
 		return {};
 	}

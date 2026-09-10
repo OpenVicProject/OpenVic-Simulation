@@ -68,8 +68,10 @@ namespace OpenVic {
 
 	public:
 		UnitDeploymentGroup(
-			std::string_view new_name, ProvinceDefinition const& new_location, memory::vector<_Unit>&& new_units,
-			std::optional<size_t> new_leader_index
+		    std::string_view new_name,
+		    ProvinceDefinition const& new_location,
+		    memory::vector<_Unit>&& new_units,
+		    std::optional<size_t> new_leader_index
 		);
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
 	};
@@ -85,10 +87,10 @@ namespace OpenVic {
 
 	public:
 		Deployment(
-			std::string_view new_path,
-			memory::vector<ArmyDeployment>&& new_armies,
-			memory::vector<NavyDeployment>&& new_navies,
-			memory::vector<LeaderBase>&& new_leaders
+		    std::string_view new_path,
+		    memory::vector<ArmyDeployment>&& new_armies,
+		    memory::vector<NavyDeployment>&& new_navies,
+		    memory::vector<LeaderBase>&& new_leaders
 		);
 		Deployment(Deployment&&) = default;
 
@@ -102,19 +104,19 @@ namespace OpenVic {
 
 	public:
 		bool add_deployment(
-			std::string_view path,
-			memory::vector<ArmyDeployment>&& armies,
-			memory::vector<NavyDeployment>&& navies,
-			memory::vector<LeaderBase>&& leaders
+		    std::string_view path,
+		    memory::vector<ArmyDeployment>&& armies,
+		    memory::vector<NavyDeployment>&& navies,
+		    memory::vector<LeaderBase>&& leaders
 		);
 
 		bool load_oob_file(
-			Dataloader const& dataloader,
-			MapDefinition const& map_definition,
-			MilitaryManager const& military_manager,
-			std::string_view history_path,
-			Deployment const*& deployment,
-			bool fail_on_missing
+		    Dataloader const& dataloader,
+		    MapDefinition const& map_definition,
+		    MilitaryManager const& military_manager,
+		    std::string_view history_path,
+		    Deployment const*& deployment,
+		    bool fail_on_missing
 		);
 
 		size_t get_missing_oob_file_count() const;

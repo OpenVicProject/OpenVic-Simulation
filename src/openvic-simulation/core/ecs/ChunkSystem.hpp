@@ -24,18 +24,25 @@ namespace OpenVic::ecs {
 		static constexpr auto declared_access() {
 			return std::array<ComponentAccess, sizeof...(Cs)> { ComponentAccess {
 				component_type_id_of<std::remove_cvref_t<Cs>>(),
-				std::is_const_v<std::remove_reference_t<Cs>> ? AccessMode::Read : AccessMode::Write
-			}... };
+				std::is_const_v<std::remove_reference_t<Cs>> ? AccessMode::Read : AccessMode::Write }... };
 		}
 
 		static constexpr system_type_id_t type_id() {
 			return system_type_id_of<Derived>();
 		}
 
-		static constexpr std::array<system_type_id_t, 0> declared_run_after() { return {}; }
-		static constexpr std::array<system_type_id_t, 0> declared_run_before() { return {}; }
-		static constexpr std::array<component_type_id_t, 0> extra_reads() { return {}; }
-		static constexpr std::array<component_type_id_t, 0> extra_writes() { return {}; }
+		static constexpr std::array<system_type_id_t, 0> declared_run_after() {
+			return {};
+		}
+		static constexpr std::array<system_type_id_t, 0> declared_run_before() {
+			return {};
+		}
+		static constexpr std::array<component_type_id_t, 0> extra_reads() {
+			return {};
+		}
+		static constexpr std::array<component_type_id_t, 0> extra_writes() {
+			return {};
+		}
 		static constexpr bool is_threaded = false;
 
 		// Sorted-unique component ids defining the iteration query. ChunkSystem doesn't
@@ -43,9 +50,7 @@ namespace OpenVic::ecs {
 		// shape: just Cs... folded through component_type_id_of, sorted, deduped.
 		// Consumed by the scheduler's query-cache prewarm for multi-system stages.
 		static std::vector<component_type_id_t> compute_tick_query_require_ids() {
-			std::vector<component_type_id_t> ids = {
-				component_type_id_of<std::remove_cvref_t<Cs>>()...
-			};
+			std::vector<component_type_id_t> ids = { component_type_id_of<std::remove_cvref_t<Cs>>()... };
 			std::sort(ids.begin(), ids.end());
 			ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
 			return ids;
@@ -61,10 +66,9 @@ namespace OpenVic::ecs {
 		void tick_all(World& world, TickContext const& ctx) {
 			Derived& self = static_cast<Derived&>(*this);
 			Query const q = detail::build_tick_query<Derived>();
-			world.template for_each_chunk<std::remove_cvref_t<Cs>...>(q,
-				[&](ChunkView<std::remove_cvref_t<Cs>...> view) {
-					self.tick_chunk(view, ctx);
-				});
+			world.template for_each_chunk<std::remove_cvref_t<Cs>...>(q, [&](ChunkView<std::remove_cvref_t<Cs>...> view) {
+				self.tick_chunk(view, ctx);
+			});
 		}
 	};
 }

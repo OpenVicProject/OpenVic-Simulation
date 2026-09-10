@@ -116,7 +116,7 @@ namespace OpenVic::ecs {
 //     not SFINAE-probeable, so there is no automated test.
 //   - A template-id extra dep (e.g. some_system<A, B>) would split on the comma at the
 //     preprocessor level — use a type alias.
-#define ECS_IN_PHASE(prev_anchor, /* next_anchor, extra_run_after_systems... */ ...) \
+#define ECS_IN_PHASE(prev_anchor, /* next_anchor, extra_run_after_systems... */...) \
 	static constexpr auto declared_run_after() { \
 		return ::OpenVic::ecs::detail::phase_run_after_array<prev_anchor, __VA_ARGS__>(); \
 	} \

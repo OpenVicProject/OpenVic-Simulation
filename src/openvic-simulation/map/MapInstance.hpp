@@ -44,9 +44,9 @@ namespace OpenVic {
 
 	public:
 		MapInstance(
-			MapDefinition const& new_map_definition,
-			ProvinceInstanceDeps const& province_instance_deps,
-			ThreadPool& new_thread_pool
+		    MapDefinition const& new_map_definition,
+		    ProvinceInstanceDeps const& province_instance_deps,
+		    ThreadPool& new_thread_pool
 		);
 
 		inline explicit constexpr operator MapDefinition const&() const {
@@ -66,23 +66,23 @@ namespace OpenVic {
 		ProvinceInstance const* get_province_instance_by_index(typename ProvinceInstance::index_t index) const;
 		ProvinceInstance& get_province_instance_by_definition(ProvinceDefinition const& province_definition);
 		ProvinceInstance* get_province_instance_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		    decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number
 		);
 		ProvinceInstance const* get_province_instance_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		    decltype(std::declval<ProvinceDefinition>().get_province_number()) province_number
 		) const;
 
 		void enable_canal(canal_index_t canal_index);
 		bool is_canal_enabled(canal_index_t canal_index) const;
 
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager,
-			const Date date,
-			CountryInstanceManager& country_manager,
-			MilitaryDefines const& military_defines,
-			PopDeps const& pop_deps,
-			TypedSpan<pop_type_index_t, const PopType> pop_types,
-			TypedSpan<reform_index_t, const Reform> reforms
+		    ProvinceHistoryManager const& history_manager,
+		    const Date date,
+		    CountryInstanceManager& country_manager,
+		    MilitaryDefines const& military_defines,
+		    PopDeps const& pop_deps,
+		    TypedSpan<pop_type_index_t, const PopType> pop_types,
+		    TypedSpan<reform_index_t, const Reform> reforms
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

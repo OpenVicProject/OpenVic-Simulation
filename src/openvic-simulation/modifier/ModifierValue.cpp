@@ -94,16 +94,13 @@ void ModifierValue::apply_exclude_targets(ModifierEffect::target_t excluded_targ
 
 	// We could test if excluded_targets is NO_TARGETS (and so we do nothing) or ALL_TARGETS (and so we clear everything),
 	// but so long as this is always called with an explicit/hardcoded value then we'll never have either of those cases.
-	erase_if(
-		values,
-		[excluded_targets](effect_map_t::value_type const& value) -> bool {
-			return !ModifierEffect::excludes_targets(value.first->targets, excluded_targets);
-		}
-	);
+	erase_if(values, [excluded_targets](effect_map_t::value_type const& value) -> bool {
+		return !ModifierEffect::excludes_targets(value.first->targets, excluded_targets);
+	});
 }
 
 void ModifierValue::multiply_add_exclude_targets(
-	ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
+    ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
 ) {
 	using enum ModifierEffect::target_t;
 

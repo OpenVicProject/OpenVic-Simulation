@@ -72,8 +72,11 @@ bool BMP::read_header() {
 	// Validate sizes and dimensions
 	if (header.image_size_bytes > 0 && header.file_size != header.offset + header.image_size_bytes) {
 		spdlog::error_s(
-			"Invalid BMP memory sizes: file size = {} != {} = {} + {} = image data offset + image data size", header.file_size,
-			header.offset + header.image_size_bytes, header.offset, header.image_size_bytes
+		    "Invalid BMP memory sizes: file size = {} != {} = {} + {} = image data offset + image data size",
+		    header.file_size,
+		    header.offset + header.image_size_bytes,
+		    header.offset,
+		    header.image_size_bytes
 		);
 		header_validated = false;
 	}
@@ -103,8 +106,10 @@ bool BMP::read_header() {
 	static constexpr uint16_t PALETTE_BITS_PER_PIXEL_LIMIT = 8;
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
 		spdlog::error_s(
-			"Invalid BMP palette size: {} (should be 0 as bits per pixel is {} > {})", header.num_colours,
-			header.bits_per_pixel, PALETTE_BITS_PER_PIXEL_LIMIT
+		    "Invalid BMP palette size: {} (should be 0 as bits per pixel is {} > {})",
+		    header.num_colours,
+		    header.bits_per_pixel,
+		    PALETTE_BITS_PER_PIXEL_LIMIT
 		);
 		header_validated = false;
 	}

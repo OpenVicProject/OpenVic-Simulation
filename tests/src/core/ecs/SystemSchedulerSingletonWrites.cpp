@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -25,9 +25,15 @@ using OpenVic::Date;
 // worker-count-invariance digest for a declared singleton pipeline.
 
 namespace {
-	struct SgwState { int64_t acc = 0; }; // the singleton — never attached to an entity
-	struct SgwA { int64_t v = 0; };       // writer-side iterated rows
-	struct SgwB { int64_t v = 0; };       // reader-side iterated rows
+	struct SgwState {
+		int64_t acc = 0;
+	}; // the singleton — never attached to an entity
+	struct SgwA {
+		int64_t v = 0;
+	}; // writer-side iterated rows
+	struct SgwB {
+		int64_t v = 0;
+	}; // reader-side iterated rows
 }
 ECS_COMPONENT(SgwState, "test_SingletonWrites::State")
 ECS_COMPONENT(SgwA, "test_SingletonWrites::A")
@@ -128,8 +134,7 @@ ECS_SYSTEM(SgwReaderThreaded)
 
 // === Structural decisions (stage assignment from declared singleton access) ===
 
-TEST_CASE("Declared singleton writer and reader land in different stages",
-          "[ecs][SystemScheduler][SingletonWrites]") {
+TEST_CASE("Declared singleton writer and reader land in different stages", "[ecs][SystemScheduler][SingletonWrites]") {
 	// The only shared id is the singleton (W via extra_writes vs R via extra_reads) —
 	// singletons are never in a require set, so the disjoint-iteration override can never
 	// drop this edge.
@@ -147,34 +152,37 @@ TEST_CASE("Declared singleton writer and reader land in different stages",
 	CHECK(world.debug_stage_count() == 2u);
 }
 
-TEST_CASE("Two declared singleton writers are serialised",
-          "[ecs][SystemScheduler][SingletonWrites]") {
+TEST_CASE("Two declared singleton writers are serialised", "[ecs][SystemScheduler][SingletonWrites]") {
 	// Different iterated components (SgwA vs SgwB) — the singleton W/W is the only conflict.
 	World world;
 	world.set_singleton<SgwState>();
 	world.register_system<SgwWriter>();
 	world.register_system<SgwWriterTwo>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<SgwWriter>())
-		!= world.debug_stage_index_of(system_type_id_of<SgwWriterTwo>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<SgwWriter>()) !=
+	    world.debug_stage_index_of(system_type_id_of<SgwWriterTwo>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
-TEST_CASE("Two declared singleton readers share a stage",
-          "[ecs][SystemScheduler][SingletonWrites]") {
+TEST_CASE("Two declared singleton readers share a stage", "[ecs][SystemScheduler][SingletonWrites]") {
 	// R/R on the singleton is not a conflict; nothing else is shared → one stage.
 	World world;
 	world.set_singleton<SgwState>();
 	world.register_system<SgwReader>();
 	world.register_system<SgwReaderOnA>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<SgwReader>())
-		== world.debug_stage_index_of(system_type_id_of<SgwReaderOnA>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<SgwReader>()) ==
+	    world.debug_stage_index_of(system_type_id_of<SgwReaderOnA>())
+	);
 	CHECK(world.debug_stage_count() == 1u);
 }
 
-TEST_CASE("Undeclared singleton access co-schedules — the hazard the declaration prevents",
-          "[ecs][SystemScheduler][SingletonWrites]") {
+TEST_CASE(
+    "Undeclared singleton access co-schedules — the hazard the declaration prevents", "[ecs][SystemScheduler][SingletonWrites]"
+) {
 	// Same iterated shapes as SgwWriter/SgwReader but with no extra_* declarations: the
 	// scheduler sees no shared component and puts them in ONE stage. This is the silent
 	// corruption vector for a real writer/reader pair — declarations are mandatory.
@@ -183,15 +191,16 @@ TEST_CASE("Undeclared singleton access co-schedules — the hazard the declarati
 	world.register_system<SgwUndeclaredWriter>();
 	world.register_system<SgwUndeclaredReader>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<SgwUndeclaredWriter>())
-		== world.debug_stage_index_of(system_type_id_of<SgwUndeclaredReader>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<SgwUndeclaredWriter>()) ==
+	    world.debug_stage_index_of(system_type_id_of<SgwUndeclaredReader>())
+	);
 	CHECK(world.debug_stage_count() == 1u);
 }
 
 // === Deterministic auto-orientation ===
 
-TEST_CASE("Singleton conflict auto-orientation is registration-order independent",
-          "[ecs][SystemScheduler][SingletonWrites]") {
+TEST_CASE("Singleton conflict auto-orientation is registration-order independent", "[ecs][SystemScheduler][SingletonWrites]") {
 	std::vector<int> log_run1;
 	std::vector<int> log_run2;
 	uint64_t h1 = 0;
@@ -240,9 +249,7 @@ namespace {
 	// threaded declared reader consume the singleton into SgwB rows. All three conflict on
 	// the singleton (and the readers on SgwB), so the schedule is fully serialised between
 	// them — the digest must be bit-identical at every worker count.
-	int64_t run_singleton_pipeline_and_digest(
-		uint32_t worker_count, bool serial_mode, std::size_t per_side, int tick_count
-	) {
+	int64_t run_singleton_pipeline_and_digest(uint32_t worker_count, bool serial_mode, std::size_t per_side, int tick_count) {
 		World world;
 		world.set_ecs_worker_count(worker_count);
 		world.set_serial_mode(serial_mode);
@@ -285,8 +292,10 @@ namespace {
 	}
 }
 
-TEST_CASE("Declared singleton pipeline: digest is identical across worker counts",
-          "[ecs][determinism][WorkerCountInvariance][SingletonWrites]") {
+TEST_CASE(
+    "Declared singleton pipeline: digest is identical across worker counts",
+    "[ecs][determinism][WorkerCountInvariance][SingletonWrites]"
+) {
 	std::size_t const per_side = 200;
 	int const ticks = 100;
 	int64_t const baseline = run_singleton_pipeline_and_digest(1, /*serial_mode=*/false, per_side, ticks);

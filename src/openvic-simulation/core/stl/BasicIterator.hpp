@@ -148,13 +148,13 @@ namespace OpenVic {
 
 	template<typename It>
 	constexpr inline auto iterator_base(std::reverse_iterator<It> it)
-		-> decltype(std::make_reverse_iterator(iterator_base(it.base()))) {
+	    -> decltype(std::make_reverse_iterator(iterator_base(it.base()))) {
 		return std::make_reverse_iterator(iterator_base(it.base()));
 	}
 
 	template<typename It>
 	constexpr inline auto iterator_base(std::move_iterator<It> it)
-		-> decltype(std::make_move_iterator(iterator_base(it.base()))) {
+	    -> decltype(std::make_move_iterator(iterator_base(it.base()))) {
 		return std::make_move_iterator(iterator_base(it.base()));
 	}
 

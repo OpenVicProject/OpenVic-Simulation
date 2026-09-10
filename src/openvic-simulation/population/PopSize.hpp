@@ -10,12 +10,13 @@
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
-	struct pop_size_t : type_safe::strong_typedef<pop_size_t, std::int32_t>,
-						type_safe::strong_typedef_op::equality_comparison<pop_size_t>,
-						type_safe::strong_typedef_op::relational_comparison<pop_size_t>,
-						type_safe::strong_typedef_op::integer_arithmetic<pop_size_t>,
-						type_safe::strong_typedef_op::mixed_relational_comparison<pop_size_t, std::uint32_t>,
-						type_safe::strong_typedef_op::mixed_equality_comparison<pop_size_t, fixed_point_t> {
+	struct pop_size_t
+	    : type_safe::strong_typedef<pop_size_t, std::int32_t>,
+	      type_safe::strong_typedef_op::equality_comparison<pop_size_t>,
+	      type_safe::strong_typedef_op::relational_comparison<pop_size_t>,
+	      type_safe::strong_typedef_op::integer_arithmetic<pop_size_t>,
+	      type_safe::strong_typedef_op::mixed_relational_comparison<pop_size_t, std::uint32_t>,
+	      type_safe::strong_typedef_op::mixed_equality_comparison<pop_size_t, fixed_point_t> {
 		using strong_typedef::strong_typedef;
 		constexpr pop_size_t(std::same_as<std::int32_t> auto value) : strong_typedef(value) {}
 

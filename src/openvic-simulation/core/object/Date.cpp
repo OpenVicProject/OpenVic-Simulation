@@ -12,8 +12,8 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
-#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 using namespace OpenVic;
 
@@ -176,11 +176,11 @@ struct date_writer {
 	void on_loc_date(numeric_system ns) {
 		char buf[8];
 		write_digit2_separated(
-			buf, //
-			detail::to_unsigned(_date.get_day()), //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(split_year_lower(_date.get_year())), //
-			'/'
+		    buf,
+		    detail::to_unsigned(_date.get_day()),
+		    detail::to_unsigned(_date.get_month()),
+		    detail::to_unsigned(split_year_lower(_date.get_year())),
+		    '/'
 		);
 		_out = detail::copy<Char>(std::begin(buf), std::end(buf), _out);
 	}
@@ -188,11 +188,11 @@ struct date_writer {
 	void on_us_date() {
 		char buf[8];
 		write_digit2_separated(
-			buf, //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(_date.get_day()), //
-			detail::to_unsigned(split_year_lower(_date.get_year())), //
-			'/'
+		    buf,
+		    detail::to_unsigned(_date.get_month()),
+		    detail::to_unsigned(_date.get_day()),
+		    detail::to_unsigned(split_year_lower(_date.get_year())),
+		    '/'
 		);
 		_out = detail::copy<Char>(std::begin(buf), std::end(buf), _out);
 	}
@@ -209,11 +209,11 @@ struct date_writer {
 			year = 0;
 		}
 		write_digit2_separated(
-			buf + 2, //
-			static_cast<unsigned>(year % 100), //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(_date.get_day()), //
-			'-'
+		    buf + 2,
+		    static_cast<unsigned>(year % 100),
+		    detail::to_unsigned(_date.get_month()),
+		    detail::to_unsigned(_date.get_day()),
+		    '-'
 		);
 		_out = detail::copy<Char>(std::begin(buf) + offset, std::end(buf), _out);
 	}

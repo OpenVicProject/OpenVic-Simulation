@@ -9,7 +9,7 @@
 namespace OpenVic::memory {
 	template<typename T, class RawAllocator>
 	using allocator_deleter = foonathan::memory::allocator_deleter<T, RawAllocator>;
-	
+
 	template<typename T, class RawAllocator>
 	requires(!std::is_array_v<T>)
 	static inline void dealloc_delete(RawAllocator&& alloc, T* ptr) {
