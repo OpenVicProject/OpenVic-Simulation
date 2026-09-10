@@ -20,8 +20,8 @@ using namespace std::string_view_literals;
 
 namespace snitch {
 	template<std::size_t N, typename CharT, class Traits>
-	[[nodiscard]] inline static constexpr bool append( //
-		snitch::small_string_span ss, OpenVic::string_literal<N, CharT, Traits> const& s
+	[[nodiscard]] inline static constexpr bool append(
+	    snitch::small_string_span ss, OpenVic::string_literal<N, CharT, Traits> const& s
 	) noexcept {
 		return append(ss, s.as_string_view());
 	}

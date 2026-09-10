@@ -6,12 +6,11 @@
 #include "openvic-simulation/core/memory/Colony.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/military/Leader.hpp"
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp" //below other imports that undef the macros
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-
-#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp" //below other imports that undef the macros
 
 namespace OpenVic {
 	struct ProvinceInstance;
@@ -41,11 +40,11 @@ namespace OpenVic {
 
 	protected:
 		UnitInstanceGroup(
-			unique_id_t new_unique_id,
-			unit_branch_t new_branch,
-			std::string_view new_name,
-			CountryInstance& new_country,
-			ProvinceInstance& new_location
+		    unique_id_t new_unique_id,
+		    unit_branch_t new_branch,
+		    std::string_view new_name,
+		    CountryInstance& new_country,
+		    ProvinceInstance& new_location
 		);
 
 		void update_gamestate();
@@ -101,10 +100,7 @@ namespace OpenVic {
 
 	public:
 		UnitInstanceGroupBranched(
-			unique_id_t new_unique_id,
-			std::string_view new_name,
-			CountryInstance& new_country,
-			ProvinceInstance& new_location
+		    unique_id_t new_unique_id, std::string_view new_name, CountryInstance& new_country, ProvinceInstance& new_location
 		);
 		UnitInstanceGroupBranched(UnitInstanceGroupBranched&&) = default;
 
@@ -113,10 +109,12 @@ namespace OpenVic {
 
 		// TODO - do these work fine when units is empty?
 		std::span<const std::reference_wrapper<RegimentInstance>> get_regiment_instances() {
-			return { reinterpret_cast<std::reference_wrapper<RegimentInstance> const*>(get_units().data()), get_units().size() };
+			return { reinterpret_cast<std::reference_wrapper<RegimentInstance> const*>(get_units().data()),
+				     get_units().size() };
 		}
 		std::span<const std::reference_wrapper<const RegimentInstance>> get_regiment_instances() const {
-			return { reinterpret_cast<std::reference_wrapper<const RegimentInstance> const*>(get_units().data()), get_units().size() };
+			return { reinterpret_cast<std::reference_wrapper<const RegimentInstance> const*>(get_units().data()),
+				     get_units().size() };
 		}
 	};
 
@@ -127,10 +125,7 @@ namespace OpenVic {
 
 	public:
 		UnitInstanceGroupBranched(
-			unique_id_t new_unique_id,
-			std::string_view new_name,
-			CountryInstance& new_country,
-			ProvinceInstance& new_location
+		    unique_id_t new_unique_id, std::string_view new_name, CountryInstance& new_country, ProvinceInstance& new_location
 		);
 		UnitInstanceGroupBranched(UnitInstanceGroupBranched&&) = default;
 
@@ -141,7 +136,8 @@ namespace OpenVic {
 			return { reinterpret_cast<std::reference_wrapper<ShipInstance> const*>(get_units().data()), get_units().size() };
 		}
 		std::span<const std::reference_wrapper<const ShipInstance>> get_ship_instances() const {
-			return { reinterpret_cast<std::reference_wrapper<const ShipInstance> const*>(get_units().data()), get_units().size() };
+			return { reinterpret_cast<std::reference_wrapper<const ShipInstance> const*>(get_units().data()),
+				     get_units().size() };
 		}
 
 		fixed_point_t get_total_consumed_supply() const;
@@ -191,22 +187,20 @@ namespace OpenVic {
 		Pop* recruit_pop_in(ProvinceInstance& province, const bool is_rebel) const;
 		template<unit_branch_t Branch>
 		UnitInstanceBranched<Branch>& generate_unit_instance(
-			UnitDeployment<Branch> const& unit_deployment,
-			MapInstance& map_instance,
-			const bool is_rebel
+		    UnitDeployment<Branch> const& unit_deployment, MapInstance& map_instance, const bool is_rebel
 		);
 		template<unit_branch_t Branch>
 		bool generate_unit_instance_group(
-			MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
+		    MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 		);
 		template<typename T>
 		void generate_leader(CountryInstance& country, T&& leader_base);
 
 	public:
 		UnitInstanceManager(
-			CultureManager const& new_culture_manager,
-			LeaderTraitManager const& new_leader_trait_manager,
-			MilitaryDefines const& new_military_defines
+		    CultureManager const& new_culture_manager,
+		    LeaderTraitManager const& new_leader_trait_manager,
+		    MilitaryDefines const& new_military_defines
 		);
 
 		bool generate_deployment(MapInstance& map_instance, CountryInstance& country, Deployment const& deployment);
@@ -223,12 +217,12 @@ namespace OpenVic {
 		// leadership points will be checked and, if there are enough, have the leader creation cost subtracted from them.
 		// If the country does not have enough leadership points, the function will return false and no leader will be created.
 		bool create_leader(
-			CountryInstance& country,
-			unit_branch_t branch,
-			Date creation_date,
-			std::string_view name = {},
-			LeaderTrait const* personality = nullptr,
-			LeaderTrait const* background = nullptr
+		    CountryInstance& country,
+		    unit_branch_t branch,
+		    Date creation_date,
+		    std::string_view name = {},
+		    LeaderTrait const* personality = nullptr,
+		    LeaderTrait const* background = nullptr
 		);
 	};
 }

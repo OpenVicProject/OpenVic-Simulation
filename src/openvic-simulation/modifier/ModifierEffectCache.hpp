@@ -339,15 +339,15 @@ namespace OpenVic {
 			constexpr strata_effects_t() {};
 		};
 
-	
-	building_type_effects_t const& get_building_type_effects(BuildingType const& key) const;
-	good_effects_t const& get_good_effects(GoodDefinition const& key) const;
-	regiment_type_effects_t const& get_regiment_type_effects(RegimentType const& key) const;
-	ship_type_effects_t const& get_ship_type_effects(ShipType const& key) const;
-	unit_terrain_effects_t const& get_unit_terrain_effects(TerrainType const& key) const;
-	ModifierEffect const* get_rebel_org_gain_effects(RebelType const& key) const;
-	strata_effects_t const& get_strata_effects(Strata const& key) const;
-	ModifierEffect const* get_research_bonus_effects(TechnologyFolder const& key) const;
+
+		building_type_effects_t const& get_building_type_effects(BuildingType const& key) const;
+		good_effects_t const& get_good_effects(GoodDefinition const& key) const;
+		regiment_type_effects_t const& get_regiment_type_effects(RegimentType const& key) const;
+		ship_type_effects_t const& get_ship_type_effects(ShipType const& key) const;
+		unit_terrain_effects_t const& get_unit_terrain_effects(TerrainType const& key) const;
+		ModifierEffect const* get_rebel_org_gain_effects(RebelType const& key) const;
+		strata_effects_t const& get_strata_effects(Strata const& key) const;
+		ModifierEffect const* get_research_bonus_effects(TechnologyFolder const& key) const;
 
 	private:
 		memory::FixedVector<strata_effects_t, strata_index_t> SPAN_PROPERTY(strata_effects);
@@ -357,14 +357,8 @@ namespace OpenVic {
 
 		// These values are replaced via moving during data loading.
 		constexpr ModifierEffectCache() :
-			building_type_effects { create_empty },
-			good_effects { create_empty },
-			regiment_type_effects { create_empty },
-			ship_type_effects { create_empty },
-			unit_terrain_effects { create_empty },
-			rebel_org_gain_effects { create_empty },
-			strata_effects { create_empty },
-			research_bonus_effects { create_empty }
-			{}
+		    building_type_effects { create_empty }, good_effects { create_empty }, regiment_type_effects { create_empty },
+		    ship_type_effects { create_empty }, unit_terrain_effects { create_empty }, rebel_org_gain_effects { create_empty },
+		    strata_effects { create_empty }, research_bonus_effects { create_empty } {}
 	};
 }

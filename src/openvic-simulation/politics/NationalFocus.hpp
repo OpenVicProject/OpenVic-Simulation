@@ -40,20 +40,20 @@ namespace OpenVic {
 		const fixed_point_map_t<PopType const*> encourage_pop_types;
 
 		NationalFocus(
-			std::string_view new_identifier,
-			NationalFocusGroup const& new_group,
-			uint8_t new_icon,
-			bool new_has_flashpoint,
-			fixed_point_t new_flashpoint_tension,
-			bool new_own_provinces,
-			bool new_outliner_show_as_percent,
-			ModifierValue&& new_modifiers,
-			Ideology const* new_loyalty_ideology,
-			fixed_point_t new_loyalty_value,
-			fixed_point_t new_encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
-			fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
-			ConditionScript&& new_limit
+		    std::string_view new_identifier,
+		    NationalFocusGroup const& new_group,
+		    uint8_t new_icon,
+		    bool new_has_flashpoint,
+		    fixed_point_t new_flashpoint_tension,
+		    bool new_own_provinces,
+		    bool new_outliner_show_as_percent,
+		    ModifierValue&& new_modifiers,
+		    Ideology const* new_loyalty_ideology,
+		    fixed_point_t new_loyalty_value,
+		    fixed_point_t new_encourage_railroads,
+		    fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
+		    fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
+		    ConditionScript&& new_limit
 		);
 		NationalFocus(NationalFocus&&) = default;
 	};
@@ -71,25 +71,28 @@ namespace OpenVic {
 		inline bool add_national_focus_group(std::string_view identifier);
 
 		inline bool add_national_focus(
-			std::string_view identifier,
-			NationalFocusGroup const& group,
-			uint8_t icon,
-			bool has_flashpoint,
-			fixed_point_t flashpoint_tension,
-			bool own_provinces,
-			bool outliner_show_as_percent,
-			ModifierValue&& modifiers,
-			Ideology const* loyalty_ideology,
-			fixed_point_t loyalty_value,
-			fixed_point_t encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
-			fixed_point_map_t<PopType const*>&& encourage_pop_types,
-			ConditionScript&& limit
+		    std::string_view identifier,
+		    NationalFocusGroup const& group,
+		    uint8_t icon,
+		    bool has_flashpoint,
+		    fixed_point_t flashpoint_tension,
+		    bool own_provinces,
+		    bool outliner_show_as_percent,
+		    ModifierValue&& modifiers,
+		    Ideology const* loyalty_ideology,
+		    fixed_point_t loyalty_value,
+		    fixed_point_t encourage_railroads,
+		    fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
+		    fixed_point_map_t<PopType const*>&& encourage_pop_types,
+		    ConditionScript&& limit
 		);
 
 		bool load_national_foci_file(
-			PopManager const& pop_manager, IdeologyManager const& ideology_manager,
-			GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
+		    PopManager const& pop_manager,
+		    IdeologyManager const& ideology_manager,
+		    GoodDefinitionManager const& good_definition_manager,
+		    ModifierManager const& modifier_manager,
+		    ast::NodeCPtr root
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

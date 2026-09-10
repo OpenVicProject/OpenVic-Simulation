@@ -34,12 +34,12 @@ TEST_CASE("dense growth then LIFO reuse, exact sequence", "[ecs][DenseSlotAlloca
 TEST_CASE("snapshot/restore continues exactly as the never-saved run", "[ecs][DenseSlotAllocator]") {
 	DenseSlotAllocator original;
 	for (int i = 0; i < 8; ++i) {
-		(void) original.allocate();
+		(void)original.allocate();
 	}
 	original.release(3);
 	original.release(6);
 	original.release(1);
-	(void) original.allocate(); // 1 — leaves [3, 6] on the stack
+	(void)original.allocate(); // 1 — leaves [3, 6] on the stack
 	original.release(7);
 
 	DenseSlotAllocator::Snapshot snap;
@@ -76,15 +76,15 @@ TEST_CASE("snapshot/restore continues exactly as the never-saved run", "[ecs][De
 
 	// Restore into a reset (non-fresh) allocator also works.
 	DenseSlotAllocator reused;
-	(void) reused.allocate();
+	(void)reused.allocate();
 	reused.reset();
 	CHECK(reused.restore(snap));
 }
 
 TEST_CASE("restore validates and leaves state untouched on failure", "[ecs][DenseSlotAllocator]") {
 	DenseSlotAllocator alloc;
-	(void) alloc.allocate();
-	(void) alloc.allocate();
+	(void)alloc.allocate();
+	(void)alloc.allocate();
 
 	{
 		// Free slot >= next_unallocated.
@@ -118,7 +118,7 @@ TEST_CASE("restore validates and leaves state untouched on failure", "[ecs][Dens
 TEST_CASE("reset forgets everything (the end_game_session sweep)", "[ecs][DenseSlotAllocator]") {
 	DenseSlotAllocator alloc;
 	for (int i = 0; i < 6; ++i) {
-		(void) alloc.allocate();
+		(void)alloc.allocate();
 	}
 	alloc.release(4);
 	alloc.release(2);
@@ -135,11 +135,12 @@ TEST_CASE("reset forgets everything (the end_game_session sweep)", "[ecs][DenseS
 	CHECK(snap.free_slots.empty());
 }
 
-TEST_CASE("release range-check ignores never-allocated slots; debug_validate catches double release",
-          "[ecs][DenseSlotAllocator]") {
+TEST_CASE(
+    "release range-check ignores never-allocated slots; debug_validate catches double release", "[ecs][DenseSlotAllocator]"
+) {
 	DenseSlotAllocator alloc;
 	for (int i = 0; i < 3; ++i) {
-		(void) alloc.allocate();
+		(void)alloc.allocate();
 	}
 
 	alloc.release(99); // never allocated — logged and ignored

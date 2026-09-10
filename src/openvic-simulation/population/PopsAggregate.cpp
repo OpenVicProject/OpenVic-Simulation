@@ -9,27 +9,27 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;
-PopsAggregate::PopsAggregate(PopsAggregateDeps const& deps)
-  : population_by_strata { generate_values, deps.strata_count },
-	militancy_by_strata_running_total_raw { generate_values, deps.strata_count },
-	life_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
-	everyday_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
-	luxury_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
-	militancy_by_strata { generate_values, deps.strata_count },
-	life_needs_fulfilled_by_strata { generate_values, deps.strata_count },
-	everyday_needs_fulfilled_by_strata { generate_values, deps.strata_count },
-	luxury_needs_fulfilled_by_strata { generate_values, deps.strata_count },
-	population_by_type { generate_values, deps.pop_type_count },
-	unemployed_pops_by_type { generate_values, deps.pop_type_count },
-	supporter_equivalents_by_ideology { generate_values, deps.ideology_count },
-	supporter_equivalents_by_party_policy { generate_values, deps.party_policy_count },
-	supporter_equivalents_by_reform { generate_values, deps.reform_count } {}
+PopsAggregate::PopsAggregate(PopsAggregateDeps const& deps) :
+    population_by_strata { generate_values, deps.strata_count },
+    militancy_by_strata_running_total_raw { generate_values, deps.strata_count },
+    life_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
+    everyday_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
+    luxury_needs_fulfilled_by_strata_running_total_raw { generate_values, deps.strata_count },
+    militancy_by_strata { generate_values, deps.strata_count },
+    life_needs_fulfilled_by_strata { generate_values, deps.strata_count },
+    everyday_needs_fulfilled_by_strata { generate_values, deps.strata_count },
+    luxury_needs_fulfilled_by_strata { generate_values, deps.strata_count },
+    population_by_type { generate_values, deps.pop_type_count },
+    unemployed_pops_by_type { generate_values, deps.pop_type_count },
+    supporter_equivalents_by_ideology { generate_values, deps.ideology_count },
+    supporter_equivalents_by_party_policy { generate_values, deps.party_policy_count },
+    supporter_equivalents_by_reform { generate_values, deps.reform_count } {}
 
 fixed_point_t PopsAggregate::get_vote_equivalents_by_party(CountryParty const& party) const {
 	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
@@ -57,9 +57,9 @@ pop_sum_t PopsAggregate::get_population_by_religion(Religion const& religion) co
 	}
 }
 
-template <typename... Vectors>
+template<typename... Vectors>
 constexpr void bulk_fill_default(Vectors&... vecs) {
-    (std::fill(vecs.begin(), vecs.end(), typename Vectors::value_type{}), ...);
+	(std::fill(vecs.begin(), vecs.end(), typename Vectors::value_type {}), ...);
 }
 
 void PopsAggregate::clear_pops_aggregate() {
@@ -75,20 +75,20 @@ void PopsAggregate::clear_pops_aggregate() {
 	average_militancy = fixed_point_t::_0;
 
 	bulk_fill_default(
-		militancy_by_strata_running_total_raw,
-		life_needs_fulfilled_by_strata_running_total_raw,
-		everyday_needs_fulfilled_by_strata_running_total_raw,
-		luxury_needs_fulfilled_by_strata_running_total_raw,
-		militancy_by_strata,
-		life_needs_fulfilled_by_strata,
-		everyday_needs_fulfilled_by_strata,
-		luxury_needs_fulfilled_by_strata,
-		population_by_strata,
-		population_by_type,
-		unemployed_pops_by_type,
-		supporter_equivalents_by_ideology,
-		supporter_equivalents_by_party_policy,
-		supporter_equivalents_by_reform
+	    militancy_by_strata_running_total_raw,
+	    life_needs_fulfilled_by_strata_running_total_raw,
+	    everyday_needs_fulfilled_by_strata_running_total_raw,
+	    luxury_needs_fulfilled_by_strata_running_total_raw,
+	    militancy_by_strata,
+	    life_needs_fulfilled_by_strata,
+	    everyday_needs_fulfilled_by_strata,
+	    luxury_needs_fulfilled_by_strata,
+	    population_by_strata,
+	    population_by_type,
+	    unemployed_pops_by_type,
+	    supporter_equivalents_by_ideology,
+	    supporter_equivalents_by_party_policy,
+	    supporter_equivalents_by_reform
 	);
 
 	vote_equivalents_by_party.clear();
@@ -96,10 +96,8 @@ void PopsAggregate::clear_pops_aggregate() {
 	population_by_religion.clear();
 }
 
-constexpr void update_running_total_raw_128 (
-	boost::int128::int128_t& running_total_raw,
-	const pop_sum_t part_population,
-	const fixed_point_t average
+constexpr void update_running_total_raw_128(
+    boost::int128::int128_t& running_total_raw, const pop_sum_t part_population, const fixed_point_t average
 ) {
 	running_total_raw += type_safe::get(part_population) * static_cast<boost::int128::int128_t>(average.get_raw_value());
 };
@@ -126,24 +124,22 @@ void PopsAggregate::add_pops_aggregate(PopsAggregate& part) {
 		for (const pop_sum_t strata_population : part.get_population_by_strata()) {
 			population_by_strata[strata_index] += strata_population;
 			update_running_total_raw_128(
-				militancy_by_strata_running_total_raw[strata_index],
-				strata_population,
-				part.militancy_by_strata[strata_index]
+			    militancy_by_strata_running_total_raw[strata_index], strata_population, part.militancy_by_strata[strata_index]
 			);
 			update_running_total_raw_128(
-				life_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population,
-				part.life_needs_fulfilled_by_strata[strata_index]
+			    life_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population,
+			    part.life_needs_fulfilled_by_strata[strata_index]
 			);
 			update_running_total_raw_128(
-				everyday_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population,
-				part.everyday_needs_fulfilled_by_strata[strata_index]
+			    everyday_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population,
+			    part.everyday_needs_fulfilled_by_strata[strata_index]
 			);
 			update_running_total_raw_128(
-				luxury_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population,
-				part.luxury_needs_fulfilled_by_strata[strata_index]
+			    luxury_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population,
+			    part.luxury_needs_fulfilled_by_strata[strata_index]
 			);
 			++strata_index;
 		}
@@ -174,21 +170,15 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	const strata_index_t strata_index = pop_type.strata.index;
 
 	population_by_strata[strata_index] += pop_size;
+	update_running_total_raw_128(militancy_by_strata_running_total_raw[strata_index], pop_size, pop.get_militancy());
 	update_running_total_raw_128(
-		militancy_by_strata_running_total_raw[strata_index],
-		pop_size, pop.get_militancy()
+	    life_needs_fulfilled_by_strata_running_total_raw[strata_index], pop_size, pop.get_life_needs_fulfilled()
 	);
 	update_running_total_raw_128(
-		life_needs_fulfilled_by_strata_running_total_raw[strata_index],
-		pop_size, pop.get_life_needs_fulfilled()
+	    everyday_needs_fulfilled_by_strata_running_total_raw[strata_index], pop_size, pop.get_everyday_needs_fulfilled()
 	);
 	update_running_total_raw_128(
-		everyday_needs_fulfilled_by_strata_running_total_raw[strata_index],
-		pop_size, pop.get_everyday_needs_fulfilled()
-	);
-	update_running_total_raw_128(
-		luxury_needs_fulfilled_by_strata_running_total_raw[strata_index],
-		pop_size, pop.get_luxury_needs_fulfilled()
+	    luxury_needs_fulfilled_by_strata_running_total_raw[strata_index], pop_size, pop.get_luxury_needs_fulfilled()
 	);
 
 	population_by_type[pop_type_index] += pop_size;
@@ -208,39 +198,37 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 }
 
 constexpr void normalise(fixed_point_t& value, const boost::int128::int128_t running_total_raw, const pop_sum_t population) {
-	value = fixed_point_t::parse_raw(static_cast<int64_t>(
-		running_total_raw / type_safe::get(population)
-	));
+	value = fixed_point_t::parse_raw(static_cast<int64_t>(running_total_raw / type_safe::get(population)));
 }
 
 void PopsAggregate::normalise_pops_aggregate() {
 	if (total_population > 0) {
 		const int64_t total_population_v = type_safe::get(total_population);
 		average_literacy = fixed_point_t::parse_raw(static_cast<int64_t>(literacy_running_total_raw / total_population_v));
-		average_consciousness = fixed_point_t::parse_raw(static_cast<int64_t>(consciousness_running_total_raw / total_population_v));
+		average_consciousness = fixed_point_t::parse_raw(
+		    static_cast<int64_t>(consciousness_running_total_raw / total_population_v)
+		);
 		average_militancy = fixed_point_t::parse_raw(static_cast<int64_t>(militancy_running_total_raw / total_population_v));
 
 		strata_index_t strata_index {};
 		for (const pop_sum_t strata_population : population_by_strata) {
 			normalise(
-				militancy_by_strata[strata_index],
-				militancy_by_strata_running_total_raw[strata_index],
-				strata_population
+			    militancy_by_strata[strata_index], militancy_by_strata_running_total_raw[strata_index], strata_population
 			);
 			normalise(
-				life_needs_fulfilled_by_strata[strata_index],
-				life_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population
+			    life_needs_fulfilled_by_strata[strata_index],
+			    life_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population
 			);
 			normalise(
-				everyday_needs_fulfilled_by_strata[strata_index],
-				everyday_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population
+			    everyday_needs_fulfilled_by_strata[strata_index],
+			    everyday_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population
 			);
 			normalise(
-				luxury_needs_fulfilled_by_strata[strata_index],
-				luxury_needs_fulfilled_by_strata_running_total_raw[strata_index],
-				strata_population
+			    luxury_needs_fulfilled_by_strata[strata_index],
+			    luxury_needs_fulfilled_by_strata_running_total_raw[strata_index],
+			    strata_population
 			);
 			++strata_index;
 		}
@@ -253,11 +241,9 @@ void PopsAggregate::update_parties_for_votes(CountryDefinition const* country_de
 		return;
 	}
 
-	auto view = country_definition->get_parties() | std::views::transform(
-		[](CountryParty const& key) {
-			return std::make_pair(&key, fixed_point_t::_0);
-		}
-	);
+	auto view = country_definition->get_parties() | std::views::transform([](CountryParty const& key) {
+		            return std::make_pair(&key, fixed_point_t::_0);
+	            });
 	vote_equivalents_by_party.insert(view.begin(), view.end());
 }
 void PopsAggregate::update_parties_for_votes(CountryInstance const* country_instance) {

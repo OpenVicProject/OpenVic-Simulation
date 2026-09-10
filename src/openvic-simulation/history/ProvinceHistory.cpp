@@ -15,40 +15,32 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 ProvinceHistoryEntry::ProvinceHistoryEntry(
-	BuildingTypeManager const& building_type_manager,
-	ProvinceDefinition const& new_province,
-	Date new_date
-) : HistoryEntry { new_date },
-	province { new_province },
-	province_building_levels {
-		province_building_index_t(building_type_manager.get_province_building_types().size()),
-		building_level_t(0)
-	}
-{}
+    BuildingTypeManager const& building_type_manager, ProvinceDefinition const& new_province, Date new_date
+) :
+    HistoryEntry { new_date }, province { new_province }, province_building_levels {
+	    province_building_index_t(building_type_manager.get_province_building_types().size()), building_level_t(0)
+    } {}
 
-ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager)
-  : province { new_province },
-	building_type_manager { new_building_type_manager }
- {}
+ProvinceHistoryMap::ProvinceHistoryMap(
+    ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager
+) : province { new_province }, building_type_manager { new_building_type_manager } {}
 
 memory::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
 	return memory::make_unique<ProvinceHistoryEntry>(building_type_manager, province, date);
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
-	DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
+    DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
 ) {
 	BuildingTypeManager const& building_type_manager = definition_manager.get_economy_manager().get_building_type_manager();
 	CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
 	GoodDefinitionManager const& good_definition_manager =
-		definition_manager.get_economy_manager().get_good_definition_manager();
+	    definition_manager.get_economy_manager().get_good_definition_manager();
 	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
 	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
 	using enum colony_status_t;
-	static const string_map_t<colony_status_t> colony_status_map {
-		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
-	};
+	static const string_map_t<colony_status_t> colony_status_map { { "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY } };
 
 	const auto set_core_instruction = [&entry](bool add) {
 		return [&entry, add](CountryDefinition const& country) -> bool {
@@ -60,23 +52,23 @@ bool ProvinceHistoryMap::_load_history_entry(
 			} else if (it->second == add) {
 				// Desired core instruction already exists
 				spdlog::warn_s(
-					"Duplicate attempt to {} core of country {} {} province history of {}",
-					add ? "add" : "remove",
-					country,
-					add ? "to" : "from",
-					entry.province
+				    "Duplicate attempt to {} core of country {} {} province history of {}",
+				    add ? "add" : "remove",
+				    country,
+				    add ? "to" : "from",
+				    entry.province
 				);
 				return true;
 			} else {
 				// Opposite core instruction exists
 				entry.cores.erase(it);
 				spdlog::warn_s(
-					"Attempted to {} core of country {} {} province history of {} after previously {} it",
-					add ? "add" : "remove",
-					country,
-					add ? "to" : "from",
-					entry.province,
-					add ? "removing" : "adding"
+				    "Attempted to {} core of country {} {} province history of {} after previously {} it",
+				    add ? "add" : "remove",
+				    country,
+				    add ? "to" : "from",
+				    entry.province,
+				    add ? "removing" : "adding"
 				);
 				return true;
 			}
@@ -276,14 +268,9 @@ ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(ProvinceD
 ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(ProvinceDefinition const& province) {
 	decltype(province_histories)::iterator it = province_histories.find(&province);
 	if (it == province_histories.end()) {
-		const std::pair<decltype(province_histories)::iterator, bool> result =
-			province_histories.emplace(
-				&province,
-				ProvinceHistoryMap {
-					province,
-					definition_manager.get_economy_manager().get_building_type_manager()
-				}
-			);
+		const std::pair<decltype(province_histories)::iterator, bool> result = province_histories.emplace(
+		    &province, ProvinceHistoryMap { province, definition_manager.get_economy_manager().get_building_type_manager() }
+		);
 		if (result.second) {
 			it = result.first;
 		} else {
@@ -295,13 +282,10 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 }
 
 bool ProvinceHistoryManager::load_province_history_file(
-	DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
+    DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
 ) {
 	if (locked) {
-		spdlog::error_s(
-			"Attempted to load province history file for {} after province history registry was locked!",
-			province
-		);
+		spdlog::error_s("Attempted to load province history file for {} after province history registry was locked!", province);
 		return false;
 	}
 
@@ -314,20 +298,18 @@ bool ProvinceHistoryManager::load_province_history_file(
 }
 
 bool ProvinceHistoryEntry::_load_province_pop_history(
-	DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
+    DefinitionManager const& definition_manager, ast::NodeCPtr root, bool* non_integer_size
 ) {
 	PopManager const& pop_manager = definition_manager.get_pop_manager();
 	RebelManager const& rebel_manager = definition_manager.get_politics_manager().get_rebel_manager();
-	return pop_manager.expect_pop_type_dictionary_reserve_length(
-		pops,
-		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
-			return pop_manager.load_pop_bases_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
-		}
-	)(root);
+	return pop_manager
+	    .expect_pop_type_dictionary_reserve_length(pops, [this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
+		    return pop_manager.load_pop_bases_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
+	    })(root);
 }
 
 bool ProvinceHistoryMap::_load_province_pop_history(
-	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+    DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
 ) {
 	ProvinceHistoryEntry* entry = _get_or_make_entry(definition_manager, date);
 	if (entry != nullptr) {
@@ -338,20 +320,19 @@ bool ProvinceHistoryMap::_load_province_pop_history(
 }
 
 bool ProvinceHistoryManager::load_pop_history_file(
-	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+    DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
 ) {
 	if (locked) {
 		spdlog::error_s("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
-	return definition_manager.get_map_definition().expect_province_definition_dictionary(
-		[this, &definition_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
-			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
-			if (province_history != nullptr) {
-				return province_history->_load_province_pop_history(definition_manager, date, node, non_integer_size);
-			} else {
-				return false;
-			}
-		}
-	)(root);
+	return definition_manager.get_map_definition()
+	    .expect_province_definition_dictionary([this, &definition_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
+		    ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
+		    if (province_history != nullptr) {
+			    return province_history->_load_province_pop_history(definition_manager, date, node, non_integer_size);
+		    } else {
+			    return false;
+		    }
+	    })(root);
 }

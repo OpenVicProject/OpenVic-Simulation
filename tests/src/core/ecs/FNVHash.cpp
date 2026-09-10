@@ -1,7 +1,7 @@
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
-
 #include <cstdint>
 #include <string_view>
+
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

@@ -1,14 +1,15 @@
-#include "openvic-simulation/core/object/Date.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/SystemImpl.hpp"
-#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -90,8 +91,9 @@ namespace {
 	}
 }
 
-TEST_CASE("Skipped SystemThreaded, single-system stage: should_run vs in-body early-out",
-          "[benchmarks][benchmark-ecs][ecs-shouldrun]") {
+TEST_CASE(
+    "Skipped SystemThreaded, single-system stage: should_run vs in-body early-out", "[benchmarks][benchmark-ecs][ecs-shouldrun]"
+) {
 	ankerl::nanobench::Bench bench;
 	bench.title("skipped tick, single-system stage").unit("tick");
 
@@ -112,8 +114,9 @@ TEST_CASE("Skipped SystemThreaded, single-system stage: should_run vs in-body ea
 	}
 }
 
-TEST_CASE("Skipped SystemThreaded, multi-system stage: should_run vs in-body early-out",
-          "[benchmarks][benchmark-ecs][ecs-shouldrun]") {
+TEST_CASE(
+    "Skipped SystemThreaded, multi-system stage: should_run vs in-body early-out", "[benchmarks][benchmark-ecs][ecs-shouldrun]"
+) {
 	ankerl::nanobench::Bench bench;
 	bench.title("skipped tick, multi-system stage").unit("tick");
 

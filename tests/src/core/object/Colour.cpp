@@ -5,9 +5,9 @@
 
 #include <fmt/format.h>
 
+#include "Helper.hpp" // IWYU pragma: keep
 #include "core/object/Colour.hpp" // IWYU pragma: keep
 #include "core/object/Numeric.hpp" // IWYU pragma: keep
-#include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -23,9 +23,9 @@ TEMPLATE_LIST_TEST_CASE("basic_colour_t Constructor methods", "[basic_colour_t][
 	using value_t = TestType::value_type;
 
 	static constexpr TestType blue_rgb = TestType(
-		(value_t)(63.0 / 255 * TestType::max_value), //
-		(value_t)(96.0 / 255 * TestType::max_value), //
-		(value_t)(1.0 * TestType::max_value)
+	    (value_t)(63.0 / 255 * TestType::max_value),
+	    (value_t)(96.0 / 255 * TestType::max_value),
+	    (value_t)(1.0 * TestType::max_value)
 	);
 	static constexpr TestType blue_float = TestType::from_floats(0.25098, 0.376471, 1);
 
@@ -128,11 +128,7 @@ TEMPLATE_LIST_TEST_CASE("basic_colour_t Formatting", "[basic_colour_t][basic_col
 }
 
 TEST_CASE("colour_rgb_t Constructor methods", "[basic_colour_t][colour_rgb_t][colour_rgb_t-constructor]") {
-	static constexpr colour_rgb_t blue_rgb = colour_rgb_t(
-		63.0 / 255 * 255, //
-		96.0 / 255 * 255, //
-		1.0 * 255
-	);
+	static constexpr colour_rgb_t blue_rgb = colour_rgb_t(63.0 / 255 * 255, 96.0 / 255 * 255, 1.0 * 255);
 	static constexpr colour_rgb_t blue_int = colour_rgb_t::from_integer(0x3F'60'FF);
 	static constexpr colour_rgb_t blue_rgba = colour_rgb_t::from_rgba(0x3F'60'FF'FF);
 	static constexpr colour_rgb_t blue_argb = colour_rgb_t::from_argb(0xFF'3F'60'FF);
@@ -149,11 +145,7 @@ TEST_CASE("colour_rgb_t Constructor methods", "[basic_colour_t][colour_rgb_t][co
 }
 
 TEST_CASE("colour_argb_t Constructor methods", "[basic_colour_t][colour_argb_t][colour_argb_t-constructor]") {
-	static constexpr colour_argb_t blue_rgb = colour_argb_t(
-		63.0 / 255 * 255, //
-		96.0 / 255 * 255, //
-		1.0 * 255
-	);
+	static constexpr colour_argb_t blue_rgb = colour_argb_t(63.0 / 255 * 255, 96.0 / 255 * 255, 1.0 * 255);
 	static constexpr colour_argb_t blue_int = colour_argb_t::from_integer(0x3F'60'FF'FF);
 	static constexpr colour_argb_t blue_rgba = colour_argb_t::from_rgba(0x3F'60'FF'FF);
 	static constexpr colour_argb_t blue_argb = colour_argb_t::from_argb(0xFF'3F'60'FF);

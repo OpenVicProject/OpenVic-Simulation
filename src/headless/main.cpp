@@ -12,9 +12,9 @@
 #include <spdlog/logger.h>
 #include <spdlog/sinks/callback_sink.h>
 
+#include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/core/memory/MemoryTracker.hpp>
 #include <openvic-simulation/core/memory/Vector.hpp>
-#include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/economy/GoodDefinition.hpp>
@@ -26,18 +26,21 @@
 
 using namespace OpenVic;
 
-inline static void print_memory_usage( //
-	std::string_view prefix, std::source_location const& location = std::source_location::current()
+inline static void print_memory_usage(
+    std::string_view prefix, std::source_location const& location = std::source_location::current()
 ) {
 #ifdef DEBUG_ENABLED // memory tracking will return 0 without DEBUG_ENABLED
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
 	spdlog::log(
 #ifndef SPDLOG_NO_SOURCE_LOC
-		spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+	    spdlog::source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
 #else
-		spdlog::source_loc {},
+	    spdlog::source_loc {},
 #endif
-		spdlog::level::info, "{} Memory Usage: {} Bytes", prefix, OpenVic::memory::MemoryTracker::get_memory_usage()
+	    spdlog::level::info,
+	    "{} Memory Usage: {} Bytes",
+	    prefix,
+	    OpenVic::memory::MemoryTracker::get_memory_usage()
 	);
 #endif
 #endif
@@ -50,9 +53,9 @@ static void print_help(FILE* file, std::string_view program_name) {
 	fmt::println(file, "    -b : Use the following path as the base directory (instead of searching for one).");
 	fmt::println(file, "    -s : Use the following path as a hint to search for a base directory.");
 	fmt::println(
-		file,
-		"Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base "
-		"directory."
+	    file,
+	    "Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base "
+	    "directory."
 	);
 	fmt::println(file, "(Paths with spaces need to be enclosed in \"quotes\").");
 }
@@ -70,20 +73,20 @@ static void print_rgo(ProvinceInstance const& province) {
 
 		SPDLOG_INFO("{}:", province);
 		SPDLOG_INFO(
-			"\tgood: {}, "
-			"production_type: {}, "
-			"size_multiplier: {:.3}, "
-			"output_quantity_yesterday: {:.3}, "
-			"revenue_yesterday: {:.3}, "
-			"total owner income: {:.3}, "
-			"total employee income: {:.3}",
-			production_type.output_good, //
-			production_type, //
-			rgo.get_size_multiplier(), //
-			rgo.get_output_quantity_yesterday(), //
-			rgo.get_revenue_yesterday(), //
-			rgo.get_total_owner_income_cache(), //
-			rgo.get_total_employee_income_cache()
+		    "\tgood: {}, "
+		    "production_type: {}, "
+		    "size_multiplier: {:.3}, "
+		    "output_quantity_yesterday: {:.3}, "
+		    "revenue_yesterday: {:.3}, "
+		    "total owner income: {:.3}, "
+		    "total employee income: {:.3}",
+		    production_type.output_good,
+		    production_type,
+		    rgo.get_size_multiplier(),
+		    rgo.get_output_quantity_yesterday(),
+		    rgo.get_revenue_yesterday(),
+		    rgo.get_total_owner_income_cache(),
+		    rgo.get_total_employee_income_cache()
 		);
 
 		bool logged_employees = false;
@@ -190,11 +193,11 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	spdlog::sink_ptr counter_sink = std::make_shared<spdlog::sinks::callback_sink_st>([](spdlog::details::log_msg const& msg) {
 		switch (msg.level) {
 			using namespace spdlog::level;
-		case info:	   info_count++; break;
-		case warn:	   warning_count++; break;
-		case err:	   error_count++; break;
+		case info:     info_count++; break;
+		case warn:     warning_count++; break;
+		case err:      error_count++; break;
 		case critical: critical_count++; break;
-		default:	   break;
+		default:       break;
 		}
 	});
 
@@ -202,9 +205,10 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	GameManager game_manager {
 		[] {
-			SPDLOG_INFO("State updated");
+		    SPDLOG_INFO("State updated");
 		},
-		nullptr, nullptr //
+		nullptr,
+		nullptr
 	};
 
 	SPDLOG_INFO("Commit hash: {}", GameManager::get_commit_hash());
@@ -220,9 +224,9 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	SPDLOG_INFO("===== Loading definitions... =====");
 	ret &= game_manager.load_definitions(
-		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
-			return true;
-		}
+	    [](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
+		    return true;
+	    }
 	);
 
 	print_memory_usage("Definition Setup");
@@ -244,10 +248,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	SPDLOG_INFO("===== Setting up instance... =====");
 	ret &= game_manager.setup_instance(
-		game_manager.get_definition_manager()
-			.get_history_manager()
-			.get_bookmark_manager()
-			.get_front_bookmark()
+	    game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_front_bookmark()
 	);
 
 	print_memory_usage("Instance Setup");
@@ -263,25 +264,32 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	// TODO - REMOVE TEST CODE
 	SPDLOG_INFO("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [ //
-		](std::string_view title, OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> countries) -> void {
+		const auto print_ranking_list =
+		    [](std::string_view title,
+		       OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> countries) -> void {
 			memory::string countries_str;
 			for (CountryInstance& country : countries) {
 				countries_str += fmt::format(
-					"\n\t{} - Total #{} ({:.1}), Prestige #{} ({:.1}), Industry #{} ({:.1}), Military #{} ({:.1})", //
-					country, //
-					country.get_total_rank(), country.total_score.get_untracked(), //
-					country.get_prestige_rank(), country.get_prestige_untracked(),
-					country.get_industrial_rank(), country.get_industrial_power_untracked(),
-					country.get_military_rank(), country.military_power.get_untracked()
+				    "\n\t{} - Total #{} ({:.1}), Prestige #{} ({:.1}), Industry #{} ({:.1}), Military #{} ({:.1})",
+				    country,
+				    country.get_total_rank(),
+				    country.total_score.get_untracked(),
+				    country.get_prestige_rank(),
+				    country.get_prestige_untracked(),
+				    country.get_industrial_rank(),
+				    country.get_industrial_power_untracked(),
+				    country.get_military_rank(),
+				    country.military_power.get_untracked()
 				);
 			}
 			SPDLOG_INFO("{}:{}", title, countries_str);
 		};
 
-		CountryInstanceManager const& country_instance_manager = game_manager.get_instance_manager()->get_country_instance_manager();
+		CountryInstanceManager const& country_instance_manager =
+		    game_manager.get_instance_manager()->get_country_instance_manager();
 
-		OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> great_powers = country_instance_manager.get_great_powers();
+		OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> great_powers =
+		    country_instance_manager.get_great_powers();
 		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
@@ -311,14 +319,14 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		MapInstance& map_instance = game_manager.get_instance_manager()->get_map_instance();
 
 		SPDLOG_INFO("===== Land Pathfinding test... =====");
-		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>( //
-			run_pathing_test<TESTS>(map_instance.get_land_pathing(), LAND_SEED)
+		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>(
+		    run_pathing_test<TESTS>(map_instance.get_land_pathing(), LAND_SEED)
 		);
 		SPDLOG_INFO("Ran {} land pathing tests in {}", TESTS, duration);
 
 		SPDLOG_INFO("===== Sea Pathfinding test... =====");
-		duration = std::chrono::duration_cast<test_time_units_t>( //
-			run_pathing_test<TESTS>(map_instance.get_sea_pathing(), SEA_SEED)
+		duration = std::chrono::duration_cast<test_time_units_t>(
+		    run_pathing_test<TESTS>(map_instance.get_sea_pathing(), SEA_SEED)
 		);
 		SPDLOG_INFO("Ran {} sea pathing tests in {}", TESTS, duration);
 	}
@@ -328,9 +336,8 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 		SPDLOG_INFO("===== Game Tick test... =====");
 		size_t ticks_passed = 0;
-		test_duration_t min_tick_duration = test_duration_t::max(), //
-			max_tick_duration = test_duration_t::min(), //
-			total_tick_duration {};
+		test_duration_t min_tick_duration = test_duration_t::max(), max_tick_duration = test_duration_t::min(),
+		                total_tick_duration {};
 		const test_time_point_t start_time = testing_clock_t::now();
 		while (++ticks_passed < TICK_COUNT) {
 			const test_time_point_t tick_start = testing_clock_t::now();
@@ -353,14 +360,20 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 			const test_duration_t tick_tps = total_tick_duration / ticks_passed;
 			const test_duration_t total_tps = duration / ticks_passed;
 			spdlog::info(
-				"Ran {} / {} ticks, total time {} at {} per tick, tick time only {} at {} per tick. "
-				"Tick lengths ranged from {} to {}.",
-				ticks_passed, TICK_COUNT, duration, total_tps, total_tick_duration, tick_tps, //
-				min_tick_duration, max_tick_duration
+			    "Ran {} / {} ticks, total time {} at {} per tick, tick time only {} at {} per tick. "
+			    "Tick lengths ranged from {} to {}.",
+			    ticks_passed,
+			    TICK_COUNT,
+			    duration,
+			    total_tps,
+			    total_tick_duration,
+			    tick_tps,
+			    min_tick_duration,
+			    max_tick_duration
 			);
 		} else {
 			spdlog::error_s(
-				"No ticks passed ({}, expected {}) or zero duration measured ({})!", ticks_passed, TICK_COUNT, duration
+			    "No ticks passed ({}, expected {}) or zero duration measured ({})!", ticks_passed, TICK_COUNT, duration
 			);
 			ret = false;
 		}
@@ -375,7 +388,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 }
 
 /*
-	$ program [-h] [-t] [-b] [path]+
+    $ program [-h] [-t] [-b] [path]+
 */
 
 int main(int argc, char const* argv[]) {
@@ -389,8 +402,10 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv, &program_name //
-	](std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform) -> bool {
+	const auto _read =
+	    [&root, &argn, argc, argv, &program_name](
+	        std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform
+	    ) -> bool {
 		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];
@@ -399,7 +414,7 @@ int main(int argc, char const* argv[]) {
 					return true;
 				} else {
 					fmt::println(
-						stderr, "Empty path after giving \"{}\" to {} command line argument \"{}\".", path, path_use, command
+					    stderr, "Empty path after giving \"{}\" to {} command line argument \"{}\".", path, path_use, command
 					);
 				}
 			} else {
@@ -452,17 +467,19 @@ int main(int argc, char const* argv[]) {
 	spdlog::info("Load returned: {}", ret ? "SUCCESS" : "FAILURE");
 
 	spdlog::info(
-		"Logger Summary: "
+	    "Logger Summary: "
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
-		"Info = {}, "
+	    "Info = {}, "
 #endif
-		"Warning = {}, "
-		"Error = {}, "
-		"Critical = {}",
+	    "Warning = {}, "
+	    "Error = {}, "
+	    "Critical = {}",
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
-		info_count,
+	    info_count,
 #endif
-		warning_count, error_count, critical_count
+	    warning_count,
+	    error_count,
+	    critical_count
 	);
 
 	return ret ? 0 : -1;

@@ -6,8 +6,8 @@
 #include <string_view>
 #include <type_traits>
 
-#include "openvic-simulation/core/stl/BasicIterator.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/stl/BasicIterator.hpp"
 
 namespace OpenVic {
 	template<std::size_t N, typename CharT, class Traits>
@@ -173,22 +173,21 @@ namespace OpenVic {
 		}
 
 		template<size_type N2>
-		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> append( //
-			string_literal<N2, value_type, traits_type> str
+		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> append(
+		    string_literal<N2, value_type, traits_type> str
 		) const noexcept {
 			return *this + str;
 		}
 
 		template<size_type N2>
-		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> append( //
-			const value_type (&literal)[N2]
+		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> append(
+		    const value_type (&literal)[N2]
 		) const noexcept {
 			return *this + literal;
 		}
 
 		template<size_type pos = 0, size_type count = npos>
-		[[nodiscard]] constexpr decltype(auto) substr() //
-			const noexcept {
+		[[nodiscard]] constexpr decltype(auto) substr() const noexcept {
 			static_assert(pos <= size(), "pos must be less than or equal to size");
 			constexpr size_type result_size = std::min(count, size() - pos) + 1;
 
@@ -204,8 +203,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		[[nodiscard]] constexpr std::basic_string_view<value_type, traits_type> substr( //
-			size_type pos, size_type count = npos
+		[[nodiscard]] constexpr std::basic_string_view<value_type, traits_type> substr(
+		    size_type pos, size_type count = npos
 		) const noexcept {
 			return as_string_view().substr(pos, count);
 		}
@@ -258,8 +257,8 @@ namespace OpenVic {
 		}
 
 		template<size_type N2>
-		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+( //
-			string_literal<N2, value_type, traits_type> const& other
+		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+(
+		    string_literal<N2, value_type, traits_type> const& other
 		) const noexcept {
 			string_literal<size() + N2, value_type, traits_type> result;
 			for (size_type i = 0u; i != size(); i++) {
@@ -273,15 +272,15 @@ namespace OpenVic {
 		}
 
 		template<size_type N2>
-		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+( //
-			const value_type (&rhs)[N2]
+		[[nodiscard]] constexpr string_literal<size() + N2, value_type, traits_type> operator+(
+		    const value_type (&rhs)[N2]
 		) const noexcept {
 			return *this + _to_string(rhs);
 		}
 
 		template<size_type N2>
-		[[nodiscard]] friend constexpr string_literal<size() + N2, value_type, traits_type> operator+( //
-			const value_type (&lhs)[N2], string_literal<N, value_type, traits_type> rhs
+		[[nodiscard]] friend constexpr string_literal<size() + N2, value_type, traits_type> operator+(
+		    const value_type (&lhs)[N2], string_literal<N, value_type, traits_type> rhs
 		) noexcept {
 			return _to_string(lhs) + rhs;
 		}

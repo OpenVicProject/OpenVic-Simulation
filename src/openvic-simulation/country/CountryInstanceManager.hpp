@@ -45,14 +45,14 @@ namespace OpenVic {
 
 	public:
 		CountryInstanceManager(
-			CountryDefines const& new_country_defines,
-			CountryDefinitionManager const& new_country_definition_manager,
-			CountryInstanceDeps const& country_instance_deps,
-			GoodInstanceManager const& new_good_instance_manager,
-			PopsDefines const& new_pop_defines,
-			forwardable_span<const PopType> pop_type_keys,
-			memory::vector<RegimentType> const& regiment_types,
-			ThreadPool& new_thread_pool
+		    CountryDefines const& new_country_defines,
+		    CountryDefinitionManager const& new_country_definition_manager,
+		    CountryInstanceDeps const& country_instance_deps,
+		    GoodInstanceManager const& new_good_instance_manager,
+		    PopsDefines const& new_pop_defines,
+		    forwardable_span<const PopType> pop_type_keys,
+		    memory::vector<RegimentType> const& regiment_types,
+		    ThreadPool& new_thread_pool
 		);
 
 		constexpr std::span<CountryInstance> get_country_instances() {

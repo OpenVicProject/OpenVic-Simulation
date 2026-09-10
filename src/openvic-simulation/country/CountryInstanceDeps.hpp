@@ -48,7 +48,7 @@ namespace OpenVic {
 		PopsAggregateDeps pops_aggregate_deps;
 		forwardable_span<const PopType> pop_types;
 		forwardable_span<const ReformGroup> reform_groups;
-		memory::vector<RegimentType> const& regiment_types; //can't use forwardable_span due to macos
+		memory::vector<RegimentType> const& regiment_types; // can't use forwardable_span due to macos
 		memory::vector<ShipType> const& ship_types;
 		forwardable_span<const Strata> stratas;
 		forwardable_span<const Technology> technologies;

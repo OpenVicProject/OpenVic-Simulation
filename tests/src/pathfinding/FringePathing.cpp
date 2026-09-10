@@ -13,7 +13,12 @@ using namespace OpenVic;
 
 namespace {
 	struct ABC final : public PointMap, public FringePathing {
-		enum { A, B, C, D };
+		enum {
+			A,
+			B,
+			C,
+			D
+		};
 
 		ABC() : PointMap(), FringePathing(this) {
 			add_point(A, ivec2_t(0, 0));
@@ -40,7 +45,7 @@ namespace {
 TEST_CASE("FringePathing ABC path", "[fringe-pathing][fringe-pathing-abc-path]") {
 	ABC abc;
 	memory::vector<PointMap::points_key_type> path = abc.get_id_path(ABC::A, ABC::C);
-	CHECK_IF(path.size() == 3) {
+	CHECK_IF (path.size() == 3) {
 		CHECK(path[0] == ABC::A);
 		CHECK(path[1] == ABC::B);
 		CHECK(path[2] == ABC::C);

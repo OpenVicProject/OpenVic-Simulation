@@ -22,11 +22,15 @@ namespace OpenVic {
 		using search_value_type = ValueT;
 		using search_pair_type = std::pair<search_key_type, search_value_type>;
 		using search_allocator_type =
-			foonathan::memory::std_allocator<search_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
+		    foonathan::memory::std_allocator<search_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
 		using search_container_type = std::vector<search_pair_type, search_allocator_type>;
 		using search_map_type = tsl::ordered_map<
-			search_key_type, search_value_type, //
-			std::hash<search_key_type>, std::equal_to<search_key_type>, search_allocator_type, search_container_type>;
+		    search_key_type,
+		    search_value_type,
+		    std::hash<search_key_type>,
+		    std::equal_to<search_key_type>,
+		    search_allocator_type,
+		    search_container_type>;
 		using search_iterator = search_map_type::iterator;
 		using search_const_iterator = search_map_type::const_iterator;
 
@@ -66,20 +70,14 @@ namespace OpenVic {
 		}
 
 		virtual fixed_point_t _estimate_cost(search_const_iterator from_it, search_const_iterator end_it) {
-			return fp::sqrt(
-				fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }
-			);
+			return fp::sqrt(fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) });
 		}
 
 		virtual fixed_point_t _compute_cost(search_const_iterator from_it, search_const_iterator end_it) {
-			return fp::sqrt(
-				fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) }
-			);
+			return fp::sqrt(fixed_point_t { from_it.value().point->position.distance_squared(end_it.value().point->position) });
 		}
 
-		virtual bool _solve( //
-			search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path
-		) = 0;
+		virtual bool _solve(search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path) = 0;
 
 		void _on_point_invalidated(search_key_type id) {
 			search_const_iterator it = search.find(id);
@@ -145,7 +143,9 @@ namespace OpenVic {
 		}
 
 		template<typename T, typename Projection = std::identity>
-		inline memory::vector<T> generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
+		inline memory::vector<T> generate_path_result(
+		    search_iterator from_it, search_iterator to_it, Projection projection = {}
+		) {
 			search_iterator p = to_it;
 			int64_t pc = 1; // Begin point
 			while (p != from_it) {
@@ -172,8 +172,8 @@ namespace OpenVic {
 			return path;
 		}
 
-		memory::vector<ivec2_t> get_point_path( //
-			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
+		memory::vector<ivec2_t> get_point_path(
+		    PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
 			OV_ERR_FAIL_COND_V(point_map == nullptr, memory::vector<ivec2_t>());
 
@@ -206,8 +206,8 @@ namespace OpenVic {
 			});
 		}
 
-		memory::vector<PointMap::points_key_type> get_id_path( //
-			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
+		memory::vector<PointMap::points_key_type> get_id_path(
+		    PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
 			OV_ERR_FAIL_COND_V(point_map == nullptr, memory::vector<PointMap::points_key_type>());
 

@@ -1,10 +1,11 @@
-#include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/Chunk.hpp"
+
+#include <cstdint>
+
+#include "openvic-simulation/core/ecs/Archetype.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -41,9 +42,9 @@ namespace {
 		Archetype* found = nullptr;
 		// We can't directly access World::archetypes (private). Use for_each_chunk to capture
 		// the chunk capacity / column array layout for the entity's archetype.
-		(void) world;
-		(void) eid;
-		(void) found;
+		(void)world;
+		(void)eid;
+		(void)found;
 		return nullptr;
 	}
 }
@@ -95,7 +96,9 @@ TEST_CASE("Tag-only archetype iterates all entities", "[ecs][Chunk][tag]") {
 	}
 
 	int count = 0;
-	world.for_each<CTagA>([&](CTagA&) { ++count; });
+	world.for_each<CTagA>([&](CTagA&) {
+		++count;
+	});
 	CHECK(count == 50);
 }
 

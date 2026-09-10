@@ -9,11 +9,8 @@
 
 namespace OpenVic::memory {
 	template<typename CharT, class RawAllocator = foonathan::memory::default_allocator>
-	using basic_string = std::basic_string<
-		CharT,
-		std::char_traits<CharT>,
-		foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>
-	>;
+	using basic_string =
+	    std::basic_string<CharT, std::char_traits<CharT>, foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>>;
 
 	template<class RawAllocator = foonathan::memory::default_allocator>
 	using string_alloc = basic_string<char, RawAllocator>;

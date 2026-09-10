@@ -4,9 +4,9 @@
 
 #include "openvic-simulation/core/Math.hpp"
 #include "openvic-simulation/core/MathSqrt.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 /* Sin lookup table */
 #include "openvic-simulation/core/object/FixedPoint/LUT_sin.hpp"
@@ -46,32 +46,35 @@ namespace OpenVic::fp {
 
 	OV_SPEED_INLINE static constexpr fixed_point_t sqrt(fixed_point_t const& v) {
 		return !v.is_negative()
-			? fixed_point_t::parse_raw(OpenVic::sqrt(static_cast<uint64_t>(v.get_raw_value()) << fixed_point_t::PRECISION))
-			: fixed_point_t::_0;
+		         ? fixed_point_t::parse_raw(OpenVic::sqrt(static_cast<uint64_t>(v.get_raw_value()) << fixed_point_t::PRECISION))
+		         : fixed_point_t::_0;
 	}
 
 	// Preserves accuracy. Performing a normal multiplication of small values results in 0.
 	template<std::integral T>
-	OV_SPEED_INLINE static constexpr fixed_point_t
-	mul_div(fixed_point_t const& multiplier, T const& numerator, T const& denominator) {
+	OV_SPEED_INLINE static constexpr fixed_point_t mul_div(
+	    fixed_point_t const& multiplier, T const& numerator, T const& denominator
+	) {
 		return fixed_point_t::parse_raw(multiplier.get_raw_value() * numerator / denominator);
 	}
 
-	OV_SPEED_INLINE static constexpr fixed_point_t
-	mul_div(fixed_point_t const& multiplier, fixed_point_t const& numerator, fixed_point_t const& denominator) {
+	OV_SPEED_INLINE static constexpr fixed_point_t mul_div(
+	    fixed_point_t const& multiplier, fixed_point_t const& numerator, fixed_point_t const& denominator
+	) {
 		return mul_div(multiplier, numerator.get_raw_value(), denominator.get_raw_value());
 	}
 
 	template<is_strongly_typed StrongType>
-	OV_SPEED_INLINE static constexpr fixed_point_t
-	mul_div(fixed_point_t const& multiplier, StrongType const& numerator, StrongType const& denominator) {
+	OV_SPEED_INLINE static constexpr fixed_point_t mul_div(
+	    fixed_point_t const& multiplier, StrongType const& numerator, StrongType const& denominator
+	) {
 		return mul_div(multiplier, type_safe::get(numerator), type_safe::get(denominator));
 	}
 
 	template<std::integral T>
 	OV_SPEED_INLINE static constexpr T multiply_truncate(T const& integer, fixed_point_t const& v) {
 		return static_cast<T>(
-			(static_cast<fixed_point_t::value_type>(integer) * v.get_raw_value()) >> fixed_point_t::PRECISION
+		    (static_cast<fixed_point_t::value_type>(integer) * v.get_raw_value()) >> fixed_point_t::PRECISION
 		);
 	}
 
@@ -83,8 +86,8 @@ namespace OpenVic::fp {
 	template<integral_max_size_4 TNumerator, integral_max_size_4 TDenominator>
 	OV_SPEED_INLINE static constexpr fixed_point_t from_fraction(const TNumerator numerator, const TDenominator denominator) {
 		return fixed_point_t::parse_raw(
-			(static_cast<fixed_point_t::value_type>(numerator) << fixed_point_t::PRECISION) /
-			static_cast<fixed_point_t::value_type>(denominator)
+		    (static_cast<fixed_point_t::value_type>(numerator) << fixed_point_t::PRECISION) /
+		    static_cast<fixed_point_t::value_type>(denominator)
 		);
 	}
 

@@ -1,18 +1,17 @@
+#include "openvic-simulation/core/stl/containers/BulkInsertWrapper.hpp"
+
 #include <cstddef>
 #include <memory>
 #include <vector>
 
-#include "openvic-simulation/core/stl/containers/BulkInsertWrapper.hpp"
-
+#include "SpyAllocator.hpp"
 #include <snitch/snitch.hpp>
 
-#include "SpyAllocator.hpp"
-
-// A simple non-trivially destructible type to test constraint violations if needed, 
+// A simple non-trivially destructible type to test constraint violations if needed,
 // and a trivial one to satisfy emplace_back's requires clause.
 struct TrivialPoint {
-    int x = 0;
-    int y = 0;
+	int x = 0;
+	int y = 0;
 };
 
 using namespace OpenVic;
@@ -22,51 +21,39 @@ TEST_CASE("bulk_insert_wrapper Constructors", "[bulk_insert_wrapper][bulk_insert
 	CONSTEXPR_CHECK(empty.empty());
 	CONSTEXPR_CHECK(empty.size() == 0);
 	CONSTEXPR_CHECK(empty.capacity() == 0);
-    CONSTEXPR_CHECK(empty.begin() == empty.end());
-    CONSTEXPR_CHECK(empty.cbegin() == empty.cend());
-    CONSTEXPR_CHECK(empty.rbegin() == empty.rend());
+	CONSTEXPR_CHECK(empty.begin() == empty.end());
+	CONSTEXPR_CHECK(empty.cbegin() == empty.cend());
+	CONSTEXPR_CHECK(empty.rbegin() == empty.rend());
 
 	constexpr std::size_t expected_size = 3;
-	bulk_insert_wrapper<std::vector<int>> filled {
-		std::vector<int> { 1, 2, 3 }
-	};
+	bulk_insert_wrapper<std::vector<int>> filled { std::vector<int> { 1, 2, 3 } };
 	CHECK(!filled.empty());
 	CHECK(filled.size() == expected_size);
 	CHECK(filled.capacity() >= expected_size);
-    CHECK(std::distance(filled.begin(), filled.end()) == expected_size);
-    CHECK(std::distance(filled.cbegin(), filled.cend()) == expected_size);
-    CHECK(std::distance(filled.rbegin(), filled.rend()) == expected_size);
-    CHECK(filled[0] == 1);
+	CHECK(std::distance(filled.begin(), filled.end()) == expected_size);
+	CHECK(std::distance(filled.cbegin(), filled.cend()) == expected_size);
+	CHECK(std::distance(filled.rbegin(), filled.rend()) == expected_size);
+	CHECK(filled[0] == 1);
 }
 
 TEST_CASE("bulk_insert_wrapper make_room does not allocate", "[bulk_insert_wrapper][bulk_insert_wrapper-make_room]") {
-	SpyAllocator<int> spy_allocator{};
-	bulk_insert_wrapper<
-		std::vector<
-			int,
-			SpyAllocator<int>
-		>
-	> empty { spy_allocator };
+	SpyAllocator<int> spy_allocator {};
+	bulk_insert_wrapper<std::vector<int, SpyAllocator<int>>> empty { spy_allocator };
 	empty.make_room_for(10);
-	
+
 	CHECK(empty.empty());
 	CHECK(empty.size() == 0);
 	CHECK(empty.capacity() == 0);
-    CHECK(empty.begin() == empty.end());
-    CHECK(empty.cbegin() == empty.cend());
-    CHECK(empty.rbegin() == empty.rend());
+	CHECK(empty.begin() == empty.end());
+	CHECK(empty.cbegin() == empty.cend());
+	CHECK(empty.rbegin() == empty.rend());
 	CHECK(spy_allocator.metrics->allocation_count == 0);
 }
 
 // correct usage
 TEST_CASE("bulk_insert_wrapper make_room + append_range", "[bulk_insert_wrapper][bulk_insert_wrapper-append_range]") {
-	SpyAllocator<int> spy_allocator{};
-	bulk_insert_wrapper<
-		std::vector<
-			int,
-			SpyAllocator<int>
-		>
-	> wrapper { spy_allocator };
+	SpyAllocator<int> spy_allocator {};
+	bulk_insert_wrapper<std::vector<int, SpyAllocator<int>>> wrapper { spy_allocator };
 
 	std::vector<int> a { 1, 2 };
 	std::vector<int> b { 3, 4, 5 };
@@ -88,13 +75,8 @@ TEST_CASE("bulk_insert_wrapper make_room + append_range", "[bulk_insert_wrapper]
 #ifdef NDEBUG
 // incorrect usage may not crash
 TEST_CASE("bulk_insert_wrapper append_range without make_room", "[bulk_insert_wrapper][bulk_insert_wrapper-append_range]") {
-	SpyAllocator<int> spy_allocator{};
-	bulk_insert_wrapper<
-		std::vector<
-			int,
-			SpyAllocator<int>
-		>
-	> wrapper { spy_allocator };
+	SpyAllocator<int> spy_allocator {};
+	bulk_insert_wrapper<std::vector<int, SpyAllocator<int>>> wrapper { spy_allocator };
 
 	std::vector<int> a { 1, 2 };
 	std::vector<int> b { 3, 4, 5 };
@@ -109,13 +91,8 @@ TEST_CASE("bulk_insert_wrapper append_range without make_room", "[bulk_insert_wr
 #endif
 
 TEST_CASE("bulk_insert_wrapper clear", "[bulk_insert_wrapper][bulk_insert_wrapper-clear]") {
-	SpyAllocator<int> spy_allocator{};
-	bulk_insert_wrapper<
-		std::vector<
-			int,
-			SpyAllocator<int>
-		>
-	> wrapper { spy_allocator };
+	SpyAllocator<int> spy_allocator {};
+	bulk_insert_wrapper<std::vector<int, SpyAllocator<int>>> wrapper { spy_allocator };
 
 	std::vector<int> a { 1, 2 };
 	constexpr std::size_t extra_room = 1;
@@ -133,13 +110,8 @@ TEST_CASE("bulk_insert_wrapper clear", "[bulk_insert_wrapper][bulk_insert_wrappe
 }
 
 TEST_CASE("bulk_insert_wrapper shrink_to_fit", "[bulk_insert_wrapper][bulk_insert_wrapper-shrink_to_fit]") {
-	SpyAllocator<int> spy_allocator{};
-	bulk_insert_wrapper<
-		std::vector<
-			int,
-			SpyAllocator<int>
-		>
-	> wrapper { spy_allocator };
+	SpyAllocator<int> spy_allocator {};
+	bulk_insert_wrapper<std::vector<int, SpyAllocator<int>>> wrapper { spy_allocator };
 
 	std::vector<int> a { 1, 2 };
 	constexpr std::size_t extra_room = 1;

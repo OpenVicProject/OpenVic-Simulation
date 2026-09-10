@@ -1,10 +1,10 @@
-#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -13,8 +13,12 @@ using namespace OpenVic::ecs;
 using OpenVic::Date;
 
 namespace {
-	struct GuardTag { int n = 0; };
-	struct GuardTagB { int m = 0; };
+	struct GuardTag {
+		int n = 0;
+	};
+	struct GuardTagB {
+		int m = 0;
+	};
 }
 ECS_COMPONENT(GuardTag, "test_InTickGuard::GuardTag")
 ECS_COMPONENT(GuardTagB, "test_InTickGuard::GuardTagB")
@@ -49,8 +53,7 @@ TEST_CASE("World::add_component during tick is rejected", "[ecs][InTickMutationG
 	CHECK_FALSE(world.has_component<GuardTagB>(eid));
 }
 
-TEST_CASE("ctx.cmd.add_component succeeds and applies at stage barrier",
-          "[ecs][InTickMutationGuard]") {
+TEST_CASE("ctx.cmd.add_component succeeds and applies at stage barrier", "[ecs][InTickMutationGuard]") {
 	World world;
 	EntityID const eid = world.create_entity(GuardTag {});
 	world.register_system<WellBehavedSystem>();

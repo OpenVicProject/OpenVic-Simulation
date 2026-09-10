@@ -26,32 +26,22 @@
 using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
-	ResourceGatheringOperationDeps const& rgo_deps,
-	ProductionType const* new_production_type_nullable,
-	fixed_point_t new_size_multiplier,
-	fixed_point_t new_revenue_yesterday,
-	fixed_point_t new_output_quantity_yesterday,
-	fixed_point_t new_unsold_quantity_yesterday,
-	memory::vector<Employee>&& new_employees
-)
-	: market_instance { rgo_deps.market_instance },
-	  modifier_effect_cache { rgo_deps.modifier_effect_cache },
-	  production_type_nullable { new_production_type_nullable },
-	  revenue_yesterday { new_revenue_yesterday },
-	  output_quantity_yesterday { new_output_quantity_yesterday },
-	  unsold_quantity_yesterday { new_unsold_quantity_yesterday },
-	  size_multiplier { new_size_multiplier },
-	  employees { std::move(new_employees) },
-	  employee_count_per_type_cache { generate_values, rgo_deps.pop_type_count } {}
+    ResourceGatheringOperationDeps const& rgo_deps,
+    ProductionType const* new_production_type_nullable,
+    fixed_point_t new_size_multiplier,
+    fixed_point_t new_revenue_yesterday,
+    fixed_point_t new_output_quantity_yesterday,
+    fixed_point_t new_unsold_quantity_yesterday,
+    memory::vector<Employee>&& new_employees
+) :
+    market_instance { rgo_deps.market_instance }, modifier_effect_cache { rgo_deps.modifier_effect_cache },
+    production_type_nullable { new_production_type_nullable }, revenue_yesterday { new_revenue_yesterday },
+    output_quantity_yesterday { new_output_quantity_yesterday }, unsold_quantity_yesterday { new_unsold_quantity_yesterday },
+    size_multiplier { new_size_multiplier }, employees { std::move(new_employees) },
+    employee_count_per_type_cache { generate_values, rgo_deps.pop_type_count } {}
 
-ResourceGatheringOperation::ResourceGatheringOperation(
-	ResourceGatheringOperationDeps const& rgo_deps
-) : ResourceGatheringOperation {
-	rgo_deps,
-	nullptr, 0,
-	0, 0,
-	0, {}
-} {}
+ResourceGatheringOperation::ResourceGatheringOperation(ResourceGatheringOperationDeps const& rgo_deps) :
+    ResourceGatheringOperation { rgo_deps, nullptr, 0, 0, 0, 0, {} } {}
 
 void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) {
 	if (location_ptr != nullptr) {
@@ -72,7 +62,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
 
-	pop_sum_t total_worker_count_in_province = 0; //not counting equivalents
+	pop_sum_t total_worker_count_in_province = 0; // not counting equivalents
 	for (Job const& job : jobs) {
 		total_worker_count_in_province += location.get_population_by_type()[job.pop_type_index];
 	}
@@ -82,18 +72,14 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	if (size_modifier == 0) {
 		size_multiplier = 0;
 	} else {
-		size_multiplier = (
-			(
-				fp::from_fraction<pop_sum_t>(
-					total_worker_count_in_province,
-					base_workforce_size
-				) / size_modifier
-			).ceil()
-			* fixed_point_t::_1_50
-		).floor();
+		size_multiplier =
+		    ((fp::from_fraction<pop_sum_t>(total_worker_count_in_province, base_workforce_size) / size_modifier).ceil() *
+		     fixed_point_t::_1_50)
+		        .floor();
 	}
 
-	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<type_safe::underlying_type<pop_size_t>>();
+	max_employee_count_cache =
+	    (size_modifier * size_multiplier * base_workforce_size).floor<type_safe::underlying_type<pop_size_t>>();
 }
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
@@ -121,7 +107,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	}
 
 	size_modifier += location.get_modifier_effect_value(
-		*modifier_effect_cache.get_good_effects(production_type.output_good).get_rgo_size()
+	    *modifier_effect_cache.get_good_effects(production_type.output_good).get_rgo_size()
 	);
 	return size_modifier > 0 ? size_modifier : fixed_point_t::_0;
 }
@@ -137,7 +123,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
 
-	total_worker_count_in_province_cache = 0; //not counting equivalents
+	total_worker_count_in_province_cache = 0; // not counting equivalents
 	for (Job const& job : jobs) {
 		total_worker_count_in_province_cache += location.get_population_by_type()[job.pop_type_index];
 	}
@@ -161,21 +147,23 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 		}
 
 		market_instance.place_market_sell_order(
-			{
-				production_type.output_good.index,
-				country_to_report_economy_nullable == nullptr
-					? std::nullopt
-					: std::optional<country_index_t>{country_to_report_economy_nullable->index},
-				output_quantity_yesterday,
-				this,
-				after_sell,
-			},
-			reusable_vector
+		    {
+		        production_type.output_good.index,
+		        country_to_report_economy_nullable == nullptr
+		            ? std::nullopt
+		            : std::optional<country_index_t> { country_to_report_economy_nullable->index },
+		        output_quantity_yesterday,
+		        this,
+		        after_sell,
+		    },
+		    reusable_vector
 		);
 	}
 }
 
-void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
+void ResourceGatheringOperation::after_sell(
+    void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector
+) {
 	ResourceGatheringOperation& rgo = *static_cast<ResourceGatheringOperation*>(actor);
 	rgo.revenue_yesterday = sell_result.money_gained;
 	rgo.pay_employees(reusable_vector);
@@ -185,7 +173,7 @@ void ResourceGatheringOperation::hire() {
 	pop_sum_t const& available_worker_count = total_worker_count_in_province_cache;
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache = 0;
-	employees.clear(); //TODO implement Victoria 2 hiring logic
+	employees.clear(); // TODO implement Victoria 2 hiring logic
 	std::fill(employee_count_per_type_cache.begin(), employee_count_per_type_cache.end(), 0);
 	if (production_type_nullable == nullptr) {
 		return;
@@ -193,25 +181,30 @@ void ResourceGatheringOperation::hire() {
 	ProvinceInstance& location = *location_ptr;
 
 	ProductionType const& production_type = *production_type_nullable;
-	if (max_employee_count_cache <= 0) { return; }
-	if (available_worker_count <= 0) { return; }
+	if (max_employee_count_cache <= 0) {
+		return;
+	}
+	if (available_worker_count <= 0) {
+		return;
+	}
 
 	fixed_point_t proportion_to_hire;
 	if (max_employee_count_cache >= available_worker_count) {
-		//hire everyone
+		// hire everyone
 		proportion_to_hire = 1;
 	} else {
-		//hire all pops proportionally
+		// hire all pops proportionally
 		proportion_to_hire = fp::from_fraction<pop_sum_t>(max_employee_count_cache, available_worker_count);
 	}
 
 	std::span<const Job> jobs = production_type.get_jobs();
-	for (Pop& pop : location.get_mutable_pops()){
+	for (Pop& pop : location.get_mutable_pops()) {
 		PopType const& pop_type = pop.get_type();
 		for (Job const& job : jobs) {
 			const pop_type_index_t job_pop_type_index = job.pop_type_index;
 			if (job_pop_type_index == pop_type.index) {
-				const pop_size_t pop_size_to_hire = (proportion_to_hire * pop.get_size()).floor<type_safe::underlying_type<pop_size_t>>();
+				const pop_size_t pop_size_to_hire =
+				    (proportion_to_hire * pop.get_size()).floor<type_safe::underlying_type<pop_size_t>>();
 				if (pop_size_to_hire <= 0) {
 					continue;
 				}
@@ -231,7 +224,7 @@ void ResourceGatheringOperation::hire() {
 
 fixed_point_t ResourceGatheringOperation::produce() {
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	if (size_modifier == 0){
+	if (size_modifier == 0) {
 		return 0;
 	}
 
@@ -259,58 +252,56 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 		if (total_owner_count_in_state_cache > 0) {
 			switch (owner_job.effect_type) {
-				case Job::effect_t::OUTPUT:
-					output_multiplier += fp::mul_div(
-						owner_job.effect_multiplier,
-						total_owner_count_in_state_cache,
-						state_population
-					);
-					break;
-				case Job::effect_t::THROUGHPUT:
-					throughput_multiplier += fp::mul_div(
-						owner_job.effect_multiplier,
-						total_owner_count_in_state_cache,
-						state_population
-					);
-					break;
-				default:
-					spdlog::error_s("Invalid job effect in RGO {}", production_type);
-					break;
+			case Job::effect_t::OUTPUT:
+				output_multiplier += fp::mul_div(
+				    owner_job.effect_multiplier, total_owner_count_in_state_cache, state_population
+				);
+				break;
+			case Job::effect_t::THROUGHPUT:
+				throughput_multiplier += fp::mul_div(
+				    owner_job.effect_multiplier, total_owner_count_in_state_cache, state_population
+				);
+				break;
+			default: spdlog::error_s("Invalid job effect in RGO {}", production_type); break;
 			}
 		}
 	}
 
 	// TODO - work out how best to avoid repeated lookups of the same effects,
 	// e.g. by caching total non-local effect values at the CountryInstance level
-	throughput_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_tech())
-		+ location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_country())
-		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_throughput());
-	output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_tech())
-		+ location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_country())
-		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
+	throughput_multiplier +=
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_tech()) +
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_country()) +
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_throughput());
+	output_multiplier +=
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_tech()) +
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_country()) +
+	    location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.get_is_farm_for_tech()) {
-		const fixed_point_t farm_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_throughput_and_output());
+		const fixed_point_t farm_rgo_throughput_and_output = location.get_modifier_effect_value(
+		    *modifier_effect_cache.get_farm_rgo_throughput_and_output()
+		);
 		throughput_multiplier += farm_rgo_throughput_and_output;
 		output_multiplier += farm_rgo_throughput_and_output;
 	}
 
 	if (production_type.get_is_farm_for_non_tech()) {
-		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_global())
-			+ location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_local());
+		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_global()) +
+		                     location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_local());
 	}
 
 	if (production_type.get_is_mine_for_tech()) {
-		const fixed_point_t mine_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_throughput_and_output());
+		const fixed_point_t mine_rgo_throughput_and_output = location.get_modifier_effect_value(
+		    *modifier_effect_cache.get_mine_rgo_throughput_and_output()
+		);
 		throughput_multiplier += mine_rgo_throughput_and_output;
 		output_multiplier += mine_rgo_throughput_and_output;
 	}
 
 	if (production_type.get_is_mine_for_non_tech()) {
-		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_global())
-			+ location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_local());
+		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_global()) +
+		                     location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_local());
 	}
 
 	auto const& good_effects = modifier_effect_cache.get_good_effects(production_type.output_good);
@@ -330,33 +321,26 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 				const fixed_point_t effect_multiplier = job.effect_multiplier;
 				const fixed_point_t amount = job.amount;
-				const fixed_point_t effect = effect_multiplier != fixed_point_t::_1
-					&& fp::from_fraction<pop_size_t>(employees_of_type, max_employee_count_cache) > amount
-					? effect_multiplier * amount //special Vic2 logic
-					: fp::mul_div(effect_multiplier, employees_of_type, max_employee_count_cache);
+				const fixed_point_t effect =
+				    effect_multiplier != fixed_point_t::_1 &&
+				            fp::from_fraction<pop_size_t>(employees_of_type, max_employee_count_cache) > amount
+				        ? effect_multiplier * amount // special Vic2 logic
+				        : fp::mul_div(effect_multiplier, employees_of_type, max_employee_count_cache);
 
 				switch (job.effect_type) {
-					case Job::effect_t::OUTPUT:
-						output_from_workers += effect;
-						break;
-					case Job::effect_t::THROUGHPUT:
-						throughput_from_workers += effect;
-						break;
-					default:
-						spdlog::error_s("Invalid job effect in RGO {}", production_type);
-						break;
+				case Job::effect_t::OUTPUT:     output_from_workers += effect; break;
+				case Job::effect_t::THROUGHPUT: throughput_from_workers += effect; break;
+				default:                        spdlog::error_s("Invalid job effect in RGO {}", production_type); break;
 				}
 			}
 			++pop_type_index;
 		}
 	}
 
-	//if province is overseas multiply by (1 + overseas penalty)
+	// if province is overseas multiply by (1 + overseas penalty)
 
-	return production_type.base_output_quantity
-		* size_modifier * size_multiplier
-		* throughput_multiplier * throughput_from_workers
-		* output_multiplier * output_from_workers;
+	return production_type.base_output_quantity * size_modifier * size_multiplier * throughput_multiplier *
+	       throughput_from_workers * output_multiplier * output_from_workers;
 }
 
 void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& reusable_vector) {
@@ -387,12 +371,8 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 	if (revenue <= total_minimum_wage) {
 		for (Employee& employee : employees) {
 			const fixed_point_t income_for_this_pop = std::max(
-				fp::mul_div(
-					revenue,
-					employee.get_minimum_wage_cached(),
-					total_minimum_wage
-				),
-				fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
+			    fp::mul_div(revenue, employee.get_minimum_wage_cached(), total_minimum_wage),
+			    fixed_point_t::epsilon // revenue > 0 is already checked, so rounding up
 			);
 			Pop& employee_pop = employee.get_pop();
 			employee_pop.add_rgo_worker_income(income_for_this_pop);
@@ -402,22 +382,16 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 		fixed_point_t revenue_left = revenue;
 		if (total_owner_count_in_state_cache > 0) {
 			const fixed_point_t upper_limit = std::min(
-				fixed_point_t::_0_50,
-				fixed_point_t::_1 - total_minimum_wage / revenue_left
+			    fixed_point_t::_0_50, fixed_point_t::_1 - total_minimum_wage / revenue_left
 			);
 			const fixed_point_t owner_share = std::min(
-				fp::from_fraction(2 * total_owner_count_in_state_cache, total_worker_count_in_province_cache),
-				upper_limit
+			    fp::from_fraction(2 * total_owner_count_in_state_cache, total_worker_count_in_province_cache), upper_limit
 			);
 
 			for (Pop& owner_pop : *owner_pops_cache_nullable) {
 				const fixed_point_t income_for_this_pop = std::max(
-					revenue_left * fp::mul_div<pop_sum_t>(
-						owner_share,
-						owner_pop.get_size(),
-						total_owner_count_in_state_cache
-					),
-					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
+				    revenue_left * fp::mul_div<pop_sum_t>(owner_share, owner_pop.get_size(), total_owner_count_in_state_cache),
+				    fixed_point_t::epsilon // revenue > 0 is already checked, so rounding up
 				);
 				owner_pop.add_rgo_owner_income(income_for_this_pop);
 				total_owner_income_cache += income_for_this_pop;
@@ -426,8 +400,8 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 		}
 
 		if (total_paid_employees_count_cache == 0) {
-			//scenario slaves only
-			//Money is removed from system in Victoria 2.
+			// scenario slaves only
+			// Money is removed from system in Victoria 2.
 		} else {
 			memory::vector<fixed_point_t>& incomes = reusable_vector;
 			incomes.resize(employees.size());
@@ -449,19 +423,15 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 
 				const pop_size_t employee_size = employee.get_size();
 				const fixed_point_t income_for_this_pop = std::max(
-					fp::mul_div(
-						revenue_left,
-						employee_size,
-						count_workers_to_be_paid
-					),
-					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
+				    fp::mul_div(revenue_left, employee_size, count_workers_to_be_paid),
+				    fixed_point_t::epsilon // revenue > 0 is already checked, so rounding up
 				);
 
 				if (income_for_this_pop < minimum_wage) {
 					incomes[i] = minimum_wage;
 					revenue_left -= minimum_wage;
 					count_workers_to_be_paid -= employee_size;
-					i = -1; //Restart loop and skip minimum incomes. This is required to spread the remaining revenue again.
+					i = -1; // Restart loop and skip minimum incomes. This is required to spread the remaining revenue again.
 				} else {
 					incomes[i] = income_for_this_pop;
 				}

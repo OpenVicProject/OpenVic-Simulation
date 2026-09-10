@@ -1,16 +1,17 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <string>
+
+#include <nanobench.h>
+
 #include "openvic-simulation/core/ecs/ChunkSystem.hpp"
 #include "openvic-simulation/core/ecs/ChunkView.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
-
-#include <nanobench.h>
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -75,8 +76,7 @@ namespace {
 	void populate(World& world, std::size_t n) {
 		for (std::size_t i = 0; i < n; ++i) {
 			world.create_entity(
-				TickValue { static_cast<int64_t>(i + 1) },
-				TickDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
+			    TickValue { static_cast<int64_t>(i + 1) }, TickDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
 			);
 		}
 	}
@@ -123,8 +123,7 @@ TEST_CASE("SystemThreaded<> chunk-parallel tick (worker-count sweep)", "[benchma
 			populate(world, n);
 			world.register_system<TickThreaded>();
 
-			std::string const label =
-				"SystemThreaded<TickThreaded> workers=" + std::to_string(wc) + suffix(n);
+			std::string const label = "SystemThreaded<TickThreaded> workers=" + std::to_string(wc) + suffix(n);
 			bench.batch(n).run(label, [&] {
 				world.tick_systems(Date {});
 			});

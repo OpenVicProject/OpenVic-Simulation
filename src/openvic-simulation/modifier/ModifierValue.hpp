@@ -41,7 +41,7 @@ namespace OpenVic {
 
 		void apply_exclude_targets(ModifierEffect::target_t excluded_targets);
 		void multiply_add_exclude_targets(
-			ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
+		    ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
 		);
 
 		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);

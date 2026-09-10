@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/QueryFilter.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemPhase.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -29,9 +29,15 @@ using OpenVic::Date;
 // is a hard error outside any SFINAE-probeable context.
 
 namespace {
-	struct PhaseTagA { int64_t v = 0; };
-	struct PhaseTagB { int64_t v = 0; };
-	struct PhaseTagC { int64_t v = 0; };
+	struct PhaseTagA {
+		int64_t v = 0;
+	};
+	struct PhaseTagB {
+		int64_t v = 0;
+	};
+	struct PhaseTagC {
+		int64_t v = 0;
+	};
 }
 ECS_COMPONENT(PhaseTagA, "test_SystemPhase::TagA")
 ECS_COMPONENT(PhaseTagB, "test_SystemPhase::TagB")
@@ -142,16 +148,46 @@ namespace {
 // declared_run_after / declared_run_before reference these types via system_type_id_of<> (see
 // the note in SystemScheduler_DAG.cpp). Specialise up front against the forward declarations.
 namespace OpenVic::ecs {
-	template<> struct SystemName<HandPhaseP0> { static constexpr std::string_view value = "PhaseSugarP0"; };
-	template<> struct SystemName<HandPhaseP1> { static constexpr std::string_view value = "PhaseSugarP1"; };
-	template<> struct SystemName<HandPhaseP2> { static constexpr std::string_view value = "PhaseSugarP2"; };
-	template<> struct SystemName<HandPhaseP3> { static constexpr std::string_view value = "PhaseSugarP3"; };
-	template<> struct SystemName<HandP0SysA> { static constexpr std::string_view value = "SugarP0SysA"; };
-	template<> struct SystemName<HandP0SysB> { static constexpr std::string_view value = "SugarP0SysB"; };
-	template<> struct SystemName<HandP1SysA> { static constexpr std::string_view value = "SugarP1SysA"; };
-	template<> struct SystemName<HandP1SysB> { static constexpr std::string_view value = "SugarP1SysB"; };
-	template<> struct SystemName<HandP2SysA> { static constexpr std::string_view value = "SugarP2SysA"; };
-	template<> struct SystemName<HandP2SysB> { static constexpr std::string_view value = "SugarP2SysB"; };
+	template<>
+	struct SystemName<HandPhaseP0> {
+		static constexpr std::string_view value = "PhaseSugarP0";
+	};
+	template<>
+	struct SystemName<HandPhaseP1> {
+		static constexpr std::string_view value = "PhaseSugarP1";
+	};
+	template<>
+	struct SystemName<HandPhaseP2> {
+		static constexpr std::string_view value = "PhaseSugarP2";
+	};
+	template<>
+	struct SystemName<HandPhaseP3> {
+		static constexpr std::string_view value = "PhaseSugarP3";
+	};
+	template<>
+	struct SystemName<HandP0SysA> {
+		static constexpr std::string_view value = "SugarP0SysA";
+	};
+	template<>
+	struct SystemName<HandP0SysB> {
+		static constexpr std::string_view value = "SugarP0SysB";
+	};
+	template<>
+	struct SystemName<HandP1SysA> {
+		static constexpr std::string_view value = "SugarP1SysA";
+	};
+	template<>
+	struct SystemName<HandP1SysB> {
+		static constexpr std::string_view value = "SugarP1SysB";
+	};
+	template<>
+	struct SystemName<HandP2SysA> {
+		static constexpr std::string_view value = "SugarP2SysA";
+	};
+	template<>
+	struct SystemName<HandP2SysB> {
+		static constexpr std::string_view value = "SugarP2SysB";
+	};
 }
 namespace {
 	struct HandPhaseP0 : PhaseAnchorSystem<HandPhaseP0> {};
@@ -293,22 +329,27 @@ TEST_CASE("Phase members land strictly between their anchors", "[ecs][SystemPhas
 	// only — unrelated systems may legally co-stage with an anchor at the same depth.)
 	std::size_t const p0_sys_a = stage_of(world, system_type_id_of<SugarP0SysA>());
 	std::size_t const p0_sys_b = stage_of(world, system_type_id_of<SugarP0SysB>());
-	CHECK(p0 < p0_sys_a); CHECK(p0_sys_a < p1);
-	CHECK(p0 < p0_sys_b); CHECK(p0_sys_b < p1);
+	CHECK(p0 < p0_sys_a);
+	CHECK(p0_sys_a < p1);
+	CHECK(p0 < p0_sys_b);
+	CHECK(p0_sys_b < p1);
 
 	std::size_t const p1_sys_a = stage_of(world, system_type_id_of<SugarP1SysA>());
 	std::size_t const p1_sys_b = stage_of(world, system_type_id_of<SugarP1SysB>());
-	CHECK(p1 < p1_sys_a); CHECK(p1_sys_a < p2);
-	CHECK(p1 < p1_sys_b); CHECK(p1_sys_b < p2);
+	CHECK(p1 < p1_sys_a);
+	CHECK(p1_sys_a < p2);
+	CHECK(p1 < p1_sys_b);
+	CHECK(p1_sys_b < p2);
 
 	std::size_t const p2_sys_a = stage_of(world, system_type_id_of<SugarP2SysA>());
 	std::size_t const p2_sys_b = stage_of(world, system_type_id_of<SugarP2SysB>());
-	CHECK(p2 < p2_sys_a); CHECK(p2_sys_a < p3);
-	CHECK(p2 < p2_sys_b); CHECK(p2_sys_b < p3);
+	CHECK(p2 < p2_sys_a);
+	CHECK(p2_sys_a < p3);
+	CHECK(p2 < p2_sys_b);
+	CHECK(p2_sys_b < p3);
 }
 
-TEST_CASE("Macro-built schedule hashes identically to the hand-written form",
-          "[ecs][SystemPhase][Hash]") {
+TEST_CASE("Macro-built schedule hashes identically to the hand-written form", "[ecs][SystemPhase][Hash]") {
 	World macro_world;
 	register_macro_set(macro_world);
 
@@ -329,8 +370,7 @@ TEST_CASE("Macro-built schedule hashes identically to the hand-written form",
 	CHECK(macro_world.debug_stage_count() == hand_world.debug_stage_count());
 }
 
-TEST_CASE("Variadic ECS_IN_PHASE extras order systems within a phase",
-          "[ecs][SystemPhase]") {
+TEST_CASE("Variadic ECS_IN_PHASE extras order systems within a phase", "[ecs][SystemPhase]") {
 	World world;
 	register_macro_set(world);
 
@@ -345,8 +385,7 @@ TEST_CASE("Variadic ECS_IN_PHASE extras order systems within a phase",
 	CHECK(sys_b < p2);
 }
 
-TEST_CASE("Anchor/member registration order does not affect schedule_hash",
-          "[ecs][SystemPhase][Hash][determinism]") {
+TEST_CASE("Anchor/member registration order does not affect schedule_hash", "[ecs][SystemPhase][Hash][determinism]") {
 	World forward;
 	register_macro_set(forward);
 
@@ -367,8 +406,7 @@ TEST_CASE("Anchor/member registration order does not affect schedule_hash",
 	CHECK(forward.schedule_hash() == shuffled.schedule_hash());
 }
 
-TEST_CASE("Members execute in phase order; anchors contribute nothing",
-          "[ecs][SystemPhase]") {
+TEST_CASE("Members execute in phase order; anchors contribute nothing", "[ecs][SystemPhase]") {
 	std::vector<int> log;
 	g_phase_log = &log;
 
@@ -394,15 +432,18 @@ TEST_CASE("Members execute in phase order; anchors contribute nothing",
 	for (std::size_t i = 0; i < log.size(); ++i) {
 		pos[static_cast<std::size_t>(log[i])] = i;
 	}
-	CHECK(pos[1] < pos[3]); CHECK(pos[1] < pos[4]);
-	CHECK(pos[2] < pos[3]); CHECK(pos[2] < pos[4]);
+	CHECK(pos[1] < pos[3]);
+	CHECK(pos[1] < pos[4]);
+	CHECK(pos[2] < pos[3]);
+	CHECK(pos[2] < pos[4]);
 	CHECK(pos[3] < pos[4]); // intra-phase variadic edge
-	CHECK(pos[3] < pos[5]); CHECK(pos[3] < pos[6]);
-	CHECK(pos[4] < pos[5]); CHECK(pos[4] < pos[6]);
+	CHECK(pos[3] < pos[5]);
+	CHECK(pos[3] < pos[6]);
+	CHECK(pos[4] < pos[5]);
+	CHECK(pos[4] < pos[6]);
 }
 
-TEST_CASE("SystemThreaded member with Filters works unchanged inside a phase",
-          "[ecs][SystemPhase]") {
+TEST_CASE("SystemThreaded member with Filters works unchanged inside a phase", "[ecs][SystemPhase]") {
 	World world;
 	EntityID const plain = world.create_entity(PhaseTagA { 0 });
 	EntityID const filtered = world.create_entity(PhaseTagA { 0 }, PhaseTagC { 0 });
@@ -417,7 +458,7 @@ TEST_CASE("SystemThreaded member with Filters works unchanged inside a phase",
 	PhaseTagA const* filtered_a = world.get_component<PhaseTagA>(filtered);
 	REQUIRE(plain_a != nullptr);
 	REQUIRE(filtered_a != nullptr);
-	CHECK(plain_a->v == 1);    // {A} — visited
+	CHECK(plain_a->v == 1); // {A} — visited
 	CHECK(filtered_a->v == 0); // {A, C} — excluded by Filters
 
 	std::size_t const p1 = stage_of(world, system_type_id_of<PhaseSugarP1>());
@@ -427,8 +468,7 @@ TEST_CASE("SystemThreaded member with Filters works unchanged inside a phase",
 	CHECK(member < p2);
 }
 
-TEST_CASE("Same-phase write conflict still auto-serialises between the anchors",
-          "[ecs][SystemPhase]") {
+TEST_CASE("Same-phase write conflict still auto-serialises between the anchors", "[ecs][SystemPhase]") {
 	World world;
 	world.create_entity(PhaseTagA { 0 });
 	world.register_system<PhaseSugarP1>();
@@ -444,12 +484,13 @@ TEST_CASE("Same-phase write conflict still auto-serialises between the anchors",
 	std::size_t const sys_a = stage_of(world, system_type_id_of<SugarConflictSysA>());
 	std::size_t const sys_b = stage_of(world, system_type_id_of<SugarConflictSysB>());
 	CHECK(sys_a != sys_b);
-	CHECK(p1 < sys_a); CHECK(sys_a < p2);
-	CHECK(p1 < sys_b); CHECK(sys_b < p2);
+	CHECK(p1 < sys_a);
+	CHECK(sys_a < p2);
+	CHECK(p1 < sys_b);
+	CHECK(sys_b < p2);
 }
 
-TEST_CASE("Cross-phase writers of the same component occupy distinct stages",
-          "[ecs][SystemPhase]") {
+TEST_CASE("Cross-phase writers of the same component occupy distinct stages", "[ecs][SystemPhase]") {
 	World world;
 	register_macro_set(world);
 

@@ -6,8 +6,8 @@
 #include <string_view>
 
 #include "openvic-simulation/core/Assert.hpp"
-#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	template<size_t Size>

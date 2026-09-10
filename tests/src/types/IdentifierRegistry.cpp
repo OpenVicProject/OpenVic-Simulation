@@ -38,8 +38,8 @@ namespace {
 
 	/* Lightweight registry item carrying both a string identifier and a typed index. */
 	struct TestItem : HasIdentifier, HasIndex<TestItem, good_index_t> {
-		TestItem(index_t new_index, std::string_view new_identifier)
-			: HasIdentifier { new_identifier }, HasIndex<TestItem, good_index_t> { new_index } {}
+		TestItem(index_t new_index, std::string_view new_identifier) :
+		    HasIdentifier { new_identifier }, HasIndex<TestItem, good_index_t> { new_index } {}
 		TestItem(TestItem&&) = default;
 	};
 }
@@ -96,12 +96,10 @@ TEST_CASE("IdentifierRegistry expect_item_identifier", "[IdentifierRegistry]") {
 	auto* alpha_id = ast.create_with_intern<IdentifierValue>("alpha"sv);
 
 	bool invoked = false;
-	CHECK(registry.expect_item_identifier(
-		[&invoked](TestItem const& item) -> bool {
-			invoked = true;
-			CHECK_RETURN_BOOL(item.get_identifier() == "alpha"sv);
-		}
-	)(alpha_id));
+	CHECK(registry.expect_item_identifier([&invoked](TestItem const& item) -> bool {
+		invoked = true;
+		CHECK_RETURN_BOOL(item.get_identifier() == "alpha"sv);
+	})(alpha_id));
 	CHECK(invoked);
 }
 
@@ -117,24 +115,20 @@ TEST_CASE("IdentifierRegistry expect_item_index", "[IdentifierRegistry]") {
 	/* Known identifier delivers the item's typed index. */
 	good_index_t result { 0 };
 	bool invoked = false;
-	CHECK(registry.expect_item_index(
-		[&result, &invoked](good_index_t index) -> bool {
-			invoked = true;
-			result = index;
-			return true;
-		}
-	)(beta_id));
+	CHECK(registry.expect_item_index([&result, &invoked](good_index_t index) -> bool {
+		invoked = true;
+		result = index;
+		return true;
+	})(beta_id));
 	CHECK(invoked);
 	CHECK(result == good_index_t { 1 });
 
 	/* Unknown identifier: callback not invoked, returns false without warn. */
 	invoked = false;
-	CHECK_FALSE(registry.expect_item_index(
-		[&invoked](good_index_t) -> bool {
-			invoked = true;
-			return true;
-		}
-	)(unknown_id));
+	CHECK_FALSE(registry.expect_item_index([&invoked](good_index_t) -> bool {
+		invoked = true;
+		return true;
+	})(unknown_id));
 	CHECK_FALSE(invoked);
 
 	/* Unknown identifier with warn = true returns true, callback still not invoked. */
@@ -157,24 +151,20 @@ TEST_CASE("IdentifierRegistry expect_item_index_str", "[IdentifierRegistry]") {
 	/* Known key resolves to its typed index via the string path. */
 	good_index_t result { 0 };
 	bool invoked = false;
-	CHECK(registry.expect_item_index_str(
-		[&result, &invoked](good_index_t index) -> bool {
-			invoked = true;
-			result = index;
-			return true;
-		}
-	)("beta"sv));
+	CHECK(registry.expect_item_index_str([&result, &invoked](good_index_t index) -> bool {
+		invoked = true;
+		result = index;
+		return true;
+	})("beta"sv));
 	CHECK(invoked);
 	CHECK(result == good_index_t { 1 });
 
 	/* Unknown key: callback not invoked, returns false without warn. */
 	invoked = false;
-	CHECK_FALSE(registry.expect_item_index_str(
-		[&invoked](good_index_t) -> bool {
-			invoked = true;
-			return true;
-		}
-	)("gamma"sv));
+	CHECK_FALSE(registry.expect_item_index_str([&invoked](good_index_t) -> bool {
+		invoked = true;
+		return true;
+	})("gamma"sv));
 	CHECK_FALSE(invoked);
 
 	/* Unknown key with warn = true returns true, callback still not invoked. */

@@ -1,16 +1,17 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <string>
+
+#include <nanobench.h>
+
 #include "openvic-simulation/core/ecs/ChunkSystem.hpp"
 #include "openvic-simulation/core/ecs/ChunkView.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
-
-#include <nanobench.h>
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -98,9 +99,7 @@ namespace {
 		for (std::size_t i = 0; i < n; ++i) {
 			int64_t const seed = static_cast<int64_t>(i);
 			world.create_entity(
-				AliasA { seed + 1, seed + 2 },
-				AliasB { seed * 3 + 1, seed * 3 + 2 },
-				AliasC { (seed % 7) + 1, (seed % 11) + 1 }
+			    AliasA { seed + 1, seed + 2 }, AliasB { seed * 3 + 1, seed * 3 + 2 }, AliasC { (seed % 7) + 1, (seed % 11) + 1 }
 			);
 		}
 	}
@@ -132,8 +131,7 @@ TEST_CASE("SystemThreaded<> aliasing hot loop (worker-count sweep)", "[benchmark
 			populate(world, n);
 			world.register_system<AliasThreaded>();
 
-			std::string const label =
-				"SystemThreaded<AliasThreaded> workers=" + std::to_string(wc) + suffix(n);
+			std::string const label = "SystemThreaded<AliasThreaded> workers=" + std::to_string(wc) + suffix(n);
 			bench.batch(n).run(label, [&] {
 				world.tick_systems(Date {});
 			});

@@ -1,10 +1,10 @@
-#include "openvic-simulation/core/object/FixedPoint.hpp"
-#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
-#include "openvic-simulation/core/ecs/Reductions.hpp"
-
 #include <cstdint>
 #include <span>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
+#include "openvic-simulation/core/ecs/Reductions.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -58,10 +58,11 @@ TEST_CASE("parallel_keyed_sum matches a serial reference", "[ecs][Reductions][ke
 	EcsThreadPool pool { 4 };
 
 	std::vector<int64_t> out(key_count, 0);
-	reductions::parallel_keyed_sum<int64_t>(pool, chunk_count, key_count, out,
-		[key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-			emit_chunk(chunk_idx, key_count, emit);
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, chunk_count, key_count, out, [key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit_chunk(chunk_idx, key_count, emit);
+	    }
+	);
 
 	std::vector<int64_t> expected = serial_reference(chunk_count, key_count);
 	for (std::size_t k = 0; k < key_count; ++k) {
@@ -77,20 +78,22 @@ TEST_CASE("parallel_keyed_sum is bit-identical across worker counts", "[ecs][Red
 	{
 		EcsThreadPool serial { 1 };
 		std::vector<int64_t> out(key_count, 0);
-		reductions::parallel_keyed_sum<int64_t>(serial, chunk_count, key_count, out,
-			[key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-				emit_chunk(chunk_idx, key_count, emit);
-			});
+		reductions::parallel_keyed_sum<int64_t>(
+		    serial, chunk_count, key_count, out, [key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+			    emit_chunk(chunk_idx, key_count, emit);
+		    }
+		);
 		baseline = digest_out(out);
 	}
 
 	for (uint32_t wc : { 1u, 2u, 4u, 8u, 16u }) {
 		EcsThreadPool pool { wc };
 		std::vector<int64_t> out(key_count, 0);
-		reductions::parallel_keyed_sum<int64_t>(pool, chunk_count, key_count, out,
-			[key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-				emit_chunk(chunk_idx, key_count, emit);
-			});
+		reductions::parallel_keyed_sum<int64_t>(
+		    pool, chunk_count, key_count, out, [key_count](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+			    emit_chunk(chunk_idx, key_count, emit);
+		    }
+		);
 		CHECK(digest_out(out) == baseline);
 	}
 }
@@ -102,14 +105,15 @@ TEST_CASE("parallel_keyed_sum folds duplicate keys within a chunk", "[ecs][Reduc
 	// One chunk emits key 3 consecutively (fast path), then key 5, then key 3 again
 	// (linear-scan path), then key 5 again.
 	std::vector<int64_t> out(key_count, 0);
-	reductions::parallel_keyed_sum<int64_t>(pool, 1, key_count, out,
-		[](std::size_t /*chunk_idx*/, reductions::KeyedEmitter<int64_t>& emit) {
-			emit.add(3, 10);
-			emit.add(3, 20);
-			emit.add(5, 100);
-			emit.add(3, 30);
-			emit.add(5, 200);
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, 1, key_count, out, [](std::size_t /*chunk_idx*/, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit.add(3, 10);
+		    emit.add(3, 20);
+		    emit.add(5, 100);
+		    emit.add(3, 30);
+		    emit.add(5, 200);
+	    }
+	);
 
 	CHECK(out[3] == 60);
 	CHECK(out[5] == 300);
@@ -125,10 +129,11 @@ TEST_CASE("parallel_keyed_sum leaves untouched keys at their initial value", "[e
 	// out pre-initialized to a sentinel: emitted keys get sentinel + contribution,
 	// untouched keys keep the sentinel.
 	std::vector<int64_t> out(key_count, 42);
-	reductions::parallel_keyed_sum<int64_t>(pool, 2, key_count, out,
-		[](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-			emit.add(chunk_idx, static_cast<int64_t>(chunk_idx + 1) * 100);
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, 2, key_count, out, [](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit.add(chunk_idx, static_cast<int64_t>(chunk_idx + 1) * 100);
+	    }
+	);
 
 	CHECK(out[0] == 142);
 	CHECK(out[1] == 242);
@@ -142,10 +147,11 @@ TEST_CASE("parallel_keyed_sum on zero chunks leaves out unchanged", "[ecs][Reduc
 	EcsThreadPool pool { 4 };
 
 	std::vector<int64_t> out(key_count, 7);
-	reductions::parallel_keyed_sum<int64_t>(pool, 0, key_count, out,
-		[](std::size_t /*chunk_idx*/, reductions::KeyedEmitter<int64_t>& emit) {
-			emit.add(0, 1);
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, 0, key_count, out, [](std::size_t /*chunk_idx*/, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit.add(0, 1);
+	    }
+	);
 
 	for (std::size_t k = 0; k < key_count; ++k) {
 		CHECK(out[k] == 7);
@@ -159,19 +165,21 @@ TEST_CASE("parallel_keyed_sum scratch reuse does not leak entries across calls",
 
 	// First call: more chunks, different data — fills the scratch.
 	std::vector<int64_t> first(key_count, 0);
-	reductions::parallel_keyed_sum<int64_t>(pool, 8, key_count, first, scratch,
-		[](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-			emit.add(chunk_idx % 16, static_cast<int64_t>(chunk_idx) * 1000 + 1);
-			emit.add((chunk_idx + 3) % 16, 5);
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, 8, key_count, first, scratch, [](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit.add(chunk_idx % 16, static_cast<int64_t>(chunk_idx) * 1000 + 1);
+		    emit.add((chunk_idx + 3) % 16, 5);
+	    }
+	);
 
 	// Second call: fewer chunks through the same scratch. Stale entries from the first
 	// call must not contribute.
 	std::vector<int64_t> out(key_count, 0);
-	reductions::parallel_keyed_sum<int64_t>(pool, 3, key_count, out, scratch,
-		[](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
-			emit.add(chunk_idx, static_cast<int64_t>(chunk_idx + 1));
-		});
+	reductions::parallel_keyed_sum<int64_t>(
+	    pool, 3, key_count, out, scratch, [](std::size_t chunk_idx, reductions::KeyedEmitter<int64_t>& emit) {
+		    emit.add(chunk_idx, static_cast<int64_t>(chunk_idx + 1));
+	    }
+	);
 
 	std::vector<int64_t> expected(key_count, 0);
 	for (std::size_t i = 0; i < 3; ++i) {
@@ -182,8 +190,9 @@ TEST_CASE("parallel_keyed_sum scratch reuse does not leak entries across calls",
 	}
 }
 
-TEST_CASE("parallel_keyed_sum works with fixed_point_t and stays worker-count-invariant",
-          "[ecs][Reductions][keyed][determinism]") {
+TEST_CASE(
+    "parallel_keyed_sum works with fixed_point_t and stays worker-count-invariant", "[ecs][Reductions][keyed][determinism]"
+) {
 	std::size_t const chunk_count = 100;
 	std::size_t const key_count = 13;
 
@@ -191,15 +200,19 @@ TEST_CASE("parallel_keyed_sum works with fixed_point_t and stays worker-count-in
 	{
 		EcsThreadPool serial { 1 };
 		std::vector<fixed_point_t> out(key_count, fixed_point_t::_0);
-		reductions::parallel_keyed_sum<fixed_point_t>(serial, chunk_count, key_count, out,
-			[key_count](std::size_t chunk_idx, reductions::KeyedEmitter<fixed_point_t>& emit) {
-				for (std::size_t row = 0; row < 8; ++row) {
-					emit.add(
-						(chunk_idx * 5 + row / 2) % key_count,
-						fixed_point_t { static_cast<int32_t>(chunk_idx * 7 + row) } / 3
-					);
-				}
-			});
+		reductions::parallel_keyed_sum<fixed_point_t>(
+		    serial,
+		    chunk_count,
+		    key_count,
+		    out,
+		    [key_count](std::size_t chunk_idx, reductions::KeyedEmitter<fixed_point_t>& emit) {
+			    for (std::size_t row = 0; row < 8; ++row) {
+				    emit.add(
+				        (chunk_idx * 5 + row / 2) % key_count, fixed_point_t { static_cast<int32_t>(chunk_idx * 7 + row) } / 3
+				    );
+			    }
+		    }
+		);
 		for (fixed_point_t const& v : out) {
 			baseline_raw.push_back(v.get_raw_value());
 		}
@@ -208,15 +221,19 @@ TEST_CASE("parallel_keyed_sum works with fixed_point_t and stays worker-count-in
 	for (uint32_t wc : { 1u, 2u, 4u, 8u, 16u }) {
 		EcsThreadPool pool { wc };
 		std::vector<fixed_point_t> out(key_count, fixed_point_t::_0);
-		reductions::parallel_keyed_sum<fixed_point_t>(pool, chunk_count, key_count, out,
-			[key_count](std::size_t chunk_idx, reductions::KeyedEmitter<fixed_point_t>& emit) {
-				for (std::size_t row = 0; row < 8; ++row) {
-					emit.add(
-						(chunk_idx * 5 + row / 2) % key_count,
-						fixed_point_t { static_cast<int32_t>(chunk_idx * 7 + row) } / 3
-					);
-				}
-			});
+		reductions::parallel_keyed_sum<fixed_point_t>(
+		    pool,
+		    chunk_count,
+		    key_count,
+		    out,
+		    [key_count](std::size_t chunk_idx, reductions::KeyedEmitter<fixed_point_t>& emit) {
+			    for (std::size_t row = 0; row < 8; ++row) {
+				    emit.add(
+				        (chunk_idx * 5 + row / 2) % key_count, fixed_point_t { static_cast<int32_t>(chunk_idx * 7 + row) } / 3
+				    );
+			    }
+		    }
+		);
 		for (std::size_t k = 0; k < key_count; ++k) {
 			CHECK(out[k].get_raw_value() == baseline_raw[k]);
 		}

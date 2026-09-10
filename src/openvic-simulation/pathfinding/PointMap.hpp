@@ -23,11 +23,15 @@ namespace OpenVic {
 		using points_value_type = Point;
 		using points_pair_type = std::pair<points_key_type, points_value_type>;
 		using points_allocator_type =
-			foonathan::memory::std_allocator<points_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
+		    foonathan::memory::std_allocator<points_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
 		using points_container_type = std::vector<points_pair_type, points_allocator_type>;
 		using points_map_type = tsl::ordered_map<
-			points_key_type, points_value_type, //
-			std::hash<points_key_type>, std::equal_to<points_key_type>, points_allocator_type, points_container_type>;
+		    points_key_type,
+		    points_value_type,
+		    std::hash<points_key_type>,
+		    std::equal_to<points_key_type>,
+		    points_allocator_type,
+		    points_container_type>;
 		using points_iterator = points_map_type::iterator;
 		using points_const_iterator = points_map_type::const_iterator;
 
@@ -35,7 +39,7 @@ namespace OpenVic {
 			std::pair<points_key_type, points_key_type> key;
 
 			enum class Direction : uint8_t {
-				NONE = 0, //
+				NONE = 0,
 				FORWARD = 1,
 				BACKWARD = 2,
 				BIDIRECTIONAL = FORWARD | BACKWARD
@@ -63,30 +67,35 @@ namespace OpenVic {
 
 		struct SegmentHash {
 			inline constexpr std::size_t operator()(Segment const& segment) const {
-				return hash_murmur3(hash_murmur3(segment.key.first) << 32) |
-					hash_murmur3(segment.key.second);
+				return hash_murmur3(hash_murmur3(segment.key.first) << 32) | hash_murmur3(segment.key.second);
 			}
 		};
 
 		using segments_type = Segment;
 		using segments_hash_type = SegmentHash;
 		using segments_allocator_type =
-			foonathan::memory::std_allocator<segments_type, memory::tracker<foonathan::memory::default_allocator>>;
+		    foonathan::memory::std_allocator<segments_type, memory::tracker<foonathan::memory::default_allocator>>;
 		using segments_container_type = std::vector<segments_type, segments_allocator_type>;
 		using segments_set_type = tsl::ordered_set<
-			segments_type, segments_hash_type, std::equal_to<segments_type>, segments_allocator_type, segments_container_type>;
+		    segments_type,
+		    segments_hash_type,
+		    std::equal_to<segments_type>,
+		    segments_allocator_type,
+		    segments_container_type>;
 		using segments_iterator = segments_set_type::iterator;
 		using segments_const_iterator = segments_set_type::const_iterator;
 
 		struct Point {
 			using neighbor_point_id_type = points_key_type;
 			using neighbors_allocator_type =
-				foonathan::memory::std_allocator<neighbor_point_id_type, memory::tracker<foonathan::memory::default_allocator>>;
+			    foonathan::memory::std_allocator<neighbor_point_id_type, memory::tracker<foonathan::memory::default_allocator>>;
 			using neighbors_container_type = std::vector<neighbor_point_id_type, neighbors_allocator_type>;
 			using neighbors_type = tsl::ordered_set<
-				neighbor_point_id_type, //
-				std::hash<neighbor_point_id_type>, std::equal_to<neighbor_point_id_type>, neighbors_allocator_type,
-				neighbors_container_type>;
+			    neighbor_point_id_type,
+			    std::hash<neighbor_point_id_type>,
+			    std::equal_to<neighbor_point_id_type>,
+			    neighbors_allocator_type,
+			    neighbors_container_type>;
 			using neighbors_iterator = neighbors_type::iterator;
 			using neighbors_const_iterator = neighbors_type::const_iterator;
 
@@ -146,13 +155,17 @@ namespace OpenVic {
 		int64_t get_available_points() const;
 
 		bool try_add_point(
-			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = 1,
-			std::span<points_key_type> adjacent_points = {}
+		    points_key_type id,
+		    ivec2_t const& position,
+		    fixed_point_t weight_scale = 1,
+		    std::span<points_key_type> adjacent_points = {}
 		);
 
 		void add_point(
-			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = 1,
-			std::span<points_key_type> adjacent_points = {}
+		    points_key_type id,
+		    ivec2_t const& position,
+		    fixed_point_t weight_scale = 1,
+		    std::span<points_key_type> adjacent_points = {}
 		);
 
 		Point const* get_point(points_key_type id) const;

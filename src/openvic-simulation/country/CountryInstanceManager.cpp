@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <functional>
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/population/Pop.hpp"
@@ -16,38 +16,27 @@
 using namespace OpenVic;
 
 CountryInstanceManager::CountryInstanceManager(
-	CountryDefines const& new_country_defines,
-	CountryDefinitionManager const& new_country_definition_manager,
-	CountryInstanceDeps const& country_instance_deps,
-	GoodInstanceManager const& new_good_instance_manager,
-	PopsDefines const& new_pop_defines,
-	forwardable_span<const PopType> pop_type_keys,
-	memory::vector<RegimentType> const& regiment_types,
-	ThreadPool& new_thread_pool
-) : thread_pool { new_thread_pool },
-  	country_definition_manager { new_country_definition_manager },
-	country_defines { new_country_defines },
-	shared_country_values {
-		new_pop_defines,
-		new_good_instance_manager,
-		pop_type_keys,
-		regiment_types
-	},
-	country_instances {
-		country_index_t(new_country_definition_manager.get_country_definition_count()),
-		[
-			this,
-			&new_country_definition_manager,
-			&country_instance_deps
-		](const country_index_t country_index)->auto{
-			return std::make_tuple(
-				std::ref(*new_country_definition_manager.get_country_definition_by_index(country_index)),
-				std::ref(shared_country_values),
-				std::ref(country_instance_deps)
-			);
-		}
-	}
-{
+    CountryDefines const& new_country_defines,
+    CountryDefinitionManager const& new_country_definition_manager,
+    CountryInstanceDeps const& country_instance_deps,
+    GoodInstanceManager const& new_good_instance_manager,
+    PopsDefines const& new_pop_defines,
+    forwardable_span<const PopType> pop_type_keys,
+    memory::vector<RegimentType> const& regiment_types,
+    ThreadPool& new_thread_pool
+) :
+    thread_pool { new_thread_pool }, country_definition_manager { new_country_definition_manager },
+    country_defines { new_country_defines },
+    shared_country_values { new_pop_defines, new_good_instance_manager, pop_type_keys, regiment_types }, country_instances {
+	    country_index_t(new_country_definition_manager.get_country_definition_count()),
+	    [this, &new_country_definition_manager, &country_instance_deps](const country_index_t country_index) -> auto {
+	        return std::make_tuple(
+	            std::ref(*new_country_definition_manager.get_country_definition_by_index(country_index)),
+	            std::ref(shared_country_values),
+	            std::ref(country_instance_deps)
+	        );
+	    }
+    } {
 	assert(new_country_definition_manager.country_definitions_are_locked());
 	great_powers.reserve(new_country_defines.get_great_power_rank());
 	secondary_powers.reserve(new_country_defines.get_max_secondary_power_count());
@@ -66,31 +55,27 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	industrial_power_ranking = total_ranking;
 	military_power_ranking = total_ranking;
 
+	std::stable_sort(total_ranking.begin(), total_ranking.end(), [](CountryInstance& a, CountryInstance& b) -> bool {
+		const bool a_civilised = a.is_civilised();
+		const bool b_civilised = b.is_civilised();
+		return a_civilised != b_civilised ? a_civilised : a.total_score.get_untracked() > b.total_score.get_untracked();
+	});
 	std::stable_sort(
-		total_ranking.begin(), total_ranking.end(),
-		[](CountryInstance& a, CountryInstance& b) -> bool {
-			const bool a_civilised = a.is_civilised();
-			const bool b_civilised = b.is_civilised();
-			return a_civilised != b_civilised ? a_civilised : a.total_score.get_untracked() > b.total_score.get_untracked();
-		}
+	    prestige_ranking.begin(), prestige_ranking.end(), [](CountryInstance const& a, CountryInstance const& b) -> bool {
+		    return a.get_prestige_untracked() > b.get_prestige_untracked();
+	    }
 	);
 	std::stable_sort(
-		prestige_ranking.begin(), prestige_ranking.end(),
-		[](CountryInstance const& a, CountryInstance const& b) -> bool {
-			return a.get_prestige_untracked() > b.get_prestige_untracked();
-		}
+	    industrial_power_ranking.begin(),
+	    industrial_power_ranking.end(),
+	    [](CountryInstance const& a, CountryInstance const& b) -> bool {
+		    return a.get_industrial_power_untracked() > b.get_industrial_power_untracked();
+	    }
 	);
 	std::stable_sort(
-		industrial_power_ranking.begin(), industrial_power_ranking.end(),
-		[](CountryInstance const& a, CountryInstance const& b) -> bool {
-			return a.get_industrial_power_untracked() > b.get_industrial_power_untracked();
-		}
-	);
-	std::stable_sort(
-		military_power_ranking.begin(), military_power_ranking.end(),
-		[](CountryInstance& a, CountryInstance& b) -> bool {
-			return a.military_power.get_untracked() > b.military_power.get_untracked();
-		}
+	    military_power_ranking.begin(), military_power_ranking.end(), [](CountryInstance& a, CountryInstance& b) -> bool {
+		    return a.military_power.get_untracked() > b.military_power.get_untracked();
+	    }
 	);
 
 	for (size_t index = 0; index < total_ranking.size(); ++index) {
@@ -112,8 +97,8 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	std::erase_if(great_powers, [max_great_power_rank, today](CountryInstance& great_power) -> bool {
 		if (OV_likely(great_power.get_country_status() == COUNTRY_STATUS_GREAT_POWER)) {
 			if (OV_unlikely(
-				great_power.get_total_rank() > max_great_power_rank && great_power.get_lose_great_power_date() < today
-			)) {
+			        great_power.get_total_rank() > max_great_power_rank && great_power.get_lose_great_power_date() < today
+			    )) {
 				great_power.country_status = COUNTRY_STATUS_CIVILISED;
 				return true;
 			} else {
@@ -180,26 +165,24 @@ void CountryInstanceManager::update_rankings(const Date today) {
 
 CountryInstance* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) {
 	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
-	return country_definition == nullptr
-		? nullptr
-		: &get_country_instance_by_definition(*country_definition);
+	return country_definition == nullptr ? nullptr : &get_country_instance_by_definition(*country_definition);
 }
 CountryInstance const* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) const {
 	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
-	return country_definition == nullptr
-		? nullptr
-		: &(country_instances[country_definition->index]);
+	return country_definition == nullptr ? nullptr : &(country_instances[country_definition->index]);
 }
 CountryInstance& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) {
 	return get_country_instance_by_index(country_definition.index);
 }
-CountryInstance const& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) const {
+CountryInstance const& CountryInstanceManager::get_country_instance_by_definition(
+    CountryDefinition const& country_definition
+) const {
 	return get_country_instance_by_index(country_definition.index);
 }
 
 bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
 	CountryHistoryManager const& history_manager =
-		instance_manager.definition_manager.get_history_manager().get_country_manager();
+	    instance_manager.definition_manager.get_history_manager().get_country_manager();
 
 	bool ret = true;
 
@@ -214,9 +197,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
 		if (!country_instance.country_definition.is_dynamic_tag) {
-			CountryHistoryMap const* history_map = history_manager.get_country_history(
-				country_instance.country_definition
-			);
+			CountryHistoryMap const* history_map = history_manager.get_country_history(country_instance.country_definition);
 
 			if (history_map != nullptr) {
 				static constexpr fixed_point_t DEFAULT_STATE_CULTURE_LITERACY = fixed_point_t::_0_50;
@@ -228,12 +209,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
 					if (entry_date <= today) {
-						ret &= country_instance.apply_history_to_country(
-							*entry,
-							*this,
-							global_flags,
-							map_instance
-						);
+						ret &= country_instance.apply_history_to_country(*entry, *this, global_flags, map_instance);
 
 						if (entry->get_initial_oob() != nullptr) {
 							oob_history_entry = entry.get();
@@ -257,9 +233,10 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 				}
 
 				if (oob_history_entry != nullptr) {
-					ret &= oob_history_entry->get_initial_oob() != nullptr && unit_instance_manager.generate_deployment(
-						map_instance, country_instance, *oob_history_entry->get_initial_oob()
-					);
+					ret &= oob_history_entry->get_initial_oob() != nullptr &&
+					       unit_instance_manager.generate_deployment(
+					           map_instance, country_instance, *oob_history_entry->get_initial_oob()
+					       );
 				}
 
 				// TODO - check if better to do "if"s then "for"s, so looping multiple times rather than having lots of

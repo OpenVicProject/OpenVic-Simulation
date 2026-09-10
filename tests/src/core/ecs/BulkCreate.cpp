@@ -1,11 +1,3 @@
-#include "openvic-simulation/core/object/Date.hpp"
-#include "openvic-simulation/core/ecs/CommandBuffer.hpp"
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/SystemImpl.hpp"
-#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -14,6 +6,14 @@
 #include <span>
 #include <utility>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/CommandBuffer.hpp"
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -104,9 +104,7 @@ TEST_CASE("Direct bulk create matches the equivalent create_entity loop", "[ecs]
 	World loop_world;
 	std::vector<EntityID> loop_ids;
 	for (std::size_t i = 0; i < count; ++i) {
-		loop_ids.push_back(loop_world.create_entity(
-			BCA { static_cast<int>(i) }, BCB { static_cast<int>(i * 2) }, BCTag {}
-		));
+		loop_ids.push_back(loop_world.create_entity(BCA { static_cast<int>(i) }, BCB { static_cast<int>(i * 2) }, BCTag {}));
 	}
 
 	World bulk_world;
@@ -211,7 +209,9 @@ TEST_CASE("Bulk create with count == 0 is a no-op", "[ecs][BulkCreate]") {
 	CHECK(world.create_entities<BCA>(0, empty_out));
 
 	int found = 0;
-	world.for_each<BCA>([&](BCA&) { ++found; });
+	world.for_each<BCA>([&](BCA&) {
+		++found;
+	});
 	CHECK(found == 0);
 
 	CommandBuffer cmd;
@@ -231,7 +231,9 @@ TEST_CASE("Bulk create refuses mismatched out_ids / span lengths", "[ecs][BulkCr
 	CHECK_FALSE(world.create_entities<BCA>(5, out, short_span));
 
 	int found = 0;
-	world.for_each<BCA>([&](BCA&) { ++found; });
+	world.for_each<BCA>([&](BCA&) {
+		++found;
+	});
 	CHECK(found == 0);
 
 	CommandBuffer cmd;
@@ -417,8 +419,7 @@ TEST_CASE("CB serial bulk: out_ids are real and usable for same-buffer ops", "[e
 	CHECK(world.is_alive(ids[3]));
 }
 
-TEST_CASE("CB serial bulk: a slot destroyed between record and apply is skipped without leaking",
-          "[ecs][BulkCreate]") {
+TEST_CASE("CB serial bulk: a slot destroyed between record and apply is skipped without leaking", "[ecs][BulkCreate]") {
 	int const before = BCCounted::live;
 	std::size_t const count = 6;
 	std::size_t const dropped = 2;
@@ -445,7 +446,9 @@ TEST_CASE("CB serial bulk: a slot destroyed between record and apply is skipped 
 
 		CHECK_FALSE(world.is_alive(ids[dropped]));
 		int found = 0;
-		world.for_each<BCCounted>([&](BCCounted&) { ++found; });
+		world.for_each<BCCounted>([&](BCCounted&) {
+			++found;
+		});
 		CHECK(found == static_cast<int>(count) - 1);
 		for (std::size_t i = 0; i < count; ++i) {
 			if (i == dropped) {
@@ -460,8 +463,7 @@ TEST_CASE("CB serial bulk: a slot destroyed between record and apply is skipped 
 	CHECK(BCCounted::live == before);
 }
 
-TEST_CASE("CB parallel bulk: sequential placeholders interleave correctly with single creates",
-          "[ecs][BulkCreate][deferred]") {
+TEST_CASE("CB parallel bulk: sequential placeholders interleave correctly with single creates", "[ecs][BulkCreate][deferred]") {
 	World world;
 	CommandBuffer cmd;
 	cmd.set_parallel_mode(true);
@@ -495,7 +497,9 @@ TEST_CASE("CB parallel bulk: sequential placeholders interleave correctly with s
 	cmd.apply(world);
 
 	std::vector<std::pair<int, int>> pairs; // (BCA::v, BCB::w)
-	world.for_each<BCA, BCB>([&](BCA& a, BCB& b) { pairs.push_back({ a.v, b.w }); });
+	world.for_each<BCA, BCB>([&](BCA& a, BCB& b) {
+		pairs.push_back({ a.v, b.w });
+	});
 	std::sort(pairs.begin(), pairs.end());
 	REQUIRE(pairs.size() == 4u);
 	CHECK(pairs[0] == std::pair<int, int> { 10, 100 });
@@ -504,7 +508,9 @@ TEST_CASE("CB parallel bulk: sequential placeholders interleave correctly with s
 	CHECK(pairs[3] == std::pair<int, int> { 31, 301 });
 
 	int total = 0;
-	world.for_each<BCA>([&](BCA&) { ++total; });
+	world.for_each<BCA>([&](BCA&) {
+		++total;
+	});
 	CHECK(total == 6);
 }
 
@@ -539,7 +545,9 @@ TEST_CASE("merge_from rebases bulk placeholder ranges across buffers", "[ecs][Bu
 	system_pending.apply(world);
 
 	std::vector<std::pair<int, int>> pairs;
-	world.for_each<BCA, BCB>([&](BCA& a, BCB& b) { pairs.push_back({ a.v, b.w }); });
+	world.for_each<BCA, BCB>([&](BCA& a, BCB& b) {
+		pairs.push_back({ a.v, b.w });
+	});
 	std::sort(pairs.begin(), pairs.end());
 	REQUIRE(pairs.size() == 4u);
 	CHECK(pairs[0] == std::pair<int, int> { 11, 110 });
@@ -548,7 +556,9 @@ TEST_CASE("merge_from rebases bulk placeholder ranges across buffers", "[ecs][Bu
 	CHECK(pairs[3] == std::pair<int, int> { 22, 220 });
 
 	int total = 0;
-	world.for_each<BCA>([&](BCA&) { ++total; });
+	world.for_each<BCA>([&](BCA&) {
+		++total;
+	});
 	CHECK(total == 6);
 }
 
@@ -691,7 +701,9 @@ TEST_CASE("Bulk-created entities destroy normally and bump column versions", "[e
 		CHECK(world.is_alive(ids[i]) == (i >= count / 2));
 	}
 	int found = 0;
-	world.for_each<BCA>([&](BCA&) { ++found; });
+	world.for_each<BCA>([&](BCA&) {
+		++found;
+	});
 	CHECK(found == static_cast<int>(count / 2 + 2));
 }
 
@@ -731,9 +743,7 @@ namespace {
 	struct BCBulkSpawner : SystemThreaded<BCBulkSpawner> {
 		void tick(TickContext const& ctx, EntityID, BCSeed const& s) {
 			std::array<BCSpawned, 3> vals {
-				BCSpawned { s.seed * 31 + 1 },
-				BCSpawned { s.seed * 31 + 2 },
-				BCSpawned { s.seed * 31 + 3 }
+				BCSpawned { s.seed * 31 + 1 }, BCSpawned { s.seed * 31 + 2 }, BCSpawned { s.seed * 31 + 3 }
 			};
 			std::array<EntityID, 3> out {};
 			ctx.cmd.create_entities<BCSpawned>(ctx.world, 3, out, vals);
@@ -778,8 +788,7 @@ namespace {
 	}
 }
 
-TEST_CASE("Threaded bulk spawner: digest is identical across worker counts",
-          "[ecs][determinism][BulkCreate][deferred]") {
+TEST_CASE("Threaded bulk spawner: digest is identical across worker counts", "[ecs][determinism][BulkCreate][deferred]") {
 	std::size_t const seeds = 300;
 	int const ticks = 1;
 	int64_t const baseline = bulk_spawn_and_digest<BCBulkSpawner>(1, seeds, ticks);
@@ -790,8 +799,10 @@ TEST_CASE("Threaded bulk spawner: digest is identical across worker counts",
 	}
 }
 
-TEST_CASE("Threaded bulk spawner produces the identical end state to the single-create spawner",
-          "[ecs][determinism][BulkCreate][deferred]") {
+TEST_CASE(
+    "Threaded bulk spawner produces the identical end state to the single-create spawner",
+    "[ecs][determinism][BulkCreate][deferred]"
+) {
 	std::size_t const seeds = 300;
 	for (int ticks : { 1, 3 }) {
 		int64_t const loop_digest = bulk_spawn_and_digest<BCLoopSpawner>(4, seeds, ticks);

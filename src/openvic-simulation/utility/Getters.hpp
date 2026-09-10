@@ -6,11 +6,11 @@
 #include <string_view>
 #include <type_traits>
 
+#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/core/stl/containers/TypedSpan.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 
 namespace OpenVic::utility {
 #if !defined(_MSC_VER)
@@ -162,18 +162,16 @@ namespace OpenVic {
 				result.emplace(property.value());
 			}
 			return result;
-		}else {
+		} else {
 			/* Return const reference */
 			return property;
 		}
 	}
 
 	// Primary template: Default to forwardable_span
-	template <typename Container, typename = void>
+	template<typename Container, typename = void>
 	struct SpanSelector {
-		using type = OpenVic::forwardable_span<
-			std::add_const_t<typename Container::value_type>
-		>;
+		using type = OpenVic::forwardable_span<std::add_const_t<typename Container::value_type>>;
 
 		static constexpr type get(const Container& container) {
 			return container;
@@ -181,16 +179,10 @@ namespace OpenVic {
 	};
 
 	// Specialization: Triggered if Container has an size_type that is strongly typed
-	template <typename Container>
-	requires (
-		requires { typename Container::size_type; }
-		&& is_strongly_typed<typename Container::size_type>
-	)
+	template<typename Container>
+	requires(requires { typename Container::size_type; } && is_strongly_typed<typename Container::size_type>)
 	struct SpanSelector<Container, void> {
-		using type = OpenVic::TypedSpan<
-			typename Container::size_type,
-			std::add_const_t<typename Container::value_type>
-		>;
+		using type = OpenVic::TypedSpan<typename Container::size_type, std::add_const_t<typename Container::value_type>>;
 
 		static constexpr type get(const Container& container) {
 			return container; // Assumes TypedSpan can be constructed from the container
@@ -227,7 +219,8 @@ public: \
 
 // TODO: Special logic to decide argument type and control assignment.
 #define PROPERTY_RW(NAME, ...) PROPERTY_RW_ACCESS(NAME, private, __VA_ARGS__)
-#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME, ...) PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private, __VA_ARGS__)
+#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME, ...) \
+	PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private, __VA_ARGS__)
 #define PROPERTY_RW_ACCESS(NAME, ACCESS, ...) PROPERTY_RW_FULL(NAME, get_##NAME, set_##NAME, ACCESS, __VA_ARGS__)
 #define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS, ...) \
 	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS, __VA_ARGS__) \
@@ -245,6 +238,7 @@ public: \
 #define PROPERTY_PTR_ACCESS(NAME, ACCESS, ...) \
 	NAME __VA_OPT__(=) __VA_ARGS__; \
 	static_assert(std::is_pointer_v<decltype(NAME)> && !std::is_const_v<std::remove_pointer_t<decltype(NAME)>>); \
+\
 public: \
 	[[nodiscard]] constexpr decltype(NAME) get_##NAME() { \
 		return NAME; \
@@ -252,15 +246,14 @@ public: \
 	[[nodiscard]] constexpr std::add_pointer_t<std::add_const_t<std::remove_pointer_t<decltype(NAME)>>> get_##NAME() const { \
 		return NAME; \
 	} \
-ACCESS:
+	ACCESS:
 
 #define SPAN_PROPERTY(NAME) SPAN_PROPERTY_ACCESS(NAME, private)
 #define SPAN_PROPERTY_ACCESS(NAME, ACCESS) \
 	NAME; \
 \
 public: \
-	[[nodiscard]] constexpr auto get_##NAME() const \
-	-> typename OpenVic::SpanSelector<decltype(NAME)>::type { \
+	[[nodiscard]] constexpr auto get_##NAME() const -> typename OpenVic::SpanSelector<decltype(NAME)>::type { \
 		return OpenVic::SpanSelector<decltype(NAME)>::get(NAME); \
 	} \
 	ACCESS:

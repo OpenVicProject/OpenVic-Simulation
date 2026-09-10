@@ -5,10 +5,10 @@
 #include "openvic-simulation/core/memory/SmartPtr.hpp"
 #include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
@@ -29,6 +29,7 @@ namespace OpenVic {
 
 	struct CountryHistoryEntry : HistoryEntry {
 		friend struct CountryHistoryMap;
+
 	private:
 		std::optional<Culture const*> PROPERTY(primary_culture);
 		ordered_map<Culture const*, bool> PROPERTY(accepted_cultures);
@@ -64,8 +65,10 @@ namespace OpenVic {
 		CountryDefinition const& country;
 
 		CountryHistoryEntry(
-			CountryDefinition const& new_country, const Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
-			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
+		    CountryDefinition const& new_country,
+		    const Date new_date,
+		    decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+		    decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
 		);
 	};
 
@@ -83,14 +86,18 @@ namespace OpenVic {
 
 	protected:
 		CountryHistoryMap(
-			CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
-			decltype(government_type_keys) new_government_type_keys
+		    CountryDefinition const& new_country,
+		    decltype(ideology_keys) new_ideology_keys,
+		    decltype(government_type_keys) new_government_type_keys
 		);
 
 		memory::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
-			DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-			CountryHistoryEntry& entry, ast::NodeCPtr root
+		    DefinitionManager const& definition_manager,
+		    Dataloader const& dataloader,
+		    DeploymentManager& deployment_manager,
+		    CountryHistoryEntry& entry,
+		    ast::NodeCPtr root
 		) override;
 	};
 
@@ -109,9 +116,12 @@ namespace OpenVic {
 		CountryHistoryMap const* get_country_history(CountryDefinition const& country) const;
 
 		bool load_country_history_file(
-			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
-			decltype(CountryHistoryMap::ideology_keys) ideology_keys,
-			decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
+		    DefinitionManager& definition_manager,
+		    Dataloader const& dataloader,
+		    CountryDefinition const& country,
+		    decltype(CountryHistoryMap::ideology_keys) ideology_keys,
+		    decltype(CountryHistoryMap::government_type_keys) government_type_keys,
+		    ast::NodeCPtr root
 		);
 	};
 }

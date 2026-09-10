@@ -24,7 +24,7 @@ namespace OpenVic {
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition, country_index_t> {
 		friend struct CountryDefinitionManager;
-		
+
 		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
@@ -49,10 +49,17 @@ namespace OpenVic {
 		}
 
 		CountryDefinition(
-			std::string_view new_identifier, colour_t new_colour, index_t new_index,
-			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,
-			unit_names_map_t&& new_unit_names, bool new_is_dynamic_tag, government_colour_map_t&& new_alternative_colours,
-			colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour, colour_t new_tertiary_unit_colour
+		    std::string_view new_identifier,
+		    colour_t new_colour,
+		    index_t new_index,
+		    GraphicalCultureType const& new_graphical_culture,
+		    IdentifierRegistry<CountryParty>&& new_parties,
+		    unit_names_map_t&& new_unit_names,
+		    bool new_is_dynamic_tag,
+		    government_colour_map_t&& new_alternative_colours,
+		    colour_t new_primary_unit_colour,
+		    colour_t new_secondary_unit_colour,
+		    colour_t new_tertiary_unit_colour
 		);
 		CountryDefinition(CountryDefinition&&) = default;
 
@@ -64,21 +71,25 @@ namespace OpenVic {
 		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
 
 		NodeTools::node_callback_t load_country_party(
-			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
+		    PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 		) const;
 
 	public:
 		bool add_country(
-			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-			IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
-			CountryDefinition::government_colour_map_t&& alternative_colours
+		    std::string_view identifier,
+		    colour_t colour,
+		    GraphicalCultureType const* graphical_culture,
+		    IdentifierRegistry<CountryParty>&& parties,
+		    CountryDefinition::unit_names_map_t&& unit_names,
+		    bool dynamic_tag,
+		    CountryDefinition::government_colour_map_t&& alternative_colours
 		);
 
 		bool load_country_colours(ast::NodeCPtr root);
 
 		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
 		bool load_country_data_file(
-			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+		    DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 		);
 	};
 }

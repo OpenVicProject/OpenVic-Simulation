@@ -14,32 +14,29 @@
 namespace OpenVic {
 	namespace detail {
 		template<typename T, typename SelfT>
-		struct basic_pop_sum_t : type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>,
-								 type_safe::strong_typedef_op::equality_comparison<SelfT>,
-								 type_safe::strong_typedef_op::relational_comparison<SelfT>,
-								 type_safe::strong_typedef_op::integer_arithmetic<SelfT>,
-								 type_safe::strong_typedef_op::mixed_relational_comparison<SelfT, std::make_unsigned_t<T>>,
-								 type_safe::strong_typedef_op::mixed_equality_comparison<SelfT, fixed_point_t>,
-								 type_safe::strong_typedef_op::mixed_equality_comparison<SelfT, pop_size_t> {
+		struct basic_pop_sum_t
+		    : type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>,
+		      type_safe::strong_typedef_op::equality_comparison<SelfT>,
+		      type_safe::strong_typedef_op::relational_comparison<SelfT>,
+		      type_safe::strong_typedef_op::integer_arithmetic<SelfT>,
+		      type_safe::strong_typedef_op::mixed_relational_comparison<SelfT, std::make_unsigned_t<T>>,
+		      type_safe::strong_typedef_op::mixed_equality_comparison<SelfT, fixed_point_t>,
+		      type_safe::strong_typedef_op::mixed_equality_comparison<SelfT, pop_size_t> {
 			using type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>::strong_typedef;
 
-			constexpr basic_pop_sum_t(std::same_as<std::int32_t> auto value)
-				: type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>(value) {}
+			constexpr basic_pop_sum_t(std::same_as<std::int32_t> auto value) :
+			    type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>(value) {}
 
-			constexpr basic_pop_sum_t(pop_size_t value)
-				: type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>(type_safe::get(value)) {}
+			constexpr basic_pop_sum_t(pop_size_t value) :
+			    type_safe::strong_typedef<basic_pop_sum_t<T, SelfT>, T>(type_safe::get(value)) {}
 
 			using ov_return_by_value = void;
 
-			friend inline constexpr fixed_point_t operator*( //
-				const SelfT lhs, const std::same_as<fixed_point_t> auto rhs
-			) {
+			friend inline constexpr fixed_point_t operator*(const SelfT lhs, const std::same_as<fixed_point_t> auto rhs) {
 				return type_safe::get(lhs) * rhs;
 			}
 
-			friend inline constexpr fixed_point_t operator*( //
-				const std::same_as<fixed_point_t> auto lhs, const SelfT rhs
-			) {
+			friend inline constexpr fixed_point_t operator*(const std::same_as<fixed_point_t> auto lhs, const SelfT rhs) {
 				return lhs * type_safe::get(rhs);
 			}
 
@@ -48,15 +45,11 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr fixed_point_t operator/( //
-				const SelfT lhs, const std::same_as<fixed_point_t> auto rhs
-			) {
+			friend inline constexpr fixed_point_t operator/(const SelfT lhs, const std::same_as<fixed_point_t> auto rhs) {
 				return type_safe::get(lhs) / rhs;
 			}
 
-			friend inline constexpr fixed_point_t operator/( //
-				const std::same_as<fixed_point_t> auto lhs, const SelfT rhs
-			) {
+			friend inline constexpr fixed_point_t operator/(const std::same_as<fixed_point_t> auto lhs, const SelfT rhs) {
 				return lhs / type_safe::get(rhs);
 			}
 

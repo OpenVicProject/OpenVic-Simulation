@@ -71,18 +71,18 @@ namespace OpenVic {
 		const building_set_t activated_buildings;
 
 		Technology(
-			std::string_view new_identifier,
-			index_t new_index,
-			TechnologyArea const& new_area,
-			Date::year_t new_year,
-			fixed_point_t new_cost,
-			area_index_t new_index_in_area,
-			bool new_unciv_military,
-			std::optional<unit_variant_t>&& new_unit_variant,
-			unit_set_t&& new_activated_units,
-			building_set_t&& new_activated_buildings,
-			ModifierValue&& new_values,
-			ConditionalWeightFactorMul&& new_ai_chance
+		    std::string_view new_identifier,
+		    index_t new_index,
+		    TechnologyArea const& new_area,
+		    Date::year_t new_year,
+		    fixed_point_t new_cost,
+		    area_index_t new_index_in_area,
+		    bool new_unciv_military,
+		    std::optional<unit_variant_t>&& new_unit_variant,
+		    unit_set_t&& new_activated_units,
+		    building_set_t&& new_activated_buildings,
+		    ModifierValue&& new_values,
+		    ConditionalWeightFactorMul&& new_ai_chance
 		);
 		Technology(Technology&&) = default;
 
@@ -112,9 +112,16 @@ namespace OpenVic {
 		bool add_technology_area(std::string_view identifier, TechnologyFolder const& folder);
 
 		bool add_technology(
-			std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-			std::optional<unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
-			Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
+		    std::string_view identifier,
+		    TechnologyArea* area,
+		    Date::year_t year,
+		    fixed_point_t cost,
+		    bool unciv_military,
+		    std::optional<unit_variant_t>&& unit_variant,
+		    Technology::unit_set_t&& activated_units,
+		    Technology::building_set_t&& activated_buildings,
+		    ModifierValue&& values,
+		    ConditionalWeightFactorMul&& ai_chance
 		);
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
@@ -126,8 +133,10 @@ namespace OpenVic {
 
 		/* Loaded from "technologies/.txt" files named after technology folders. */
 		bool load_technologies_file(
-			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+		    ModifierManager const& modifier_manager,
+		    UnitTypeManager const& unit_type_manager,
+		    BuildingTypeManager const& building_type_manager,
+		    ast::NodeCPtr root
 		);
 
 		bool generate_modifiers(ModifierManager& modifier_manager) const;

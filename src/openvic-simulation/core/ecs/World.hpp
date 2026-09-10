@@ -184,9 +184,7 @@ namespace OpenVic::ecs {
 		// are ImmutableEntityID (same compile-time structural-mutation guarantee as the
 		// single-entity API).
 		template<typename... Cs, typename... Spans>
-		bool create_immutable_entities(
-			std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans
-		);
+		bool create_immutable_entities(std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans);
 
 		void destroy_entity(EntityID id);
 		bool is_alive(EntityID id) const;
@@ -407,8 +405,7 @@ namespace OpenVic::ecs {
 		void iterate_one_chunk_for_threaded(uint32_t archetype_idx, uint32_t chunk_idx, Body&& body);
 
 		template<typename... Cs, typename Body>
-		void iterate_one_chunk_with_entity_for_threaded(
-			uint32_t archetype_idx, uint32_t chunk_idx, Body&& body);
+		void iterate_one_chunk_with_entity_for_threaded(uint32_t archetype_idx, uint32_t chunk_idx, Body&& body);
 
 		// === Reserved-but-unfinalised slot ===
 		// Reserves an entity slot without placing it in any archetype. The returned EntityID
@@ -425,10 +422,10 @@ namespace OpenVic::ecs {
 		// Caller is responsible for ensuring `eid` is a reserved slot (alive but
 		// archetype_index == INVALID_ARCHETYPE).
 		void finalize_reserved_entity(
-			EntityID eid,
-			std::vector<component_type_id_t> const& sorted_sig,
-			std::vector<ColumnVTable const*> const& sorted_vtables,
-			std::vector<void*> const& sorted_value_slots
+		    EntityID eid,
+		    std::vector<component_type_id_t> const& sorted_sig,
+		    std::vector<ColumnVTable const*> const& sorted_vtables,
+		    std::vector<void*> const& sorted_value_slots
 		);
 
 		// Bulk analogue of finalize_reserved_entity, used by CommandBuffer::apply for batch
@@ -448,10 +445,10 @@ namespace OpenVic::ecs {
 		// values are destroyed here. Immutability stamping is the caller's job (as with
 		// finalize_reserved_entity).
 		void finalize_reserved_entities_bulk(
-			std::span<EntityID const> ids,
-			std::vector<component_type_id_t> const& sorted_sig,
-			std::vector<ColumnVTable const*> const& sorted_vtables,
-			std::span<void* const> column_blocks
+		    std::span<EntityID const> ids,
+		    std::vector<component_type_id_t> const& sorted_sig,
+		    std::vector<ColumnVTable const*> const& sorted_vtables,
+		    std::span<void* const> column_blocks
 		);
 
 		// Drops a reserved-but-unfinalised slot (used when CommandBuffer records a destroy
@@ -632,16 +629,17 @@ namespace OpenVic::ecs {
 		// Shared body of create_entities / create_immutable_entities. OutIdT is EntityID or
 		// ImmutableEntityID (both aggregate-init from { index, generation }).
 		template<typename OutIdT, typename... Cs, typename... Spans>
-		bool create_entities_impl(
-			bool immutable, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans
-		);
+		bool create_entities_impl(bool immutable, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans);
 
 		// Out-of-line validation + logging for the bulk-create entry points, so the header
 		// template stays free of the Logger include. True iff out_ids_size == count and every
 		// span_sizes[0..span_count) == count; logs an error naming the mismatch otherwise.
 		bool bulk_create_sizes_ok_(
-			std::size_t count, std::size_t out_ids_size, std::size_t const* span_sizes,
-			std::size_t span_count, char const* fn_name
+		    std::size_t count,
+		    std::size_t out_ids_size,
+		    std::size_t const* span_sizes,
+		    std::size_t span_count,
+		    char const* fn_name
 		) const;
 
 		// Reused scratch for bulk row reservation (create_entities_impl /
@@ -668,9 +666,7 @@ namespace OpenVic::ecs {
 		// Looks up an existing archetype matching `sig` (sorted) or creates one with empty
 		// chunks (none allocated until `reserve_row` is called). Returns the archetype's
 		// index in `archetypes`. Bumps `archetype_epoch` if a new archetype was created.
-		uint32_t find_or_create_archetype(
-			std::vector<component_type_id_t> const& sig, ColumnVTable const* const* vtables
-		);
+		uint32_t find_or_create_archetype(std::vector<component_type_id_t> const& sig, ColumnVTable const* const* vtables);
 
 		// Computes column_offsets and chunk_capacity for an archetype. Tag columns receive
 		// NO_COLUMN_OFFSET. Returns the per-row total bytes (used internally; callers don't
@@ -749,8 +745,8 @@ namespace OpenVic::ecs {
 				void* slot = archetypes[archetype_idx].row_in_column(loc.chunk_index, col, loc.row);
 				::new (slot) TC(std::forward<C>(value));
 			} else {
-				(void) col;
-				(void) value;
+				(void)col;
+				(void)value;
 			}
 		};
 		(place(std::forward<Cs>(values)), ...);
@@ -798,25 +794,23 @@ namespace OpenVic::ecs {
 		// Element types are non-const so a std::span<C const> (or const container) argument
 		// fails to convert — the moved-from input contract cannot silently become a copy.
 		template<typename... Cs>
-		using BulkSpanTuple = decltype(std::tuple_cat(std::declval<
-			std::conditional_t<std::is_empty_v<Cs>, std::tuple<>, std::tuple<std::span<Cs>>>
-		>()...));
+		using BulkSpanTuple = decltype(std::tuple_cat(
+		    std::declval<std::conditional_t<std::is_empty_v<Cs>, std::tuple<>, std::tuple<std::span<Cs>>>>()...
+		));
 	}
 
 	template<typename OutIdT, typename... Cs, typename... Spans>
-	bool World::create_entities_impl(
-		bool immutable, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans
-	) {
+	bool World::create_entities_impl(bool immutable, std::size_t count, std::span<OutIdT> out_ids, Spans&&... spans) {
 		static_assert(sizeof...(Cs) > 0, "create_entities requires at least one component");
 		static_assert(
-			(std::is_same_v<Cs, std::remove_cvref_t<Cs>> && ...),
-			"create_entities component types must be plain types (no const/volatile/reference)"
+		    (std::is_same_v<Cs, std::remove_cvref_t<Cs>> && ...),
+		    "create_entities component types must be plain types (no const/volatile/reference)"
 		);
 		constexpr std::size_t const non_empty = detail::non_empty_component_count<Cs...>();
 		static_assert(
-			sizeof...(Spans) == non_empty || sizeof...(Spans) == 0,
-			"create_entities takes one span per non-empty component (matched to the non-empty "
-			"Cs... in pack order; tags take no span), or no spans to default-construct"
+		    sizeof...(Spans) == non_empty || sizeof...(Spans) == 0,
+		    "create_entities takes one span per non-empty component (matched to the non-empty "
+		    "Cs... in pack order; tags take no span), or no spans to default-construct"
 		);
 		constexpr bool const use_spans = sizeof...(Spans) > 0;
 
@@ -838,10 +832,10 @@ namespace OpenVic::ecs {
 			std::size_t span_sizes[non_empty];
 			std::size_t si = 0;
 			std::apply(
-				[&](auto const&... s) {
-					((span_sizes[si++] = s.size()), ...);
-				},
-				typed_spans
+			    [&](auto const&... s) {
+				    ((span_sizes[si++] = s.size()), ...);
+			    },
+			    typed_spans
 			);
 			if (!bulk_create_sizes_ok_(count, out_ids.size(), span_sizes, non_empty, "World::create_entities")) {
 				return false;
@@ -918,9 +912,7 @@ namespace OpenVic::ecs {
 					std::size_t const col = arch.column_index_for(component_type_id_of<TC>());
 					std::size_t offset = 0;
 					for (Archetype::RowRange const& range : bulk_rows_scratch_) {
-						TC* const dst = static_cast<TC*>(
-							arch.row_in_column(range.chunk_index, col, range.row_begin)
-						);
+						TC* const dst = static_cast<TC*>(arch.row_in_column(range.chunk_index, col, range.row_begin));
 						if constexpr (use_spans) {
 							std::span<TC> const src = std::get<span_map[I]>(typed_spans);
 							for (std::size_t k = 0; k < range.count; ++k) {
@@ -947,9 +939,7 @@ namespace OpenVic::ecs {
 	}
 
 	template<typename... Cs, typename... Spans>
-	bool World::create_immutable_entities(
-		std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans
-	) {
+	bool World::create_immutable_entities(std::size_t count, std::span<ImmutableEntityID> out_ids, Spans&&... spans) {
 		return create_entities_impl<ImmutableEntityID, Cs...>(true, count, out_ids, std::forward<Spans>(spans)...);
 	}
 
@@ -1097,7 +1087,7 @@ namespace OpenVic::ecs {
 			std::size_t const existing_col = src.column_index_for(new_id);
 			if (existing_col != NO_COLUMN_INDEX) {
 				if constexpr (std::is_empty_v<TC>) {
-					(void) value;
+					(void)value;
 					return nullptr; // tag types have no data — no pointer to return.
 				} else {
 					TC* dst_ptr = static_cast<TC*>(src.row_in_column(src_chunk, existing_col, src_row));
@@ -1152,7 +1142,7 @@ namespace OpenVic::ecs {
 						placed_ptr = static_cast<C*>(slot);
 						::new (slot) TC(std::forward<C>(value));
 					} else {
-						(void) value;
+						(void)value;
 					}
 				} else {
 					std::size_t const src_col_idx = src.column_index_for(tid);
@@ -1276,10 +1266,10 @@ namespace OpenVic::ecs {
 		C& deref_chunk_row(Archetype& arch, std::size_t col_idx, std::size_t chunk_idx, std::size_t row) {
 			if constexpr (std::is_empty_v<C>) {
 				static C instance {};
-				(void) arch;
-				(void) col_idx;
-				(void) chunk_idx;
-				(void) row;
+				(void)arch;
+				(void)col_idx;
+				(void)chunk_idx;
+				(void)row;
 				return instance;
 			} else {
 				return *static_cast<C*>(arch.row_in_column(chunk_idx, col_idx, row));
@@ -1292,9 +1282,9 @@ namespace OpenVic::ecs {
 		template<typename C>
 		C* chunk_array_for(Archetype& arch, std::size_t col_idx, std::size_t chunk_idx) {
 			if constexpr (std::is_empty_v<C>) {
-				(void) arch;
-				(void) col_idx;
-				(void) chunk_idx;
+				(void)arch;
+				(void)col_idx;
+				(void)chunk_idx;
 				return nullptr;
 			} else {
 				return static_cast<C*>(arch.column_array(chunk_idx, col_idx));
@@ -1311,8 +1301,8 @@ namespace OpenVic::ecs {
 		C& row_ref_from_array(C* OV_RESTRICT arr, std::size_t row) {
 			if constexpr (std::is_empty_v<C>) {
 				static C instance {};
-				(void) arr;
-				(void) row;
+				(void)arr;
+				(void)row;
 				return instance;
 			} else {
 				return arr[row];
@@ -1358,11 +1348,9 @@ namespace OpenVic::ecs {
 					// loop indexes these directly; per-row pointer rederivation through
 					// row_in_column is eliminated. row_ref_from_array's OV_RESTRICT param
 					// carries the non-aliasing promise into the inlined body.
-					auto arrs = std::tuple { detail::chunk_array_for<Cs>(
-						arch, cols[Is], chunk_idx)... };
+					auto arrs = std::tuple { detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... };
 					for (std::size_t row = 0; row < row_count; ++row) {
-						fn(detail::row_ref_from_array<Cs>(
-							std::get<Is>(arrs), row)...);
+						fn(detail::row_ref_from_array<Cs>(std::get<Is>(arrs), row)...);
 					}
 				}(std::index_sequence_for<Cs...> {});
 			}
@@ -1386,11 +1374,9 @@ namespace OpenVic::ecs {
 				std::size_t const row_count = arch.chunks[chunk_idx].count;
 				EntityID const* OV_RESTRICT eids = arch.entity_array(chunk_idx);
 				[&]<std::size_t... Is>(std::index_sequence<Is...>) {
-					auto arrs = std::tuple { detail::chunk_array_for<Cs>(
-						arch, cols[Is], chunk_idx)... };
+					auto arrs = std::tuple { detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... };
 					for (std::size_t row = 0; row < row_count; ++row) {
-						fn(eids[row], detail::row_ref_from_array<Cs>(
-							std::get<Is>(arrs), row)...);
+						fn(eids[row], detail::row_ref_from_array<Cs>(std::get<Is>(arrs), row)...);
 					}
 				}(std::index_sequence_for<Cs...> {});
 			}
@@ -1425,9 +1411,7 @@ namespace OpenVic::ecs {
 				}
 				[&]<std::size_t... Is>(std::index_sequence<Is...>) {
 					ChunkView<Cs...> view {
-						row_count,
-						arch.entity_array(chunk_idx),
-						{ detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... }
+						row_count, arch.entity_array(chunk_idx), { detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... }
 					};
 					fn(view);
 				}(std::index_sequence_for<Cs...> {});
@@ -1449,9 +1433,9 @@ namespace OpenVic::ecs {
 			return existing;
 		}
 		TC* fresh = new TC(std::forward<C>(value));
-		singletons.emplace(id, SingletonRecord {
-			SingletonPtr { static_cast<void*>(fresh), deleter }, checksum_singleton_thunk_for<TC>()
-		});
+		singletons.emplace(
+		    id, SingletonRecord { SingletonPtr { static_cast<void*>(fresh), deleter }, checksum_singleton_thunk_for<TC>() }
+		);
 		return fresh;
 	}
 
@@ -1469,9 +1453,9 @@ namespace OpenVic::ecs {
 			return existing;
 		}
 		TC* fresh = new TC {};
-		singletons.emplace(id, SingletonRecord {
-			SingletonPtr { static_cast<void*>(fresh), deleter }, checksum_singleton_thunk_for<TC>()
-		});
+		singletons.emplace(
+		    id, SingletonRecord { SingletonPtr { static_cast<void*>(fresh), deleter }, checksum_singleton_thunk_for<TC>() }
+		);
 		return fresh;
 	}
 
@@ -1511,19 +1495,19 @@ namespace OpenVic::ecs {
 	template<typename S, typename... Args>
 	SystemHandle World::register_system(Args&&... args) {
 		static_assert(
-			!(S::is_threaded && S::extra_writes().size() > 0),
-			"SystemThreaded must not declare extra_writes(): its chunks run concurrently, so a "
-			"cross-archetype/singleton write races the system with ITSELF — no scheduler edge "
-			"can fix that. Use a serial System<> (with Reductions::* for parallel folds) instead."
+		    !(S::is_threaded && S::extra_writes().size() > 0),
+		    "SystemThreaded must not declare extra_writes(): its chunks run concurrently, so a "
+		    "cross-archetype/singleton write races the system with ITSELF — no scheduler edge "
+		    "can fix that. Use a serial System<> (with Reductions::* for parallel folds) instead."
 		);
 
 		static_assert(
-			!has_should_run_v<S> || should_run_signature_valid_v<S>,
-			"S declares `should_run`, but not as `static bool should_run(TickContext const&)`. "
-			"It must be a single, non-overloaded STATIC function with exactly that signature "
-			"(noexcept allowed) — systems are stateless by project rule. A member function, "
-			"data member, overload set, or wrong-signature variant would otherwise be silently "
-			"ignored; this assert makes it a hard error instead."
+		    !has_should_run_v<S> || should_run_signature_valid_v<S>,
+		    "S declares `should_run`, but not as `static bool should_run(TickContext const&)`. "
+		    "It must be a single, non-overloaded STATIC function with exactly that signature "
+		    "(noexcept allowed) — systems are stateless by project rule. A member function, "
+		    "data member, overload set, or wrong-signature variant would otherwise be silently "
+		    "ignored; this assert makes it a hard error instead."
 		);
 
 		// Build a SystemRegistration from S's static metadata. The system's per-row tick
@@ -1536,7 +1520,9 @@ namespace OpenVic::ecs {
 
 		auto instance_owned = std::make_unique<S>(std::forward<Args>(args)...);
 		void* instance_raw = instance_owned.get();
-		auto deleter = +[](void* p) { delete static_cast<S*>(p); };
+		auto deleter = +[](void* p) {
+			delete static_cast<S*>(p);
+		};
 		auto tick_all_fn = +[](void* inst, World& w, TickContext const& tc) {
 			static_cast<S*>(inst)->tick_all(w, tc);
 		};
@@ -1567,13 +1553,9 @@ namespace OpenVic::ecs {
 		// tick_query_require_ids). Declaration order is not meaningful — these only ever
 		// fold into the access set and gate the disjoint-iteration override.
 		std::sort(reg.extra_reads.begin(), reg.extra_reads.end());
-		reg.extra_reads.erase(
-			std::unique(reg.extra_reads.begin(), reg.extra_reads.end()), reg.extra_reads.end()
-		);
+		reg.extra_reads.erase(std::unique(reg.extra_reads.begin(), reg.extra_reads.end()), reg.extra_reads.end());
 		std::sort(reg.extra_writes.begin(), reg.extra_writes.end());
-		reg.extra_writes.erase(
-			std::unique(reg.extra_writes.begin(), reg.extra_writes.end()), reg.extra_writes.end()
-		);
+		reg.extra_writes.erase(std::unique(reg.extra_writes.begin(), reg.extra_writes.end()), reg.extra_writes.end());
 		merge_extra_reads(reg.access, reg.extra_reads);
 		merge_extra_writes(reg.access, reg.extra_writes);
 		canonicalise_access_set(reg.access);
@@ -1595,10 +1577,7 @@ namespace OpenVic::ecs {
 			reg.collect_chunks_fn = +[](World& w) -> std::vector<ChunkLocation> {
 				return S::collect_chunks(w);
 			};
-			reg.tick_one_chunk_fn = +[](
-				void* inst, World& w, TickContext const& tc,
-				uint32_t arch_idx, uint32_t chunk_idx
-			) {
+			reg.tick_one_chunk_fn = +[](void* inst, World& w, TickContext const& tc, uint32_t arch_idx, uint32_t chunk_idx) {
 				S::tick_one_chunk(*static_cast<S*>(inst), w, tc, arch_idx, chunk_idx);
 			};
 			reg.per_chunk_cmds_accessor = +[](void* inst) -> std::vector<CommandBuffer>* {
@@ -1624,7 +1603,7 @@ namespace OpenVic::ecs {
 
 		// Move the instance ownership into the registration last, so partial-failure paths
 		// don't leak. (`instance_raw` was already captured.)
-		(void) instance_owned.release();
+		(void)instance_owned.release();
 		system_registry_.push_back(std::move(reg));
 
 		scheduler_dirty_ = true;
@@ -1641,11 +1620,9 @@ namespace OpenVic::ecs {
 		((cols[i++] = arch.column_index_for(component_type_id_of<Cs>())), ...);
 		std::size_t const row_count = arch.chunks[chunk_idx].count;
 		[&]<std::size_t... Is>(std::index_sequence<Is...>) {
-			auto arrs = std::tuple { detail::chunk_array_for<Cs>(
-				arch, cols[Is], chunk_idx)... };
+			auto arrs = std::tuple { detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... };
 			for (std::size_t row = 0; row < row_count; ++row) {
-				body(detail::row_ref_from_array<Cs>(
-					std::get<Is>(arrs), row)...);
+				body(detail::row_ref_from_array<Cs>(std::get<Is>(arrs), row)...);
 			}
 		}(std::index_sequence_for<Cs...> {});
 	}
@@ -1659,11 +1636,9 @@ namespace OpenVic::ecs {
 		std::size_t const row_count = arch.chunks[chunk_idx].count;
 		EntityID const* OV_RESTRICT eids = arch.entity_array(chunk_idx);
 		[&]<std::size_t... Is>(std::index_sequence<Is...>) {
-			auto arrs = std::tuple { detail::chunk_array_for<Cs>(
-				arch, cols[Is], chunk_idx)... };
+			auto arrs = std::tuple { detail::chunk_array_for<Cs>(arch, cols[Is], chunk_idx)... };
 			for (std::size_t row = 0; row < row_count; ++row) {
-				body(eids[row], detail::row_ref_from_array<Cs>(
-					std::get<Is>(arrs), row)...);
+				body(eids[row], detail::row_ref_from_array<Cs>(std::get<Is>(arrs), row)...);
 			}
 		}(std::index_sequence_for<Cs...> {});
 	}

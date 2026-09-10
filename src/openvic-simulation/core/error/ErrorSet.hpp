@@ -99,7 +99,7 @@ namespace OpenVic {
 
 		memory::string to_bitset_string(memory::string::value_type zero = '0', memory::string::value_type one = '1') const {
 			return bitset::to_string<memory::string::value_type, memory::string::traits_type, memory::string::allocator_type>(
-				zero, one
+			    zero, one
 			);
 		}
 

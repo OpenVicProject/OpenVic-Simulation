@@ -5,8 +5,8 @@
 
 #include <spdlog/spdlog.h> // IWYU pragma: keep
 
-#include "openvic-simulation/core/error/Error.hpp" // IWYU pragma: keep for error
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep for macros
+#include "openvic-simulation/core/error/Error.hpp" // IWYU pragma: keep for error
 
 // Based heavily on https://github.com/godotengine/godot/blob/34d06658a85845111a50db9e485ec4a0701d4298/core/error/error_macros.h
 
@@ -46,8 +46,8 @@
 #define OV_RETURN_IF_ERROR(m_exp) \
 	if (::OpenVic::Error _err_propagate_error = (m_exp); OV_unlikely(_err_propagate_error != ::OpenVic::Error::OK)) { \
 		static_assert( \
-			std::same_as<std::decay_t<decltype(m_exp)>, ::OpenVic::Error>, \
-			"OV_RETURN_IF_ERROR expects an Error-returning expression" \
+		    std::same_as<std::decay_t<decltype(m_exp)>, ::OpenVic::Error>, \
+		    "OV_RETURN_IF_ERROR expects an Error-returning expression" \
 		); \
 		return _err_propagate_error; \
 	} else \
@@ -79,7 +79,7 @@
 #define OV_ERR_FAIL_INDEX_MSG(m_index, m_size, m_msg) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
 		); \
 		return; \
 	} else \
@@ -95,8 +95,12 @@
 #define OV_ERR_FAIL_INDEX_V(m_index, m_size, m_retval) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"Index {} = {} is out of bounds ({} = {}). Returning: {}", _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size), \
-			_OV_STR(m_retval) \
+		    "Index {} = {} is out of bounds ({} = {}). Returning: {}", \
+		    _OV_STR(m_index), \
+		    (m_index), \
+		    _OV_STR(m_size), \
+		    (m_size), \
+		    _OV_STR(m_retval) \
 		); \
 		return m_retval; \
 	} else \
@@ -109,8 +113,13 @@
 #define OV_ERR_FAIL_INDEX_V_MSG(m_index, m_size, m_retval, m_msg) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}). Returning: {}", (m_msg), _OV_STR(m_index), (m_index), \
-			_OV_STR(m_size), (m_size), _OV_STR(m_retval) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}). Returning: {}", \
+		    (m_msg), \
+		    _OV_STR(m_index), \
+		    (m_index), \
+		    _OV_STR(m_size), \
+		    (m_size), \
+		    _OV_STR(m_retval) \
 		); \
 		return m_retval; \
 	} else \
@@ -142,7 +151,7 @@
 #define OV_CRASH_BAD_INDEX_MSG(m_index, m_size, m_msg) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
 		SPDLOG_CRITICAL( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
 		); \
 		spdlog::shutdown(); \
 		OV_GENERATE_TRAP(); \
@@ -172,7 +181,7 @@
 #define OV_ERR_FAIL_UNSIGNED_INDEX_MSG(m_index, m_size, m_msg) \
 	if (OV_unlikely((m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
 		); \
 		return; \
 	} else \
@@ -188,8 +197,12 @@
 #define OV_ERR_FAIL_UNSIGNED_INDEX_V(m_index, m_size, m_retval) \
 	if (OV_unlikely((m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"Index {} = {} is out of bounds ({} = {}). Returning: {}", _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size), \
-			_OV_STR(m_retval) \
+		    "Index {} = {} is out of bounds ({} = {}). Returning: {}", \
+		    _OV_STR(m_index), \
+		    (m_index), \
+		    _OV_STR(m_size), \
+		    (m_size), \
+		    _OV_STR(m_retval) \
 		); \
 		return m_retval; \
 	} else \
@@ -202,8 +215,13 @@
 #define OV_ERR_FAIL_UNSIGNED_INDEX_V_MSG(m_index, m_size, m_retval, m_msg) \
 	if (OV_unlikely((m_index) >= (m_size))) { \
 		SPDLOG_ERROR( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}). Returning: {}", (m_msg), _OV_STR(m_index), (m_index), \
-			_OV_STR(m_size), (m_size), _OV_STR(m_retval) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}). Returning: {}", \
+		    (m_msg), \
+		    _OV_STR(m_index), \
+		    (m_index), \
+		    _OV_STR(m_size), \
+		    (m_size), \
+		    _OV_STR(m_retval) \
 		); \
 		return m_retval; \
 	} else \
@@ -235,7 +253,7 @@
 #define OV_CRASH_BAD_UNSIGNED_INDEX_MSG(m_index, m_size, m_msg) \
 	if (OV_unlikely((m_index) >= (m_size))) { \
 		SPDLOG_CRITICAL( \
-			"{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
+		    "{}\n\tIndex {} = {} is out of bounds ({} = {}).", (m_msg), _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
 		); \
 		spdlog::shutdown(); \
 		OV_GENERATE_TRAP(); \

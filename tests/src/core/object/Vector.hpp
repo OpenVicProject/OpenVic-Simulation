@@ -22,8 +22,10 @@ namespace OpenVic::testing {
 
 	inline constexpr fvec4_t parse_unsafe_v4(double x, double y, double z, double w) {
 		return fvec4_t(
-			fixed_point_t::parse_unsafe(x), fixed_point_t::parse_unsafe(y), fixed_point_t::parse_unsafe(z),
-			fixed_point_t::parse_unsafe(w)
+		    fixed_point_t::parse_unsafe(x),
+		    fixed_point_t::parse_unsafe(y),
+		    fixed_point_t::parse_unsafe(z),
+		    fixed_point_t::parse_unsafe(w)
 		);
 	}
 
@@ -36,11 +38,11 @@ namespace OpenVic::testing {
 	}
 
 	inline dvec4_t approx_value(fvec4_t value, dvec4_t compare) {
-		return { //
-				 approx_value(value.x, compare.x), //
-				 approx_value(value.y, compare.y), //
-				 approx_value(value.z, compare.z), //
-				 approx_value(value.w, compare.w)
+		return {
+			approx_value(value.x, compare.x),
+			approx_value(value.y, compare.y),
+			approx_value(value.z, compare.z),
+			approx_value(value.w, compare.w),
 		};
 	}
 
@@ -53,11 +55,11 @@ namespace OpenVic::testing {
 	}
 
 	inline dvec4_t approx_value(dvec4_t value, dvec4_t compare) {
-		return { //
-				 approx_value(value.x, compare.x), //
-				 approx_value(value.y, compare.y), //
-				 approx_value(value.z, compare.z), //
-				 approx_value(value.w, compare.w)
+		return {
+			approx_value(value.x, compare.x),
+			approx_value(value.y, compare.y),
+			approx_value(value.z, compare.z),
+			approx_value(value.w, compare.w),
 		};
 	}
 }

@@ -14,6 +14,7 @@ namespace OpenVic {
 		CountryHistoryManager PROPERTY_REF(country_manager);
 		ProvinceHistoryManager PROPERTY_REF(province_manager);
 		DiplomaticHistoryManager PROPERTY_REF(diplomacy_manager);
+
 	public:
 		HistoryManager(DefinitionManager const& definition_manager) : province_manager { definition_manager } {}
 	};

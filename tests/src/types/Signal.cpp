@@ -17,7 +17,7 @@ using namespace OpenVic;
 using namespace std::string_view_literals;
 
 using SignalTypes =
-	snitch::type_list<OpenVic::signal<int&, int>, nothread::signal<int&, int>, basic_signal<spin_mutex, int&, int>>;
+    snitch::type_list<OpenVic::signal<int&, int>, nothread::signal<int&, int>, basic_signal<spin_mutex, int&, int>>;
 
 void test_func(int& sum, int i) {
 	sum += i;
@@ -49,7 +49,6 @@ struct test_struct {
 	void func_cv(int& sum, int i) const volatile {
 		sum += i;
 	}
-	//
 
 	void unique_func(int& sum, int i) const {
 		sum += i + 1;
@@ -411,7 +410,6 @@ TEMPLATE_LIST_TEST_CASE("signal Disconnect methods", "[signal][signal-disconnect
 			// TODO: Add windows linker option /OPT:NOICF?
 			signal.connect(&test_struct::unique_func, &p1);
 			signal.connect(&test_struct::unique_func, &p2);
-			//
 			signal(sum, 1);
 			CHECK(sum == 6);
 			CHECK(signal.disconnect(&test_struct::unique_func, &p2) == 1);
@@ -429,7 +427,6 @@ TEMPLATE_LIST_TEST_CASE("signal Disconnect methods", "[signal][signal-disconnect
 			// TODO: Add windows linker option /OPT:NOICF?
 			signal.connect(&test_struct::unique_func, p1);
 			signal.connect(&test_struct::unique_func, p2);
-			//
 			signal(sum, 1);
 			CHECK(sum == 6);
 			CHECK(signal.disconnect(&test_struct::unique_func, p2) == 1);

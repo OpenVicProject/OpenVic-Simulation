@@ -16,28 +16,35 @@ namespace spdlog {
 	template<typename... Args>
 	struct log_s {
 		log_s(
-			level::level_enum level, format_string_t<Args...> fmt, Args&&... args,
-			std::source_location const& location = std::source_location::current()
+		    level::level_enum level,
+		    format_string_t<Args...> fmt,
+		    Args&&... args,
+		    std::source_location const& location = std::source_location::current()
 		) {
 			memory_buf_t buf;
 			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
 
 			default_logger_raw()->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
-				string_view_t(buf.data(), buf.size())
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    string_view_t(buf.data(), buf.size())
 			);
 		}
 
 		log_s(
-			std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args,
-			std::source_location const& location = std::source_location::current()
+		    std::shared_ptr<logger> const& logger,
+		    level::level_enum level,
+		    format_string_t<Args...> fmt,
+		    Args&&... args,
+		    std::source_location const& location = std::source_location::current()
 		) {
 			memory_buf_t buf;
 			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
 
 			logger->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
-				string_view_t(buf.data(), buf.size())
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    string_view_t(buf.data(), buf.size())
 			);
 		}
 	};
@@ -45,45 +52,57 @@ namespace spdlog {
 	template<typename... Args>
 	log_s(level::level_enum level, format_string_t<Args...> fmt, Args&&... args) -> log_s<Args...>;
 	template<typename... Args>
-	log_s( //
-		std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args
-	) -> log_s<Args...>;
+	log_s(std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args)
+	    -> log_s<Args...>;
 
 	template<typename T>
 	struct log_s<T> {
 		log_s(
-			level::level_enum level, format_string_t<T> fmt, T&& arg,
-			std::source_location const& location = std::source_location::current()
+		    level::level_enum level,
+		    format_string_t<T> fmt,
+		    T&& arg,
+		    std::source_location const& location = std::source_location::current()
 		) {
 			default_logger_raw()->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level, fmt,
-				std::forward<T>(arg)
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    fmt,
+			    std::forward<T>(arg)
 			);
 		}
 		log_s(level::level_enum level, T&& arg, std::source_location const& location = std::source_location::current()) {
 			default_logger_raw()->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
-				std::forward<T>(arg)
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    std::forward<T>(arg)
 			);
 		}
 
 		log_s(
-			std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<T> fmt, T&& arg,
-			std::source_location const& location = std::source_location::current()
+		    std::shared_ptr<logger> const& logger,
+		    level::level_enum level,
+		    format_string_t<T> fmt,
+		    T&& arg,
+		    std::source_location const& location = std::source_location::current()
 		) {
 			logger->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level, fmt,
-				std::forward<T>(arg)
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    fmt,
+			    std::forward<T>(arg)
 			);
 		}
 
 		log_s(
-			std::shared_ptr<logger> const& logger, level::level_enum level, T&& arg,
-			std::source_location const& location = std::source_location::current()
+		    std::shared_ptr<logger> const& logger,
+		    level::level_enum level,
+		    T&& arg,
+		    std::source_location const& location = std::source_location::current()
 		) {
 			logger->log(
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
-				std::forward<T>(arg)
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() },
+			    level,
+			    std::forward<T>(arg)
 			);
 		}
 	};
@@ -97,28 +116,33 @@ namespace spdlog {
 	template<typename... Args> \
 	struct NAME { \
 		NAME( \
-			format_string_t<Args...> fmt, Args&&... args, \
-			std::source_location const& location = std::source_location::current() \
+		    format_string_t<Args...> fmt, \
+		    Args&&... args, \
+		    std::source_location const& location = std::source_location::current() \
 		) { \
 			memory_buf_t buf; \
 			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...)); \
 \
 			default_logger_raw()->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
-				string_view_t(buf.data(), buf.size()) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    string_view_t(buf.data(), buf.size()) \
 			); \
 		} \
 \
 		NAME( \
-			std::shared_ptr<logger> const& logger, format_string_t<Args...> fmt, Args&&... args, \
-			std::source_location const& location = std::source_location::current() \
+		    std::shared_ptr<logger> const& logger, \
+		    format_string_t<Args...> fmt, \
+		    Args&&... args, \
+		    std::source_location const& location = std::source_location::current() \
 		) { \
 			memory_buf_t buf; \
 			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...)); \
 \
 			logger->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
-				string_view_t(buf.data(), buf.size()) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    string_view_t(buf.data(), buf.size()) \
 			); \
 		} \
 	}; \
@@ -132,34 +156,43 @@ namespace spdlog {
 	struct NAME<T> { \
 		NAME(format_string_t<T> fmt, T&& arg, std::source_location const& location = std::source_location::current()) { \
 			default_logger_raw()->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, fmt, \
-				std::forward<T>(arg) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    fmt, \
+			    std::forward<T>(arg) \
 			); \
 		} \
 		NAME(T&& arg, std::source_location const& location = std::source_location::current()) { \
 			default_logger_raw()->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
-				std::forward<T>(arg) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    std::forward<T>(arg) \
 			); \
 		} \
 \
 		NAME( \
-			std::shared_ptr<logger> const& logger, format_string_t<T> fmt, T&& arg, \
-			std::source_location const& location = std::source_location::current() \
+		    std::shared_ptr<logger> const& logger, \
+		    format_string_t<T> fmt, \
+		    T&& arg, \
+		    std::source_location const& location = std::source_location::current() \
 		) { \
 			logger->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, fmt, \
-				std::forward<T>(arg) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    fmt, \
+			    std::forward<T>(arg) \
 			); \
 		} \
 \
 		NAME( \
-			std::shared_ptr<logger> const& logger, T&& arg, \
-			std::source_location const& location = std::source_location::current() \
+		    std::shared_ptr<logger> const& logger, \
+		    T&& arg, \
+		    std::source_location const& location = std::source_location::current() \
 		) { \
 			logger->log( \
-				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
-				std::forward<T>(arg) \
+			    source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, \
+			    LEVEL, \
+			    std::forward<T>(arg) \
 			); \
 		} \
 	}; \
@@ -195,8 +228,9 @@ namespace spdlog {
 			std::shared_ptr<spdlog::logger> back = stack.top();
 			if (back->name() != _logger->name()) {
 				error(
-					"Tried exiting scope \"{}\" but \"{}\" would be removed instead. No scope was removed.", _logger->name(),
-					back->name()
+				    "Tried exiting scope \"{}\" but \"{}\" would be removed instead. No scope was removed.",
+				    _logger->name(),
+				    back->name()
 				);
 				return;
 			}

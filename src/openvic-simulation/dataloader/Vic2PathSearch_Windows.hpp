@@ -57,7 +57,7 @@ namespace OpenVic::Windows {
 
 		template<either_char_type CHAR_T, either_char_type CHAR_T2>
 		RegistryKey(
-			HKEY parent_key_handle, std::basic_string_view<CHAR_T> child_key_name, std::basic_string_view<CHAR_T2> value_name
+		    HKEY parent_key_handle, std::basic_string_view<CHAR_T> child_key_name, std::basic_string_view<CHAR_T2> value_name
 		) {
 			open_key(parent_key_handle, child_key_name);
 			query_key(value_name);
@@ -89,10 +89,10 @@ namespace OpenVic::Windows {
 
 		bool is_predefined() const {
 			return (_key_handle == HKEY_CURRENT_USER) || (_key_handle == HKEY_LOCAL_MACHINE) ||
-				(_key_handle == HKEY_CLASSES_ROOT) || (_key_handle == HKEY_CURRENT_CONFIG) ||
-				(_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) || (_key_handle == HKEY_PERFORMANCE_DATA) ||
-				(_key_handle == HKEY_PERFORMANCE_NLSTEXT) || (_key_handle == HKEY_PERFORMANCE_TEXT) ||
-				(_key_handle == HKEY_USERS);
+			       (_key_handle == HKEY_CLASSES_ROOT) || (_key_handle == HKEY_CURRENT_CONFIG) ||
+			       (_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) || (_key_handle == HKEY_PERFORMANCE_DATA) ||
+			       (_key_handle == HKEY_PERFORMANCE_NLSTEXT) || (_key_handle == HKEY_PERFORMANCE_TEXT) ||
+			       (_key_handle == HKEY_USERS);
 		}
 
 		LSTATUS close_key() {
@@ -124,7 +124,7 @@ namespace OpenVic::Windows {
 			}
 			_value = memory::wstring(data_size / sizeof(wchar_t), L'\0');
 			result = RegQueryValueExW(
-				_key_handle, wide_value.data(), NULL, NULL, reinterpret_cast<LPBYTE>(_value.data()), &data_size
+			    _key_handle, wide_value.data(), NULL, NULL, reinterpret_cast<LPBYTE>(_value.data()), &data_size
 			);
 			close_key();
 
@@ -142,8 +142,8 @@ namespace OpenVic::Windows {
 	};
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	memory::basic_string<RCHAR_T> ReadRegValue( //
-		HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
+	memory::basic_string<RCHAR_T> ReadRegValue(
+	    HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
 	) {
 		RegistryKey registry_key(root, key, name);
 		if constexpr (std::is_same_v<RCHAR_T, char>) {

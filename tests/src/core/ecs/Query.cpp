@@ -1,8 +1,9 @@
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 
 #include <algorithm>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

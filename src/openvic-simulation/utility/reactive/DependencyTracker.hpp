@@ -27,11 +27,12 @@ namespace OpenVic {
 
 			changed();
 		}
+
 	protected:
 		signal<> changed;
 		bool is_dirty = true;
 		std::mutex is_dirty_lock;
-		
+
 		virtual ~DependencyTracker() {
 			disconnect_all();
 		}
@@ -44,20 +45,19 @@ namespace OpenVic {
 			const std::lock_guard<std::mutex> lock_guard { connections_lock };
 			connections.clear();
 		}
+
 	public:
 		void track(signal<>& dependency_changed) {
 			const std::lock_guard<std::mutex> lock_guard { connections_lock };
-			connections.emplace_back(
-				dependency_changed.connect(&DependencyTracker::mark_dirty, this)
-			);
+			connections.emplace_back(dependency_changed.connect(&DependencyTracker::mark_dirty, this));
 		}
 
 		template<typename... Args>
 		void track(signal<Args...>& dependency_changed) {
 			const std::lock_guard<std::mutex> lock_guard { connections_lock };
-			connections.emplace_back(
-				dependency_changed.connect([this](Args...) { mark_dirty(); })
-			);
+			connections.emplace_back(dependency_changed.connect([this](Args...) {
+				mark_dirty();
+			}));
 		}
 	};
 }

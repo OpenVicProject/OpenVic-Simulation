@@ -90,8 +90,8 @@ namespace OpenVic {
 	}
 
 	template<typename T, typename... Args>
-	static memory::string string_join( //
-		tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", "
+	static memory::string string_join(
+	    tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", "
 	) {
 		if (map.empty()) {
 			return "";
@@ -174,7 +174,7 @@ namespace OpenVic {
 
 		if constexpr (next_value != 0) {
 			return append_sequence(
-				integer_to_string_sequence<next_value>(), std::integer_sequence<char, digits()[remainder]> {}
+			    integer_to_string_sequence<next_value>(), std::integer_sequence<char, digits()[remainder]> {}
 			);
 		} else {
 			return std::integer_sequence<char, digits()[remainder]> {};

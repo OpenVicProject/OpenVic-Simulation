@@ -1,7 +1,4 @@
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -9,6 +6,10 @@
 #include <set>
 #include <utility>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -90,13 +91,17 @@ TEST_CASE("add_component during for_each applies after iteration", "[ecs][Comman
 	});
 
 	int with_b_before = 0;
-	world.for_each<CBA, CBB>([&](CBA&, CBB&) { ++with_b_before; });
+	world.for_each<CBA, CBB>([&](CBA&, CBB&) {
+		++with_b_before;
+	});
 	CHECK(with_b_before == 0);
 
 	cmd.apply(world);
 
 	int with_b_after = 0;
-	world.for_each<CBA, CBB>([&](CBA&, CBB&) { ++with_b_after; });
+	world.for_each<CBA, CBB>([&](CBA&, CBB&) {
+		++with_b_after;
+	});
 	CHECK(with_b_after == 3);
 }
 
@@ -144,7 +149,7 @@ TEST_CASE("Tag components in CommandBuffer", "[ecs][CommandBuffer][tag]") {
 	CHECK(world.has_component<CBTag>(eid));
 
 	CommandBuffer cmd2;
-	cmd2.add_component<CBTag>(eid);  // already present — should be safe
+	cmd2.add_component<CBTag>(eid); // already present — should be safe
 	cmd2.remove_component<CBTag>(eid);
 	cmd2.apply(world);
 	CHECK_FALSE(world.has_component<CBTag>(eid));
@@ -274,7 +279,9 @@ TEST_CASE("Same-buffer destroy on a deferred placeholder is a clean net no-op", 
 	cmd.apply(world);
 
 	int found = 0;
-	world.for_each<CBA>([&](CBA&) { ++found; });
+	world.for_each<CBA>([&](CBA&) {
+		++found;
+	});
 	CHECK(found == 0);
 }
 
@@ -295,13 +302,16 @@ TEST_CASE("Same-buffer remove_component on a deferred placeholder works", "[ecs]
 		++with_a_only;
 		CHECK(a.v == 1);
 	});
-	world.for_each<CBA, CBB>([&](CBA&, CBB&) { ++with_a_and_b; });
+	world.for_each<CBA, CBB>([&](CBA&, CBB&) {
+		++with_a_and_b;
+	});
 	CHECK(with_a_only == 1);
 	CHECK(with_a_and_b == 0);
 }
 
-TEST_CASE("merge_from rebases deferred placeholders so each add resolves to its own create",
-          "[ecs][CommandBuffer][deferred][merge]") {
+TEST_CASE(
+    "merge_from rebases deferred placeholders so each add resolves to its own create", "[ecs][CommandBuffer][deferred][merge]"
+) {
 	World world;
 	CommandBuffer chunk_a;
 	CommandBuffer chunk_b;
@@ -328,7 +338,9 @@ TEST_CASE("merge_from rebases deferred placeholders so each add resolves to its 
 
 	// Walk the resulting entities and verify each (CBA::v, CBB::w) pair.
 	std::vector<std::pair<int, int>> pairs;
-	world.for_each<CBA, CBB>([&](CBA& a, CBB& b) { pairs.push_back({ a.v, b.w }); });
+	world.for_each<CBA, CBB>([&](CBA& a, CBB& b) {
+		pairs.push_back({ a.v, b.w });
+	});
 	std::sort(pairs.begin(), pairs.end());
 	REQUIRE(pairs.size() == 2u);
 	CHECK(pairs[0].first == 1);
@@ -337,8 +349,7 @@ TEST_CASE("merge_from rebases deferred placeholders so each add resolves to its 
 	CHECK(pairs[1].second == 20);
 }
 
-TEST_CASE("merge_from with multiple chunks resolves placeholders in chunk_idx order",
-          "[ecs][CommandBuffer][deferred][merge]") {
+TEST_CASE("merge_from with multiple chunks resolves placeholders in chunk_idx order", "[ecs][CommandBuffer][deferred][merge]") {
 	World world;
 	std::vector<CommandBuffer> chunks(4);
 	for (auto& cb : chunks) {
@@ -363,7 +374,9 @@ TEST_CASE("merge_from with multiple chunks resolves placeholders in chunk_idx or
 	system_pending.apply(world);
 
 	std::vector<std::pair<int, int>> pairs;
-	world.for_each<CBA, CBB>([&](CBA& a, CBB& b) { pairs.push_back({ a.v, b.w }); });
+	world.for_each<CBA, CBB>([&](CBA& a, CBB& b) {
+		pairs.push_back({ a.v, b.w });
+	});
 	std::sort(pairs.begin(), pairs.end());
 	REQUIRE(pairs.size() == 8u);
 	for (std::size_t i = 0; i < pairs.size(); ++i) {
@@ -375,8 +388,7 @@ TEST_CASE("merge_from with multiple chunks resolves placeholders in chunk_idx or
 	}
 }
 
-TEST_CASE("Empty parallel buffer apply is a no-op and resets deferred_count",
-          "[ecs][CommandBuffer][deferred]") {
+TEST_CASE("Empty parallel buffer apply is a no-op and resets deferred_count", "[ecs][CommandBuffer][deferred]") {
 	World world;
 	CommandBuffer cmd;
 	cmd.set_parallel_mode(true);
@@ -384,7 +396,9 @@ TEST_CASE("Empty parallel buffer apply is a no-op and resets deferred_count",
 	cmd.apply(world);
 	CHECK(cmd.deferred_count() == 0u);
 	int found = 0;
-	world.for_each<CBA>([&](CBA&) { ++found; });
+	world.for_each<CBA>([&](CBA&) {
+		++found;
+	});
 	CHECK(found == 0);
 }
 
@@ -424,13 +438,14 @@ TEST_CASE("Tag components are first-class in the deferred path", "[ecs][CommandB
 		CHECK(a.v == 1);
 		CHECK(e.is_valid());
 		CHECK_FALSE(e.is_deferred());
-		(void) ph;
+		(void)ph;
 	});
 	CHECK(found == 1);
 }
 
-TEST_CASE("Deferred placeholder is safe to pass to World accessors outside its buffer",
-          "[ecs][CommandBuffer][deferred][safety]") {
+TEST_CASE(
+    "Deferred placeholder is safe to pass to World accessors outside its buffer", "[ecs][CommandBuffer][deferred][safety]"
+) {
 	World world;
 	CommandBuffer cmd;
 	cmd.set_parallel_mode(true);
@@ -448,8 +463,9 @@ TEST_CASE("Deferred placeholder is safe to pass to World accessors outside its b
 	cmd.apply(world);
 }
 
-TEST_CASE("Real entity destroy via parallel buffer is unaffected by placeholder space",
-          "[ecs][CommandBuffer][deferred][safety]") {
+TEST_CASE(
+    "Real entity destroy via parallel buffer is unaffected by placeholder space", "[ecs][CommandBuffer][deferred][safety]"
+) {
 	// Subtle bug class: confusing a real EntityID's small index with a placeholder's local_seq.
 	// Pre-create 5 entities (real indices 0..4), then in parallel mode create 3 deferred and
 	// destroy the first real eid. After apply: real_eid_0 is dead, the other 4 originals plus
@@ -486,8 +502,7 @@ TEST_CASE("Real entity destroy via parallel buffer is unaffected by placeholder 
 	CHECK(high_value_count == 3);
 }
 
-TEST_CASE("allocate_entity_slot generations stay below DEFERRED_GENERATION_BIT",
-          "[ecs][CommandBuffer][deferred][safety]") {
+TEST_CASE("allocate_entity_slot generations stay below DEFERRED_GENERATION_BIT", "[ecs][CommandBuffer][deferred][safety]") {
 	// Repeatedly create+destroy the same slot — generation increments on every reuse and must
 	// never produce a value with the high bit set, otherwise a real EntityID could be confused
 	// with a deferred placeholder. We don't push through 2^31 reuses (too slow); instead spot-

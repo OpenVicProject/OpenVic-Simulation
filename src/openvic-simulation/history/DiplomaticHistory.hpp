@@ -24,8 +24,7 @@ namespace OpenVic {
 
 		template<typename HistoryType>
 		static memory::vector<std::reference_wrapper<const HistoryType>> filter_by_date(
-			std::span<const HistoryType> items,
-			const Date date
+		    std::span<const HistoryType> items, const Date date
 		) {
 			memory::vector<std::reference_wrapper<const HistoryType>> ret;
 			for (HistoryType const& item : items) {
@@ -51,7 +50,7 @@ namespace OpenVic {
 		[[nodiscard]] memory::vector<std::reference_wrapper<const ReparationsHistory>> get_reparations(Date date) const {
 			return filter_by_date<ReparationsHistory>(reparations, date);
 		}
-		[[nodiscard]] memory::vector<std::reference_wrapper<const SubjectHistory>> get_subjects(Date date) const{
+		[[nodiscard]] memory::vector<std::reference_wrapper<const SubjectHistory>> get_subjects(Date date) const {
 			return filter_by_date<SubjectHistory>(subjects, date);
 		}
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date,

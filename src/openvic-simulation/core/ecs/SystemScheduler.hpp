@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/core/ecs/System.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 namespace OpenVic::ecs {
 	struct World;
@@ -34,29 +34,32 @@ namespace OpenVic::ecs {
 		// stage has only one system). After each stage joins, applies each system's
 		// pending CommandBuffer in the stage's deterministic emit order — ascending
 		// system_type_id_t within the stage, independent of registration order.
-		void run(
-			World& world, Date today, std::vector<SystemRegistration>& registry,
-			EcsThreadPool& pool, bool serial_mode
-		);
+		void run(World& world, Date today, std::vector<SystemRegistration>& registry, EcsThreadPool& pool, bool serial_mode);
 
 		// FNV-1a hash over the (stage_index, system_type_id_t) pairs of the schedule.
-		uint64_t schedule_hash() const noexcept { return schedule_hash_; }
+		uint64_t schedule_hash() const noexcept {
+			return schedule_hash_;
+		}
 
 		// Drop the built state — next `run` call will rebuild.
-		void invalidate() noexcept { built_ = false; }
+		void invalidate() noexcept {
+			built_ = false;
+		}
 
-		bool built() const noexcept { return built_; }
+		bool built() const noexcept {
+			return built_;
+		}
 
 		// Test/introspection only. Number of stages in the built schedule (0 if not built).
-		std::size_t stage_count() const noexcept { return stages_.size(); }
+		std::size_t stage_count() const noexcept {
+			return stages_.size();
+		}
 
 		// Test/introspection only. Stage index of the system registered with `type_id`, or
 		// SIZE_MAX if it isn't scheduled. Walks `registry` to map a stage's registration
 		// indices back to type ids — lets tests assert two systems do (or do not) share a
 		// stage, which is exactly what the disjoint-iteration conflict override changes.
-		std::size_t stage_index_of(
-			system_type_id_t type_id, std::vector<SystemRegistration> const& registry
-		) const noexcept;
+		std::size_t stage_index_of(system_type_id_t type_id, std::vector<SystemRegistration> const& registry) const noexcept;
 
 	private:
 		bool built_ = false;

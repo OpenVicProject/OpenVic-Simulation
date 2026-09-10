@@ -13,7 +13,7 @@ namespace OpenVic {
 		std::for_each(first, last, f);
 #else
 #if defined(__linux__) || defined(__MINGW32__)
-			// We cannot use std::execution::par here as its implementation uses exceptions, which we have disabled
+		// We cannot use std::execution::par here as its implementation uses exceptions, which we have disabled
 		std::for_each(first, last, f);
 #else
 		if constexpr (__cpp_lib_execution >= 201603L) {

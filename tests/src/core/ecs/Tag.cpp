@@ -1,9 +1,9 @@
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstdint>
 #include <set>
 #include <type_traits>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -53,7 +53,9 @@ TEST_CASE("for_each over a tag-only archetype iterates all rows", "[ecs][World][
 	world.create_entity(Tag1 {});
 
 	int count = 0;
-	world.for_each<Tag1>([&](Tag1&) { ++count; });
+	world.for_each<Tag1>([&](Tag1&) {
+		++count;
+	});
 	CHECK(count == 3);
 }
 
@@ -86,7 +88,9 @@ TEST_CASE("destroy_entity in a tag archetype works", "[ecs][World][tag]") {
 	CHECK(world.is_alive(c));
 
 	int count = 0;
-	world.for_each<Tag1>([&](Tag1&) { ++count; });
+	world.for_each<Tag1>([&](Tag1&) {
+		++count;
+	});
 	CHECK(count == 2);
 }
 
@@ -127,7 +131,9 @@ TEST_CASE("for_each_with_entity over tag passes correct EntityIDs", "[ecs][World
 	EntityID const b = world.create_entity(Tag1 {});
 
 	std::set<uint64_t> seen;
-	world.for_each_with_entity<Tag1>([&](EntityID e, Tag1&) { seen.insert(e.to_uint64()); });
+	world.for_each_with_entity<Tag1>([&](EntityID e, Tag1&) {
+		seen.insert(e.to_uint64());
+	});
 	CHECK(seen.size() == 2u);
 	CHECK(seen.count(a.to_uint64()) == 1u);
 	CHECK(seen.count(b.to_uint64()) == 1u);

@@ -8,41 +8,36 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
 
 using namespace OpenVic;
 
 State::State(
-	StateSet const& new_state_set,
-	ProvinceInstance* new_capital,
-	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
-	colony_status_t new_colony_status,
-	PopsAggregateDeps const& pops_aggregate_deps
-) : PopsAggregate { pops_aggregate_deps },
-	state_set { new_state_set },
-	capital { new_capital },
-	provinces { std::move(new_provinces) },
-	colony_status { new_colony_status },
-	pops_cache_by_type { generate_values, pops_aggregate_deps.pop_type_count }
-{
+    StateSet const& new_state_set,
+    ProvinceInstance* new_capital,
+    memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
+    colony_status_t new_colony_status,
+    PopsAggregateDeps const& pops_aggregate_deps
+) :
+    PopsAggregate { pops_aggregate_deps }, state_set { new_state_set }, capital { new_capital },
+    provinces { std::move(new_provinces) }, colony_status { new_colony_status },
+    pops_cache_by_type { generate_values, pops_aggregate_deps.pop_type_count } {
 	_update_country();
 }
 
 memory::string State::get_identifier() const {
 	return memory::fmt::format(
-		"{}_{}_{}",
-		state_set.region,
-		ovfmt::validate(get_owner(), "NoCountry"),
-		ProvinceInstance::get_colony_status_string(colony_status)
+	    "{}_{}_{}",
+	    state_set.region,
+	    ovfmt::validate(get_owner(), "NoCountry"),
+	    ProvinceInstance::get_colony_status_string(colony_status)
 	);
 }
 
 CountryInstance* State::get_owner() const {
-	return capital == nullptr
-		? static_cast<CountryInstance*>(nullptr)
-		: capital->get_owner();
+	return capital == nullptr ? static_cast<CountryInstance*>(nullptr) : capital->get_owner();
 }
 
 void State::update_gamestate() {
@@ -61,11 +56,7 @@ void State::update_gamestate() {
 			pop_type_index_t pop_type_index {};
 			for (auto const& province_pops_of_type : province.get_pops_cache_by_type()) {
 				memory::vector<std::reference_wrapper<Pop>>& state_pops_of_type = pops_cache_by_type[pop_type_index];
-				state_pops_of_type.insert(
-					state_pops_of_type.end(),
-					province_pops_of_type.begin(),
-					province_pops_of_type.end()
-				);
+				state_pops_of_type.insert(state_pops_of_type.end(), province_pops_of_type.begin(), province_pops_of_type.end());
 				++pop_type_index;
 			}
 		}
@@ -85,8 +76,9 @@ void State::update_gamestate() {
 		workforce_scalar = min_workforce_scalar;
 	} else {
 		workforce_scalar = std::clamp(
-			(fixed_point_t { potential_workforce_in_state } / 100).floor() * 400 / potential_employment_in_state,
-			min_workforce_scalar, max_workforce_scalar
+		    (fixed_point_t { potential_workforce_in_state } / 100).floor() * 400 / potential_employment_in_state,
+		    min_workforce_scalar,
+		    max_workforce_scalar
 		);
 	}
 
@@ -96,10 +88,10 @@ void State::update_gamestate() {
 
 void State::_update_country() {
 	CountryInstance* const owner_ptr = get_owner();
-	if (owner_ptr == previous_country_ptr) { 
+	if (owner_ptr == previous_country_ptr) {
 		return;
 	}
-	
+
 	update_parties_for_votes(owner_ptr);
 	if (previous_country_ptr != nullptr) {
 		previous_country_ptr->remove_state(*this);
@@ -130,13 +122,18 @@ void StateSet::update_gamestate() {
 }
 
 bool StateManager::add_state_set(
-	MapInstance& map_instance, Region const& region,
-	PopsAggregateDeps const& pops_aggregate_deps,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys
+    MapInstance& map_instance,
+    Region const& region,
+    PopsAggregateDeps const& pops_aggregate_deps,
+    forwardable_span<const Strata> strata_keys,
+    forwardable_span<const PopType> pop_type_keys
 ) {
-	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
-	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
+	OV_ERR_FAIL_COND_V_MSG(
+	    region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region)
+	);
+	OV_ERR_FAIL_COND_V_MSG(
+	    region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region)
+	);
 
 	memory::vector<memory::vector<std::reference_wrapper<ProvinceInstance>>> temp_provinces;
 
@@ -171,10 +168,12 @@ bool StateManager::add_state_set(
 		ProvinceInstance& capital = provinces.front();
 
 		State& state = *state_set.states.emplace(
-			/* TODO: capital province logic */
-			state_set, &capital,
-			std::move(provinces), capital.get_colony_status(),
-			pops_aggregate_deps
+		    /* TODO: capital province logic */
+		    state_set,
+		    &capital,
+		    std::move(provinces),
+		    capital.get_colony_status(),
+		    pops_aggregate_deps
 		);
 
 		for (ProvinceInstance& province : state.get_provinces()) {
@@ -186,11 +185,11 @@ bool StateManager::add_state_set(
 }
 
 bool StateManager::generate_states(
-	MapDefinition const& map_definition,
-	MapInstance& map_instance,
-	PopsAggregateDeps const& pops_aggregate_deps,
-	forwardable_span<const Strata> strata_keys,
-	forwardable_span<const PopType> pop_type_keys
+    MapDefinition const& map_definition,
+    MapInstance& map_instance,
+    PopsAggregateDeps const& pops_aggregate_deps,
+    forwardable_span<const Strata> strata_keys,
+    forwardable_span<const PopType> pop_type_keys
 ) {
 	state_sets.clear();
 	state_sets.reserve(map_definition.get_region_count());
@@ -200,13 +199,7 @@ bool StateManager::generate_states(
 
 	for (Region const& region : map_definition.get_regions()) {
 		if (!region.is_meta) {
-			if (add_state_set(
-				map_instance,
-				region,
-				pops_aggregate_deps,
-				strata_keys,
-				pop_type_keys
-			)) {
+			if (add_state_set(map_instance, region, pops_aggregate_deps, strata_keys, pop_type_keys)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
 				ret = false;

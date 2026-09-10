@@ -135,21 +135,19 @@ namespace {
 	}
 
 	bool provably_disjoint(SystemRegistration const& a, SystemRegistration const& b) {
-		bool const disjoint_iteration =
-			sorted_intersects(a.tick_query_require_ids, b.tick_query_exclude_ids) ||
-			sorted_intersects(b.tick_query_require_ids, a.tick_query_exclude_ids);
+		bool const disjoint_iteration = sorted_intersects(a.tick_query_require_ids, b.tick_query_exclude_ids) ||
+		                                sorted_intersects(b.tick_query_require_ids, a.tick_query_exclude_ids);
 		if (!disjoint_iteration) {
 			return false;
 		}
 		for (component_type_id_t c : access_conflict_components(a.access, b.access)) {
-			if (!sorted_contains(a.tick_query_require_ids, c) ||
-				!sorted_contains(b.tick_query_require_ids, c)) {
+			if (!sorted_contains(a.tick_query_require_ids, c) || !sorted_contains(b.tick_query_require_ids, c)) {
 				return false;
 			}
 			// Declared in an extra list on either side → the access also reaches rows the
 			// system does not iterate; disjoint iteration cannot separate it.
-			if (sorted_contains(a.extra_reads, c) || sorted_contains(a.extra_writes, c) ||
-				sorted_contains(b.extra_reads, c) || sorted_contains(b.extra_writes, c)) {
+			if (sorted_contains(a.extra_reads, c) || sorted_contains(a.extra_writes, c) || sorted_contains(b.extra_reads, c) ||
+			    sorted_contains(b.extra_writes, c)) {
 				return false;
 			}
 		}
@@ -215,8 +213,8 @@ void SystemScheduler::rebuild(std::vector<SystemRegistration>& registry) {
 				continue;
 			}
 			if (!access_overlaps(
-					std::span<ComponentAccess const>(registry[i].access),
-					std::span<ComponentAccess const>(registry[j].access))) {
+			        std::span<ComponentAccess const>(registry[i].access), std::span<ComponentAccess const>(registry[j].access)
+			    )) {
 				continue;
 			}
 			// Filter-aware override: a shared Write is not a real ordering constraint when
@@ -365,7 +363,7 @@ void SystemScheduler::rebuild(std::vector<SystemRegistration>& registry) {
 }
 
 std::size_t SystemScheduler::stage_index_of(
-	system_type_id_t type_id, std::vector<SystemRegistration> const& registry
+    system_type_id_t type_id, std::vector<SystemRegistration> const& registry
 ) const noexcept {
 	for (std::size_t s = 0; s < stages_.size(); ++s) {
 		for (uint32_t reg_idx : stages_[s].registration_indices) {
@@ -406,8 +404,7 @@ namespace {
 }
 
 void SystemScheduler::run(
-	World& world, Date today, std::vector<SystemRegistration>& registry,
-	EcsThreadPool& pool, bool serial_mode
+    World& world, Date today, std::vector<SystemRegistration>& registry, EcsThreadPool& pool, bool serial_mode
 ) {
 	if (!built_) {
 		return;
@@ -484,7 +481,7 @@ void SystemScheduler::run(
 				}
 				if (!reg.tick_query_require_ids.empty()) {
 					QueryCacheKey key { reg.tick_query_require_ids, reg.tick_query_exclude_ids };
-					(void) world.resolve_query_cache_for_threaded(key);
+					(void)world.resolve_query_cache_for_threaded(key);
 				}
 			}
 
@@ -509,9 +506,8 @@ void SystemScheduler::run(
 					continue;
 				}
 
-				if (reg.is_threaded && reg.collect_chunks_fn != nullptr
-					&& reg.per_chunk_cmds_accessor != nullptr
-					&& reg.tick_one_chunk_fn != nullptr) {
+				if (reg.is_threaded && reg.collect_chunks_fn != nullptr && reg.per_chunk_cmds_accessor != nullptr &&
+				    reg.tick_one_chunk_fn != nullptr) {
 					std::vector<ChunkLocation> chunks = reg.collect_chunks_fn(world);
 					std::vector<CommandBuffer>* cbs = reg.per_chunk_cmds_accessor(reg.instance);
 					if (cbs->size() < chunks.size()) {
@@ -533,9 +529,7 @@ void SystemScheduler::run(
 						item.chunk_local_idx = static_cast<uint32_t>(i);
 						work_items.push_back(item);
 					}
-					threaded_systems.push_back(
-						PerSystemThreadedInfo { reg_idx, static_cast<uint32_t>(chunks.size()) }
-					);
+					threaded_systems.push_back(PerSystemThreadedInfo { reg_idx, static_cast<uint32_t>(chunks.size()) });
 				} else {
 					// Plain System<> (or a SystemThreaded with no entry points — shouldn't
 					// happen post-Phase-0). One whole-tick work item; dispatch_serial
@@ -554,24 +548,19 @@ void SystemScheduler::run(
 			// nested parallel_for, no run_concurrent — so the pool's per-call DoneState
 			// is the only counter touched and workers never block on inner dispatches.
 			if (!work_items.empty()) {
-				pool.parallel_for(work_items.size(),
-					[&work_items, &registry, &world, today]
-					(std::size_t i, uint32_t /*worker_id*/) {
-						WorkItem const& item = work_items[i];
-						SystemRegistration& reg = registry[item.reg_idx];
-						if (item.kind == WorkKind::ThreadedChunk) {
-							std::vector<CommandBuffer>* cbs
-								= reg.per_chunk_cmds_accessor(reg.instance);
-							TickContext ctx { world, today, (*cbs)[item.chunk_local_idx] };
-							reg.tick_one_chunk_fn(
-								reg.instance, world, ctx,
-								item.archetype_idx, item.chunk_idx
-							);
-						} else {
-							TickContext ctx { world, today, *reg.pending_cmd };
-							reg.tick_all_fn(reg.instance, world, ctx);
-						}
-					}
+				pool.parallel_for(
+				    work_items.size(), [&work_items, &registry, &world, today](std::size_t i, uint32_t /*worker_id*/) {
+					    WorkItem const& item = work_items[i];
+					    SystemRegistration& reg = registry[item.reg_idx];
+					    if (item.kind == WorkKind::ThreadedChunk) {
+						    std::vector<CommandBuffer>* cbs = reg.per_chunk_cmds_accessor(reg.instance);
+						    TickContext ctx { world, today, (*cbs)[item.chunk_local_idx] };
+						    reg.tick_one_chunk_fn(reg.instance, world, ctx, item.archetype_idx, item.chunk_idx);
+					    } else {
+						    TickContext ctx { world, today, *reg.pending_cmd };
+						    reg.tick_all_fn(reg.instance, world, ctx);
+					    }
+				    }
 				);
 			}
 

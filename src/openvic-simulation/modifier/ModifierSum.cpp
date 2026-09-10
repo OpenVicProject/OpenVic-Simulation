@@ -11,22 +11,20 @@ using namespace OpenVic;
 
 std::string_view modifier_entry_t::source_to_string(modifier_source_t const& source) {
 	return std::visit(
-		[](has_get_identifier auto const* has_identifier) -> std::string_view {
-			return has_identifier == nullptr
-				? "<NULL>"
-				: has_identifier->get_identifier();
-		},
-		source
+	    [](has_get_identifier auto const* has_identifier) -> std::string_view {
+		    return has_identifier == nullptr ? "<NULL>" : has_identifier->get_identifier();
+	    },
+	    source
 	);
 }
 
 memory::string modifier_entry_t::to_string() const {
 	return memory::fmt::format(
-		"[{}, {}, {}, {}]",
-		ovfmt::validate(modifier),
-		multiplier,
-		source_to_string(source),
-		ModifierEffect::target_to_string(excluded_targets)
+	    "[{}, {}, {}, {}]",
+	    ovfmt::validate(modifier),
+	    multiplier,
+	    source_to_string(source),
+	    ModifierEffect::target_to_string(excluded_targets)
 	);
 }
 
@@ -44,22 +42,20 @@ bool ModifierSum::has_modifier_effect(ModifierEffect const& effect) const {
 }
 
 void ModifierSum::add_modifier(
-	Modifier const& modifier, fixed_point_t multiplier, modifier_entry_t::modifier_source_t const& source,
-	ModifierEffect::target_t excluded_targets
+    Modifier const& modifier,
+    fixed_point_t multiplier,
+    modifier_entry_t::modifier_source_t const& source,
+    ModifierEffect::target_t excluded_targets
 ) {
 	// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
 	// called with an explcit/hardcoded value and so won't ever exclude everything.
 	if (multiplier != 0) {
 		modifier_entry_t const& new_entry = modifiers.emplace_back(
-			modifier,
-			multiplier,
-			modifier_entry_t::source_or_null_fallback(source, this_source),
-			excluded_targets | this_excluded_targets
+		    modifier,
+		    multiplier,
+		    modifier_entry_t::source_or_null_fallback(source, this_source),
+		    excluded_targets | this_excluded_targets
 		);
-		value_sum.multiply_add_exclude_targets(
-			*new_entry.modifier,
-			new_entry.multiplier,
-			new_entry.excluded_targets
-		);
+		value_sum.multiply_add_exclude_targets(*new_entry.modifier, new_entry.multiplier, new_entry.excluded_targets);
 	}
 }

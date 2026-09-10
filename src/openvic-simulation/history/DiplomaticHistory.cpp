@@ -16,7 +16,7 @@ void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
 
 void DiplomaticHistoryManager::lock_diplomatic_history() {
 	SPDLOG_INFO(
-		"Locked diplomacy history registry after registering {} items", alliances.size() + subjects.size() + wars.size()
+	    "Locked diplomacy history registry after registering {} items", alliances.size() + subjects.size() + wars.size()
 	);
 	locked = true;
 }
@@ -38,7 +38,7 @@ memory::vector<std::reference_wrapper<const WarHistory>> DiplomaticHistoryManage
 }
 
 bool DiplomaticHistoryManager::load_diplomacy_history_file(
-	CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root
+    CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root
 ) {
 	// Default vanilla alliances is 2, 54 is the max I've seen in mods
 	// Eliminates reallocations at the cost of memory usage

@@ -1,14 +1,15 @@
-#include "openvic-simulation/core/object/Date.hpp"
-#include "openvic-simulation/core/ecs/Chunk.hpp"
 #include "openvic-simulation/core/ecs/ChunkPool.hpp"
-#include "openvic-simulation/core/ecs/ChunkView.hpp"
-#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+
+#include "openvic-simulation/core/ecs/Chunk.hpp"
+#include "openvic-simulation/core/ecs/ChunkView.hpp"
+#include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

@@ -37,7 +37,7 @@ namespace std {
 	requires OpenVic::derived_from_specialization_of<std::decay_t<T>, OpenVic::HasIndex>
 	struct hash<T> {
 		[[nodiscard]] std::size_t operator()(T const& obj) const noexcept {
-			return std::hash<typename std::decay_t<T>::index_t>{}(obj.index);
+			return std::hash<typename std::decay_t<T>::index_t> {}(obj.index);
 		}
 	};
 }

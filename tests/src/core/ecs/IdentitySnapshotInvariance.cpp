@@ -1,14 +1,14 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <algorithm>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <algorithm>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -194,8 +194,7 @@ namespace {
 	}
 }
 
-TEST_CASE("restore + tick digest equals continue + tick digest across worker counts",
-          "[ecs][determinism][identity]") {
+TEST_CASE("restore + tick digest equals continue + tick digest across worker counts", "[ecs][determinism][identity]") {
 	RunResult const baseline = run_both_branches(1);
 	CHECK(baseline.restored_digest == baseline.continued_digest);
 
@@ -207,8 +206,7 @@ TEST_CASE("restore + tick digest equals continue + tick digest across worker cou
 	}
 }
 
-TEST_CASE("restored free-list reuse hands spawned entities identical EntityIDs",
-          "[ecs][determinism][identity]") {
+TEST_CASE("restored free-list reuse hands spawned entities identical EntityIDs", "[ecs][determinism][identity]") {
 	// Sharper failure message than a digest mismatch: the exact spawned-id sets must match —
 	// early ticks drain the churned free list, later ticks grow fresh slots past it.
 	RunResult const result = run_both_branches(4);

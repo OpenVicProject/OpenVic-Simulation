@@ -9,7 +9,9 @@ EcsThreadPool::EcsThreadPool(uint32_t worker_count) {
 	uint32_t const n = std::max<uint32_t>(1u, worker_count);
 	workers_.reserve(n);
 	for (uint32_t i = 0; i < n; ++i) {
-		workers_.emplace_back([this, i]() { worker_loop(i); });
+		workers_.emplace_back([this, i]() {
+			worker_loop(i);
+		});
 	}
 }
 
@@ -32,7 +34,9 @@ void EcsThreadPool::worker_loop(uint32_t worker_id) {
 		bool have_job = false;
 		{
 			std::unique_lock<std::mutex> lock(queue_mutex_);
-			cv_.wait(lock, [this]() { return stop_ || !queue_.empty(); });
+			cv_.wait(lock, [this]() {
+				return stop_ || !queue_.empty();
+			});
 			if (stop_ && queue_.empty()) {
 				return;
 			}

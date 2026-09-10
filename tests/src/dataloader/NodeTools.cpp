@@ -29,9 +29,9 @@
 #include "openvic-simulation/core/object/Timespan.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 
+#include "Helper.hpp" // IWYU pragma: keep
 #include "core/object/Colour.hpp" // IWYU pragma: keep
 #include "core/object/Numeric.hpp" // IWYU pragma: keep
-#include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -171,7 +171,8 @@ struct Ast : ovdl::SymbolIntern {
 		StatementList slist;
 		for (size_t index : ranges::views::iota(static_cast<size_t>(0), count)) {
 			std::to_chars_result result = std::to_chars(hex_array.data(), hex_array.data() + hex_array.size(), index);
-			CHECK_IF(result.ec == std::errc {});
+			CHECK_IF (result.ec == std::errc {})
+				;
 			else {
 				continue;
 			}
@@ -190,7 +191,8 @@ struct Ast : ovdl::SymbolIntern {
 		for (auto [index, lhs] : ranges::views::iota(static_cast<size_t>(0), count) | ranges::views::enumerate) {
 			index %= span_rhs.size();
 			std::to_chars_result result = std::to_chars(hex_array.data(), hex_array.data() + hex_array.size(), lhs);
-			CHECK_IF(result.ec == std::errc {});
+			CHECK_IF (result.ec == std::errc {})
+				;
 			else {
 				continue;
 			}
@@ -201,29 +203,21 @@ struct Ast : ovdl::SymbolIntern {
 };
 
 TEST_CASE("NodeTools AST get_type_name", "[NodeTools][NodeTools-ast-get_type_name]") {
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::FileTree) == "ovdl::v2script::ast::FileTree"sv
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::FileTree) == "ovdl::v2script::ast::FileTree"sv);
+	CONSTEXPR_CHECK(
+	    ast::get_type_name(ovdl::v2script::ast::NodeKind::IdentifierValue) == "ovdl::v2script::ast::IdentifierValue"sv
+	);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::StringValue) == "ovdl::v2script::ast::StringValue"sv);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::ListValue) == "ovdl::v2script::ast::ListValue"sv);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::NullValue) == "ovdl::v2script::ast::NullValue"sv);
+	CONSTEXPR_CHECK(
+	    ast::get_type_name(ovdl::v2script::ast::NodeKind::EventStatement) == "ovdl::v2script::ast::EventStatement"sv
 	);
 	CONSTEXPR_CHECK(
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::IdentifierValue) == "ovdl::v2script::ast::IdentifierValue"sv
-	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::StringValue) == "ovdl::v2script::ast::StringValue"sv
-	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::ListValue) == "ovdl::v2script::ast::ListValue"sv
-	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::NullValue) == "ovdl::v2script::ast::NullValue"sv
+	    ast::get_type_name(ovdl::v2script::ast::NodeKind::AssignStatement) == "ovdl::v2script::ast::AssignStatement"sv
 	);
 	CONSTEXPR_CHECK(
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::EventStatement) == "ovdl::v2script::ast::EventStatement"sv
-	);
-	CONSTEXPR_CHECK(
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::AssignStatement) == "ovdl::v2script::ast::AssignStatement"sv
-	);
-	CONSTEXPR_CHECK(
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::ValueStatement) == "ovdl::v2script::ast::ValueStatement"sv
+	    ast::get_type_name(ovdl::v2script::ast::NodeKind::ValueStatement) == "ovdl::v2script::ast::ValueStatement"sv
 	);
 }
 
@@ -237,7 +231,7 @@ TEST_CASE("NodeTools Default Callback functions", "[NodeTools][NodeTools-default
 	CONSTEXPR_CHECK(NodeTools::default_length_callback(0) == 0);
 	CONSTEXPR_CHECK(NodeTools::default_length_callback(5) == 5);
 	CONSTEXPR_CHECK(
-		NodeTools::default_length_callback(std::numeric_limits<std::size_t>::max()) == std::numeric_limits<std::size_t>::max()
+	    NodeTools::default_length_callback(std::numeric_limits<std::size_t>::max()) == std::numeric_limits<std::size_t>::max()
 	);
 }
 
@@ -331,7 +325,8 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 
 		decltype(val) check;
 		std::from_chars_result result = std::from_chars(sv.data(), sv.data() + sv.size(), check);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -380,7 +375,8 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 
 		decltype(val) check;
 		std::from_chars_result result = string_to_uint64(sv, check, base);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -427,8 +423,8 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 }
 
 TEST_CASE(
-	"NodeTools expect fixed_point_t functions",
-	"[NodeTools][NodeTools-expect-functions][NodeTools-expect-fixed_point_t-functions]"
+    "NodeTools expect fixed_point_t functions",
+    "[NodeTools][NodeTools-expect-functions][NodeTools-expect-fixed_point_t-functions]"
 ) {
 	Ast ast;
 
@@ -444,7 +440,8 @@ TEST_CASE(
 
 		fixed_point_t check = 0;
 		std::from_chars_result result = fp::from_chars(check, sv.data(), sv.data() + sv.size());
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -486,7 +483,8 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 
 	auto callback = [](ListValue const* ptr, colour_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == 3);
+		CHECK_IF (ranges::distance(list) == 3)
+			;
 		else {
 			return false;
 		}
@@ -519,7 +517,7 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 }
 
 TEST_CASE(
-	"NodeTools expect colour hex functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-colour-hex-functions]"
+    "NodeTools expect colour hex functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-colour-hex-functions]"
 ) {
 	Ast ast;
 
@@ -531,7 +529,8 @@ TEST_CASE(
 
 		colour_argb_t check;
 		std::from_chars_result result = check.from_chars_argb(sv.data(), sv.data() + sv.size());
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -544,7 +543,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-	"NodeTools expect text format functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-text-format-functions]"
+    "NodeTools expect text format functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-text-format-functions]"
 ) {
 	Ast ast;
 
@@ -561,14 +560,9 @@ TEST_CASE(
 
 	auto callback = [](FlatValue const* ptr, text_format_t val) -> bool {
 		using enum text_format_t;
-		static const string_map_t<text_format_t> format_map = //
-			{ //
-			  { "left", left }, //
-			  { "right", right },
-			  { "centre", centre },
-			  { "center", centre },
-			  { "justified", justified }
-			};
+		static const string_map_t<text_format_t> format_map = {
+			{ "left", left }, { "right", right }, { "centre", centre }, { "center", centre }, { "justified", justified },
+		};
 
 		std::string_view sv = ptr->value().view();
 		text_format_t check = format_map.find(sv).value();
@@ -597,7 +591,8 @@ TEST_CASE("NodeTools expect Date functions", "[NodeTools][NodeTools-expect-funct
 	static auto sv_callback = [](std::string_view sv, Date val) -> bool {
 		Date::from_chars_result result = {};
 		Date check = Date::from_string(sv, &result);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
@@ -622,27 +617,32 @@ TEST_CASE("NodeTools expect Date functions", "[NodeTools][NodeTools-expect-funct
 }
 
 TEST_CASE(
-	"NodeTools expect Timespan functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-timespan-functions]"
+    "NodeTools expect Timespan functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-timespan-functions]"
 ) {
 	Ast ast;
 
 	auto* _5_id = ast.create_with_intern<IdentifierValue>("5"sv);
 	auto* _5_str = ast.create_with_intern<StringValue>("5"sv);
 
-	enum class TimespanType : uint8_t { Day, Month, Year };
+	enum class TimespanType : uint8_t {
+		Day,
+		Month,
+		Year
+	};
 	auto callback = [](FlatValue const* ptr, TimespanType type, Timespan val) -> bool {
 		std::string_view sv = ptr->value().view();
 
 		int64_t check_int;
 		std::from_chars_result result = string_to_int64(sv, check_int);
-		CHECK_IF(result.ec == std::errc {});
+		CHECK_IF (result.ec == std::errc {})
+			;
 		else {
 			return false;
 		}
 
 		Timespan check = [&] {
 			switch (type) {
-			case TimespanType::Day:	  return Timespan::from_days(check_int);
+			case TimespanType::Day:   return Timespan::from_days(check_int);
 			case TimespanType::Month: return Timespan::from_months(check_int);
 			case TimespanType::Year:  return Timespan::from_years(check_int);
 			}
@@ -676,7 +676,8 @@ TEST_CASE("NodeTools expect vector functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback = [](ListValue const* ptr, auto val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == val.size());
+		CHECK_IF (ranges::distance(list) == val.size())
+			;
 		else {
 			return false;
 		}
@@ -826,8 +827,8 @@ TEST_CASE("NodeTools expect assign functions", "[NodeTools][NodeTools-expect-fun
 
 		auto* value = dryad::node_cast<FlatValue>(rhs);
 
-		CHECK_IF(ptr_lhs->value().view() == lhs) {
-			CHECK_IF(ptr_rhs->value().view() == value->value().view()) {
+		CHECK_IF (ptr_lhs->value().view() == lhs) {
+			CHECK_IF (ptr_rhs->value().view() == value->value().view()) {
 				return true;
 			}
 		}
@@ -860,7 +861,7 @@ TEST_CASE("NodeTools expect list functions", "[NodeTools][NodeTools-expect-funct
 	auto* _24_str_list = ast.create_assign_list(24, str_value);
 
 	static auto length_callback = [](size_t size, size_t check) {
-		CHECK_IF(size == check) {
+		CHECK_IF (size == check) {
 			return true;
 		}
 		return false;
@@ -868,7 +869,8 @@ TEST_CASE("NodeTools expect list functions", "[NodeTools][NodeTools-expect-funct
 
 	static auto callback = [](ListValue const* ptr, size_t count, NodeCPtr val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == count);
+		CHECK_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -984,7 +986,8 @@ TEST_CASE("NodeTools expect length functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback = [](ListValue const* ptr, size_t count, size_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_IF(ranges::distance(list) == count);
+		CHECK_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -1005,7 +1008,8 @@ TEST_CASE("NodeTools expect length functions", "[NodeTools][NodeTools-expect-fun
 
 	static auto callback_false = [](ListValue const* ptr, size_t count, size_t val) -> bool {
 		auto list = ptr->statements();
-		CHECK_FALSE_IF(ranges::distance(list) == count);
+		CHECK_FALSE_IF (ranges::distance(list) == count)
+			;
 		else {
 			return false;
 		}
@@ -1279,7 +1283,7 @@ TEST_CASE("NodeTools expect key functions", "[NodeTools][NodeTools-expect-functi
 }
 
 TEST_CASE(
-	"NodeTools expect dictionary functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-dictionary-functions]"
+    "NodeTools expect dictionary functions", "[NodeTools][NodeTools-expect-functions][NodeTools-expect-dictionary-functions]"
 ) {
 	Ast ast;
 
@@ -1394,20 +1398,20 @@ TEST_CASE(
 }
 
 TEST_CASE(
-	"NodeTools expect mapped string functions",
-	"[NodeTools][NodeTools-expect-functions][NodeTools-expect-mapped-string-functions]"
+    "NodeTools expect mapped string functions",
+    "[NodeTools][NodeTools-expect-functions][NodeTools-expect-mapped-string-functions]"
 ) {
 	Ast ast;
 
-	static const string_map_t<std::string_view> map //
-		{ //
-		  { "key_test1", "value_test1"sv },
-		  { "key_test2", "value_test2"sv },
-		  { "key_test3", "value_test3"sv }
-		};
+	static const string_map_t<std::string_view> map {
+		{ "key_test1", "value_test1"sv },
+		{ "key_test2", "value_test2"sv },
+		{ "key_test3", "value_test3"sv },
+	};
 
 	static auto callback = [](string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
-		CHECK_IF(map.size() > expected_index);
+		CHECK_IF (map.size() > expected_index)
+			;
 		else {
 			return false;
 		}

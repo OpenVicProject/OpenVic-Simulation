@@ -1,14 +1,15 @@
-#include "openvic-simulation/core/object/Date.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/SystemImpl.hpp"
-#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;
@@ -91,8 +92,7 @@ TEST_CASE("System tick: EntityID handle vs ImmutableEntityID handle", "[benchmar
 			World world;
 			for (std::size_t i = 0; i < n; ++i) {
 				world.create_entity(
-					ImmBenchValue { static_cast<int64_t>(i + 1) },
-					ImmBenchDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
+				    ImmBenchValue { static_cast<int64_t>(i + 1) }, ImmBenchDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
 				);
 			}
 			world.register_system<EidTick>();
@@ -104,8 +104,7 @@ TEST_CASE("System tick: EntityID handle vs ImmutableEntityID handle", "[benchmar
 			World world;
 			for (std::size_t i = 0; i < n; ++i) {
 				world.create_entity(
-					ImmBenchValue { static_cast<int64_t>(i + 1) },
-					ImmBenchDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
+				    ImmBenchValue { static_cast<int64_t>(i + 1) }, ImmBenchDelta { static_cast<int64_t>((i * 17) % 13 + 1) }
 				);
 			}
 			world.register_system<ImmIdTick>();

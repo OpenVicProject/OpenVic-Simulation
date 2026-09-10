@@ -55,10 +55,7 @@ namespace OpenVic::ecs {
 	// turns any other marker into a clear compile error rather than a silent no-op.
 	template<typename... Fs>
 	struct Filter {
-		static_assert(
-			(is_without<Fs>::value && ...),
-			"ecs::Filter currently supports only ecs::Without<C> entries."
-		);
+		static_assert((is_without<Fs>::value && ...), "ecs::Filter currently supports only ecs::Without<C> entries.");
 
 		// Sorted-unique exclude ids. Runtime (not constexpr) to mirror
 		// System<>::compute_tick_query_require_ids — both feed Query::*_ids vectors.

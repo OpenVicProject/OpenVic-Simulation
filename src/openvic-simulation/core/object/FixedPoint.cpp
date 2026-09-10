@@ -6,8 +6,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-#include "openvic-simulation/core/object/FixedPoint/String.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/object/FixedPoint/String.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 /* Base e exponential lookup table */
@@ -21,14 +21,11 @@ static_assert(_detail::LUT::_2_16_EXP_e_DIVISOR == 1 << fixed_point_t::PRECISION
 static_assert(_detail::LUT::_2_16_EXP_2001_DIVISOR == 1 << fixed_point_t::PRECISION);
 
 OV_SPEED_INLINE void fixed_point_t::warn_if_truncated() const {
-	if (OV_unlikely(
-		value != 0
-		&& abs() < fixed_point_t::_1
-	)) {
+	if (OV_unlikely(value != 0 && abs() < fixed_point_t::_1)) {
 		spdlog::warn_s(
-			"0 < abs(Fixed point) < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
-			get_raw_value(),
-			static_cast<float>(*this)
+		    "0 < abs(Fixed point) < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
+		    get_raw_value(),
+		    static_cast<float>(*this)
 		);
 	}
 }
@@ -91,7 +88,7 @@ namespace OpenVic {
 }
 
 template<std::integral T>
-requires (sizeof(T) >= 4)
+requires(sizeof(T) >= 4)
 static fixed_point_t parse_capped_generic(const T value) {
 	fixed_point_t result;
 	if (value > std::numeric_limits<int32_t>::max()) {
@@ -109,8 +106,12 @@ static fixed_point_t parse_capped_generic(const T value) {
 	return result;
 }
 
-fixed_point_t fixed_point_t::parse_capped(const int64_t value) { return parse_capped_generic(value); }
-fixed_point_t fixed_point_t::parse_capped(const uint64_t value) { return parse_capped_generic(value); }
+fixed_point_t fixed_point_t::parse_capped(const int64_t value) {
+	return parse_capped_generic(value);
+}
+fixed_point_t fixed_point_t::parse_capped(const uint64_t value) {
+	return parse_capped_generic(value);
+}
 
 template<size_t N, std::array<int64_t, N> EXP_LUT>
 OV_SPEED_INLINE static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {

@@ -37,7 +37,7 @@ namespace OpenVic {
 	template<class T, typename... Args>
 	constexpr void perfect_hash(std::size_t& s, T&& v, Args&&... args) {
 		static_assert(
-			sizeof(T) + (sizeof(Args) + ...) <= sizeof(std::size_t), "Perfect hashes must be able to fit into size_t"
+		    sizeof(T) + (sizeof(Args) + ...) <= sizeof(std::size_t), "Perfect hashes must be able to fit into size_t"
 		);
 		std::hash<T> h;
 		if constexpr (sizeof...(args) == 0) {
@@ -46,16 +46,15 @@ namespace OpenVic {
 			const std::tuple arg_tuple { args... };
 			s = h(v) << (sizeof(T) * CHAR_BIT);
 			(
-				[&] {
-					// If args is not last pointer of args
-					if (static_cast<void const*>(&(std::get<sizeof...(args) - 1>(arg_tuple))) !=
-						static_cast<void const*>(&args)) {
-						s <<= sizeof(Args) * CHAR_BIT;
-					}
-					s |= std::hash<Args> {}(args);
-				}(),
-				...
-			);
+			    [&] {
+				    // If args is not last pointer of args
+				    if (static_cast<void const*>(&(std::get<sizeof...(args) - 1>(arg_tuple))) !=
+				        static_cast<void const*>(&args)) {
+					    s <<= sizeof(Args) * CHAR_BIT;
+				    }
+				    s |= std::hash<Args> {}(args);
+			    }(),
+			    ...);
 		}
 	}
 }

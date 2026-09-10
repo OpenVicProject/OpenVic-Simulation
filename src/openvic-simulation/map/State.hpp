@@ -41,10 +41,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(industrial_power);
 		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
 
-		memory::FixedVector<
-			memory::vector<std::reference_wrapper<Pop>>,
-			pop_type_index_t
-		> SPAN_PROPERTY(pops_cache_by_type);
+		memory::FixedVector<memory::vector<std::reference_wrapper<Pop>>, pop_type_index_t> SPAN_PROPERTY(pops_cache_by_type);
 
 		void _update_country();
 
@@ -52,11 +49,11 @@ namespace OpenVic {
 		StateSet const& state_set;
 
 		State(
-			StateSet const& new_state_set,
-			ProvinceInstance* new_capital,
-			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
-			colony_status_t new_colony_status,
-			PopsAggregateDeps const& pops_aggregate_deps
+		    StateSet const& new_state_set,
+		    ProvinceInstance* new_capital,
+		    memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
+		    colony_status_t new_colony_status,
+		    PopsAggregateDeps const& pops_aggregate_deps
 		);
 		State(State&&) = delete;
 		State(State const&) = delete;
@@ -101,10 +98,11 @@ namespace OpenVic {
 		memory::vector<StateSet> SPAN_PROPERTY(state_sets);
 
 		bool add_state_set(
-			MapInstance& map_instance, Region const& region,
-			PopsAggregateDeps const& pops_aggregate_deps,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys
+		    MapInstance& map_instance,
+		    Region const& region,
+		    PopsAggregateDeps const& pops_aggregate_deps,
+		    forwardable_span<const Strata> strata_keys,
+		    forwardable_span<const PopType> pop_type_keys
 		);
 
 	public:
@@ -112,11 +110,11 @@ namespace OpenVic {
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
 		bool generate_states(
-			MapDefinition const& map_definition,
-			MapInstance& map_instance,
-			PopsAggregateDeps const& pops_aggregate_deps,
-			forwardable_span<const Strata> strata_keys,
-			forwardable_span<const PopType> pop_type_keys
+		    MapDefinition const& map_definition,
+		    MapInstance& map_instance,
+		    PopsAggregateDeps const& pops_aggregate_deps,
+		    forwardable_span<const Strata> strata_keys,
+		    forwardable_span<const PopType> pop_type_keys
 		);
 
 		void reset();

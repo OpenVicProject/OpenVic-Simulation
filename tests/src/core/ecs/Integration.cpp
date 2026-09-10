@@ -1,16 +1,16 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CachedRef.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/Query.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <string_view>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -146,7 +146,7 @@ TEST_CASE("Integration: CachedRef survives sibling-induced swap-pop", "[ecs][int
 
 	std::vector<EntityID> ids;
 	for (int i = 0; i < 5; ++i) {
-		ids.push_back(world.create_entity(Position { (float) i, 0 }));
+		ids.push_back(world.create_entity(Position { (float)i, 0 }));
 	}
 
 	// Cache a ref into the middle entity.
@@ -166,7 +166,7 @@ TEST_CASE("Integration: CachedRef survives sibling-induced swap-pop", "[ecs][int
 TEST_CASE("Integration: query cache survives across a system tick", "[ecs][integration][query]") {
 	World world;
 	for (int i = 0; i < 10; ++i) {
-		world.create_entity(Position { (float) i, 0 }, Velocity { 1, 0 });
+		world.create_entity(Position { (float)i, 0 }, Velocity { 1, 0 });
 	}
 	world.create_entity(Position { 99, 0 }, Velocity { 1, 0 }, Frozen {});
 
@@ -195,13 +195,13 @@ TEST_CASE("Integration: archetype mass-creation does not lose data", "[ecs][inte
 	World world;
 	std::vector<EntityID> ids;
 	for (int i = 0; i < 100; ++i) {
-		ids.push_back(world.create_entity(Position { (float) i, (float) (i * 2) }));
+		ids.push_back(world.create_entity(Position { (float)i, (float)(i * 2) }));
 	}
 	for (int i = 0; i < 100; ++i) {
 		Position* p = world.get_component<Position>(ids[i]);
 		CHECK(p != nullptr);
-		CHECK(p->x == (float) i);
-		CHECK(p->y == (float) (i * 2));
+		CHECK(p->x == (float)i);
+		CHECK(p->y == (float)(i * 2));
 	}
 }
 
@@ -242,10 +242,10 @@ TEST_CASE("Integration: many migrations preserve component data", "[ecs][integra
 	EntityID const eid = world.create_entity(Position { 13, 17 });
 
 	for (int i = 0; i < 10; ++i) {
-		world.add_component<Velocity>(eid, Velocity { (float) i, (float) (i * 2) });
+		world.add_component<Velocity>(eid, Velocity { (float)i, (float)(i * 2) });
 		CHECK(world.get_component<Position>(eid)->x == 13.0f);
 		CHECK(world.get_component<Position>(eid)->y == 17.0f);
-		CHECK(world.get_component<Velocity>(eid)->dx == (float) i);
+		CHECK(world.get_component<Velocity>(eid)->dx == (float)i);
 		world.remove_component<Velocity>(eid);
 		CHECK(world.get_component<Position>(eid)->x == 13.0f);
 	}

@@ -1,14 +1,15 @@
-#include "openvic-simulation/core/object/Date.hpp"
-#include "openvic-simulation/core/ecs/EntityID.hpp"
-#include "openvic-simulation/core/ecs/SystemImpl.hpp"
-#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
-#include "openvic-simulation/core/ecs/World.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
 #include <nanobench.h>
+
+#include "openvic-simulation/core/ecs/EntityID.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemTypeID.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic::ecs;

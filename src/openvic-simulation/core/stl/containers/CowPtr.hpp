@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic::stl {
 	/**
@@ -78,13 +78,13 @@ namespace OpenVic::stl {
 
 		template<typename U, typename... Args>
 		requires std::constructible_from<T, std::initializer_list<U>&, Args...>
-		OV_ALWAYS_INLINE cow_ptr(Allocator const& alloc, std::in_place_t, std::initializer_list<U> ilist, Args&&... args)
-			: cow_ptr(allocate_tag, alloc) {
+		OV_ALWAYS_INLINE cow_ptr(Allocator const& alloc, std::in_place_t, std::initializer_list<U> ilist, Args&&... args) :
+		    cow_ptr(allocate_tag, alloc) {
 			std::construct_at(data, ilist, std::forward<Args>(args)...);
 		}
 
-		OV_ALWAYS_INLINE cow_ptr(cow_ptr const& x)
-			: alloc(payload_allocator_traits::select_on_container_copy_construction(x.alloc)), data(x.data) {
+		OV_ALWAYS_INLINE cow_ptr(cow_ptr const& x) :
+		    alloc(payload_allocator_traits::select_on_container_copy_construction(x.alloc)), data(x.data) {
 			++data->count;
 		}
 

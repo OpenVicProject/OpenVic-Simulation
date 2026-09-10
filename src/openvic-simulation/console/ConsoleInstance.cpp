@@ -9,14 +9,14 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/military/Wargoal.hpp"
@@ -29,8 +29,8 @@ using namespace std::string_view_literals;
 
 ConsoleInstance::ConsoleInstance(InstanceManager& instance_manager) : ConsoleInstance(instance_manager, &default_write_func) {}
 
-ConsoleInstance::ConsoleInstance(InstanceManager& instance_manager, write_func_t&& write_func)
-	: instance_manager(instance_manager) {
+ConsoleInstance::ConsoleInstance(InstanceManager& instance_manager, write_func_t&& write_func) :
+    instance_manager(instance_manager) {
 	set_write_func(std::move(write_func));
 	setup_commands();
 }
@@ -186,11 +186,11 @@ std::optional<bool> ConsoleInstance::validate_boolean(std::string_view value_str
 	constexpr std::string_view ON_VALUE = "on"sv;
 	constexpr std::string_view OFF_VALUE = "off"sv;
 
-	if (value_string == TRUE_VALUE || value_string == YES_VALUE || //
-		value_string == ONE_VALUE || value_string == ON_VALUE) {
+	if (value_string == TRUE_VALUE || value_string == YES_VALUE || value_string == ONE_VALUE || value_string == ON_VALUE) {
 		return true;
-	} else if (value_string == FALSE_VALUE || value_string == NO_VALUE || //
-			   value_string == ZERO_VALUE || value_string == OFF_VALUE) {
+	} else if (
+	    value_string == FALSE_VALUE || value_string == NO_VALUE || value_string == ZERO_VALUE || value_string == OFF_VALUE
+	) {
 		return false;
 	}
 
@@ -255,12 +255,10 @@ UnitType const* ConsoleInstance::validate_unit(std::string_view value_string) {
 		return nullptr;
 	}
 
-	UnitType const* unit_type = //
-		instance_manager
-			.definition_manager //
-			.get_military_manager()
-			.get_unit_type_manager()
-			.get_unit_type_by_identifier(value_string);
+	UnitType const* unit_type =
+	    instance_manager.definition_manager.get_military_manager().get_unit_type_manager().get_unit_type_by_identifier(
+	        value_string
+	    );
 
 	if (unit_type == nullptr) {
 		write_error("Unknown unit type");
@@ -305,12 +303,10 @@ Invention const* ConsoleInstance::validate_invention(std::string_view value_stri
 		return nullptr;
 	}
 
-	Invention const* invention = //
-		instance_manager
-			.definition_manager //
-			.get_research_manager()
-			.get_invention_manager()
-			.get_invention_by_identifier(value_string);
+	Invention const* invention =
+	    instance_manager.definition_manager.get_research_manager().get_invention_manager().get_invention_by_identifier(
+	        value_string
+	    );
 
 	if (invention == nullptr) {
 		write_error("Unknown invention");
@@ -324,12 +320,10 @@ WargoalType const* ConsoleInstance::validate_cb_type(std::string_view value_stri
 		return nullptr;
 	}
 
-	WargoalType const* cb_type = //
-		instance_manager
-			.definition_manager //
-			.get_military_manager()
-			.get_wargoal_type_manager()
-			.get_wargoal_type_by_identifier(value_string);
+	WargoalType const* cb_type =
+	    instance_manager.definition_manager.get_military_manager().get_wargoal_type_manager().get_wargoal_type_by_identifier(
+	        value_string
+	    );
 
 	if (cb_type == nullptr) {
 		write_error("Unknown casus belli type");
@@ -343,12 +337,10 @@ Technology const* ConsoleInstance::validate_tech_name(std::string_view value_str
 		return nullptr;
 	}
 
-	Technology const* tech = //
-		instance_manager
-			.definition_manager //
-			.get_research_manager()
-			.get_technology_manager()
-			.get_technology_by_identifier(value_string);
+	Technology const* tech =
+	    instance_manager.definition_manager.get_research_manager().get_technology_manager().get_technology_by_identifier(
+	        value_string
+	    );
 
 	if (tech == nullptr) {
 		write_error("Unknown technology");

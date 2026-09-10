@@ -41,10 +41,7 @@ namespace OpenVic {
 		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
-		memory::FixedVector<
-			pop_size_t,
-			pop_type_index_t
-		> SPAN_PROPERTY(employee_count_per_type_cache);
+		memory::FixedVector<pop_size_t, pop_type_index_t> SPAN_PROPERTY(employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
 		void hire();
@@ -54,13 +51,13 @@ namespace OpenVic {
 
 	public:
 		ResourceGatheringOperation(
-			ResourceGatheringOperationDeps const& rgo_deps,
-			ProductionType const* new_production_type_nullable,
-			fixed_point_t new_size_multiplier,
-			fixed_point_t new_revenue_yesterday,
-			fixed_point_t new_output_quantity_yesterday,
-			fixed_point_t new_unsold_quantity_yesterday,
-			memory::vector<Employee>&& new_employees
+		    ResourceGatheringOperationDeps const& rgo_deps,
+		    ProductionType const* new_production_type_nullable,
+		    fixed_point_t new_size_multiplier,
+		    fixed_point_t new_revenue_yesterday,
+		    fixed_point_t new_output_quantity_yesterday,
+		    fixed_point_t new_unsold_quantity_yesterday,
+		    memory::vector<Employee>&& new_employees
 		);
 
 		ResourceGatheringOperation(ResourceGatheringOperationDeps const& rgo_deps);

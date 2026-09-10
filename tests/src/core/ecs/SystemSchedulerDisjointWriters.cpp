@@ -1,4 +1,9 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <array>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/ChunkSystem.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
@@ -8,12 +13,7 @@
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <array>
-#include <atomic>
-#include <cstddef>
-#include <cstdint>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -32,9 +32,15 @@ using OpenVic::Date;
 // determinism gate for this path lives in SystemFiltersWorkerCountInvariance.cpp.
 
 namespace {
-	struct DwShared { int64_t v = 0; }; // written by both gate-partitioned systems
-	struct DwGate { int64_t g = 0; };   // read by the with-gate system; excluded by the other
-	struct DwOther { int64_t v = 0; };  // separate write target for the extra_reads soundness case
+	struct DwShared {
+		int64_t v = 0;
+	}; // written by both gate-partitioned systems
+	struct DwGate {
+		int64_t g = 0;
+	}; // read by the with-gate system; excluded by the other
+	struct DwOther {
+		int64_t v = 0;
+	}; // separate write target for the extra_reads soundness case
 }
 ECS_COMPONENT(DwShared, "test_DisjointWriters::Shared")
 ECS_COMPONENT(DwGate, "test_DisjointWriters::Gate")
@@ -145,10 +151,10 @@ TEST_CASE("sorted_intersects detects shared elements in sorted lists", "[ecs][Sy
 	std::vector<component_type_id_t> const empty {};
 	std::vector<component_type_id_t> const a { 1, 3, 5, 7 };
 	std::vector<component_type_id_t> const disjoint { 2, 4, 6, 8 };
-	std::vector<component_type_id_t> const overlap_first { 1, 100 };  // shares 1 (start of a)
-	std::vector<component_type_id_t> const overlap_mid { 0, 5, 99 };  // shares 5 (middle of a)
-	std::vector<component_type_id_t> const overlap_last { 7 };        // shares 7 (end of a)
-	std::vector<component_type_id_t> const multi { 3, 5 };            // shares 3 and 5
+	std::vector<component_type_id_t> const overlap_first { 1, 100 }; // shares 1 (start of a)
+	std::vector<component_type_id_t> const overlap_mid { 0, 5, 99 }; // shares 5 (middle of a)
+	std::vector<component_type_id_t> const overlap_last { 7 }; // shares 7 (end of a)
+	std::vector<component_type_id_t> const multi { 3, 5 }; // shares 3 and 5
 
 	CHECK_FALSE(sorted_intersects(empty, empty));
 	CHECK_FALSE(sorted_intersects(empty, a));
@@ -163,8 +169,7 @@ TEST_CASE("sorted_intersects detects shared elements in sorted lists", "[ecs][Sy
 
 // === Structural decisions (which stage each system lands in) ===
 
-TEST_CASE("Disjoint-filter writers of the same component share a stage",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("Disjoint-filter writers of the same component share a stage", "[ecs][SystemScheduler][DisjointWriters]") {
 	// Writes DwShared from both, but one requires DwGate and the other excludes it — provably
 	// disjoint, so the conflict edge is dropped and they co-schedule into one stage.
 	World world;
@@ -172,8 +177,7 @@ TEST_CASE("Disjoint-filter writers of the same component share a stage",
 	world.register_system<DwWriterWithoutGate>();
 
 	std::size_t const stage_with = world.debug_stage_index_of(system_type_id_of<DwWriterWithGate>());
-	std::size_t const stage_without =
-		world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>());
+	std::size_t const stage_without = world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>());
 
 	CHECK(stage_with != SIZE_MAX);
 	CHECK(stage_without != SIZE_MAX);
@@ -181,15 +185,16 @@ TEST_CASE("Disjoint-filter writers of the same component share a stage",
 	CHECK(world.debug_stage_count() == 1u);
 }
 
-TEST_CASE("Unfiltered writers of the same component stay in different stages",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("Unfiltered writers of the same component stay in different stages", "[ecs][SystemScheduler][DisjointWriters]") {
 	// No filters → not provably disjoint → the write/write conflict edge is kept → serialised.
 	World world;
 	world.register_system<DwWriterPlainA>();
 	world.register_system<DwWriterPlainB>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwWriterPlainA>())
-		!= world.debug_stage_index_of(system_type_id_of<DwWriterPlainB>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwWriterPlainA>()) !=
+	    world.debug_stage_index_of(system_type_id_of<DwWriterPlainB>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
@@ -200,15 +205,16 @@ TEST_CASE("A one-sided filter does not prove disjointness", "[ecs][SystemSchedul
 	world.register_system<DwWriterWithoutGate>();
 	world.register_system<DwWriterPlainA>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>())
-		!= world.debug_stage_index_of(system_type_id_of<DwWriterPlainA>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>()) !=
+	    world.debug_stage_index_of(system_type_id_of<DwWriterPlainA>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
 // === Soundness guard: a cross-archetype extra_read is NOT separated by disjoint iteration ===
 
-TEST_CASE("extra_reads on the conflicting component keeps systems serialised",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("extra_reads on the conflicting component keeps systems serialised", "[ecs][SystemScheduler][DisjointWriters]") {
 	// DwExtraReader writes DwOther and extra-reads DwShared; DwWriterWithoutOther writes
 	// DwShared and excludes DwOther. Their ITERATIONS are disjoint (DwOther required vs
 	// excluded), but the conflict is on DwShared, which DwExtraReader reaches CROSS-ARCHETYPE
@@ -217,13 +223,14 @@ TEST_CASE("extra_reads on the conflicting component keeps systems serialised",
 	world.register_system<DwExtraReader>();
 	world.register_system<DwWriterWithoutOther>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwExtraReader>())
-		!= world.debug_stage_index_of(system_type_id_of<DwWriterWithoutOther>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwExtraReader>()) !=
+	    world.debug_stage_index_of(system_type_id_of<DwWriterWithoutOther>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
-TEST_CASE("Without the extra_read the same pair has no conflict at all",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("Without the extra_read the same pair has no conflict at all", "[ecs][SystemScheduler][DisjointWriters]") {
 	// DwPlainOtherWriter is DwExtraReader minus the extra_reads<DwShared> declaration. It only
 	// touches DwOther, which DwWriterWithoutOther never touches → no shared component → no edge
 	// → one stage. Isolates that the extra_read (not the iteration shape) caused the
@@ -232,13 +239,17 @@ TEST_CASE("Without the extra_read the same pair has no conflict at all",
 	world.register_system<DwPlainOtherWriter>();
 	world.register_system<DwWriterWithoutOther>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwPlainOtherWriter>())
-		== world.debug_stage_index_of(system_type_id_of<DwWriterWithoutOther>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwPlainOtherWriter>()) ==
+	    world.debug_stage_index_of(system_type_id_of<DwWriterWithoutOther>())
+	);
 	CHECK(world.debug_stage_count() == 1u);
 }
 
-TEST_CASE("extra_writes on an also-required component defeats the disjoint-iteration override",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE(
+    "extra_writes on an also-required component defeats the disjoint-iteration override",
+    "[ecs][SystemScheduler][DisjointWriters]"
+) {
 	// DwHybridWriter requires {DwShared, DwGate} and ALSO declares extra_writes(DwShared);
 	// DwWriterWithoutGate writes DwShared excluding DwGate. Rule 1 holds (DwGate required vs
 	// excluded) and DwShared is in BOTH require sets — pre-hardening this pair co-scheduled,
@@ -248,13 +259,17 @@ TEST_CASE("extra_writes on an also-required component defeats the disjoint-itera
 	world.register_system<DwHybridWriter>();
 	world.register_system<DwWriterWithoutGate>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwHybridWriter>())
-		!= world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwHybridWriter>()) !=
+	    world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
-TEST_CASE("extra_reads of an also-required component defeats the disjoint-iteration override",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE(
+    "extra_reads of an also-required component defeats the disjoint-iteration override",
+    "[ecs][SystemScheduler][DisjointWriters]"
+) {
 	// Read-side twin of the previous test: DwShared is in DwHybridReader's tick pack (Read)
 	// AND in its extra_reads, so the read reaches rows outside its iteration. The pre-existing
 	// Rule 2 (require membership only) wrongly dropped this edge.
@@ -262,13 +277,16 @@ TEST_CASE("extra_reads of an also-required component defeats the disjoint-iterat
 	world.register_system<DwHybridReader>();
 	world.register_system<DwWriterWithoutGate>();
 
-	CHECK(world.debug_stage_index_of(system_type_id_of<DwHybridReader>())
-		!= world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>()));
+	CHECK(
+	    world.debug_stage_index_of(system_type_id_of<DwHybridReader>()) !=
+	    world.debug_stage_index_of(system_type_id_of<DwWriterWithoutGate>())
+	);
 	CHECK(world.debug_stage_count() == 2u);
 }
 
-TEST_CASE("Co-scheduled disjoint writers: schedule_hash is registration-order independent",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE(
+    "Co-scheduled disjoint writers: schedule_hash is registration-order independent", "[ecs][SystemScheduler][DisjointWriters]"
+) {
 	uint64_t h1 = 0;
 	uint64_t h2 = 0;
 	{
@@ -289,8 +307,7 @@ TEST_CASE("Co-scheduled disjoint writers: schedule_hash is registration-order in
 
 // === End-to-end correctness ===
 
-TEST_CASE("Co-scheduled disjoint writers each write only their own entities",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("Co-scheduled disjoint writers each write only their own entities", "[ecs][SystemScheduler][DisjointWriters]") {
 	auto run = [](bool serial) {
 		World world;
 		world.set_ecs_worker_count(4);
@@ -303,7 +320,7 @@ TEST_CASE("Co-scheduled disjoint writers each write only their own entities",
 			ungated.push_back(world.create_entity(DwShared { 0 }));
 		}
 
-		world.register_system<DwWriterWithGate>();    // +1 on entities WITH DwGate
+		world.register_system<DwWriterWithGate>(); // +1 on entities WITH DwGate
 		world.register_system<DwWriterWithoutGate>(); // +100 on entities WITHOUT DwGate
 		world.tick_systems(Date {});
 
@@ -315,7 +332,7 @@ TEST_CASE("Co-scheduled disjoint writers each write only their own entities",
 		}
 	};
 
-	run(/*serial=*/true);  // baseline
+	run(/*serial=*/true); // baseline
 	run(/*serial=*/false); // co-scheduled parallel — must match the baseline
 }
 
@@ -335,7 +352,7 @@ namespace dw_concurrency {
 		for (int i = 0; i < 2000; ++i) {
 			spin += i;
 		}
-		(void) spin;
+		(void)spin;
 		g_active.fetch_sub(1);
 	}
 
@@ -357,8 +374,7 @@ namespace dw_concurrency {
 ECS_SYSTEM(dw_concurrency::DwConcWithGate)
 ECS_SYSTEM(dw_concurrency::DwConcWithoutGate)
 
-TEST_CASE("Co-scheduled disjoint writers run their tick bodies concurrently",
-          "[ecs][SystemScheduler][DisjointWriters]") {
+TEST_CASE("Co-scheduled disjoint writers run their tick bodies concurrently", "[ecs][SystemScheduler][DisjointWriters]") {
 	using namespace dw_concurrency;
 
 	World world;
@@ -367,7 +383,7 @@ TEST_CASE("Co-scheduled disjoint writers run their tick bodies concurrently",
 	std::size_t const N = 2000; // many chunks on both sides → ample overlap opportunity
 	for (std::size_t i = 0; i < N; ++i) {
 		world.create_entity(DwShared { 0 }, DwGate { 0 }); // → DwConcWithGate
-		world.create_entity(DwShared { 0 });               // → DwConcWithoutGate
+		world.create_entity(DwShared { 0 }); // → DwConcWithoutGate
 	}
 
 	g_active.store(0);

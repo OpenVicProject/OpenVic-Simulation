@@ -69,9 +69,8 @@ namespace OpenVic::ecs {
 	template<typename C, typename = void>
 	struct has_custom_checksum : std::false_type {};
 	template<typename C>
-	struct has_custom_checksum<C,
-		std::void_t<decltype(ecs_checksum(std::declval<C const&>(), std::declval<uint64_t>()))>>
-		: std::true_type {};
+	struct has_custom_checksum<C, std::void_t<decltype(ecs_checksum(std::declval<C const&>(), std::declval<uint64_t>()))>>
+	    : std::true_type {};
 
 	template<typename C>
 	inline constexpr bool has_custom_checksum_v = has_custom_checksum<C>::value;
@@ -80,7 +79,7 @@ namespace OpenVic::ecs {
 	// archetype signature / singleton id fold. Custom hash takes precedence over byte path.
 	template<typename C>
 	inline constexpr bool is_checksummable_v =
-		std::is_empty_v<C> || has_custom_checksum_v<C> || std::has_unique_object_representations_v<C>;
+	    std::is_empty_v<C> || has_custom_checksum_v<C> || std::has_unique_object_representations_v<C>;
 
 #define OPENVIC_ECS_CHECKSUM_ENFORCE_MESSAGE \
 	"ECS checksum: this component/singleton type cannot be hashed. Fix one of: " \
@@ -101,13 +100,12 @@ namespace OpenVic::ecs {
 	uint64_t checksum_value(C const& value, uint64_t seed) {
 		static_assert(is_checksummable_v<C>, OPENVIC_ECS_CHECKSUM_ENFORCE_MESSAGE);
 		if constexpr (std::is_empty_v<C>) {
-			(void) value;
+			(void)value;
 			return seed;
 		} else if constexpr (has_custom_checksum_v<C>) {
 			static_assert(
-				std::is_same_v<
-					decltype(ecs_checksum(std::declval<C const&>(), std::declval<uint64_t>())), uint64_t>,
-				"ecs_checksum(C const&, uint64_t seed) must return uint64_t"
+			    std::is_same_v<decltype(ecs_checksum(std::declval<C const&>(), std::declval<uint64_t>())), uint64_t>,
+			    "ecs_checksum(C const&, uint64_t seed) must return uint64_t"
 			);
 			return ecs_checksum(value, seed);
 		} else {
@@ -166,8 +164,6 @@ namespace OpenVic::ecs {
 // garbage and WILL produce unstable checksums), and float values produced deterministically.
 #define ECS_CHECKSUM_BYTES(Type) \
 	inline uint64_t ecs_checksum(Type const& ecs_checksum_value_, uint64_t ecs_checksum_seed_) { \
-		static_assert( \
-			std::is_trivially_copyable_v<Type>, "ECS_CHECKSUM_BYTES requires a trivially copyable type" \
-		); \
+		static_assert(std::is_trivially_copyable_v<Type>, "ECS_CHECKSUM_BYTES requires a trivially copyable type"); \
 		return ::OpenVic::ecs::fnv1a_64_bytes(&ecs_checksum_value_, sizeof(Type), ecs_checksum_seed_); \
 	}

@@ -1,10 +1,10 @@
+#include <cstdint>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/Chunk.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstdint>
-#include <vector>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -120,7 +120,9 @@ TEST_CASE("destroy_entity in the first chunk relocates last entity from last chu
 
 	// After the destroy, only `total - 1` entities remain.
 	int count = 0;
-	world.for_each<Heavy>([&](Heavy&) { ++count; });
+	world.for_each<Heavy>([&](Heavy&) {
+		++count;
+	});
 	CHECK(count == static_cast<int>(total - 1));
 }
 
@@ -139,6 +141,8 @@ TEST_CASE("Destroying enough entities drops the trailing empty chunk", "[ecs][Ch
 	world.destroy_entity(ids.back());
 
 	std::size_t chunk_count = 0;
-	world.for_each_chunk<Heavy>([&](ChunkView<Heavy>) { ++chunk_count; });
+	world.for_each_chunk<Heavy>([&](ChunkView<Heavy>) {
+		++chunk_count;
+	});
 	CHECK(chunk_count == 1u);
 }

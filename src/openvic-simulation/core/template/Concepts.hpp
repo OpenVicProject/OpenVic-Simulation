@@ -41,15 +41,17 @@ namespace OpenVic {
 	concept not_same_as = !std::same_as<T, T2>;
 
 	template<typename Allocator, typename T, typename Value = std::remove_cvref_t<typename Allocator::value_type>>
-	concept move_insertable_allocator_for =
-		requires(Allocator& alloc, Value* value, T move) { std::allocator_traits<Allocator>::construct(alloc, value, move); };
+	concept move_insertable_allocator_for = requires(Allocator& alloc, Value* value, T move) {
+		std::allocator_traits<Allocator>::construct(alloc, value, move);
+	};
 
 	template<typename Allocator>
 	struct enable_copy_insertable : std::false_type {};
 
 	template<typename Allocator>
-	concept copy_insertable_allocator = enable_copy_insertable<Allocator>::value ||
-		move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
+	concept copy_insertable_allocator =
+	    enable_copy_insertable<Allocator>::value ||
+	    move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
 
 	template<typename T>
 	struct enable_copy_insertable<std::allocator<T>> : std::is_copy_constructible<T> {};
@@ -59,7 +61,7 @@ namespace OpenVic {
 
 	template<typename Allocator>
 	concept move_insertable_allocator =
-		enable_move_insertable<Allocator>::value || move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
+	    enable_move_insertable<Allocator>::value || move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
 
 	template<typename T>
 	struct enable_move_insertable<std::allocator<T>> : std::is_move_constructible<T> {};
@@ -111,12 +113,11 @@ namespace OpenVic {
 	concept is_strongly_typed = derived_from_specialization_of<T, type_safe::strong_typedef>;
 
 	template<typename T>
-	concept has_index = requires { typename T::index_t; } &&
-		is_strongly_typed<typename T::index_t> && requires {
-			static_cast<std::size_t>(
-				static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
-			);
-		};
+	concept has_index = requires { typename T::index_t; } && is_strongly_typed<typename T::index_t> && requires {
+		static_cast<std::size_t>(
+		    static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
+		);
+	};
 
 	// helper to avoid error 'index_t': is not a member of T
 	template<typename T, typename = void>
@@ -193,7 +194,7 @@ namespace OpenVic {
 
 	template<typename Lhs, typename Rhs = Lhs, typename Result = std::common_type_t<Lhs, Rhs>>
 	concept multipliable = requires(Lhs const& lhs, Rhs const& rhs) {
-		{ lhs* rhs } -> std::convertible_to<Result>;
+		{ lhs * rhs } -> std::convertible_to<Result>;
 	};
 
 	template<typename Lhs, typename Rhs = Lhs, typename Result = std::common_type_t<Lhs, Rhs>>

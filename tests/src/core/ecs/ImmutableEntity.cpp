@@ -1,16 +1,16 @@
-#include "openvic-simulation/core/object/Date.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
 #include "openvic-simulation/core/ecs/CommandBuffer.hpp"
 #include "openvic-simulation/core/ecs/ComponentTypeID.hpp"
 #include "openvic-simulation/core/ecs/EntityID.hpp"
 #include "openvic-simulation/core/ecs/SystemImpl.hpp"
 #include "openvic-simulation/core/ecs/SystemTypeID.hpp"
 #include "openvic-simulation/core/ecs/World.hpp"
-
-#include <cstddef>
-#include <cstdint>
-#include <type_traits>
-#include <utility>
-#include <vector>
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
@@ -54,23 +54,29 @@ namespace {
 	template<typename Obj, typename Handle, typename C, typename = void>
 	struct can_add_component : std::false_type {};
 	template<typename Obj, typename Handle, typename C>
-	struct can_add_component<Obj, Handle, C,
-		std::void_t<decltype(std::declval<Obj&>().template add_component<C>(std::declval<Handle>()))>>
-		: std::true_type {};
+	struct can_add_component<
+	    Obj,
+	    Handle,
+	    C,
+	    std::void_t<decltype(std::declval<Obj&>().template add_component<C>(std::declval<Handle>()))>> : std::true_type {};
 
 	template<typename Obj, typename Handle, typename C, typename = void>
 	struct can_remove_component : std::false_type {};
 	template<typename Obj, typename Handle, typename C>
-	struct can_remove_component<Obj, Handle, C,
-		std::void_t<decltype(std::declval<Obj&>().template remove_component<C>(std::declval<Handle>()))>>
-		: std::true_type {};
+	struct can_remove_component<
+	    Obj,
+	    Handle,
+	    C,
+	    std::void_t<decltype(std::declval<Obj&>().template remove_component<C>(std::declval<Handle>()))>> : std::true_type {};
 
 	template<typename Obj, typename Handle, typename C, typename = void>
 	struct can_get_component : std::false_type {};
 	template<typename Obj, typename Handle, typename C>
-	struct can_get_component<Obj, Handle, C,
-		std::void_t<decltype(std::declval<Obj&>().template get_component<C>(std::declval<Handle>()))>>
-		: std::true_type {};
+	struct can_get_component<
+	    Obj,
+	    Handle,
+	    C,
+	    std::void_t<decltype(std::declval<Obj&>().template get_component<C>(std::declval<Handle>()))>> : std::true_type {};
 
 	// Structural mutation IS reachable on a plain EntityID, but NOT on an ImmutableEntityID
 	// (no overload accepts it and there is no implicit conversion). This is the guarantee.
@@ -99,8 +105,9 @@ namespace {
 	static_assert(std::is_same_v<decltype(std::declval<ImmutableEntityID>().unsafe_mutable_id()), EntityID>);
 
 	// The factory hands back the strong handle, not a plain EntityID.
-	static_assert(std::is_same_v<
-		decltype(std::declval<World&>().create_immutable_entity(std::declval<ImmA>())), ImmutableEntityID>);
+	static_assert(
+	    std::is_same_v<decltype(std::declval<World&>().create_immutable_entity(std::declval<ImmA>())), ImmutableEntityID>
+	);
 }
 
 TEST_CASE("Immutable compile-time guarantees hold (static_assert wall)", "[ecs][World][immutable][compiletime]") {
@@ -156,8 +163,7 @@ TEST_CASE("is_immutable reports per-entity immutability", "[ecs][World][immutabl
 	CHECK_FALSE(world.is_immutable(reused));
 }
 
-TEST_CASE("is_immutable: a deferred immutable create is not immutable until apply",
-		  "[ecs][World][immutable][cmd]") {
+TEST_CASE("is_immutable: a deferred immutable create is not immutable until apply", "[ecs][World][immutable][cmd]") {
 	World world;
 	CommandBuffer cb;
 	ImmutableEntityID const e = cb.create_immutable_entity(world, ImmA { 7 });
@@ -189,8 +195,10 @@ TEST_CASE("remove_component on a laundered immutable id is refused", "[ecs][Worl
 	CHECK(world.has_component<ImmB>(e));
 }
 
-TEST_CASE("structural ops still succeed on a normal mutable entity (backstop is immutability-gated)",
-		  "[ecs][World][immutable][backstop]") {
+TEST_CASE(
+    "structural ops still succeed on a normal mutable entity (backstop is immutability-gated)",
+    "[ecs][World][immutable][backstop]"
+) {
 	World world;
 	EntityID const e = world.create_entity(ImmA { 5 });
 
@@ -200,8 +208,9 @@ TEST_CASE("structural ops still succeed on a normal mutable entity (backstop is 
 	CHECK_FALSE(world.has_component<ImmB>(e));
 }
 
-TEST_CASE("CommandBuffer add_component on a laundered immutable id is refused at apply",
-		  "[ecs][World][immutable][backstop][cmd]") {
+TEST_CASE(
+    "CommandBuffer add_component on a laundered immutable id is refused at apply", "[ecs][World][immutable][backstop][cmd]"
+) {
 	World world;
 	ImmutableEntityID const e = world.create_immutable_entity(ImmA { 5 });
 
@@ -213,8 +222,9 @@ TEST_CASE("CommandBuffer add_component on a laundered immutable id is refused at
 	CHECK(world.get_component<ImmA>(e)->v == 5);
 }
 
-TEST_CASE("CommandBuffer remove_component on a laundered immutable id is refused at apply",
-		  "[ecs][World][immutable][backstop][cmd]") {
+TEST_CASE(
+    "CommandBuffer remove_component on a laundered immutable id is refused at apply", "[ecs][World][immutable][backstop][cmd]"
+) {
 	World world;
 	ImmutableEntityID const e = world.create_immutable_entity(ImmA { 5 }, ImmB { 6 });
 
@@ -225,8 +235,7 @@ TEST_CASE("CommandBuffer remove_component on a laundered immutable id is refused
 	CHECK(world.has_component<ImmB>(e));
 }
 
-TEST_CASE("CommandBuffer::create_immutable_entity (serial) finalises an immutable entity",
-		  "[ecs][World][immutable][cmd]") {
+TEST_CASE("CommandBuffer::create_immutable_entity (serial) finalises an immutable entity", "[ecs][World][immutable][cmd]") {
 	World world;
 	CommandBuffer cb;
 	ImmutableEntityID const e = cb.create_immutable_entity(world, ImmA { 11 });
@@ -244,8 +253,7 @@ TEST_CASE("CommandBuffer::create_immutable_entity (serial) finalises an immutabl
 	CHECK_FALSE(world.has_component<ImmB>(e));
 }
 
-TEST_CASE("Deferred create_immutable_entity + same-buffer add: create runs, add refused",
-		  "[ecs][World][immutable][cmd]") {
+TEST_CASE("Deferred create_immutable_entity + same-buffer add: create runs, add refused", "[ecs][World][immutable][cmd]") {
 	World world;
 	CommandBuffer cb;
 	ImmutableEntityID const e = cb.create_immutable_entity(world, ImmA { 2 });
@@ -257,8 +265,7 @@ TEST_CASE("Deferred create_immutable_entity + same-buffer add: create runs, add 
 	CHECK_FALSE(world.has_component<ImmB>(e));
 }
 
-TEST_CASE("A reused slot comes back mutable after an immutable entity is destroyed",
-		  "[ecs][World][immutable][lifecycle]") {
+TEST_CASE("A reused slot comes back mutable after an immutable entity is destroyed", "[ecs][World][immutable][lifecycle]") {
 	World world;
 	ImmutableEntityID const e = world.create_immutable_entity(ImmA { 1 });
 	uint32_t const idx = e.index;
@@ -282,8 +289,7 @@ TEST_CASE("Stale ImmutableEntityID fails is_alive after slot reuse", "[ecs][Worl
 	CHECK_FALSE(world.is_alive(e));
 }
 
-TEST_CASE("Immutable entity survives sibling churn (re-fetch, not pointer identity)",
-		  "[ecs][World][immutable][stability]") {
+TEST_CASE("Immutable entity survives sibling churn (re-fetch, not pointer identity)", "[ecs][World][immutable][stability]") {
 	World world;
 	ImmutableEntityID const keep = world.create_immutable_entity(ImmA { 100 });
 
@@ -409,8 +415,9 @@ namespace {
 	}
 }
 
-TEST_CASE("SystemThreaded can spawn immutable entities via cmd.create_immutable_entity",
-		  "[ecs][World][immutable][cmd][system]") {
+TEST_CASE(
+    "SystemThreaded can spawn immutable entities via cmd.create_immutable_entity", "[ecs][World][immutable][cmd][system]"
+) {
 	SpawnResult const r = run_immutable_spawn(4);
 
 	std::size_t expected = 0;
@@ -421,8 +428,7 @@ TEST_CASE("SystemThreaded can spawn immutable entities via cmd.create_immutable_
 	CHECK(r.immutable_count == expected); // all spawned entities are immutable
 }
 
-TEST_CASE("Immutable in-system spawn is worker-count invariant",
-		  "[ecs][World][immutable][cmd][system][determinism]") {
+TEST_CASE("Immutable in-system spawn is worker-count invariant", "[ecs][World][immutable][cmd][system][determinism]") {
 	SpawnResult const baseline = run_immutable_spawn(1);
 
 	for (uint32_t wc : { 1u, 2u, 4u, 8u, 16u }) {

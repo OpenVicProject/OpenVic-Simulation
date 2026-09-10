@@ -13,7 +13,7 @@
 
 namespace OpenVic {
 	// not thread safe
-	template <typename Container>
+	template<typename Container>
 	struct bulk_insert_wrapper {
 	public:
 		// Member types based on std::vector
@@ -39,11 +39,11 @@ namespace OpenVic {
 		std::atomic<size_type> pending_extra_size {};
 
 		constexpr void flush_pending_room() {
-			if (pending_extra_size > size_type{}) {
+			if (pending_extra_size > size_type {}) {
 				size_type valid_size { size() };
 				container.resize(valid_size + pending_extra_size);
 				container.resize(valid_size);
-				pending_extra_size = size_type{};
+				pending_extra_size = size_type {};
 			}
 		}
 
@@ -55,9 +55,8 @@ namespace OpenVic {
 		constexpr bulk_insert_wrapper() noexcept {};
 
 		// Forwarding constructor for custom allocators or initial capacities
-		template <typename... Args>
-		constexpr explicit bulk_insert_wrapper(Args&&... args)
-			: container(std::forward<Args>(args)...) {}
+		template<typename... Args>
+		constexpr explicit bulk_insert_wrapper(Args&&... args) : container(std::forward<Args>(args)...) {}
 
 		// thread safe
 		constexpr void make_room_for(const size_type count) noexcept {
@@ -85,15 +84,19 @@ namespace OpenVic {
 
 		constexpr reference back() OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
-			return container[size()-1];
+			return container[size() - 1];
 		}
 		constexpr const_reference back() const OV_LIFETIME_BOUND {
 			OV_HARDEN_ASSERT_NONEMPTY("back");
-			return container[size()-1];
+			return container[size() - 1];
 		}
 
-		constexpr value_type* data() noexcept OV_LIFETIME_BOUND { return container.data(); }
-		constexpr value_type const* data() const noexcept OV_LIFETIME_BOUND { return container.data(); }
+		constexpr value_type* data() noexcept OV_LIFETIME_BOUND {
+			return container.data();
+		}
+		constexpr value_type const* data() const noexcept OV_LIFETIME_BOUND {
+			return container.data();
+		}
 
 		// Iterators based on std::vector
 		constexpr iterator begin() noexcept OV_LIFETIME_BOUND {
@@ -137,19 +140,27 @@ namespace OpenVic {
 		}
 
 		// Capacity based on std::vector
-		constexpr bool empty() const noexcept { return size() <= size_type{}; }
-		constexpr size_type size() const noexcept { return container.size(); }
-		constexpr size_type max_size() const noexcept { return container.max_size(); }
+		constexpr bool empty() const noexcept {
+			return size() <= size_type {};
+		}
+		constexpr size_type size() const noexcept {
+			return container.size();
+		}
+		constexpr size_type max_size() const noexcept {
+			return container.max_size();
+		}
 		// reserve() is omitted as we manage that via make_room_for
-		constexpr size_type capacity() const noexcept { return container.capacity(); }
+		constexpr size_type capacity() const noexcept {
+			return container.capacity();
+		}
 		constexpr void shrink_to_fit() {
-			pending_extra_size = size_type{};
+			pending_extra_size = size_type {};
 			container.shrink_to_fit();
 		}
 
 		// Modifiers based on std::vector
 		constexpr void clear() noexcept {
-			pending_extra_size = size_type{};
+			pending_extra_size = size_type {};
 			container.clear();
 		}
 
@@ -165,7 +176,6 @@ namespace OpenVic {
 		constexpr void push_back(value_type const& value) {
 			flush_pending_room();
 			container.push_back(value);
-
 		}
 		constexpr void push_back(value_type&& value) {
 			flush_pending_room();
@@ -178,12 +188,12 @@ namespace OpenVic {
 			return container.emplace_back(std::forward<Args>(args)...);
 		}
 
-		template <typename OtherContainerT>
+		template<typename OtherContainerT>
 		constexpr void append_range(OtherContainerT const& other) {
 			append_range(other.begin(), other.end());
 		}
 
-		template <typename InputIt>
+		template<typename InputIt>
 		constexpr void append_range(const InputIt first, const InputIt last) {
 			flush_pending_room();
 

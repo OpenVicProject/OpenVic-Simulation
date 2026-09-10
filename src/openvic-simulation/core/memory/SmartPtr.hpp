@@ -7,8 +7,8 @@
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/smart_ptr.hpp>
 
-#include "openvic-simulation/core/memory/make_tracked_allocator.hpp"
 #include "openvic-simulation/core/memory/MemoryTracker.hpp"
+#include "openvic-simulation/core/memory/make_tracked_allocator.hpp"
 
 namespace OpenVic::memory {
 	template<class RawAllocator>
@@ -35,7 +35,7 @@ namespace OpenVic::memory {
 	requires(!std::is_array_v<T>)
 	unique_ptr<T, std::decay_t<RawAllocator>> allocate_unique(RawAllocator&& alloc, Args&&... args) {
 		return foonathan::memory::allocate_unique<T>(
-			OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), std::forward<Args>(args)...
+		    OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), std::forward<Args>(args)...
 		);
 	}
 
@@ -43,19 +43,21 @@ namespace OpenVic::memory {
 	requires(std::is_array_v<T>)
 	unique_ptr<T, std::decay_t<RawAllocator>> allocate_unique(RawAllocator&& alloc, std::size_t size) {
 		return foonathan::memory::allocate_unique<T, tracker<RawAllocator>>(
-			OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), size
+		    OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), size
 		);
 	}
 #else
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
 	using unique_ptr = std::conditional_t<
-		will_optimize_deleter_for<RawAllocator>::value, std::unique_ptr<T>,
-		foonathan::memory::unique_ptr<T, tracker<RawAllocator>>>;
+	    will_optimize_deleter_for<RawAllocator>::value,
+	    std::unique_ptr<T>,
+	    foonathan::memory::unique_ptr<T, tracker<RawAllocator>>>;
 
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
 	using unique_base_ptr = std::conditional_t<
-		will_optimize_deleter_for<RawAllocator>::value, std::unique_ptr<T>,
-		foonathan::memory::unique_base_ptr<T, tracker<RawAllocator>>>;
+	    will_optimize_deleter_for<RawAllocator>::value,
+	    std::unique_ptr<T>,
+	    foonathan::memory::unique_base_ptr<T, tracker<RawAllocator>>>;
 
 	template<typename T, class RawAllocator, typename... Args>
 	requires(!std::is_array_v<T>)
@@ -64,7 +66,7 @@ namespace OpenVic::memory {
 			return std::make_unique<T>(std::forward<Args>(args)...);
 		} else {
 			return foonathan::memory::allocate_unique<T>(
-				OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), std::forward<Args>(args)...
+			    OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), std::forward<Args>(args)...
 			);
 		}
 	}
@@ -76,7 +78,7 @@ namespace OpenVic::memory {
 			return std::make_unique<T>(size);
 		} else {
 			return foonathan::memory::allocate_unique<T, tracker<RawAllocator>>(
-				OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), size
+			    OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), size
 			);
 		}
 	}
@@ -91,10 +93,7 @@ namespace OpenVic::memory {
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator, typename... Args>
 	requires(std::is_unbounded_array_v<T>)
 	static inline unique_ptr<T, RawAllocator> make_unique(size_t n) {
-		return allocate_unique<T>(
-			OpenVic::memory::make_tracked_allocator(RawAllocator {}),
-			n
-		);
+		return allocate_unique<T>(OpenVic::memory::make_tracked_allocator(RawAllocator {}), n);
 	}
 
 	template<typename T, class RawAllocator = foonathan::memory::default_allocator, typename... Args>
@@ -126,10 +125,7 @@ namespace OpenVic::memory {
 	template<typename T, class RawAllocator, typename... Args>
 	std::shared_ptr<T> allocate_shared(RawAllocator&& alloc, Args&&... args) {
 		return foonathan::memory::allocate_shared<T>(
-			OpenVic::memory::make_tracked_allocator(
-				std::forward<RawAllocator>(alloc)
-			),
-			std::forward<Args>(args)...
+		    OpenVic::memory::make_tracked_allocator(std::forward<RawAllocator>(alloc)), std::forward<Args>(args)...
 		);
 	}
 
