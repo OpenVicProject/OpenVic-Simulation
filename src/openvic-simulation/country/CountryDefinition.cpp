@@ -66,7 +66,7 @@ bool CountryDefinitionManager::add_country(
 	static constexpr colour_t default_colour = colour_t::fill_as(colour_t::max_value);
 
 	return country_definitions.emplace_item(
-	    identifier, //
+	    identifier,
 	    identifier,
 	    colour,
 	    index_from_count<CountryDefinition::index_t>(get_country_definition_count()),

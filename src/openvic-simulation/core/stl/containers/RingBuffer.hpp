@@ -548,9 +548,7 @@ namespace OpenVic::stl {
 
 		/// Moves the read_size of the buffer from the front into r_buffer and erases read_size from the buffer.
 		/// If read_size exceeds capacity(), read_size will become capacity().
-		std::span<value_type> read_buffer_to( //
-			pointer r_buffer, size_type read_size = std::numeric_limits<size_type>::max()
-		) {
+		std::span<value_type> read_buffer_to(pointer r_buffer, size_type read_size = std::numeric_limits<size_type>::max()) {
 			read_size = std::min(read_size, capacity());
 			iterator last = begin();
 			ranges::advance(last, read_size);

@@ -35,12 +35,9 @@ namespace OpenVic::_detail::forwardable_span {
 
 	template<class Range, class ElementType>
 	concept span_compatible_range =
-	    !is_std_span<std::remove_cvref_t<Range>>::value && //
-	    std::ranges::contiguous_range<Range> && //
-	    std::ranges::sized_range<Range> && //
-	    (std::ranges::borrowed_range<Range> || std::is_const_v<ElementType>) && //
-	    !is_std_array<std::remove_cvref_t<Range>>::value && //
-	    !std::is_array_v<std::remove_cvref_t<Range>> && //
+	    !is_std_span<std::remove_cvref_t<Range>>::value && std::ranges::contiguous_range<Range> &&
+	    std::ranges::sized_range<Range> && (std::ranges::borrowed_range<Range> || std::is_const_v<ElementType>) &&
+	    !is_std_array<std::remove_cvref_t<Range>>::value && !std::is_array_v<std::remove_cvref_t<Range>> &&
 	    std::is_convertible_v<std::remove_reference_t<std::ranges::range_reference_t<Range>> (*)[], ElementType (*)[]>;
 
 	template<class From, class To>
@@ -291,8 +288,8 @@ namespace OpenVic::_detail::forwardable_span {
 			}
 		}
 
-		[[nodiscard]] constexpr span<element_type, dynamic_extent> subspan( //
-			size_type offset, size_type count = dynamic_extent
+		[[nodiscard]] constexpr span<element_type, dynamic_extent> subspan(
+		    size_type offset, size_type count = dynamic_extent
 		) const {
 			if (std::is_constant_evaluated() && !(offset <= size())) {
 				std::abort();

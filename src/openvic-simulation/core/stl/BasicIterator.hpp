@@ -80,8 +80,8 @@ namespace OpenVic {
 	};
 
 	template<typename PtrL, typename PtrR, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==( //
-		basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==(
+	    basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
 	)
 	requires requires {
 		{ lhs.base() == rhs.base() } -> std::convertible_to<bool>;
@@ -91,15 +91,15 @@ namespace OpenVic {
 	}
 
 	template<typename PtrL, typename PtrR, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
-		basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>(
+	    basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
 	) {
 		return three_way_compare(lhs.base(), rhs.base());
 	}
 
 	template<typename Ptr, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==( //
-		basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==(
+	    basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
 	)
 	requires requires {
 		{ lhs.base() == rhs.base() } -> std::convertible_to<bool>;
@@ -109,29 +109,29 @@ namespace OpenVic {
 	}
 
 	template<typename Ptr, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
-		basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>(
+	    basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
 	) {
 		return three_way_compare(lhs.base(), rhs.base());
 	}
 
 	template<typename ItL, typename ItR, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator-( //
-		basic_iterator<ItL, ContainerTag> const& lhs, basic_iterator<ItR, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator-(
+	    basic_iterator<ItL, ContainerTag> const& lhs, basic_iterator<ItR, ContainerTag> const& rhs
 	) -> decltype(lhs.base() - rhs.base()) {
 		return lhs.base() - rhs.base();
 	}
 
 	template<typename It, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr typename basic_iterator<It, ContainerTag>::difference_type operator-( //
-		basic_iterator<It, ContainerTag> const& lhs, basic_iterator<It, ContainerTag> const& rhs
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr typename basic_iterator<It, ContainerTag>::difference_type operator-(
+	    basic_iterator<It, ContainerTag> const& lhs, basic_iterator<It, ContainerTag> const& rhs
 	) {
 		return lhs.base() - rhs.base();
 	}
 
 	template<typename It, typename ContainerTag>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr basic_iterator<It, ContainerTag> operator+( //
-		typename basic_iterator<It, ContainerTag>::difference_type n, basic_iterator<It, ContainerTag> const& i
+	[[nodiscard]] OV_ALWAYS_INLINE constexpr basic_iterator<It, ContainerTag> operator+(
+	    typename basic_iterator<It, ContainerTag>::difference_type n, basic_iterator<It, ContainerTag> const& i
 	) {
 		return basic_iterator<It, ContainerTag>(i.base() + n);
 	}

@@ -41,7 +41,7 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 
 		// Find point closer to end_point, or same distance to end_point but closer to begin_point.
 		if (last_closest_point == search.end() || last_closest_point.value().abs_f_score > p.value().abs_f_score ||
-		    (last_closest_point.value().abs_f_score >= p.value().abs_f_score && //
+		    (last_closest_point.value().abs_f_score >= p.value().abs_f_score &&
 		     last_closest_point.value().g_score > p.value().g_score)) {
 			last_closest_point = p;
 		}

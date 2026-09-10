@@ -222,8 +222,8 @@ namespace OpenVic {
 				     colour_traits::blue_from_argb(integer) };
 		}
 
-		OV_SPEED_INLINE static constexpr basic_colour_t from_floats( //
-			float r, float g, float b, float a = colour_traits::alpha_to_float(max_value)
+		OV_SPEED_INLINE static constexpr basic_colour_t from_floats(
+		    float r, float g, float b, float a = colour_traits::alpha_to_float(max_value)
 		)
 		requires(colour_traits::has_alpha)
 		{
@@ -240,8 +240,8 @@ namespace OpenVic {
 		}
 
 	private:
-		OV_SPEED_INLINE static constexpr std::from_chars_result parse_from_chars( //
-			const char* first, const char* last, integer_type& value
+		OV_SPEED_INLINE static constexpr std::from_chars_result parse_from_chars(
+		    const char* first, const char* last, integer_type& value
 		) {
 			if (first < last && first[0] == '0' && (first + 1 < last) && (first[1] == 'x' || first[1] == 'X')) {
 				first += 2;

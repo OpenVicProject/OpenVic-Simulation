@@ -203,21 +203,13 @@ struct Ast : ovdl::SymbolIntern {
 };
 
 TEST_CASE("NodeTools AST get_type_name", "[NodeTools][NodeTools-ast-get_type_name]") {
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::FileTree) == "ovdl::v2script::ast::FileTree"sv
-	);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::FileTree) == "ovdl::v2script::ast::FileTree"sv);
 	CONSTEXPR_CHECK(
 	    ast::get_type_name(ovdl::v2script::ast::NodeKind::IdentifierValue) == "ovdl::v2script::ast::IdentifierValue"sv
 	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::StringValue) == "ovdl::v2script::ast::StringValue"sv
-	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::ListValue) == "ovdl::v2script::ast::ListValue"sv
-	);
-	CONSTEXPR_CHECK( //
-		ast::get_type_name(ovdl::v2script::ast::NodeKind::NullValue) == "ovdl::v2script::ast::NullValue"sv
-	);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::StringValue) == "ovdl::v2script::ast::StringValue"sv);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::ListValue) == "ovdl::v2script::ast::ListValue"sv);
+	CONSTEXPR_CHECK(ast::get_type_name(ovdl::v2script::ast::NodeKind::NullValue) == "ovdl::v2script::ast::NullValue"sv);
 	CONSTEXPR_CHECK(
 	    ast::get_type_name(ovdl::v2script::ast::NodeKind::EventStatement) == "ovdl::v2script::ast::EventStatement"sv
 	);

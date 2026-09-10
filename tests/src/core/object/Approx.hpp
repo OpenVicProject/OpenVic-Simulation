@@ -19,9 +19,7 @@ namespace OpenVic::testing {
 
 	struct approx {
 		constexpr approx(double value) :
-		    _epsilon(static_cast<double>(std::numeric_limits<float>::epsilon()) * 100), //
-		    _scale(1.0), //
-		    _value(value) {}
+		    _epsilon(static_cast<double>(std::numeric_limits<float>::epsilon()) * 100), _scale(1.0), _value(value) {}
 
 		constexpr approx operator()(double value) const {
 			approx approx(value);

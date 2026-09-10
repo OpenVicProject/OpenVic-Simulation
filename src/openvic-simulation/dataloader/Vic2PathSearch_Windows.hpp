@@ -142,8 +142,8 @@ namespace OpenVic::Windows {
 	};
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	memory::basic_string<RCHAR_T> ReadRegValue( //
-		HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
+	memory::basic_string<RCHAR_T> ReadRegValue(
+	    HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
 	) {
 		RegistryKey registry_key(root, key, name);
 		if constexpr (std::is_same_v<RCHAR_T, char>) {

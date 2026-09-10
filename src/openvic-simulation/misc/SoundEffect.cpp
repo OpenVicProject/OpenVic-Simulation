@@ -5,10 +5,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-SoundEffect::SoundEffect( //
-	std::string_view new_identifier, std::filesystem::path&& new_file, fixed_point_t new_volume
-)
-	: HasIdentifier { new_identifier }, file { std::move(new_file) }, volume { new_volume } {}
+SoundEffect::SoundEffect(std::string_view new_identifier, std::filesystem::path&& new_file, fixed_point_t new_volume) :
+    HasIdentifier { new_identifier }, file { std::move(new_file) }, volume { new_volume } {}
 
 bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::string_view sfx_identifier, ast::NodeCPtr root) {
 	std::filesystem::path file {};
@@ -22,14 +20,10 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 	};
 
 	fixed_point_t volume = 1;
-	bool ret = expect_dictionary_keys(
-	    "file",
-	    ONE_EXACTLY,
-	    expect_string(file_callback), //
-	    "volume",
-	    ZERO_OR_ONE,
-	    expect_fixed_point(assign_variable_callback(volume)) //
-	)(root);
+	bool ret =
+	    expect_dictionary_keys("file", ONE_EXACTLY, expect_string(file_callback), "volume", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(volume)))(
+	        root
+	    );
 
 	if (sfx_identifier.empty()) {
 		spdlog::error_s("Invalid sound identifier - empty!");
@@ -44,9 +38,7 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 }
 
 bool SoundEffectManager::load_sound_defines_file(Dataloader const& dataloader, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(sound_effects, //
-		[this, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
-			return _load_sound_define(dataloader, key, value);
-		}
-	)(root);
+	return expect_dictionary_reserve_length(sound_effects, [this, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
+		return _load_sound_define(dataloader, key, value);
+	})(root);
 }

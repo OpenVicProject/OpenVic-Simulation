@@ -131,35 +131,35 @@ namespace std {
 			return value_type::parse_raw(base_type::exchange(fp.get_raw_value(), m));
 		}
 
-		OV_ALWAYS_INLINE bool compare_exchange_weak( //
-			value_type& fp1, value_type fp2, memory_order m1, memory_order m2
+		OV_ALWAYS_INLINE bool compare_exchange_weak(
+		    value_type& fp1, value_type fp2, memory_order m1, memory_order m2
 		) noexcept {
 			return base_type::compare_exchange_weak(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m1, m2);
 		}
-		OV_ALWAYS_INLINE bool compare_exchange_weak( //
-			value_type& fp1, value_type fp2, memory_order m1, memory_order m2
+		OV_ALWAYS_INLINE bool compare_exchange_weak(
+		    value_type& fp1, value_type fp2, memory_order m1, memory_order m2
 		) volatile noexcept {
 			return base_type::compare_exchange_weak(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m1, m2);
 		}
 
-		OV_ALWAYS_INLINE bool compare_exchange_weak( //
-			value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
+		OV_ALWAYS_INLINE bool compare_exchange_weak(
+		    value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
 		) noexcept {
 			return base_type::compare_exchange_weak(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m);
 		}
-		OV_ALWAYS_INLINE bool compare_exchange_weak( //
-			value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
+		OV_ALWAYS_INLINE bool compare_exchange_weak(
+		    value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
 		) volatile noexcept {
 			return base_type::compare_exchange_weak(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m);
 		}
 
-		OV_ALWAYS_INLINE bool compare_exchange_strong( //
-			value_type& fp1, value_type fp2, memory_order m1, memory_order m2
+		OV_ALWAYS_INLINE bool compare_exchange_strong(
+		    value_type& fp1, value_type fp2, memory_order m1, memory_order m2
 		) noexcept {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m1, m2);
 		}
-		OV_ALWAYS_INLINE bool compare_exchange_strong( //
-			value_type& fp1, value_type fp2, memory_order m1, memory_order m2
+		OV_ALWAYS_INLINE bool compare_exchange_strong(
+		    value_type& fp1, value_type fp2, memory_order m1, memory_order m2
 		) volatile noexcept {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m1, m2);
 		}
@@ -169,8 +169,8 @@ namespace std {
 		) noexcept {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m);
 		}
-		OV_ALWAYS_INLINE bool compare_exchange_strong( //
-			value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
+		OV_ALWAYS_INLINE bool compare_exchange_strong(
+		    value_type& fp1, value_type fp2, memory_order m = memory_order_seq_cst
 		) volatile noexcept {
 			return base_type::compare_exchange_strong(*reinterpret_cast<underlying_type*>(&fp1), fp2.get_raw_value(), m);
 		}

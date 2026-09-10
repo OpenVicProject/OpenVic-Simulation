@@ -53,8 +53,8 @@ namespace OpenVic {
 		};
 
 	protected:
-		virtual bool _solve( //
-			search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path
+		virtual bool _solve(
+		    search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path
 		) override;
 	};
 

@@ -1136,15 +1136,16 @@ namespace OpenVic::cow {
 
 namespace std {
 	template<typename T, typename Allocator>
-	inline void swap( //
-		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& x, typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& y
+	inline void swap(
+	    typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& x,
+	    typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& y
 	) {
 		x.swap(y);
 	}
 
 	template<typename T, typename Allocator, typename Predicate>
-	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase_if( //
-		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, Predicate pred
+	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase_if(
+	    typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, Predicate pred
 	) {
 		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& ucont = cont;
 		const auto orig_size = cont.size();
@@ -1159,8 +1160,8 @@ namespace std {
 	}
 
 	template<typename T, typename Allocator, typename U>
-	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase( //
-		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, U const& value
+	inline typename ::OpenVic::stl::cow_vector<T, Allocator>::size_type erase(
+	    typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& cont, U const& value
 	) {
 		typename ::OpenVic::stl::cow_vector<T, Allocator>::writer& ucont = cont;
 		const auto orig_size = cont.size();

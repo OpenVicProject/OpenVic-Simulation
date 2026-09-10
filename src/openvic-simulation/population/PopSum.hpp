@@ -32,15 +32,11 @@ namespace OpenVic {
 
 			using ov_return_by_value = void;
 
-			friend inline constexpr fixed_point_t operator*( //
-				const SelfT lhs, const std::same_as<fixed_point_t> auto rhs
-			) {
+			friend inline constexpr fixed_point_t operator*(const SelfT lhs, const std::same_as<fixed_point_t> auto rhs) {
 				return type_safe::get(lhs) * rhs;
 			}
 
-			friend inline constexpr fixed_point_t operator*( //
-				const std::same_as<fixed_point_t> auto lhs, const SelfT rhs
-			) {
+			friend inline constexpr fixed_point_t operator*(const std::same_as<fixed_point_t> auto lhs, const SelfT rhs) {
 				return lhs * type_safe::get(rhs);
 			}
 
@@ -49,15 +45,11 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr fixed_point_t operator/( //
-				const SelfT lhs, const std::same_as<fixed_point_t> auto rhs
-			) {
+			friend inline constexpr fixed_point_t operator/(const SelfT lhs, const std::same_as<fixed_point_t> auto rhs) {
 				return type_safe::get(lhs) / rhs;
 			}
 
-			friend inline constexpr fixed_point_t operator/( //
-				const std::same_as<fixed_point_t> auto lhs, const SelfT rhs
-			) {
+			friend inline constexpr fixed_point_t operator/(const std::same_as<fixed_point_t> auto lhs, const SelfT rhs) {
 				return lhs / type_safe::get(rhs);
 			}
 

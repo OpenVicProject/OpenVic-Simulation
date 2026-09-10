@@ -52,9 +52,8 @@ namespace spdlog {
 	template<typename... Args>
 	log_s(level::level_enum level, format_string_t<Args...> fmt, Args&&... args) -> log_s<Args...>;
 	template<typename... Args>
-	log_s( //
-		std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args
-	) -> log_s<Args...>;
+	log_s(std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args)
+	    -> log_s<Args...>;
 
 	template<typename T>
 	struct log_s<T> {

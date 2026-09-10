@@ -176,8 +176,8 @@ namespace OpenVic {
 			return WEEKDAY_NAMES[get_day_of_week()];
 		}
 
-		OV_SPEED_INLINE constexpr std::to_chars_result to_chars( //
-			char* first, char* last, bool pad_year = false, bool pad_month = true, bool pad_day = true
+		OV_SPEED_INLINE constexpr std::to_chars_result to_chars(
+		    char* first, char* last, bool pad_year = false, bool pad_month = true, bool pad_day = true
 		) const {
 			year_t year = get_year();
 			if (year < 0) {

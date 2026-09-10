@@ -117,7 +117,7 @@ TEST_CASE("dvec3_t Length methods", "[vec3_t][dvec3_t][dvec3_t-length]") {
 TEST_CASE("fvec3_t Operators", "[vec3_t][fvec3_t][fvec3_t-operators]") {
 	static constexpr fixed_point_t _2_30 = fixed_point_t::_2 + fixed_point_t::_0_20 + fixed_point_t::_0_10;
 	static constexpr fixed_point_t _4_90 = fixed_point_t::_4 + fixed_point_t::_0_50 + fixed_point_t::_0_20 * 2;
-	static constexpr fixed_point_t _7_80 = //
+	static constexpr fixed_point_t _7_80 =
 	    fixed_point_t::_4 + fixed_point_t::_2 + fixed_point_t::_1 + fixed_point_t::_0_50 + fixed_point_t::_0_20 +
 	    fixed_point_t::_0_10;
 	static constexpr fixed_point_t _1_20 = fixed_point_t::_0_20 * 6;
@@ -140,9 +140,9 @@ TEST_CASE("fvec3_t Operators", "[vec3_t][fvec3_t][fvec3_t-operators]") {
 	CONSTEXPR_CHECK(
 	    decimal1 - decimal2 ==
 	    testing::approx_vec3 {
-	        (1.1_a).epsilon(testing::INACCURATE_EPSILON), //
-	        (1.5_a).epsilon(testing::INACCURATE_EPSILON), //
-	        (2.2_a).epsilon(testing::INACCURATE_EPSILON) //
+	        (1.1_a).epsilon(testing::INACCURATE_EPSILON),
+	        (1.5_a).epsilon(testing::INACCURATE_EPSILON),
+	        (2.2_a).epsilon(testing::INACCURATE_EPSILON),
 	    }
 	);
 	CONSTEXPR_CHECK(power1 - power2 == testing::approx_vec3(0.25, 1.375, 0.375));
@@ -150,9 +150,9 @@ TEST_CASE("fvec3_t Operators", "[vec3_t][fvec3_t][fvec3_t-operators]") {
 	CONSTEXPR_CHECK(
 	    decimal1 * decimal2 ==
 	    testing::approx_vec3 {
-	        (2.76_a).epsilon(testing::INACCURATE_EPSILON), //
-	        (16.66_a).epsilon(testing::INACCURATE_EPSILON), //
-	        (43.68_a).epsilon(testing::INACCURATE_EPSILON) //
+	        (2.76_a).epsilon(testing::INACCURATE_EPSILON),
+	        (16.66_a).epsilon(testing::INACCURATE_EPSILON),
+	        (43.68_a).epsilon(testing::INACCURATE_EPSILON),
 	    }
 	);
 	CONSTEXPR_CHECK(power1 * power2 == testing::approx_vec3(0.375, 0.1875, 0.15625));

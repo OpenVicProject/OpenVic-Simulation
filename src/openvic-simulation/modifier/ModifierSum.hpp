@@ -49,7 +49,6 @@ namespace OpenVic {
 		    modifier { nullptr }, multiplier { fixed_point_t::_0 },
 		    source { static_cast<std::variant_alternative_t<0, modifier_source_t>>(nullptr) }, excluded_targets {} {}
 
-		//
 		constexpr modifier_entry_t(
 		    Modifier const& new_modifier,
 		    fixed_point_t new_multiplier,

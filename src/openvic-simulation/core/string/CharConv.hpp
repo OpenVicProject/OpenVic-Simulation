@@ -8,8 +8,8 @@
 
 namespace OpenVic {
 	template<typename T>
-	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
-		char const* const first, char const* const last, T& raw_value, const int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result from_chars(
+	    char const* const first, char const* const last, T& raw_value, const int base = 10
 	) noexcept {
 		if (!std::is_constant_evaluated()) {
 			return std::from_chars(first, last, raw_value, base);
@@ -108,18 +108,17 @@ namespace OpenVic {
 	}
 
 	template<typename T>
-	[[nodiscard]] inline constexpr std::to_chars_result to_chars( //
-		char* first, char* const last, const T raw_value, const int base = 10
+	[[nodiscard]] inline constexpr std::to_chars_result to_chars(
+	    char* first, char* const last, const T raw_value, const int base = 10
 	) noexcept {
 		if (!std::is_constant_evaluated()) {
 			return std::to_chars(first, last, raw_value, base);
 		}
 
-		constexpr char digits[] = //
-		    { //
-			  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-			  'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-		    };
+		constexpr char digits[] = {
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+			'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		};
 		static_assert(std::size(digits) == 36);
 
 		using unsigned_type = std::make_unsigned_t<T>;
@@ -275,14 +274,14 @@ namespace OpenVic {
 		return from_chars(str, end, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64( //
-		char const* const str, size_t length, std::uint64_t& value, int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(
+	    char const* const str, size_t length, std::uint64_t& value, int base = 10
 	) {
 		return string_to_uint64(str, str + length, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64( //
-		std::string_view str, std::uint64_t& value, int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(
+	    std::string_view str, std::uint64_t& value, int base = 10
 	) {
 		return string_to_uint64(str.data(), str.length(), value, base);
 	}
@@ -295,8 +294,8 @@ namespace OpenVic {
 	 * still starts with "0", otherwise 10. The std::from_chars_result return value is used to report whether
 	 * or not conversion was successful.
 	 */
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
-		char const* str, char const* const end, std::int64_t& value, int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(
+	    char const* str, char const* const end, std::int64_t& value, int base = 10
 	) {
 		// If base is zero, base is determined by the string prefix.
 		if (base == 0) {
@@ -320,14 +319,14 @@ namespace OpenVic {
 		return from_chars(str, end, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
-		char const* str, size_t length, std::int64_t& value, int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(
+	    char const* str, size_t length, std::int64_t& value, int base = 10
 	) {
 		return string_to_int64(str, str + length, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
-		std::string_view str, std::int64_t& value, int base = 10
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(
+	    std::string_view str, std::int64_t& value, int base = 10
 	) {
 		return string_to_int64(str.data(), str.length(), value, base);
 	}

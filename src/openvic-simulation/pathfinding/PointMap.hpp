@@ -27,7 +27,7 @@ namespace OpenVic {
 		using points_container_type = std::vector<points_pair_type, points_allocator_type>;
 		using points_map_type = tsl::ordered_map<
 		    points_key_type,
-		    points_value_type, //
+		    points_value_type,
 		    std::hash<points_key_type>,
 		    std::equal_to<points_key_type>,
 		    points_allocator_type,
@@ -39,7 +39,7 @@ namespace OpenVic {
 			std::pair<points_key_type, points_key_type> key;
 
 			enum class Direction : uint8_t {
-				NONE = 0, //
+				NONE = 0,
 				FORWARD = 1,
 				BACKWARD = 2,
 				BIDIRECTIONAL = FORWARD | BACKWARD
@@ -91,7 +91,7 @@ namespace OpenVic {
 			    foonathan::memory::std_allocator<neighbor_point_id_type, memory::tracker<foonathan::memory::default_allocator>>;
 			using neighbors_container_type = std::vector<neighbor_point_id_type, neighbors_allocator_type>;
 			using neighbors_type = tsl::ordered_set<
-			    neighbor_point_id_type, //
+			    neighbor_point_id_type,
 			    std::hash<neighbor_point_id_type>,
 			    std::equal_to<neighbor_point_id_type>,
 			    neighbors_allocator_type,

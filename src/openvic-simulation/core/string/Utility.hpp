@@ -90,8 +90,8 @@ namespace OpenVic {
 	}
 
 	template<typename T, typename... Args>
-	static memory::string string_join( //
-		tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", "
+	static memory::string string_join(
+	    tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", "
 	) {
 		if (map.empty()) {
 			return "";

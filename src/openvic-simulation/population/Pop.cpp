@@ -270,9 +270,11 @@ void Pop::update_gamestate(
 	    !is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)) {
 		max_supported_regiments = 0;
 	} else {
-		max_supported_regiments = (
-			type_safe::get(size) / (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier) //
-		).floor<size_t>() + 1;
+		max_supported_regiments =
+		    (type_safe::get(size) /
+		     (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier))
+		        .floor<size_t>() +
+		    1;
 	}
 }
 

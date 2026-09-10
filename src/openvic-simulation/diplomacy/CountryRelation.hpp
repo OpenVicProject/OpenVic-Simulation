@@ -24,10 +24,8 @@ namespace OpenVic {
 		using base_type::base_type;
 
 		inline constexpr auto operator<=>(UnorderedCountryInstancePair const& rhs) const {
-			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), //
-			    left2 = std::bit_cast<uintptr_t>(second), //
-			    right1 = std::bit_cast<uintptr_t>(rhs.first), //
-			    right2 = std::bit_cast<uintptr_t>(rhs.second);
+			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), left2 = std::bit_cast<uintptr_t>(second),
+			                right1 = std::bit_cast<uintptr_t>(rhs.first), right2 = std::bit_cast<uintptr_t>(rhs.second);
 
 			using ordering = decltype(three_way_compare(std::tie(left1, left2), std::tie(right1, right2)));
 
@@ -51,10 +49,8 @@ namespace OpenVic {
 		}
 
 		inline constexpr bool operator==(UnorderedCountryInstancePair const& rhs) const {
-			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), //
-			    left2 = std::bit_cast<uintptr_t>(second), //
-			    right1 = std::bit_cast<uintptr_t>(rhs.first), //
-			    right2 = std::bit_cast<uintptr_t>(rhs.second);
+			const uintptr_t left1 = std::bit_cast<uintptr_t>(first), left2 = std::bit_cast<uintptr_t>(second),
+			                right1 = std::bit_cast<uintptr_t>(rhs.first), right2 = std::bit_cast<uintptr_t>(rhs.second);
 
 			auto tied = std::tie(left1, left2);
 			return tied == std::tie(right1, right2) || tied == std::tie(right2, right1);
@@ -66,8 +62,7 @@ namespace std {
 	template<>
 	struct hash<OpenVic::CountryInstancePair> {
 		size_t operator()(OpenVic::CountryInstancePair const& pair) const {
-			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
-			    second = std::bit_cast<uintptr_t>(pair.second);
+			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), second = std::bit_cast<uintptr_t>(pair.second);
 
 			std::size_t seed1 = 0;
 			OpenVic::hash_combine(seed1, first);
@@ -80,8 +75,7 @@ namespace std {
 	template<>
 	struct hash<OpenVic::UnorderedCountryInstancePair> {
 		size_t operator()(OpenVic::UnorderedCountryInstancePair const& pair) const {
-			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
-			    second = std::bit_cast<uintptr_t>(pair.second);
+			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), second = std::bit_cast<uintptr_t>(pair.second);
 
 			std::size_t seed1 = 0;
 			OpenVic::hash_combine(seed1, first);
@@ -172,8 +166,8 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type& operator+=( //
-				influence_value_type& lhs, influence_value_type const& rhs
+			friend inline constexpr influence_value_type& operator+=(
+			    influence_value_type& lhs, influence_value_type const& rhs
 			) {
 				return lhs += rhs.value;
 			}
@@ -184,8 +178,8 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type& operator-=( //
-				influence_value_type& lhs, influence_value_type const& rhs
+			friend inline constexpr influence_value_type& operator-=(
+			    influence_value_type& lhs, influence_value_type const& rhs
 			) {
 				return lhs -= rhs.value;
 			}
@@ -196,8 +190,8 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type& operator*=( //
-				influence_value_type& lhs, influence_value_type const& rhs
+			friend inline constexpr influence_value_type& operator*=(
+			    influence_value_type& lhs, influence_value_type const& rhs
 			) {
 				return lhs *= rhs.value;
 			}
@@ -208,8 +202,8 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type& operator/=( //
-				influence_value_type& lhs, influence_value_type const& rhs
+			friend inline constexpr influence_value_type& operator/=(
+			    influence_value_type& lhs, influence_value_type const& rhs
 			) {
 				return lhs /= rhs.value;
 			}
@@ -232,7 +226,7 @@ namespace OpenVic {
 		};
 
 		enum class OpinionType : int8_t {
-			Hostile = -2, //
+			Hostile = -2,
 			Opposed,
 			Neutral,
 			Cordial,
@@ -280,9 +274,7 @@ private:
 		decltype(discredits.values_container()) get_discredited_date_values() const;
 
 		std::optional<Date> get_embassy_banned_date(CountryInstance const* country, CountryInstance const* recipient) const;
-		Date& assign_or_get_embassy_banned_date( //
-			CountryInstance* country, CountryInstance const* recipient, Date default_value
-		);
+		Date& assign_or_get_embassy_banned_date(CountryInstance* country, CountryInstance const* recipient, Date default_value);
 		bool set_embassy_banned_date(CountryInstance* country, CountryInstance const* recipient, Date value);
 		decltype(embassy_bans.values_container()) get_embassy_banned_date_values() const;
 
@@ -307,7 +299,7 @@ constexpr OpenVic::CountryRelationManager::OpinionType& operator++(OpenVic::Coun
 	using underlying_type = std::underlying_type_t<OpenVic::CountryRelationManager::OpinionType>;
 	type = static_cast<OpenVic::CountryRelationManager::OpinionType>(static_cast<underlying_type>(type) + 1);
 	type = static_cast<underlying_type>(type) >
-	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Sphere) //
+	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Sphere)
 	         ? OpenVic::CountryRelationManager::OpinionType::Sphere
 	         : type;
 	return type;
@@ -323,7 +315,7 @@ constexpr OpenVic::CountryRelationManager::OpinionType& operator--(OpenVic::Coun
 	using underlying_type = std::underlying_type_t<OpenVic::CountryRelationManager::OpinionType>;
 	type = static_cast<OpenVic::CountryRelationManager::OpinionType>(static_cast<underlying_type>(type) - 1);
 	type = static_cast<underlying_type>(type) <
-	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Hostile) //
+	               static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Hostile)
 	         ? OpenVic::CountryRelationManager::OpinionType::Hostile
 	         : type;
 	return type;

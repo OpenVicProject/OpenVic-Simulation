@@ -26,8 +26,8 @@
 
 using namespace OpenVic;
 
-inline static void print_memory_usage( //
-	std::string_view prefix, std::source_location const& location = std::source_location::current()
+inline static void print_memory_usage(
+    std::string_view prefix, std::source_location const& location = std::source_location::current()
 ) {
 #ifdef DEBUG_ENABLED // memory tracking will return 0 without DEBUG_ENABLED
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
@@ -80,12 +80,12 @@ static void print_rgo(ProvinceInstance const& province) {
 		    "revenue_yesterday: {:.3}, "
 		    "total owner income: {:.3}, "
 		    "total employee income: {:.3}",
-		    production_type.output_good, //
-		    production_type, //
-		    rgo.get_size_multiplier(), //
-		    rgo.get_output_quantity_yesterday(), //
-		    rgo.get_revenue_yesterday(), //
-		    rgo.get_total_owner_income_cache(), //
+		    production_type.output_good,
+		    production_type,
+		    rgo.get_size_multiplier(),
+		    rgo.get_output_quantity_yesterday(),
+		    rgo.get_revenue_yesterday(),
+		    rgo.get_total_owner_income_cache(),
 		    rgo.get_total_employee_income_cache()
 		);
 
@@ -208,7 +208,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		    SPDLOG_INFO("State updated");
 		},
 		nullptr,
-		nullptr //
+		nullptr
 	};
 
 	SPDLOG_INFO("Commit hash: {}", GameManager::get_commit_hash());
@@ -264,15 +264,16 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	// TODO - REMOVE TEST CODE
 	SPDLOG_INFO("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [ //
-		](std::string_view title, OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> countries) -> void {
+		const auto print_ranking_list =
+		    [](std::string_view title,
+		       OpenVic::forwardable_span<const std::reference_wrapper<CountryInstance>> countries) -> void {
 			memory::string countries_str;
 			for (CountryInstance& country : countries) {
 				countries_str += fmt::format(
-				    "\n\t{} - Total #{} ({:.1}), Prestige #{} ({:.1}), Industry #{} ({:.1}), Military #{} ({:.1})", //
-				    country, //
+				    "\n\t{} - Total #{} ({:.1}), Prestige #{} ({:.1}), Industry #{} ({:.1}), Military #{} ({:.1})",
+				    country,
 				    country.get_total_rank(),
-				    country.total_score.get_untracked(), //
+				    country.total_score.get_untracked(),
 				    country.get_prestige_rank(),
 				    country.get_prestige_untracked(),
 				    country.get_industrial_rank(),
@@ -318,13 +319,13 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		MapInstance& map_instance = game_manager.get_instance_manager()->get_map_instance();
 
 		SPDLOG_INFO("===== Land Pathfinding test... =====");
-		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>( //
+		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>(
 		    run_pathing_test<TESTS>(map_instance.get_land_pathing(), LAND_SEED)
 		);
 		SPDLOG_INFO("Ran {} land pathing tests in {}", TESTS, duration);
 
 		SPDLOG_INFO("===== Sea Pathfinding test... =====");
-		duration = std::chrono::duration_cast<test_time_units_t>( //
+		duration = std::chrono::duration_cast<test_time_units_t>(
 		    run_pathing_test<TESTS>(map_instance.get_sea_pathing(), SEA_SEED)
 		);
 		SPDLOG_INFO("Ran {} sea pathing tests in {}", TESTS, duration);
@@ -335,9 +336,8 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 		SPDLOG_INFO("===== Game Tick test... =====");
 		size_t ticks_passed = 0;
-		test_duration_t min_tick_duration = test_duration_t::max(), //
-		    max_tick_duration = test_duration_t::min(), //
-		    total_tick_duration {};
+		test_duration_t min_tick_duration = test_duration_t::max(), max_tick_duration = test_duration_t::min(),
+		                total_tick_duration {};
 		const test_time_point_t start_time = testing_clock_t::now();
 		while (++ticks_passed < TICK_COUNT) {
 			const test_time_point_t tick_start = testing_clock_t::now();
@@ -367,7 +367,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 			    duration,
 			    total_tps,
 			    total_tick_duration,
-			    tick_tps, //
+			    tick_tps,
 			    min_tick_duration,
 			    max_tick_duration
 			);
@@ -402,8 +402,10 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv, &program_name //
-	](std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform) -> bool {
+	const auto _read =
+	    [&root, &argn, argc, argv, &program_name](
+	        std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform
+	    ) -> bool {
 		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];

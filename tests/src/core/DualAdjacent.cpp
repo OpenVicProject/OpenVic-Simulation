@@ -18,9 +18,7 @@ using namespace OpenVic;
 
 namespace snitch {
 	template<typename T, size_t Size>
-	[[nodiscard]] inline static constexpr bool append( //
-		snitch::small_string_span ss, std::array<T, Size> array
-	) noexcept {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, std::array<T, Size> array) noexcept {
 		if (array.empty()) {
 			return append(ss, "{}");
 		}
@@ -32,9 +30,7 @@ namespace snitch {
 	}
 
 	template<typename T>
-	[[nodiscard]] inline static constexpr bool append( //
-		snitch::small_string_span ss, std::vector<T> vector
-	) noexcept {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, std::vector<T> vector) noexcept {
 		if (vector.empty()) {
 			return append(ss, "{}");
 		}
@@ -146,9 +142,7 @@ TEST_CASE("remove_if_dual_adjacent", "[algorithm][dual-adjacent][remove_if_dual_
 	CHECK(remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), callback_none) == vector_down.end());
 	CHECK(remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), callback_none) == vector_spread.end());
 
-	CHECK( //
-		remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 1)) == vector_up.end()
-	);
+	CHECK(remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 1)) == vector_up.end());
 	CHECK(
 	    remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 9)) == vector_down.end()
 	);
@@ -157,8 +151,8 @@ TEST_CASE("remove_if_dual_adjacent", "[algorithm][dual-adjacent][remove_if_dual_
 	    vector_spread.end()
 	);
 
-	CHECK( //
-		remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 9)) == vector_up.end() - 1
+	CHECK(
+	    remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 9)) == vector_up.end() - 1
 	);
 	CHECK(
 	    remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 1)) ==
