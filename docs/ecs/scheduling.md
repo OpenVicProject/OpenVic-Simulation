@@ -17,7 +17,7 @@ void tick_systems(Date today);
 void clear_systems();
 ```
 
-(All on `World` — see src/openvic-simulation/ecs/World.hpp and world.md.)
+(All on `World` — see src/openvic-simulation/core/ecs/World.hpp and world.md.)
 
 Each `world.tick_systems(today)` call:
 
@@ -41,8 +41,8 @@ static constexpr std::array<system_type_id_t, N> declared_run_before();
 Each entry is a `system_type_id_of<OtherSystem>()`. `declared_run_after` makes this system run in a strictly later stage than each listed system; `declared_run_before` is the mirror image. Both directions exist so a system can insert itself relative to systems it does not own.
 
 ```cpp
-#include "openvic-simulation/ecs/SystemImpl.hpp" // required in the TU that calls register_system
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp" // required in the TU that calls register_system
+#include "openvic-simulation/core/ecs/World.hpp"
 
 using namespace OpenVic::ecs;
 
@@ -84,7 +84,7 @@ void register_tick(World& world) {
 Rules and contracts:
 
 - **Edges to unregistered systems are silently ignored.** `run_after` / `run_before` ids that match no *registered* system simply vanish — there is no error. The classic footgun is a phase anchor you declared but forgot to `world.register_system()`: every edge through it disappears and your "ordered" pipeline quietly flattens. Register every system you reference, in any order.
-- The statics must be `constexpr` and the listed types need `ECS_SYSTEM` identities (see src/openvic-simulation/ecs/SystemTypeID.hpp). A missing `ECS_SYSTEM(Type)` is a clear compile error ("incomplete type `SystemName<X>`").
+- The statics must be `constexpr` and the listed types need `ECS_SYSTEM` identities (see src/openvic-simulation/core/ecs/SystemTypeID.hpp). A missing `ECS_SYSTEM(Type)` is a clear compile error ("incomplete type `SystemName<X>`").
 - Edges only constrain *stage order*; they never weaken conflict detection. Two systems can be both edge-ordered and conflicting — that is fine and common.
 
 ## Automatic conflict resolution from declared access
@@ -201,7 +201,7 @@ struct PhaseAnchorSystem : System<Derived> {
 };
 ```
 
-The canonical base for a hand-written anchor (src/openvic-simulation/ecs/SystemPhase.hpp). Do **not** try to write an anchor as a bare `System<Derived>` with an empty tick: an empty component pack does not compile through the default dispatch path, and even if it did, an empty require set would match *every* archetype. `PhaseAnchorSystem` shadows `tick_all` so an anchor's "execution" is a true no-op — no query is built, no rows are touched, and `declared_access()` derives an empty access set.
+The canonical base for a hand-written anchor (src/openvic-simulation/core/ecs/SystemPhase.hpp). Do **not** try to write an anchor as a bare `System<Derived>` with an empty tick: an empty component pack does not compile through the default dispatch path, and even if it did, an empty require set would match *every* archetype. `PhaseAnchorSystem` shadows `tick_all` so an anchor's "execution" is a true no-op — no query is built, no rows are touched, and `declared_access()` derives an empty access set.
 
 ### `ECS_PHASE_ANCHOR_FIRST` / `ECS_PHASE_ANCHOR`
 
@@ -236,9 +236,9 @@ Rules:
 Adapted from tests/src/ecs/SystemPhaseAnchors.cpp:
 
 ```cpp
-#include "openvic-simulation/ecs/SystemImpl.hpp"
-#include "openvic-simulation/ecs/SystemPhase.hpp"
-#include "openvic-simulation/ecs/World.hpp"
+#include "openvic-simulation/core/ecs/SystemImpl.hpp"
+#include "openvic-simulation/core/ecs/SystemPhase.hpp"
+#include "openvic-simulation/core/ecs/World.hpp"
 
 using namespace OpenVic::ecs;
 
@@ -306,15 +306,15 @@ Note that `FactoryProduceSystem` (writes `FactoryOutput`) and `OfferMatchSystem`
 - Register once at startup; gate cadence with `should_run`, never with re-registration.
 - Never nest `parallel_for` inside a tick body.
 - Renaming a system's `ECS_SYSTEM` string changes its identity and the `schedule_hash` — a breaking change for saves, replays, and the multiplayer handshake.
-- The TU that calls `register_system` must include `openvic-simulation/ecs/SystemImpl.hpp` (registration instantiates the iteration drivers defined there); do not otherwise depend on its contents.
+- The TU that calls `register_system` must include `openvic-simulation/core/ecs/SystemImpl.hpp` (registration instantiates the iteration drivers defined there); do not otherwise depend on its contents.
 
 ## Source files
 
-- src/openvic-simulation/ecs/SystemScheduler.hpp — `SystemScheduler`, `ScheduledStage`, `schedule_hash`
-- src/openvic-simulation/ecs/SystemScheduler.cpp — DAG build, auto-orientation, disjoint-iteration override, stage execution
-- src/openvic-simulation/ecs/SystemPhase.hpp — `PhaseAnchorSystem`, `ECS_PHASE_ANCHOR_FIRST`, `ECS_PHASE_ANCHOR`, `ECS_IN_PHASE`
-- src/openvic-simulation/ecs/System.hpp — `System`, `SystemThreaded`, `declared_run_after` / `declared_run_before`, `extra_reads` / `extra_writes`, `should_run` contract
-- src/openvic-simulation/ecs/SystemAccess.hpp — `AccessMode`, `ComponentAccess`, conflict definition
-- src/openvic-simulation/ecs/SystemTypeID.hpp — `system_type_id_of`, `ECS_SYSTEM`
-- src/openvic-simulation/ecs/World.hpp — `register_system`, `tick_systems`, `schedule_hash`, `set_serial_mode`, `set_ecs_worker_count`
+- src/openvic-simulation/core/ecs/SystemScheduler.hpp — `SystemScheduler`, `ScheduledStage`, `schedule_hash`
+- src/openvic-simulation/core/ecs/SystemScheduler.cpp — DAG build, auto-orientation, disjoint-iteration override, stage execution
+- src/openvic-simulation/core/ecs/SystemPhase.hpp — `PhaseAnchorSystem`, `ECS_PHASE_ANCHOR_FIRST`, `ECS_PHASE_ANCHOR`, `ECS_IN_PHASE`
+- src/openvic-simulation/core/ecs/System.hpp — `System`, `SystemThreaded`, `declared_run_after` / `declared_run_before`, `extra_reads` / `extra_writes`, `should_run` contract
+- src/openvic-simulation/core/ecs/SystemAccess.hpp — `AccessMode`, `ComponentAccess`, conflict definition
+- src/openvic-simulation/core/ecs/SystemTypeID.hpp — `system_type_id_of`, `ECS_SYSTEM`
+- src/openvic-simulation/core/ecs/World.hpp — `register_system`, `tick_systems`, `schedule_hash`, `set_serial_mode`, `set_ecs_worker_count`
 - Tests: tests/src/ecs/SystemScheduler_DAG.cpp, tests/src/ecs/SystemScheduler_Conflicts.cpp, tests/src/ecs/SystemSchedulerDisjointWriters.cpp, tests/src/ecs/SystemSchedulerSingletonWrites.cpp, tests/src/ecs/SystemPhaseAnchors.cpp, tests/src/ecs/MultiSystemMixedStage.cpp

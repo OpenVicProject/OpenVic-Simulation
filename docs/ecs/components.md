@@ -26,7 +26,7 @@ Forgetting to register is a clear compile error, not a silent misbehaviour: the 
 What the type system actually enforces:
 
 - **Move-constructible and destructible.** Storage moves components between rows during archetype migrations and swap-pop compaction, and destroys them on `destroy_entity` / `remove_component`. Non-trivial members (e.g. a `std::string`) are handled correctly — destructors run, nothing leaks (see `tests/src/ecs/Component.cpp`, "Components with non-trivial dtor are destroyed properly").
-- **Checksummable.** The first use of a component type with a `World` instantiates its column vtable, which `static_assert`s the universal hashing rule from `src/openvic-simulation/ecs/ChecksumTraits.hpp` (`is_checksummable_v<C>`). Every component (and singleton) type must hash one of two ways:
+- **Checksummable.** The first use of a component type with a `World` instantiates its column vtable, which `static_assert`s the universal hashing rule from `src/openvic-simulation/core/ecs/ChecksumTraits.hpp` (`is_checksummable_v<C>`). Every component (and singleton) type must hash one of two ways:
   1. **Raw bytes** — allowed only if `std::has_unique_object_representations_v<C>`, i.e. the compiler inserted no padding and there are no `float`/`double` members. Padding bytes are indeterminate garbage; fill gaps with explicit `_pad` members, zeroed at construction.
   2. **A custom hash** — a free function `uint64_t ecs_checksum(C const&, uint64_t seed)` declared at `C`'s scope (found by ADL), before `C`'s first `World`/`CommandBuffer` use in the translation unit. Mandatory for anything holding heap data (`std::string`, vector members, ...): walk sizes + elements in index order, never capacities or addresses.
 
@@ -67,7 +67,7 @@ ECS_COMPONENT(Velocity, "test_Component::Velocity")
 
 ## ComponentTypeID — how types get IDs
 
-You will mostly never touch this machinery directly; it is what `ECS_COMPONENT` plugs into. From `src/openvic-simulation/ecs/ComponentTypeID.hpp`:
+You will mostly never touch this machinery directly; it is what `ECS_COMPONENT` plugs into. From `src/openvic-simulation/core/ecs/ComponentTypeID.hpp`:
 
 ```cpp
 using component_type_id_t = uint64_t;
@@ -140,7 +140,7 @@ Notes:
 - Only the *numeric ordering for one column within one run* is meaningful. Bulk creation bumps versions once per touched chunk instead of once per row, so never compare version values across runs or use them as data — they only signal "this column changed".
 - An `ImmutableEntityID` overload exists with identical behaviour.
 
-This is the primitive `CachedRef<C>::get(World&)` is built on (`src/openvic-simulation/ecs/CachedRef.hpp`): it re-resolves the pointer only when the live version differs from the cached one.
+This is the primitive `CachedRef<C>::get(World&)` is built on (`src/openvic-simulation/core/ecs/CachedRef.hpp`): it re-resolves the pointer only when the live version differs from the cached one.
 
 ### Example: reads, writes, and what `nullptr` means
 
@@ -301,7 +301,7 @@ GameClock* c = ctx.world.get_singleton<GameClock>();
 
 ## `DenseSlotAllocator` — deterministic rows for singleton side tables
 
-Some singleton-owned state is per-entity but doesn't fit a component column — variable-width or shared tables ("side tables") indexed by a dense row number that the owning entity stores. `DenseSlotAllocator` (`src/openvic-simulation/ecs/DenseSlotAllocator.hpp`) hands out those rows deterministically.
+Some singleton-owned state is per-entity but doesn't fit a component column — variable-width or shared tables ("side tables") indexed by a dense row number that the owning entity stores. `DenseSlotAllocator` (`src/openvic-simulation/core/ecs/DenseSlotAllocator.hpp`) hands out those rows deterministically.
 
 ```cpp
 inline constexpr uint32_t INVALID_DENSE_SLOT = static_cast<uint32_t>(-1);
@@ -380,10 +380,10 @@ if (!restored.restore(snap)) {
 
 ## Source files
 
-- src/openvic-simulation/ecs/ComponentTypeID.hpp — `component_type_id_t`, `fnv1a_64`, `ComponentName`, `component_type_id_of`, `ECS_COMPONENT`
-- src/openvic-simulation/ecs/World.hpp — `create_entity`, `add_component`, `remove_component`, `get_component`, `has_component`, `component_version_in`, `set_singleton`, `get_singleton`, `clear_singleton`
-- src/openvic-simulation/ecs/ChecksumTraits.hpp — the checksum contract: `is_checksummable_v`, `ecs_checksum` convention, `ECS_CHECKSUM_BYTES`
-- src/openvic-simulation/ecs/Archetype.hpp — `ColumnVTable` (the move/destroy/hash operations a component type must support)
-- src/openvic-simulation/ecs/CachedRef.hpp — version-validated cross-tick component pointer
-- src/openvic-simulation/ecs/DenseSlotAllocator.hpp / src/openvic-simulation/ecs/DenseSlotAllocator.cpp — deterministic dense rows for singleton side tables
+- src/openvic-simulation/core/ecs/ComponentTypeID.hpp — `component_type_id_t`, `fnv1a_64`, `ComponentName`, `component_type_id_of`, `ECS_COMPONENT`
+- src/openvic-simulation/core/ecs/World.hpp — `create_entity`, `add_component`, `remove_component`, `get_component`, `has_component`, `component_version_in`, `set_singleton`, `get_singleton`, `clear_singleton`
+- src/openvic-simulation/core/ecs/ChecksumTraits.hpp — the checksum contract: `is_checksummable_v`, `ecs_checksum` convention, `ECS_CHECKSUM_BYTES`
+- src/openvic-simulation/core/ecs/Archetype.hpp — `ColumnVTable` (the move/destroy/hash operations a component type must support)
+- src/openvic-simulation/core/ecs/CachedRef.hpp — version-validated cross-tick component pointer
+- src/openvic-simulation/core/ecs/DenseSlotAllocator.hpp / src/openvic-simulation/core/ecs/DenseSlotAllocator.cpp — deterministic dense rows for singleton side tables
 - tests/src/ecs/Component.cpp, tests/src/ecs/Tag.cpp, tests/src/ecs/Singleton.cpp, tests/src/ecs/DenseSlotAllocator.cpp, tests/src/ecs/FNVHash.cpp — executable examples of everything above

@@ -20,7 +20,7 @@ struct EntityID {
 inline constexpr EntityID INVALID_ENTITY_ID = {};
 ```
 
-Defined in [src/openvic-simulation/ecs/EntityID.hpp](../../src/openvic-simulation/ecs/EntityID.hpp). There is no parallel id system — `EntityID` is the one handle type for cross-references between entities. Store it by value; it is two `uint32_t`s and trivially copyable.
+Defined in [src/openvic-simulation/core/ecs/EntityID.hpp](../../src/openvic-simulation/core/ecs/EntityID.hpp). There is no parallel id system — `EntityID` is the one handle type for cross-references between entities. Store it by value; it is two `uint32_t`s and trivially copyable.
 
 ### Encoding
 
@@ -345,7 +345,7 @@ struct CachedRef {
 };
 ```
 
-Defined in [src/openvic-simulation/ecs/CachedRef.hpp](../../src/openvic-simulation/ecs/CachedRef.hpp).
+Defined in [src/openvic-simulation/core/ecs/CachedRef.hpp](../../src/openvic-simulation/core/ecs/CachedRef.hpp).
 
 - `CachedRef<C>::from(world, id)` builds a ref and resolves it immediately.
 - `get(world)` returns the current component pointer, refreshing the cache if the column has mutated since the last successful resolve or the entity changed archetype. Returns `nullptr` if the entity is dead or no longer carries `C`. The fast path is one version comparison and an indirection — cheaper than calling `World::get_component<C>` every time.
@@ -403,8 +403,8 @@ Note for tag (zero-size) components: `get_component<Tag>` returns `nullptr` by d
 
 ## Source files
 
-- [src/openvic-simulation/ecs/EntityID.hpp](../../src/openvic-simulation/ecs/EntityID.hpp) — `EntityID`, `ImmutableEntityID`, sentinels, `DEFERRED_GENERATION_BIT`
-- [src/openvic-simulation/ecs/World.hpp](../../src/openvic-simulation/ecs/World.hpp) — creation/destruction/bulk APIs, `WorldIdentitySnapshot`, `restore_entity`, `component_version_in`
-- [src/openvic-simulation/ecs/World.cpp](../../src/openvic-simulation/ecs/World.cpp) — slot allocation, `is_alive` / `destroy_entity` / identity snapshot bodies
-- [src/openvic-simulation/ecs/CachedRef.hpp](../../src/openvic-simulation/ecs/CachedRef.hpp) — `CachedRef<C>`
+- [src/openvic-simulation/core/ecs/EntityID.hpp](../../src/openvic-simulation/core/ecs/EntityID.hpp) — `EntityID`, `ImmutableEntityID`, sentinels, `DEFERRED_GENERATION_BIT`
+- [src/openvic-simulation/core/ecs/World.hpp](../../src/openvic-simulation/core/ecs/World.hpp) — creation/destruction/bulk APIs, `WorldIdentitySnapshot`, `restore_entity`, `component_version_in`
+- [src/openvic-simulation/core/ecs/World.cpp](../../src/openvic-simulation/core/ecs/World.cpp) — slot allocation, `is_alive` / `destroy_entity` / identity snapshot bodies
+- [src/openvic-simulation/core/ecs/CachedRef.hpp](../../src/openvic-simulation/core/ecs/CachedRef.hpp) — `CachedRef<C>`
 - Tests with observable semantics: `tests/src/ecs/EntityID.cpp`, `tests/src/ecs/EntityLifecycle.cpp`, `tests/src/ecs/BulkCreate.cpp`, `tests/src/ecs/ImmutableEntity.cpp`, `tests/src/ecs/CachedRef.cpp`, `tests/src/ecs/IdentitySnapshot.cpp`

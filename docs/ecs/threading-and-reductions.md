@@ -95,7 +95,7 @@ Two details that make this rule easy to violate without noticing:
 
 ## `EcsThreadPool` reference
 
-Defined in `src/openvic-simulation/ecs/EcsThreadPool.hpp`. This is the dedicated pool for ECS scheduler dispatch — intentionally separate from `OpenVic::ThreadPool` (which serves un-migrated production-tick / market-clearing code) so neither side disturbs the other. From game code you normally only ever *pass it along* (to `reductions::*`); you rarely construct one outside tests.
+Defined in `src/openvic-simulation/core/ecs/EcsThreadPool.hpp`. This is the dedicated pool for ECS scheduler dispatch — intentionally separate from `OpenVic::ThreadPool` (which serves un-migrated production-tick / market-clearing code) so neither side disturbs the other. From game code you normally only ever *pass it along* (to `reductions::*`); you rarely construct one outside tests.
 
 ```cpp
 explicit EcsThreadPool(uint32_t worker_count);
@@ -131,7 +131,7 @@ Runs each supplied function exactly once across the pool; blocking. A general-pu
 
 ## Reductions
 
-Header: `src/openvic-simulation/ecs/Reductions.hpp`, namespace `OpenVic::ecs::reductions`.
+Header: `src/openvic-simulation/core/ecs/Reductions.hpp`, namespace `OpenVic::ecs::reductions`.
 
 The pattern all four helpers share: each chunk's body writes its partial result into a **`chunk_idx`-indexed slot** — no atomics, no shared mutable state during the parallel section — then, after the parallel section joins, the per-chunk results are folded **sequentially in `chunk_idx` ascending order**. The only operation order that affects the output is that sequential fold, which is independent of the pool — so the result is bit-identical regardless of `worker_count`. This is the project-sanctioned replacement for "loop over everything with an atomic accumulator", which is both contended and non-deterministic for non-associative arithmetic.
 
@@ -159,8 +159,8 @@ T parallel_max(EcsThreadPool& pool, std::size_t chunk_count, T init, Body&& body
 Adapted from `tests/src/ecs/Reductions.cpp`:
 
 ```cpp
-#include "openvic-simulation/ecs/EcsThreadPool.hpp"
-#include "openvic-simulation/ecs/Reductions.hpp"
+#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
+#include "openvic-simulation/core/ecs/Reductions.hpp"
 
 using namespace OpenVic::ecs;
 
@@ -230,8 +230,8 @@ Adapted from `tests/src/ecs/KeyedReductions.cpp` (the `fixed_point_t` worker-cou
 
 ```cpp
 #include "openvic-simulation/core/object/FixedPoint.hpp"
-#include "openvic-simulation/ecs/EcsThreadPool.hpp"
-#include "openvic-simulation/ecs/Reductions.hpp"
+#include "openvic-simulation/core/ecs/EcsThreadPool.hpp"
+#include "openvic-simulation/core/ecs/Reductions.hpp"
 
 using namespace OpenVic::ecs;
 using OpenVic::fixed_point_t;
@@ -269,8 +269,8 @@ The threading-relevant rules, with rationale (full treatment in [determinism.md]
 
 ## Source files
 
-- `src/openvic-simulation/ecs/EcsThreadPool.hpp` / `src/openvic-simulation/ecs/EcsThreadPool.cpp` — the pool: `parallel_for`, `run_concurrent`, invariants.
-- `src/openvic-simulation/ecs/Reductions.hpp` — `parallel_sum`, `parallel_min`, `parallel_max`, `parallel_keyed_sum`, `KeyedEmitter`, `KeyedSumScratch`.
-- `src/openvic-simulation/ecs/World.hpp` — `set_ecs_worker_count`, `ecs_thread_pool`, `set_serial_mode`.
-- `src/openvic-simulation/ecs/System.hpp` — `SystemThreaded`, the `extra_writes` restriction.
+- `src/openvic-simulation/core/ecs/EcsThreadPool.hpp` / `src/openvic-simulation/core/ecs/EcsThreadPool.cpp` — the pool: `parallel_for`, `run_concurrent`, invariants.
+- `src/openvic-simulation/core/ecs/Reductions.hpp` — `parallel_sum`, `parallel_min`, `parallel_max`, `parallel_keyed_sum`, `KeyedEmitter`, `KeyedSumScratch`.
+- `src/openvic-simulation/core/ecs/World.hpp` — `set_ecs_worker_count`, `ecs_thread_pool`, `set_serial_mode`.
+- `src/openvic-simulation/core/ecs/System.hpp` — `SystemThreaded`, the `extra_writes` restriction.
 - Tests: `tests/src/ecs/EcsThreadPool.cpp`, `tests/src/ecs/Reductions.cpp`, `tests/src/ecs/KeyedReductions.cpp`, `tests/src/ecs/IntraSystemParallel.cpp`, `tests/src/ecs/WorkerCountInvariance.cpp`.
