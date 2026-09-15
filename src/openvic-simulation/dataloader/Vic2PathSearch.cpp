@@ -219,7 +219,7 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 		lexy_vdf::Parser parser;
 
 		memory::string buffer;
-		auto error_log_stream = detail::make_callback_stream<char>(
+		auto error_log_stream = ovdl::detail::make_callback_stream<char>(
 			[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 				if (s != nullptr && n > 0 && user_data != nullptr) {
 					static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);
