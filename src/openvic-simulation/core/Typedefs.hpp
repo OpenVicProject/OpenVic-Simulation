@@ -2,6 +2,7 @@
 
 #include <array>
 #include <string_view>
+#include <type_traits> // IWYU pragma: keep
 #include <utility>
 
 #if defined(__GNUC__)
@@ -60,6 +61,9 @@
 #define OV_LIFETIME_BOUND
 #endif
 #endif // OV_LIFETIME_BOUND
+
+#define OV_MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+#define OV_FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
 
 namespace OpenVic {
 	template<std::size_t... Idxs>
