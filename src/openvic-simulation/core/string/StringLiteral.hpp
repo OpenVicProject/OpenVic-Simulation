@@ -296,4 +296,22 @@ namespace OpenVic {
 	// Size of 1 to include null terminator
 	template<typename CharT = char, class Traits = std::char_traits<CharT>>
 	string_literal() -> string_literal<1, CharT, Traits>;
+
+	template<typename T>
+	struct is_string_literal : std::false_type {};
+
+	template<std::size_t N, typename CharT, typename CharTraits>
+	struct is_string_literal<string_literal<N, CharT, CharTraits>> : std::true_type {};
+
+	template<std::size_t N, typename CharT, typename CharTraits>
+	struct is_string_literal<const string_literal<N, CharT, CharTraits>> : std::true_type {};
+
+	template<std::size_t N, typename CharT, typename CharTraits>
+	struct is_string_literal<string_literal<N, CharT, CharTraits> const&> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_string_literal_v = is_string_literal<T>::value;
+
+	template<typename T>
+	concept string_literal_concept = is_string_literal_v<T>;
 }
