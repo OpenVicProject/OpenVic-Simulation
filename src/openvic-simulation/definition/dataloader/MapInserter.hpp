@@ -3,10 +3,12 @@
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/definition/dataloader/TraverseResult.hpp"
+
 namespace OpenVic::dataloader {
 	template<typename MapT>
 	struct MapCallbackArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Value const* node;
 		MapT& map;
 	};

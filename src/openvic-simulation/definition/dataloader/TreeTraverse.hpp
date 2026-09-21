@@ -22,15 +22,17 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/string/StringLiteral.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/definition/dataloader/ErrorMacros.hpp"
 #include "openvic-simulation/definition/dataloader/ListParser.hpp"
 #include "openvic-simulation/definition/dataloader/MapInserter.hpp"
+#include "openvic-simulation/definition/dataloader/TraverseResult.hpp"
 #include "openvic-simulation/definition/dataloader/Utility.hpp"
 #include "openvic-simulation/definition/dataloader/ValueParser.hpp"
+#include "openvic-simulation/definition/dataloader/diagnostic/DiagnosticBag.hpp"
+#include "openvic-simulation/definition/dataloader/diagnostic/DiagnosticLevel.hpp"
 
 namespace OpenVic {
 	struct TreeOptions {
-		spdlog::level::level_enum unknown_level = spdlog::level::off;
+		dataloader::DiagnosticLevel unknown_level = dataloader::DiagnosticLevel::NONE;
 	};
 
 	template<TreeOptions Options, typename Apply, typename DefaultElement, typename... Elements>
@@ -181,22 +183,28 @@ namespace OpenVic {
 			return _make_new_traverse_append<NewElement<Key, T>>(std::make_index_sequence<sizeof...(Elements)> {}, ref);
 		}
 
-		Error operator()(ovdl::v2script::Parser const& parser, node_pointer_type node) const {
+		TraverseResult operator()(ovdl::v2script::Parser const& parser, node_pointer_type node) const {
 			return operator()(&parser, node);
 		}
 
-		Error operator()(ovdl::v2script::Parser const& parser) const {
-			return operator()(&parser, parser.get_file_node(), parser.get_file_node()->statements());
+		TraverseResult operator()(ovdl::v2script::Parser const& parser) const {
+			TraverseResult result { { &parser }, Error::OK };
+			operator()(result, parser.get_file_node(), parser.get_file_node()->statements());
+			return result;
 		}
 
-		Error operator()(node_pointer_type node) const {
+		TraverseResult operator()(node_pointer_type node) const {
 			return operator()(nullptr, node);
 		}
 
-		Error operator()(parser_pointer_type parser, node_pointer_type node) const {
-			using namespace ovdl::v2script::ast;
+		TraverseResult operator()(parser_pointer_type parser, node_pointer_type node) const {
+			TraverseResult result { { parser }, Error::OK };
+			operator()(result, node);
+			return result;
+		}
 
-			Error err = Error::OK;
+		TraverseResult& operator()(TraverseResult& result, node_pointer_type node) const {
+			using namespace ovdl::v2script::ast;
 
 			auto statements = [&]() -> statement_range_type {
 				if (auto* ft = dryad::node_try_cast<FileTree>(node)) {
@@ -207,41 +215,42 @@ namespace OpenVic {
 					return lv->statements();
 				}
 
-				err = Error::FAILED;
-				OV_DL_ERR_FAIL_V_MSG(
-				    dryad::make_node_range<Statement>(
-				        statement_range_iterator::from_ptr(nullptr), statement_range_iterator::from_ptr(nullptr)
-				    ),
-				    dataloader::make_location_message(
-				        parser, node, "Expected a file tree or list value, found {}", get_kind_name(node->kind())
-				    )
+				result.error = Error::FAILED;
+				result.diagnostics.error(node).with_message(
+				    "Expected a file tree or list value, found {}", get_kind_name(node->kind())
+				);
+				return dryad::make_node_range<Statement>(
+				    statement_range_iterator::from_ptr(nullptr), statement_range_iterator::from_ptr(nullptr)
 				);
 			}();
 
-			if (err != Error::OK) {
-				return err;
+			if (result.error != Error::OK) {
+				return result;
 			}
 
-			return operator()(parser, node, statements);
+			return operator()(result, node, statements);
 		}
 
-		Error operator()(parser_pointer_type parser, node_pointer_type node, statement_range_type statements) const {
+		TraverseResult& operator()(TraverseResult& result, node_pointer_type node, statement_range_type statements) const {
 			using namespace ovdl::v2script::ast;
 
-			Error err = Error::OK;
 			std::array<bool, sizeof...(Elements)> found {};
 
 			auto key_list = ([&]()->std::array<ovdl::symbol<>, sizeof...(Elements)> {
-				if (parser == nullptr) {
+				if (result.diagnostics.parser() == nullptr) {
 					return {};
 				}
 
-				return { parser->find_intern(Elements::key)... };
+				return { result.diagnostics.parser()->find_intern(Elements::key)... };
 			}());
 
-			err = initialize_all(parser, node, err, std::make_index_sequence<sizeof...(Elements)> {});
+			result.error = initialize_all(node, result, std::make_index_sequence<sizeof...(Elements)> {});
 
 			for (Statement const* s : statements) {
+				if (result.diagnostics.has_fatal_error()) {
+					break;
+				}
+
 				auto* as = dryad::node_try_cast<AssignStatement>(s);
 				if (!as) {
 					continue;
@@ -258,18 +267,18 @@ namespace OpenVic {
 				// and still completely optimisable by the compiler.
 				const ovdl::symbol<> symbol = left->value();
 				handled = try_all(
-				    { parser, symbol, as->right(), err, found }, key_list, std::make_index_sequence<sizeof...(Elements)> {}
+				    { result, symbol, as->right(), found }, key_list, std::make_index_sequence<sizeof...(Elements)> {}
 				);
 
 				if (handled) {
-					if (err != Error::OK || err != Error::SKIP) {
-						return err;
+					if (result.error != Error::OK && result.error != Error::SKIP) {
+						return result;
 					}
-					handled = err == Error::OK;
+					handled = result.error == Error::OK;
 				} else if constexpr (!is_default_element_empty) {
 					Error err = Error::OK;
-					if (err = DefaultElement::call({ parser, as, map }); err != Error::OK || err != Error::SKIP) {
-						return err;
+					if (err = DefaultElement::call({ result, as, map }); err != Error::OK && err != Error::SKIP) {
+						return result;
 					}
 					handled = err == Error::OK;
 				}
@@ -279,27 +288,25 @@ namespace OpenVic {
 				}
 
 				if constexpr (!is_apply_empty) {
-					if (Error err = apply_function(dataloader::ApplyFunctionArguments { parser, as });
-					    err != Error::OK || err != Error::SKIP) {
-						return err;
+					if (Error err = apply_function(dataloader::ApplyFunctionArguments { result, as });
+					    err != Error::OK && err != Error::SKIP) {
+						return result;
 					}
-					handled = err == Error::OK;
+					handled = result.error == Error::OK;
 				}
 
-				if constexpr (Options.unknown_level != spdlog::level::off) {
+				if constexpr (Options.unknown_level != dataloader::DiagnosticLevel::NONE) {
 					if (!handled) {
-						if constexpr (Options.unknown_level >= spdlog::level::err) {
-							err = Error::FAILED;
+						if constexpr (Options.unknown_level <= dataloader::DiagnosticLevel::ERROR) {
+							result.error = Error::FAILED;
 						}
-						dataloader::log::log(
-						    Options.unknown_level, dataloader::make_location_message(parser, s, "Unknown key {}", symbol.view())
-						);
+						result.diagnostics.report(Options.unknown_level, s).with_message("Unknown key: {}", symbol.view());
 					}
 				}
 			}
 
-			err = finalize_all(parser, node, found, std::make_index_sequence<sizeof...(Elements)> {});
-			return err;
+			result.error = finalize_all(result, node, found, std::make_index_sequence<sizeof...(Elements)> {});
+			return result;
 		}
 
 	private:
@@ -308,10 +315,9 @@ namespace OpenVic {
 		OV_NO_UNIQUE_ADDRESS default_element_target_pointer_type map;
 
 		struct TryArguments {
-			parser_pointer_type parser = nullptr;
+			TraverseResult& traverse;
 			ovdl::symbol<> key;
 			value_node_pointer_type value = nullptr;
-			Error& error;
 			std::array<bool, sizeof...(Elements)>& found_list;
 		};
 
@@ -355,12 +361,10 @@ namespace OpenVic {
 		}
 
 		template<std::size_t... Is>
-		Error initialize_all(
-		    parser_pointer_type parser, node_pointer_type root_node, Error& error, std::index_sequence<Is...>
-		) const {
+		Error initialize_all(node_pointer_type root_node, TraverseResult& traverse, std::index_sequence<Is...>) const {
 			bool failed = false;
 			((failed |=
-			  Elements::initialize(dataloader::TraverseInitializeArguments { parser, root_node, *std::get<Is>(targets) }) !=
+			  Elements::initialize(dataloader::TraverseInitializeArguments { traverse, root_node, *std::get<Is>(targets) }) !=
 			  Error::OK),
 			 ...);
 
@@ -373,20 +377,14 @@ namespace OpenVic {
 		) const {
 			bool handled = false;
 
-			if (args.parser == nullptr) {
+			if (args.traverse.diagnostics.parser() == nullptr) {
 				// Iterates Elements until Elements::key == key
-				((handled =
-				      handled ||
-				      (Elements::key == args.key.view() &&
-				       Elements::try_extract(
-				           dataloader::TraverseExtractArguments {
-				               args.parser,
-				               args.value,
-				               *std::get<Is>(targets),
-				               args.found_list[Is],
-				               args.error,
-				           }
-				       ))),
+				((handled = handled ||
+				            (Elements::key == args.key.view() &&
+				             Elements::try_extract(
+				                 dataloader::TraverseExtractArguments {
+				                     args.traverse, args.value, *std::get<Is>(targets), args.found_list[Is] }
+				             ))),
 				 ...);
 
 				return handled;
@@ -404,11 +402,10 @@ namespace OpenVic {
 				      (Is == i &&
 				       Elements::try_extract(
 				           dataloader::TraverseExtractArguments {
-				               args.parser,
+				               args.traverse,
 				               args.value,
 				               *std::get<Is>(targets),
 				               args.found_list[Is],
-				               args.error,
 				           }
 				       ))),
 				 ...);
@@ -423,33 +420,34 @@ namespace OpenVic {
 
 		template<std::size_t... Is>
 		Error finalize_all(
-		    parser_pointer_type parser,
+		    TraverseResult& traverse,
 		    node_pointer_type node,
 		    std::array<bool, sizeof...(Elements)> const& found,
 		    std::index_sequence<Is...>
 		) const {
 			// TODO: make inplace_vector
-			memory::vector<std::string_view> expected_values;
-			expected_values.reserve(sizeof...(Elements));
+			memory::vector<std::string_view> expected_keys;
+			expected_keys.reserve(sizeof...(Elements));
 
 			bool failed = false;
 			((failed |=
-			  Elements::finalize(dataloader::TraverseFinalizeArguments { parser, node, expected_values, found[Is] }) !=
+			  Elements::finalize(dataloader::TraverseFinalizeArguments { traverse, node, expected_keys, found[Is] }) !=
 			  Error::OK),
 			 ...);
 
 			if constexpr (!is_default_element_empty) {
 				failed |=
-				    DefaultElement::finalize(dataloader::TraverseFinalizeArguments { parser, node, expected_values, true }) !=
+				    DefaultElement::finalize(dataloader::TraverseFinalizeArguments { traverse, node, expected_keys, true }) !=
 				    Error::OK;
 			}
 
-			if (!expected_values.empty()) {
-				OV_DL_ERR_FAIL_COND_V_MSG(
-				    failed,
-				    Error::FAILED,
-				    dataloader::make_location_message(parser, node, "Expected key: {}", fmt::join(expected_values, ", "))
-				);
+			if (!expected_keys.empty() && failed) {
+				if (expected_keys.size() == 1) {
+					traverse.diagnostics.error(node).with_message("Expected key: {}", expected_keys[0]);
+				} else {
+					traverse.diagnostics.error(node).with_message("Expected keys: [{}]", fmt::join(expected_keys, ", "));
+				}
+				return Error::FAILED;
 			}
 
 			return failed ? Error::FAILED : Error::OK;

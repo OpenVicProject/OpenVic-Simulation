@@ -24,8 +24,7 @@
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/string/StringLiteral.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
-#include "openvic-simulation/definition/dataloader/ErrorMacros.hpp"
-#include "openvic-simulation/definition/dataloader/Utility.hpp"
+#include "openvic-simulation/definition/dataloader/TraverseResult.hpp"
 
 namespace OpenVic {
 	class fixed_point_t;
@@ -119,34 +118,34 @@ namespace OpenVic::dataloader {
 
 	template<typename T>
 	struct ValueInitializeArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		T& out;
 	};
 
 	template<typename T>
 	struct ValueExtractorArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Value const* node;
 		T& out;
 	};
 
 	template<typename T>
 	struct ValueExtractorArguments<type_safe::output_parameter<T>> {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Value const* node;
 		type_safe::output_parameter<T> out;
 	};
 
 	template<typename T>
 	struct ValueExtractorArguments<T&> {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Value const* node;
 		T& out;
 	};
 
 	template<typename T>
 	struct ValueFinalizeArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		T& out;
 	};
 
@@ -177,7 +176,7 @@ namespace OpenVic::dataloader {
 	struct ValueExtractor<T> {
 		static Error extract(ValueExtractorArguments<T> args) {
 			std::string_view sv;
-			OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.parser, args.node, sv }));
+			OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.traverse, args.node, sv }));
 
 			int64_t tmp;
 			std::from_chars_result result = from_chars(sv.data(), sv.data() + sv.size(), tmp);
@@ -186,22 +185,19 @@ namespace OpenVic::dataloader {
 				return Error::OK;
 			}
 
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    result.ec == std::errc::result_out_of_range,
-			    Error::FAILED,
-			    make_location_message(args.parser, args.node, "Overflow of integer, found {}", sv)
-			);
-
-			OV_DL_ERR_FAIL_V_MSG(
-			    Error::FAILED, make_location_message(args.parser, args.node, "Expected an integer, found {}", sv)
-			);
+			if (result.ec == std::errc::result_out_of_range) {
+				args.traverse.diagnostics.error(args.node).with_message("Overflow of integer, found {}", sv);
+			} else {
+				args.traverse.diagnostics.error(args.node).with_message("Expected an integer, found {}", sv);
+			}
+			return Error::FAILED;
 		}
 	};
 
 	template<std::integral T>
 	struct ValueExtractor<base<T, 10>> {
 		static Error extract(ValueExtractorArguments<base<T, 10>> args) {
-			return ValueExtractor<T>::extract({ args.parser, args.node, args.out.value });
+			return ValueExtractor<T>::extract({ args.traverse, args.node, args.out.value });
 		}
 	};
 
@@ -209,7 +205,7 @@ namespace OpenVic::dataloader {
 	struct ValueExtractor<base<T, Base>> {
 		static Error extract(ValueExtractorArguments<base<T, Base>> args) {
 			std::string_view sv;
-			OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.parser, args.node, sv }));
+			OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.traverse, args.node, sv }));
 
 			T tmp;
 			std::from_chars_result result = from_chars(sv.data(), sv.data() + sv.size(), tmp, Base);
@@ -218,75 +214,69 @@ namespace OpenVic::dataloader {
 				return Error::OK;
 			}
 
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    result.ec == std::errc::result_out_of_range,
-			    Error::FAILED,
-			    make_location_message(args.parser, args.node, "Overflow of integer, found {}", sv)
-			);
-
-			OV_DL_ERR_FAIL_V_MSG(
-			    Error::FAILED, make_location_message(args.parser, args.node, "Expected an integer, found {}", sv)
-			);
+			if (result.ec == std::errc::result_out_of_range) {
+				args.traverse.diagnostics.error(args.node).with_message("Overflow of integer, found {}", sv);
+			} else {
+				args.traverse.diagnostics.error(args.node).with_message("Expected an integer, found {}", sv);
+			}
+			return Error::FAILED;
 		}
 	};
 
 	template<typename T>
 	struct ValueExtractor<strict_id<T>> {
 		static Error extract(ValueExtractorArguments<strict_id<T>> args) {
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.node->kind != ovdl::v2script::ast::NodeKind::IdentifierValue,
-			    Error::FAILED,
-			    make_location_message(
-			        args.parser, args.node, "Expected identifier, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
-			    )
-			);
+			if (args.node->kind != ovdl::v2script::ast::NodeKind::IdentifierValue) {
+				args.traverse.diagnostics.error(args.node).with_message(
+				    "Expected identifier, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
+				);
+				return Error::OK;
+			}
 
-			return ValueExtractor<T>::extract({ args.parser, args.node, args.out.value });
+			return ValueExtractor<T>::extract({ args.traverse, args.node, args.out.value });
 		}
 	};
 
 	template<typename T>
 	struct ValueExtractor<strict_string<T>> {
 		static Error extract(ValueExtractorArguments<strict_string<T>> args) {
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.node->kind != ovdl::v2script::ast::NodeKind::StringValue,
-			    Error::FAILED,
-			    make_location_message(
-			        args.parser, args.node, "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
-			    )
-			);
+			if (args.node->kind != ovdl::v2script::ast::NodeKind::StringValue) {
+				args.traverse.diagnostics.error(args.node).with_message(
+				    "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
+				);
+				return Error::OK;
+			}
 
-			return ValueExtractor<T>::extract({ args.parser, args.node, args.out.value });
+			return ValueExtractor<T>::extract({ args.traverse, args.node, args.out.value });
 		}
 	};
 
 	template<typename T>
 	struct ValueExtractor<strict_string<emptyable<T>>> {
 		static Error extract(ValueExtractorArguments<strict_string<emptyable<T>>> args) {
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.node->kind != ovdl::v2script::ast::NodeKind::StringValue,
-			    Error::FAILED,
-			    make_location_message(
-			        args.parser, args.node, "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
-			    )
-			);
+			if (args.node->kind != ovdl::v2script::ast::NodeKind::StringValue) {
+				args.traverse.diagnostics.error(args.node).with_message(
+				    "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
+				);
+				return Error::OK;
+			}
 
-			return ValueExtractor<T>::extract({ args.parser, args.node, args.out.value.value });
+			return ValueExtractor<emptyable<T>>::extract({ args.traverse, args.node, args.out.value });
 		}
 	};
 
 	template<typename T>
 	struct ValueExtractor<emptyable<strict_string<T>>> {
 		static Error extract(ValueExtractorArguments<emptyable<strict_string<T>>> args) {
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.node->kind != ovdl::v2script::ast::NodeKind::StringValue,
-			    Error::FAILED,
-			    make_location_message(
-			        args.parser, args.node, "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
-			    )
-			);
+			if (args.node->kind != ovdl::v2script::ast::NodeKind::StringValue) {
+				args.traverse.diagnostics.error(args.node).with_message(
+				    "Expected string, found {}", ovdl::v2script::ast::get_kind_name(args.node->kind)
+				);
+				return Error::OK;
+			}
 
-			return ValueExtractor<T>::extract({ args.parser, args.node, args.out.value.value });
+			emptyable<T> empty { args.out.value.value };
+			return ValueExtractor<emptyable<T>>::extract({ args.traverse, args.node, empty });
 		}
 	};
 
@@ -301,7 +291,7 @@ namespace OpenVic::dataloader {
 			using underlying_type = type_safe::underlying_type<T>;
 
 			return ValueExtractor<underlying_type>::extract(
-			    { args.parser, args.node, static_cast<underlying_type&>(args.out) }
+			    { args.traverse, args.node, static_cast<underlying_type&>(args.out) }
 			);
 		}
 	};
@@ -359,14 +349,13 @@ namespace OpenVic::dataloader {
 	template<typename T>
 	struct ValueExtractor<std::optional<T>> {
 		static Error extract(ValueExtractorArguments<std::optional<T>> args) {
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.out.has_value(),
-			    Error::FAILED,
-			    make_location_message(args.parser, args.node, "Unexpected overwriting of set value")
-			);
+			if (args.out.has_value()) {
+				args.traverse.diagnostics.error(args.node).with_message("Unexpected overwriting of set value");
+				return Error::OK;
+			}
 
 			T tmp;
-			OV_RETURN_IF_ERROR(ValueExtractor<T>::extract({ args.parser, args.node, tmp }));
+			OV_RETURN_IF_ERROR(ValueExtractor<T>::extract({ args.traverse, args.node, tmp }));
 			args.out = tmp;
 			return Error::OK;
 		}
@@ -376,7 +365,7 @@ namespace OpenVic::dataloader {
 	struct ValueExtractor<overwrite_optional<T>> {
 		static Error extract(ValueExtractorArguments<overwrite_optional<T>> args) {
 			T tmp;
-			OV_RETURN_IF_ERROR(ValueExtractor<T>::extract({ args.parser, args.node, tmp }));
+			OV_RETURN_IF_ERROR(ValueExtractor<T>::extract({ args.traverse, args.node, tmp }));
 			args.out = tmp;
 			return Error::OK;
 		}
@@ -398,43 +387,50 @@ namespace OpenVic::dataloader {
 		}
 
 		static Error initialize(ValueInitializeArguments<T> args) {
-			if (args.parser != table.parser) {
-				table.parser = args.parser;
+			if (args.traverse.diagnostics.parser() != table.parser) {
+				table.parser = args.traverse.diagnostics.parser();
 			}
 
-			if (OV_unlikely(args.parser == nullptr)) {
+			if (OV_unlikely(args.traverse.diagnostics.parser() == nullptr)) {
 				return Error::OK;
 			}
 
 			std::size_t i = 0;
-			((table.symbols[i++] = args.parser->find_intern(KVs.key)), ...);
+			((table.symbols[i++] = args.traverse.diagnostics.parser()->find_intern(KVs.key)), ...);
 			return Error::OK;
 		}
 
 		static Error extract(ValueExtractorArguments<T> args) {
-			if (OV_unlikely(args.parser == nullptr)) {
+			if (OV_unlikely(args.traverse.diagnostics.parser() == nullptr)) {
 				std::string_view sv;
-				OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.parser, args.node, sv }));
+				OV_RETURN_IF_ERROR(ValueExtractor<std::string_view>::extract({ args.traverse, args.node, sv }));
 
 				Error err = Error::FAILED;
 				std::size_t i = 0;
 				// first matching key wins
 				((sv && sv == KVs.key && (args.out = KVs.value, err = Error::OK, true)) || ...);
 
-				OV_DL_ERR_FAIL_COND_V_MSG(
-				    err != Error::OK,
-				    err,
-				    make_location_message(args.parser, args.node, "Expected value: [{}], found {}", fmt::join(keys(), ", "), sv)
-				);
+				if (err != Error::OK) {
+					if constexpr (size == 1) {
+						args.traverse.diagnostics.error(args.node).with_message(
+						    "Expected value: [{}], found {}", keys()[0], sv
+						);
+					} else {
+						args.traverse.diagnostics.error(args.node).with_message(
+						    "Expected one of values: [{}], found {}", fmt::join(keys(), ", "), sv
+						);
+					}
+					return err;
+				}
 
 				return Error::OK;
 			}
 
 			ovdl::symbol<> value;
-			OV_RETURN_IF_ERROR(ValueExtractor<ovdl::symbol<>>::extract({ args.parser, args.node, value }));
+			OV_RETURN_IF_ERROR(ValueExtractor<ovdl::symbol<>>::extract({ args.traverse, args.node, value }));
 
-			if (OV_unlikely(args.parser != table.parser)) {
-				initialize({ args.parser, args.out });
+			if (OV_unlikely(args.traverse.diagnostics.parser() != table.parser)) {
+				initialize({ args.traverse, args.out });
 			}
 
 			Error err = Error::FAILED;
@@ -442,13 +438,18 @@ namespace OpenVic::dataloader {
 			// first matching key wins
 			((value && value == table.symbols[i++] && (args.out = KVs.value, err = Error::OK, true)) || ...);
 
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    err != Error::OK,
-			    err,
-			    make_location_message(
-			        args.parser, args.node, "Expected value: [{}], found {}", fmt::join(keys(), ", "), value.view()
-			    )
-			);
+			if (err != Error::OK) {
+				if constexpr (size == 1) {
+					args.traverse.diagnostics.error(args.node).with_message(
+					    "Expected value: [{}], found {}", keys()[0], value.view()
+					);
+				} else {
+					args.traverse.diagnostics.error(args.node).with_message(
+					    "Expected one of values: [{}], found {}", fmt::join(keys(), ", "), value.view()
+					);
+				}
+				return err;
+			}
 
 			return Error::OK;
 		}

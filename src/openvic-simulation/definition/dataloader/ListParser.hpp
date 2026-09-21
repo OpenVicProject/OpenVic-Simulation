@@ -16,10 +16,10 @@
 #include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/core/string/StringLiteral.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/definition/dataloader/ErrorMacros.hpp"
 #include "openvic-simulation/definition/dataloader/MapInserter.hpp"
-#include "openvic-simulation/definition/dataloader/Utility.hpp"
+#include "openvic-simulation/definition/dataloader/TraverseResult.hpp"
 #include "openvic-simulation/definition/dataloader/ValueParser.hpp"
+#include "openvic-simulation/definition/dataloader/diagnostic/DiagnosticLevel.hpp"
 
 namespace OpenVic::dataloader {
 	template<typename T>
@@ -36,22 +36,21 @@ namespace OpenVic::dataloader {
 
 	template<typename T>
 	struct TraverseInitializeArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Node const* root_node;
 		T& out;
 	};
 
 	template<typename T>
 	struct TraverseExtractArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Value const* node;
 		T& out;
 		bool& was_found;
-		Error& error;
 	};
 
 	struct TraverseFinalizeArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::Node const* node;
 		memory::vector<std::string_view>& expected;
 		bool was_found;
@@ -75,9 +74,9 @@ namespace OpenVic::dataloader {
 	struct try_rule {
 		static Error finalize(TraverseFinalizeArguments args) {
 			if constexpr (requires {
-				              { ValueExtractor<T>::finalize({ args.parser }) } -> std::same_as<Error>;
+				              { ValueExtractor<T>::finalize({ args.traverse }) } -> std::same_as<Error>;
 			              }) {
-				return ValueExtractor<T>::finalize({ args.parser });
+				return ValueExtractor<T>::finalize({ args.traverse });
 			}
 			return Error::OK;
 		}
@@ -105,12 +104,16 @@ namespace OpenVic::dataloader {
 	template<string_literal Key, typename T>
 	struct expect_once_key_rule : expect_key_rule<Key, T> {
 		static bool try_extract(TraverseExtractArguments<T> args) {
-			args.error = Error::FAILED;
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.was_found, true, make_location_message(args.parser, args.node, "Found multiple {} keys", Key)
-			);
+			args.traverse.error = Error::FAILED;
+			if (args.was_found) {
+				args.traverse.diagnostics.error(args.node).with_message("Found multiple {} keys", Key);
+				return true;
+			}
 
-			args.error = ValueExtractor<T>::extract({ args.parser, args.node, args.out });
+			args.traverse.error = ValueExtractor<T>::extract({ args.traverse, args.node, args.out });
+			if (args.traverse.error == Error::OK) {
+				args.was_found = true;
+			}
 			return true;
 		}
 	};
@@ -128,12 +131,12 @@ namespace OpenVic::dataloader {
 
 		static bool try_extract(TraverseExtractArguments<T> args) {
 			if constexpr (std::same_as<item_type, T>) {
-				args.error = Function({ args.parser, args.node, args.out });
+				args.traverse.error = Function({ args.traverse, args.node, args.out });
 			} else {
 				type_safe::deferred_construction<item_type> item;
-				args.error = Function({ args.parser, args.node, type_safe::out(item) });
-				if (args.error == Error::OK && item.has_value()) {
-					MapCallback<T>::insert({ args.parser, args.node, args.out }, item.value());
+				args.traverse.error = Function({ args.traverse, args.node, type_safe::out(item) });
+				if (args.traverse.error == Error::OK && item.has_value()) {
+					MapCallback<T>::insert({ args.traverse, args.node, args.out }, item.value());
 				}
 			}
 			return true;
@@ -143,12 +146,16 @@ namespace OpenVic::dataloader {
 	template<string_literal Key, typename T>
 	struct try_once_key_rule : try_key_rule<Key, T> {
 		static bool try_extract(TraverseExtractArguments<T> args) {
-			args.error = Error::FAILED;
-			OV_DL_ERR_FAIL_COND_V_MSG(
-			    args.was_found, true, make_location_message(args.parser, args.node, "Found multiple {} keys", Key)
-			);
+			args.traverse.error = Error::FAILED;
+			if (args.was_found) {
+				args.traverse.diagnostics.error(args.node).with_message("Found multiple {} keys", Key);
+				return true;
+			}
 
-			args.error = ValueExtractor<T>::extract({ args.parser, args.node, args.out });
+			args.traverse.error = ValueExtractor<T>::extract({ args.traverse, args.node, args.out });
+			if (args.traverse.error == Error::OK) {
+				args.was_found = true;
+			}
 			return true;
 		}
 	};
@@ -166,12 +173,12 @@ namespace OpenVic::dataloader {
 
 		static bool try_extract(TraverseExtractArguments<T> args) {
 			if constexpr (std::same_as<item_type, T>) {
-				args.error = Function({ args.parser, args.node, args.out });
+				args.traverse.error = Function({ args.traverse, args.node, args.out });
 			} else {
 				type_safe::deferred_construction<item_type> item;
-				args.error = Function({ args.parser, args.node, type_safe::out(item) });
-				if (args.error == Error::OK && item.has_value()) {
-					MapCallback<T>::insert({ args.parser, args.node, args.out }, item.value());
+				args.traverse.error = Function({ args.traverse, args.node, type_safe::out(item) });
+				if (args.traverse.error == Error::OK && item.has_value()) {
+					MapCallback<T>::insert({ args.traverse, args.node, args.out }, item.value());
 				}
 			}
 			return true;
@@ -181,18 +188,18 @@ namespace OpenVic::dataloader {
 	template<string_literal Key, typename T>
 	struct set_when_key_rule : try_key_rule<Key, T> {
 		static bool try_extract(TraverseExtractArguments<T> args) {
-			args.error = ValueExtractor<T>::try_extract({ args.parser, args.node, args.out });
+			args.traverse.error = ValueExtractor<T>::try_extract({ args.traverse, args.node, args.out });
 			return true;
 		}
 	};
 
 	struct DefaultOptions {
-		spdlog::level::level_enum duplicates_level = spdlog::level::warn;
+		DiagnosticLevel duplicates_level = DiagnosticLevel::WARN;
 	};
 
 	template<typename MapT>
 	struct DefaultFunctionArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::AssignStatement const* node;
 		MapT& map;
 	};
@@ -208,13 +215,11 @@ namespace OpenVic::dataloader {
 				return Error::SKIP;
 			}
 
-			if constexpr (Options.duplicates_level != spdlog::level::off) {
-				if (MapCallback<MapT>::has({ args.parser, left, args.map })) {
-					dataloader::log::log(
-					    Options.duplicates_level,
-					    dataloader::make_location_message(args.parser, left, "Found multiple {} keys", left->value().view())
-					);
-					if constexpr (Options.duplicates_level >= spdlog::level::err) {
+			if constexpr (Options.duplicates_level != DiagnosticLevel::NONE) {
+				if (MapCallback<MapT>::has({ args.traverse, left, args.map })) {
+					args.traverse.diagnostics.report(Options.duplicates_level, left)
+					    .with_message("Found multiple {} keys", left->value().view());
+					if constexpr (Options.duplicates_level <= DiagnosticLevel::ERROR) {
 						return Error::FAILED;
 					}
 				}
@@ -222,18 +227,18 @@ namespace OpenVic::dataloader {
 
 			type_safe::deferred_construction<value_type> value;
 			Error err = ValueExtractor<type_safe::output_parameter<value_type>>::extract(
-			    { args.parser, left, type_safe::out(value) }
+			    { args.traverse, left, type_safe::out(value) }
 			);
 
 			if (err == Error::OK && value.has_value()) {
-				return MapCallback<MapT>::insert({ args.parser, left, args.map }, value.value());
+				return MapCallback<MapT>::insert({ args.traverse, left, args.map }, value.value());
 			}
 			return err;
 		}
 	};
 
 	struct ApplyFunctionArguments {
-		ovdl::v2script::Parser const* parser;
+		TraverseResult& traverse;
 		ovdl::v2script::ast::AssignStatement const* node;
 	};
 }
