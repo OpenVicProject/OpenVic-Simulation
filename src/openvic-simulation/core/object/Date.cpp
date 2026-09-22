@@ -101,7 +101,7 @@ struct date_writer {
 		} else if (upper >= 0 && upper < 100) {
 			write2(static_cast<int>(upper));
 		} else {
-			_out = detail::write<Char>(_out, upper);
+			_out = fmt::detail::write<Char>(_out, upper);
 		}
 	}
 
@@ -118,11 +118,11 @@ struct date_writer {
 	}
 
 	void on_abbr_weekday() {
-		_out = detail::write<Char>(_out, _date.get_weekday_name().substr(0, 3));
+		_out = fmt::detail::write<Char>(_out, _date.get_weekday_name().substr(0, 3));
 	}
 
 	void on_full_weekday() {
-		_out = detail::write<Char>(_out, _date.get_weekday_name());
+		_out = fmt::detail::write<Char>(_out, _date.get_weekday_name());
 	}
 
 	void on_dec0_weekday(numeric_system ns) {
@@ -135,10 +135,10 @@ struct date_writer {
 	}
 
 	void on_abbr_month() {
-		_out = detail::write<Char>(_out, _date.get_month_name().substr(0, 3));
+		_out = fmt::detail::write<Char>(_out, _date.get_month_name().substr(0, 3));
 	}
 	void on_full_month() {
-		_out = detail::write<Char>(_out, _date.get_month_name());
+		_out = fmt::detail::write<Char>(_out, _date.get_month_name());
 	}
 
 	void on_dec_month(numeric_system ns, pad_type pad) {
@@ -177,24 +177,24 @@ struct date_writer {
 		char buf[8];
 		write_digit2_separated(
 			buf, //
-			detail::to_unsigned(_date.get_day()), //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(split_year_lower(_date.get_year())), //
+			fmt::detail::to_unsigned(_date.get_day()), //
+			fmt::detail::to_unsigned(_date.get_month()), //
+			fmt::detail::to_unsigned(split_year_lower(_date.get_year())), //
 			'/'
 		);
-		_out = detail::copy<Char>(std::begin(buf), std::end(buf), _out);
+		_out = fmt::detail::copy<Char>(std::begin(buf), std::end(buf), _out);
 	}
 
 	void on_us_date() {
 		char buf[8];
 		write_digit2_separated(
 			buf, //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(_date.get_day()), //
-			detail::to_unsigned(split_year_lower(_date.get_year())), //
+			fmt::detail::to_unsigned(_date.get_month()), //
+			fmt::detail::to_unsigned(_date.get_day()), //
+			fmt::detail::to_unsigned(split_year_lower(_date.get_year())), //
 			'/'
 		);
-		_out = detail::copy<Char>(std::begin(buf), std::end(buf), _out);
+		_out = fmt::detail::copy<Char>(std::begin(buf), std::end(buf), _out);
 	}
 
 	void on_iso_date() {
@@ -202,7 +202,7 @@ struct date_writer {
 		char buf[10];
 		size_t offset = 0;
 		if (year >= 0 && year < 10000) {
-			detail::write2digits(buf, static_cast<size_t>(year / 100));
+			fmt::detail::write2digits(buf, static_cast<size_t>(year / 100));
 		} else {
 			offset = 4;
 			write_year_extended(year, pad_type::zero);
@@ -211,11 +211,11 @@ struct date_writer {
 		write_digit2_separated(
 			buf + 2, //
 			static_cast<unsigned>(year % 100), //
-			detail::to_unsigned(_date.get_month()), //
-			detail::to_unsigned(_date.get_day()), //
+			fmt::detail::to_unsigned(_date.get_month()), //
+			fmt::detail::to_unsigned(_date.get_day()), //
 			'-'
 		);
-		_out = detail::copy<Char>(std::begin(buf) + offset, std::end(buf), _out);
+		_out = fmt::detail::copy<Char>(std::begin(buf) + offset, std::end(buf), _out);
 	}
 
 private:
@@ -223,7 +223,7 @@ private:
 		if (pad == pad_type::none) {
 			return out;
 		}
-		return detail::fill_n(out, width, pad == pad_type::space ? ' ' : '0');
+		return fmt::detail::fill_n(out, width, pad == pad_type::space ? ' ' : '0');
 	}
 
 	static OutputIt write_padding(OutputIt out, pad_type pad) {
@@ -234,17 +234,17 @@ private:
 	}
 
 	void write1(int value) {
-		*_out++ = static_cast<char>('0' + detail::to_unsigned(value) % 10);
+		*_out++ = static_cast<char>('0' + fmt::detail::to_unsigned(value) % 10);
 	}
 	void write2(int value) {
-		const char* d = detail::digits2(detail::to_unsigned(value) % 100);
+		const char* d = fmt::detail::digits2(fmt::detail::to_unsigned(value) % 100);
 		*_out++ = *d++;
 		*_out++ = *d;
 	}
 	void write2(int value, pad_type pad) {
-		unsigned int v = detail::to_unsigned(value) % 100;
+		unsigned int v = fmt::detail::to_unsigned(value) % 100;
 		if (v >= 10) {
-			const char* d = detail::digits2(v);
+			const char* d = fmt::detail::digits2(v);
 			*_out++ = *d++;
 			*_out++ = *d;
 		} else {
@@ -261,8 +261,8 @@ private:
 			year = 0 - year;
 			--width;
 		}
-		detail::uint32_or_64_or_128_t<long long> n = detail::to_unsigned(year);
-		const int num_digits = detail::count_digits(n);
+		fmt::detail::uint32_or_64_or_128_t<long long> n = fmt::detail::to_unsigned(year);
+		const int num_digits = fmt::detail::count_digits(n);
 		if (negative && pad == pad_type::zero) {
 			*_out++ = '-';
 		}
@@ -272,7 +272,7 @@ private:
 		if (negative && pad != pad_type::zero) {
 			*_out++ = '-';
 		}
-		_out = detail::format_decimal<Char>(_out, n, num_digits);
+		_out = fmt::detail::format_decimal<Char>(_out, n, num_digits);
 	}
 	void write_year(long long year, pad_type pad) {
 		write_year_extended(year, pad);
@@ -308,7 +308,7 @@ private:
 		digits |= 0x3030003030003030 | (usep << 16) | (usep << 40);
 
 		constexpr const size_t len = 8;
-		if (detail::const_check(detail::is_big_endian())) {
+		if (fmt::detail::const_check(fmt::detail::is_big_endian())) {
 			char tmp[len];
 			std::memcpy(tmp, &digits, len);
 			std::reverse_copy(tmp, tmp + len, buf);
@@ -364,5 +364,5 @@ fmt::format_context::iterator fmt::formatter<Date>::format(Date d, format_contex
 	basic_appender out = basic_appender<char>(buf);
 
 	parse_date_format(_fmt.begin(), _fmt.end(), date_writer { out, d });
-	return detail::write(ctx.out(), string_view { buf.data(), buf.size() }, specs);
+	return fmt::detail::write(ctx.out(), string_view { buf.data(), buf.size() }, specs);
 }
