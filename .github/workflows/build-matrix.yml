@@ -43,14 +43,14 @@ jobs:
             target: template_release
 
           - identifier: linux-debug
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             name: 🐧 Linux Debug
             preset: linux-x64
             configuration: Debug
             target: template_debug
 
           - identifier: linux-release
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             name: 🐧 Linux Release
             preset: linux-x64
             configuration: Release
