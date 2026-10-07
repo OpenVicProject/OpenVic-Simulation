@@ -1,7 +1,7 @@
 #include <memory>
 
-#include <testing/Requirement.hpp>
-#include <testing/TestScript.hpp>
+#include "openvic-simulation/testing/Requirement.hpp"
+#include "openvic-simulation/testing/TestScript.hpp"
 
 using namespace OpenVic;
 

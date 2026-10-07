@@ -38,7 +38,6 @@ set(sim_gen_dir ${CMAKE_CURRENT_BINARY_DIR}/gen-include)
 target_include_directories(
     openvic-simulation
     PUBLIC src $<BUILD_INTERFACE:${sim_gen_dir}>
-    PRIVATE src/openvic-simulation
 )
 
 openvic_generate_commit_info(
