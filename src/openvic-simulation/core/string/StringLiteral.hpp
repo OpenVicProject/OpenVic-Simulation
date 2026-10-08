@@ -57,6 +57,13 @@ namespace OpenVic {
 			}
 		}
 
+		[[nodiscard]] consteval string_literal(std::string_view string) {
+			if (string.size() != N) {
+				unreachable();
+			}
+			std::copy_n(string.begin(), N, _data);
+		}
+
 		[[nodiscard]] constexpr string_literal(value_type c) noexcept {
 			_data[0] = c;
 			_data[size()] = '\0';
