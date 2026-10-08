@@ -1,6 +1,5 @@
 #include "ProvinceInstance.hpp"
 #include "ProvinceInstanceDeps.hpp"
-#include "population/PopsAggregateDeps.hpp"
 
 #include <type_traits>
 
@@ -16,6 +15,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/population/PopsAggregateDeps.hpp"
 #include "openvic-simulation/types/ConstructorTags.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
