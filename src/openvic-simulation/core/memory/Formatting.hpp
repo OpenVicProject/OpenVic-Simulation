@@ -12,15 +12,9 @@
 
 namespace OpenVic::memory {
 	namespace fmt {
-		template<typename T, class RawAllocator = foonathan::memory::default_allocator>
-		using basic_memory_buffer = ::fmt::basic_memory_buffer<
-			T,
-			::fmt::inline_buffer_size,
-			foonathan::memory::std_allocator<
-				T,
-				OpenVic::memory::tracker<RawAllocator>
-			>
-		>;
+		template<typename T, size_t SIZE = ::fmt::inline_buffer_size, class RawAllocator = foonathan::memory::default_allocator>
+		using basic_memory_buffer =
+		    ::fmt::basic_memory_buffer<T, SIZE, foonathan::memory::std_allocator<T, OpenVic::memory::tracker<RawAllocator>>>;
 
 		inline static memory::string vformat(::fmt::string_view fmt, ::fmt::format_args args) {
 			memory::fmt::basic_memory_buffer<char> buf {};
