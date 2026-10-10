@@ -116,6 +116,14 @@ namespace OpenVic {
 #endif
 	}
 
+	template<class Lambda, int = (Lambda {}(), 0)>
+	constexpr bool is_constexpr(Lambda) {
+		return true;
+	}
+	constexpr bool is_constexpr(...) {
+		return false;
+	}
+
 	namespace cow {
 		template<typename T>
 		T const& read(T const& v) {

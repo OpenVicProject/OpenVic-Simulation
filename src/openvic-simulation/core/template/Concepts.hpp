@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <memory>
 #include <string_view>
+#include <type_traits>
 
 #include <type_safe/strong_typedef.hpp>
 
@@ -231,4 +232,25 @@ namespace OpenVic {
 	concept strict_regular_invocable_r = std::regular_invocable<F, Args...> && requires(F f, Args&&... args) {
 		{ f(static_cast<Args>(args)...) } -> std::same_as<Return>;
 	};
+
+	namespace detail {
+		template<typename T, int = (T(), 0)>
+		constexpr bool enable_if_constexpr_constructible(int) {
+			return true;
+		}
+
+		template<typename>
+		constexpr bool enable_if_constexpr_constructible(long) {
+			return false;
+		}
+	}
+
+	template<typename T>
+	struct is_constexpr_constructible : std::bool_constant<detail::enable_if_constexpr_constructible<T>(0)> {};
+
+	template<typename T>
+	inline static constexpr bool is_constexpr_constructible_v = is_constexpr_constructible<T>::value;
+
+	template<typename T>
+	concept constexpr_constructible = is_constexpr_constructible_v<T>;
 }
