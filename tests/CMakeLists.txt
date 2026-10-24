@@ -12,8 +12,8 @@ set(SNITCH_WITH_EXCEPTIONS OFF)
 set(SNITCH_WITH_MULTITHREADING OFF)
 openvic_declare_dep(snitch
     REPO snitch-org/snitch
-    SHA 2a594333016b9cfc1f90b116184cb0bdbf98a480 # v1.3.1
-    SHA256 7512cd7ec34d02faea463e7588ccbcfddc229a7e2243dd49e421b7158741c103
+    SHA c29ce5b465fb02250afb0cb35338488c0e6b1534 # main
+    SHA256 31dd6bdf5d568c7e15def001bc81a4dbf8b93a919abbe757a545e65cafdf7ae7
 )
 FetchContent_MakeAvailable(snitch)
 
