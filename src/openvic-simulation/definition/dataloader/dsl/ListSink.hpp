@@ -27,7 +27,12 @@ namespace OpenVic::dataloader::dsl {
 		OV_NO_UNIQUE_ADDRESS Func func;
 
 		auto event_generate_parsers(TraverseContext& ctx) {
-			list.event_generate_parsers(ctx);
+			return list.event_generate_parsers(ctx);
+		}
+
+		template<typename TraverseData, typename Node>
+		auto event_match(TraverseContext& ctx, TraverseData& data, Node const* node) {
+			return list.event_match(ctx, data, node);
 		}
 
 		void event_prepare(TraverseContext& ctx) {
@@ -164,10 +169,10 @@ namespace OpenVic::dataloader::dsl {
 			} else {
 				if constexpr (list.has_pre_iterate_func) {
 					if constexpr (node_with_statements<Node>) {
-						OV_FWD(list.has_pre_iterate_func)(ctx, data, node);
+						OV_FWD(list.pre_iterate_func)(ctx, data, node);
 					} else {
 						dsl::visit_list_or_tree(ctx, data, node, [this](TraverseContext& ctx, TraverseData& data, auto* node) {
-							OV_FWD(list.has_pre_iterate_func)(ctx, data, node);
+							OV_FWD(list.pre_iterate_func)(ctx, data, node);
 						});
 					}
 				}

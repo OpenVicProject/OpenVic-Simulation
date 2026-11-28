@@ -11,6 +11,7 @@
 #include "openvic-simulation/core/memory/Formatting.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/definition/dataloader/diagnostic/DiagnosticSink.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic::dataloader {
 	class DiagnosticItem;
@@ -18,7 +19,7 @@ namespace OpenVic::dataloader {
 	class TextSink : public DiagnosticSink {
 	public:
 		using memory_buffer_type = memory::fmt::basic_memory_buffer<char, 250>;
-		using text_iterator = memory::string::const_iterator;
+		using text_iterator = std::string_view::const_iterator;
 
 		// enum class Color {
 		// 	RESET = 0,
@@ -103,12 +104,13 @@ namespace OpenVic::dataloader {
 		}
 
 	private:
-		memory::string _file_content;
+		using file_content_map_type = vector_ordered_map<std::string_view, memory::string>;
+		file_content_map_type _mapped_file_contents;
 
 		struct content_marker {
 			size_t line = 0;
 			size_t column = 0;
-			text_iterator position;
+			text_iterator position = {};
 
 			constexpr bool is_invalid() const {
 				return line == 0 && column == 0;
@@ -116,7 +118,9 @@ namespace OpenVic::dataloader {
 		};
 
 		bool open_file(std::string_view filepath);
-		content_marker find_in_content(size_t line, size_t column, content_marker begin = { 0, 0 });
+		content_marker find_in_content(
+		    std::string_view content, size_t line, size_t column, content_marker begin = { 0, 0, {} }
+		);
 
 		template<typename T>
 		static constexpr decltype(auto) remove_style(T&& value) {

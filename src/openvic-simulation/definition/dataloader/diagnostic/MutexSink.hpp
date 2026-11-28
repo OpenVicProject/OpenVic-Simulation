@@ -54,6 +54,6 @@ namespace OpenVic::dataloader {
 	template<typename MutexT, std::derived_from<DiagnosticSink> DiagnosticSinkT = DiagnosticSink, typename... Args>
 	requires std::constructible_from<DiagnosticSinkT, Args...>
 	auto make_mutex_sink(Args&&... args) {
-		return memory::make_unique<DiagnosticSinkT>(std::forward<Args>(args)...);
+		return memory::make_unique<MutexSink<MutexT, DiagnosticSinkT>>(std::forward<Args>(args)...);
 	}
 }

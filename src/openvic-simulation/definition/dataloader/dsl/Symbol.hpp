@@ -77,7 +77,7 @@ namespace OpenVic::dataloader::dsl {
 		{
 			if constexpr (node_with_value_symbol<Node>) {
 				if constexpr (std::same_as<T, ovdl::symbol<>>) {
-					return sink(ctx, node, node->value());
+					return sink(ctx, data, node, node->value());
 				} else {
 					type_safe::deferred_construction<T> value;
 					if (!data.template parser_for<type_safe::output_parameter<T>>().parse(

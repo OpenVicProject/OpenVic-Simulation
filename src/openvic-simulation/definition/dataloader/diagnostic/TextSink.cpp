@@ -4,6 +4,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string_view>
+#include <system_error>
 
 #include <openvic-dataloader/NodeLocation.hpp>
 
@@ -47,8 +48,10 @@ void TextSink::consume(DiagnosticItem const& item) {
 
 	if (item.is_primary()) {
 		for (DiagnosticItem const* subitem : item.related_items()) {
-			if (subitem->filepath() != item.filepath()) {
-				render_filepath(item, buf);
+			bool is_filepath_same = subitem->filepath() != item.filepath();
+			if (is_filepath_same) {
+				open_file(subitem->filepath());
+				render_filepath(*subitem, buf);
 			}
 			render_empty_annotation(buf);
 			render_annotation(*subitem, buf, subitem->message());
@@ -60,8 +63,8 @@ void TextSink::consume(DiagnosticItem const& item) {
 }
 
 void TextSink::end() {
-	_file_content.clear();
-	_file_content.shrink_to_fit();
+	_mapped_file_contents.clear();
+	_mapped_file_contents.shrink_to_fit();
 }
 
 void TextSink::render_text(memory_buffer_type& buf, std::string_view message) {
@@ -96,7 +99,7 @@ void TextSink::render_style_reset(memory_buffer_type& buf) {
 }
 
 void TextSink::render_filepath(DiagnosticItem const& item, memory_buffer_type& buf) {
-	if (item.filepath().empty() || _file_content.empty() || _file_content[0] == '\0') {
+	if (!_mapped_file_contents.contains(item.filepath())) {
 		return;
 	}
 
@@ -121,7 +124,7 @@ static bool is_continuation_byte(unsigned char c) {
 static bool is_one_width(
     TextSink::memory_buffer_type::value_type const*& begin, TextSink::memory_buffer_type::value_type const* end
 ) {
-	if (!is_continuation_byte(*begin)) {
+	if ((*begin & 0x80) == 0) {
 		return true;
 	}
 
@@ -153,7 +156,7 @@ static size_t get_visible_width(
 	size_t result = 0;
 	for (; begin != end; ++begin) {
 		unsigned char value = static_cast<unsigned char>(*begin);
-		if (value == '\e' && end - begin > 2) {
+		if (value == '\x1b' && end - begin > 2) {
 			if (begin[1] == '[') {
 				begin += 2;
 			} else {
@@ -181,10 +184,20 @@ static size_t get_visible_width(
 }
 
 void TextSink::render_annotation(DiagnosticItem const& item, memory_buffer_type& buf, std::string_view annotation) {
-	content_marker line_marker = find_in_content(item.location().start_line, 1);
-	content_marker line_marker_end = find_in_content(item.location().start_line + 1, 1, line_marker);
-	content_marker begin_marker = find_in_content(item.location().start_line, item.location().start_column, line_marker);
-	content_marker end_marker = find_in_content(item.location().end_line, item.location().end_column - 1, begin_marker);
+	file_content_map_type::const_iterator content = _mapped_file_contents.find(item.filepath());
+	if (content == _mapped_file_contents.end()) {
+		render_empty_annotation(buf);
+		return;
+	}
+
+	content_marker line_marker = find_in_content(content.value(), item.location().start_line, 1);
+	content_marker line_marker_end = find_in_content(content.value(), item.location().start_line + 1, 1, line_marker);
+	content_marker begin_marker = find_in_content(
+	    content.value(), item.location().start_line, item.location().start_column, line_marker
+	);
+	content_marker end_marker = find_in_content(
+	    content.value(), item.location().end_line, item.location().end_column - 1, begin_marker
+	);
 
 	text_iterator line_begin = line_marker.position;
 	text_iterator begin = begin_marker.position;
@@ -215,8 +228,8 @@ void TextSink::render_annotation(DiagnosticItem const& item, memory_buffer_type&
 
 	bool annotated_newline = end > newline_end;
 	lexeme before = { line_begin, begin };
-	lexeme annotated;
-	lexeme after;
+	lexeme annotated {};
+	lexeme after {};
 	if (!annotated_newline) {
 		annotated = { begin, end };
 		after = { end, newline_end };
@@ -555,53 +568,72 @@ fmt::text_style TextSink::get_style_for(DiagnosticItem const& item) const {
 }
 
 bool TextSink::open_file(std::string_view filepath) {
-	if (_file_content.size() == 1 && _file_content[0] == '\0') {
+	file_content_map_type::iterator it = _mapped_file_contents.find(filepath);
+	if (it == _mapped_file_contents.end()) {
+		std::pair<file_content_map_type::iterator, bool> result = _mapped_file_contents.try_emplace(
+		    filepath, memory::string {}
+		);
+		if (!result.second) {
+			return false;
+		}
+		it = result.first;
+	}
+
+	memory::string& file_content = it.value();
+
+	if (file_content.size() == 1 && file_content[0] == '\0') {
 		return false;
 	}
 
-	if (!_file_content.empty()) {
+	if (!file_content.empty()) {
 		return true;
 	}
 
-	uintmax_t size = std::filesystem::file_size(filepath);
-	_file_content.resize(static_cast<size_t>(size));
+	std::error_code ec;
+	uintmax_t size = std::filesystem::file_size(filepath, ec);
+	if (size < 1) {
+		return false;
+	}
+
+	file_content.resize(static_cast<size_t>(size));
 
 	std::FILE* file;
 	{
 		memory::string path { filepath };
 		file = std::fopen(path.c_str(), "r+");
 		if (!file) {
-			_file_content.resize(1);
+			file_content.resize(1);
 			return false;
 		}
 	}
 
-	size_t read = std::fread(_file_content.data(), sizeof(memory::string::value_type), size, file);
+	size_t read = std::fread(file_content.data(), sizeof(memory::string::value_type), size, file);
 	std::fclose(file);
-	if (read != _file_content.size()) {
-		_file_content.resize(1);
+	if (read != file_content.size()) {
+		file_content.resize(1);
 		return false;
 	}
 
 	return true;
 }
 
-TextSink::content_marker TextSink::find_in_content(size_t line, size_t column, TextSink::content_marker marker) {
+TextSink::content_marker TextSink::find_in_content(
+    std::string_view content, size_t line, size_t column, TextSink::content_marker marker
+) {
 	if (marker.line > line || marker.line == line && marker.column > column) {
 		return marker;
 	}
 
-	if (line >= _file_content.size() || column >= _file_content.size()) {
+	if (line >= content.size() || column >= content.size()) {
 		return { 0, 0, marker.position };
 	}
 
 	if (marker.position == text_iterator {}) {
-		marker = { 1, 1, _file_content.begin() };
+		marker = { 1, 1, content.begin() };
 	}
 
 	char const* start_ptr = nullptr;
-	for (size_t column_count = marker.line == line ? marker.column : 1;
-	     marker.line <= line && marker.position != _file_content.end();
+	for (size_t column_count = marker.line == line ? marker.column : 1; marker.line <= line && marker.position != content.end();
 	     ++marker.position) {
 		char const& c = *marker.position;
 		if (c == '\n') {
@@ -613,7 +645,7 @@ TextSink::content_marker TextSink::find_in_content(size_t line, size_t column, T
 			continue;
 		}
 
-		if (c == '\r' && marker.position + 1 != _file_content.end() && marker.position[1] == '\n') {
+		if (c == '\r' && marker.position + 1 != content.end() && marker.position[1] == '\n') {
 			continue;
 		}
 
@@ -628,5 +660,5 @@ TextSink::content_marker TextSink::find_in_content(size_t line, size_t column, T
 		return { 0, 0, marker.position };
 	}
 
-	return { line, column, _file_content.begin() + (start_ptr - _file_content.data()) };
+	return { line, column, content.begin() + (start_ptr - content.data()) };
 }

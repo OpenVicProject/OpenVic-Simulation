@@ -58,6 +58,9 @@ DiagnosticItem& DiagnosticBag::report(DiagnosticItem&& item) {
 }
 
 void DiagnosticBag::clear() {
+	_error_count = 0;
+	_warning_count = 0;
+	_fatal_error = false;
 	_diagnostics.clear();
 }
 
@@ -72,7 +75,7 @@ void DiagnosticBag::sort() {
 				return a.level() > b.level();
 			}
 
-			return true;
+			return false;
 		});
 	}
 
@@ -150,9 +153,9 @@ void DiagnosticBag::log_to_impl(spdlog::logger* logger) const {
 				} else {
 					out = fmt::detail::write<char>(out, sec->filepath());
 					out = fmt::detail::write<char>(out, ':');
-					out = fmt::detail::write<char>(out, sec->filepath());
+					out = fmt::detail::write<char>(out, sec->location().start_line);
 					out = fmt::detail::write<char>(out, ':');
-					out = fmt::detail::write<char>(out, sec->filepath());
+					out = fmt::detail::write<char>(out, sec->location().start_column);
 					out = fmt::detail::write<char>(out, ": ");
 					out = fmt::detail::write<char>(out, sec->message());
 				}
